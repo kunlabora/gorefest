@@ -69,6 +69,7 @@ class App(
     val topUpWizard = Wizard(tasteModel, minPairs = 3, maxPairs = 5)
     val predictor = Predictor(tasteModel)
     val matcher = Matcher(predictor)
+    val closer = GameDayCloser(this)
 
     suspend fun start() {
         db.migrate()
@@ -80,6 +81,7 @@ class App(
     /** Background jobs that shouldn't run in tests: the periodic collection refresh. */
     fun startBackgroundJobs() {
         collectionSync.startRefreshing()
+        closer.start()
     }
 
     fun stop() = scope.cancel()

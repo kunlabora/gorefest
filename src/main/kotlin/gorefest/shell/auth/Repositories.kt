@@ -54,6 +54,15 @@ class Players {
         }
     }
 
+    context(tx: Tx)
+    fun emails(ids: Collection<PlayerId>): Map<PlayerId, String> {
+        if (ids.isEmpty()) return emptyMap()
+        return tx.connection.prepareStatement("select id, email from players where id = any(?)").use {
+            it.setArray(1, tx.connection.createArrayOf("uuid", ids.map { id -> id.value.toJavaUuid() }.toTypedArray()))
+            it.executeQuery().use { rs -> buildMap { while (rs.next()) put(rs.playerId("id"), rs.getString("email")) } }
+        }
+    }
+
     private fun ResultSet.toPlayer() = Player(playerId("id"), getString("email"), getString("name"))
 }
 
