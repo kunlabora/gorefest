@@ -67,6 +67,12 @@ fun Route.gameDayRoutes(app: App) {
                     },
                 ) {
                     h1("gf-h1") { +"Your game days" }
+                    if (me.id !in app.bggAccounts.state) section("gf-next") {
+                        p("gf-kicker") { +"Optional" }
+                        h2("gf-next__title") { +"Link your BGG account" }
+                        p("gf-next__text") { +"Bring games straight from your BoardGameGeek collection instead of searching for each one." }
+                        a("/bgg?returnTo=%2F", classes = "gf-btn gf-btn--secondary gf-btn--block") { +"Link BGG" }
+                    }
                     if (gameDays.isEmpty()) {
                         emptyState("No game days yet", "Got an invite? Tap the link in your group chat. Or host one yourself.")
                     } else {

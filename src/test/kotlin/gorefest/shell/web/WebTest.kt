@@ -7,6 +7,7 @@ import gorefest.shell.IdGenerator
 import gorefest.shell.TestClock
 import gorefest.shell.TestDatabase
 import gorefest.shell.auth.DevMailbox
+import gorefest.shell.bgg.FakeBggApi
 import gorefest.shell.auth.Players
 import gorefest.shell.auth.Secrets
 import gorefest.shell.auth.Sessions
@@ -26,7 +27,8 @@ import kotlin.uuid.Uuid
 class TestApp(config: AppConfig = AppConfig.dev()) {
     val clock = TestClock()
     val mailbox = DevMailbox()
-    val app = App(TestDatabase.db, clock, IdGenerator.sequential(), config, mailbox)
+    val bgg = FakeBggApi()
+    val app = App(TestDatabase.db, clock, IdGenerator.sequential(), config, mailbox, bgg, bggInterval = Duration.ZERO)
 
     suspend fun reset() {
         TestDatabase.reset()

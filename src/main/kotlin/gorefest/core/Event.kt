@@ -19,6 +19,9 @@ object Tags {
     fun player(id: PlayerId) = Tag("player:$id")
     fun gameDay(id: GameDayId) = Tag("gameday:$id")
     fun game(id: BggId) = Tag("game:$id")
+
+    /** A BGG username, case-insensitive like BGG itself. */
+    fun bggUser(username: String) = Tag("bgg:${username.lowercase()}")
 }
 
 /** The stored type name of an event class, for use in queries. */
@@ -38,6 +41,13 @@ data class PlayerRegistered(val player: PlayerId) : Event {
 @SerialName("LoggedIn")
 data class LoggedIn(val player: PlayerId) : Event {
     override val tags get() = setOf(Tags.player(player))
+}
+
+/** The player proved they own this BGG account by putting a code in its profile. */
+@Serializable
+@SerialName("BggAccountLinked")
+data class BggAccountLinked(val player: PlayerId, val username: String) : Event {
+    override val tags get() = setOf(Tags.player(player), Tags.bggUser(username))
 }
 
 @Serializable

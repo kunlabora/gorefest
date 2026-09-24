@@ -59,7 +59,10 @@ Tag convention: `player:{id}`, `gameday:{id}`, `game:{bggId}`.
 
 ## BGG integration
 
-- Verify current API terms first; BGG may require app registration / tokens.
+- Since 2025 the XML API2 needs a registered application: every request sends `Authorization: Bearer <BGG_TOKEN>`, and unauthenticated calls get 401. boardgamegeek.com blocks scripted access to its docs, so read them in a browser.
+- Without `BGG_TOKEN` the app uses `FakeBggApi` with `DevCatalog` (dev mode and tests). All real calls go through `BggGateway`.
+- The `user` endpoint has no free-text bio, so verification looks for the code in any profile field it returns (we suggest "Web address").
+- BGG has no API for the top-ranked list; wizard anchors come from game ranks in the metadata cache.
 - One in-process coroutine worker, token bucket (~1 req / 5 s), priority queue: live searches and fresh account links jump ahead of routine refreshes.
 - Search the local metadata cache first; fall back to the BGG search endpoint.
 - Fetch metadata once per game globally, not per user.

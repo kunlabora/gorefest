@@ -8,7 +8,7 @@ A story is done when every criterion is ticked and covered by a test (decider gi
 | S0  | [Walking skeleton](#s0-walking-skeleton)          | ✅     |            |
 | S1  | [Deploy pipeline](#s1-deploy-pipeline)            | 📋     | S0         |
 | S2  | [Magic-link login](#s2-magic-link-login)          | ✅     | S0         |
-| S3  | [Link BGG account](#s3-link-bgg-account)          | 📋     | S2         |
+| S3  | [Link BGG account](#s3-link-bgg-account)          | ✅     | S2         |
 | S4  | [Collection sync](#s4-collection-sync)            | 📋     | S3         |
 | S5  | [Create and edit a game day](#s5-create-and-edit-a-game-day) | ✅ | S2   |
 | S6  | [Invite link and landing page](#s6-invite-link-and-landing-page) | ✅ | S5 |
@@ -50,6 +50,7 @@ S1–S13 is the MVP. S14–S16 make it good.
 - [ ] `/health` checks DB connectivity; a failed deploy leaves the previous jar running
 - [ ] A real mail provider sends login mail; logging in from WhatsApp's and Signal's in-app browsers works on a real phone, and invite links show their preview there
 - [ ] The server has fontconfig and a font installed, for the invite preview image
+- [ ] BGG application registered, `BGG_TOKEN` set, and the XML parsing checked against live responses (fixtures were written from the docs)
 - [ ] Login mails are rate-limited per email and per IP
 
 ## S2 Magic-link login
@@ -75,11 +76,12 @@ Follow-ups, not blocking:
 
 *As a player I want to link my BGG username so that the app knows my games.*
 
-- [ ] Before any code: current BGG XML API terms checked, app registered/token obtained if required, findings noted in CLAUDE.md
-- [ ] I enter my BGG username and get a short code to put in my BGG profile
-- [ ] "Verify" fetches my profile and emits `BggAccountLinked` when the code is there
-- [ ] A BGG username can be linked to only one player (DCB query on a `bgg:{username}` tag)
-- [ ] Linking is optional; I can skip it and come back later
+- [x] Before any code: current BGG XML API terms checked (registration + bearer token required since 2025), findings noted in CLAUDE.md. Registering the app is yours: see S1
+- [x] I enter my BGG username and get a short code (`GORE-XXXXXX`) to put in my BGG profile
+- [x] "Verify" fetches my profile and emits `BggAccountLinked` when the code is there
+- [x] A BGG username can be linked to only one player (DCB query on a `bgg:{username}` tag)
+- [x] Linking is optional; I can skip it and come back later (home page suggests it until done)
+- [x] Added: dev mode without `BGG_TOKEN` uses a fake BGG with a catalogue of ~45 well-known games
 
 ## S4 Collection sync
 

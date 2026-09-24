@@ -2,6 +2,7 @@ package gorefest.shell.web
 
 import gorefest.shell.App
 import gorefest.shell.auth.DevMailbox
+import gorefest.shell.bgg.FakeBggApi
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
@@ -31,6 +32,8 @@ fun Application.web(app: App) {
         context(app.login, app.config) { authRoutes() }
         context(app.ids, app.clock, app.login, app.config) { gameDayRoutes(app) }
         context(app.login, app.config) { inviteRoutes(app, app.invites) }
+        context(app.login) { bggRoutes(app) }
         if (app.config.dev && app.mailer is DevMailbox) devRoutes(app.mailer)
+        if (app.config.dev && app.bggApi is FakeBggApi) devBggRoutes(app.bggApi)
     }
 }
