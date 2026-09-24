@@ -49,16 +49,10 @@ import kotlinx.html.stream.createHTML
 import kotlinx.html.strong
 import kotlinx.html.id
 
-private val wizard = Wizard()
-
-/** For players who already did a round: a few pairs on what's still uncertain. */
-private val topUp = Wizard(minPairs = 3, maxPairs = 5)
-private val predictor = Predictor()
-
-/** Players with this many answers get a top-up round instead of the full one. */
+/** Players with this many answers get a top-up round (a few pairs on what's still uncertain) instead of the full one. */
 const val TOP_UP_AFTER = 10
 
-private fun wizardFor(topUpRound: Boolean) = if (topUpRound) topUp else wizard
+private fun App.wizardFor(topUpRound: Boolean) = if (topUpRound) topUpWizard else wizard
 
 /** The games a taste round draws from, and what we know about the player. */
 private data class RoundInputs(val pool: List<Game>, val shelf: List<Game>, val anchors: List<Game>, val player: PlayerGames)
@@ -75,10 +69,10 @@ fun Route.wizardRoutes(app: App) {
         return RoundInputs(pool, shelf.mapNotNull(app.catalog::get), anchors, player)
     }
 
-    fun RoundInputs.top(now: java.time.Instant) = predictor.favourites(player, shelf.ifEmpty { pool }, now).map { it.game.id }
+    fun RoundInputs.top(now: java.time.Instant) = app.predictor.favourites(player, shelf.ifEmpty { pool }, now).map { it.game.id }
 
     fun RoundInputs.focus(topUpRound: Boolean, now: java.time.Instant) =
-        if (topUpRound) topUp.uncertain(player, shelf, now).ifEmpty { null } else null
+        if (topUpRound) app.topUpWizard.uncertain(player, shelf, now).ifEmpty { null } else null
 
     get("/gamedays/{id}/taste") {
         authenticated {
@@ -88,8 +82,8 @@ fun Route.wizardRoutes(app: App) {
             val now = app.clock.instant()
             val topUpRound = inputs.player.history.comparisons.size >= TOP_UP_AFTER
             val round = RoundState(top = inputs.top(now))
-            val pair = (if (topUpRound) topUp.stalePair(inputs.player, app.catalog::get, now) else null)
-                ?: wizardFor(topUpRound).next(inputs.pool, inputs.anchors, inputs.player, round, now, inputs.focus(topUpRound, now))
+            val pair = (if (topUpRound) app.topUpWizard.stalePair(inputs.player, app.catalog::get, now) else null)
+                ?: app.wizardFor(topUpRound).next(inputs.pool, inputs.anchors, inputs.player, round, now, inputs.focus(topUpRound, now))
                 ?: return@authenticated redirect("/gamedays/${gameDay.id}/favourites")
             call.respondHtml {
                 page(
@@ -100,7 +94,7 @@ fun Route.wizardRoutes(app: App) {
                     },
                     mainClasses = "gf-wizard",
                     mainId = "wizard",
-                ) { wizardContent(gameDay, pair, round, topUpRound) }
+                ) { wizardContent(gameDay, pair, round, app.wizardFor(topUpRound).roundLength, topUpRound) }
             }
         }
     }
@@ -125,13 +119,13 @@ fun Route.wizardRoutes(app: App) {
 
             val inputs = inputs(gameDay, me)
             val topUpRound = form["mode"] == "topup"
-            val w = wizardFor(topUpRound)
+            val w = app.wizardFor(topUpRound)
             val round = w.advance(form.round(), WizardPair(a, b, basis), inputs.top(now))
             val next = if (w.shouldStop(round)) null else w.next(inputs.pool, inputs.anchors, inputs.player, round, now, inputs.focus(topUpRound, now))
             if (next == null) return@authenticated redirect("/gamedays/${gameDay.id}/favourites?answers=${round.step}")
             val html = createHTML().main("gf-body gf-wizard") {
                 id = "wizard"
-                wizardContent(gameDay, next, round, topUpRound)
+                wizardContent(gameDay, next, round, w.roundLength, topUpRound)
             }
             respondTextHtml(html)
         }
@@ -144,10 +138,10 @@ fun Route.wizardRoutes(app: App) {
             val inputs = inputs(gameDay, me)
             val now = app.clock.instant()
             val answers = call.parameters["answers"]?.toIntOrNull()
-            val favourites = predictor.favourites(inputs.player, inputs.shelf, now)
+            val favourites = app.predictor.favourites(inputs.player, inputs.shelf, now)
             val hostFavourites = if (inputs.shelf.isEmpty() && gameDay.host != me.id) {
                 val hosts = app.collectionSync.collection(gameDay.host).mapNotNull(app.catalog::get)
-                predictor.favourites(inputs.player, hosts, now, count = 2)
+                app.predictor.favourites(inputs.player, hosts, now, count = 2)
             } else emptyList()
             val hostName = login.names(listOf(gameDay.host))[gameDay.host] ?: "the host"
             call.respondHtml {
@@ -210,8 +204,7 @@ private fun Parameters.round() = RoundState(
     top = this["top"].orEmpty().split(',').mapNotNull { it.toIntOrNull()?.let(::BggId) },
 )
 
-private fun FlowContent.wizardContent(gameDay: GameDaySummary, pair: WizardPair, round: RoundState, topUpRound: Boolean) {
-    val total = wizardFor(topUpRound).roundLength
+private fun FlowContent.wizardContent(gameDay: GameDaySummary, pair: WizardPair, round: RoundState, total: Int, topUpRound: Boolean) {
     div("gf-progress") {
         role = "progressbar"
         attributes["aria-label"] = "Taste round"

@@ -108,11 +108,25 @@ data class Favourite(val game: Game, val score: Score, val reason: String)
  * they never compared it after playing), VIBE scores (appeal) for the rest.
  */
 class Predictor(private val model: TasteModel = BradleyTerry()) {
+    /**
+     * Played games: the PLAYED model. Unplayed games: appeal (VIBE) blended with what the PLAYED
+     * model expects, weighted by how well this player's vibes have predicted their enjoyment.
+     */
     fun enjoyment(player: PlayerGames, games: List<Game>, now: Instant): Map<BggId, Score> {
         val vibe = player.history.scores(model, Basis.VIBE, now)
         val played = player.history.scores(model, Basis.PLAYED, now)
+        val hasPlayedData = played.byGame.isNotEmpty()
+        val trust = vibeTrust(player.history, model, now)
         return games.associate { g ->
-            g.id to if (player.hasPlayed(g.id) && g.id in played.byGame) played[g.id] else vibe[g.id]
+            g.id to when {
+                player.hasPlayed(g.id) && g.id in played.byGame -> played[g.id]
+                !hasPlayedData -> vibe[g.id]
+                else -> {
+                    val a = vibe[g.id]
+                    val e = played[g.id]
+                    Score(trust * a.mean + (1 - trust) * e.mean, trust * a.variance + (1 - trust) * e.variance)
+                }
+            }
         }
     }
 

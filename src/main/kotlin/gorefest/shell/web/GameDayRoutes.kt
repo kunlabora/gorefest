@@ -162,7 +162,7 @@ fun Route.gameDayRoutes(app: App) {
             val uncertain = if (answers < TOP_UP_AFTER) 0 else {
                 val me = contextOf<CurrentPlayer>()
                 val player = gorefest.core.taste.PlayerGames(app.tastes.state[me.id] ?: gorefest.core.taste.TasteHistory(), app.collectionSync.collection(me.id))
-                gorefest.core.taste.Wizard().uncertain(player, shelf.map { it.first }, app.clock.instant()).size
+                app.topUpWizard.uncertain(player, shelf.map { it.first }, app.clock.instant()).size
             }
             val played = app.plays.state[gameDay.id].orEmpty().mapNotNull { log -> app.catalog[log.game]?.let { it to log } }
             call.respondHtml {

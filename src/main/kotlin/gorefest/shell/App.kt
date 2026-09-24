@@ -4,7 +4,12 @@ import gorefest.core.gameday.GameDays
 import gorefest.core.gameday.Plays
 import gorefest.core.gameday.Shelves
 import gorefest.core.player.BggAccounts
+import gorefest.core.matching.Matcher
+import gorefest.core.taste.FeatureModel
+import gorefest.core.taste.Predictor
+import gorefest.core.taste.TasteModel
 import gorefest.core.taste.Tastes
+import gorefest.core.taste.Wizard
 import gorefest.shell.auth.Login
 import gorefest.shell.auth.Mailer
 import gorefest.shell.bgg.BggApi
@@ -57,6 +62,13 @@ class App(
     val catalog = Catalog(db)
     val collectionSync = CollectionSync(db, bgg, catalog, clock, scope, bggRetry)
     val gameSearch = GameSearch(catalog, bgg, clock)
+
+    /** The taste model in use: v1 (features) since it beat v0 on replay. Swap here to compare versions. */
+    val tasteModel: TasteModel = FeatureModel(catalog::get)
+    val wizard = Wizard(tasteModel)
+    val topUpWizard = Wizard(tasteModel, minPairs = 3, maxPairs = 5)
+    val predictor = Predictor(tasteModel)
+    val matcher = Matcher(predictor)
 
     suspend fun start() {
         db.migrate()

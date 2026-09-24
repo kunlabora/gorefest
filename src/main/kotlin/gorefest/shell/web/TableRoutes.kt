@@ -35,8 +35,6 @@ import kotlinx.html.section
 import kotlinx.html.span
 import kotlin.uuid.Uuid
 
-private val matcher = Matcher()
-
 /** Time options: label to budget in minutes (null: any). */
 private val TIMES = listOf("Any" to null, "45m" to 45, "90m" to 90, "2h" to 120, "3h+" to 240)
 
@@ -51,7 +49,7 @@ fun Route.tableRoutes(app: App) {
             TablePlayer(id, names[id] ?: "Someone", PlayerGames(app.tastes.state[id] ?: TasteHistory(), app.collectionSync.collection(id)))
         }
         val shelf = app.shelves.state[gameDay.id].orEmpty().mapNotNull { entry -> app.catalog[entry.game]?.let { it to entry } }
-        return matcher.suggest(table, shelf, budget, app.clock.instant(), speed = app.groupSpeed(chosen)) to table.size
+        return app.matcher.suggest(table, shelf, budget, app.clock.instant(), speed = app.groupSpeed(chosen)) to table.size
     }
 
     get("/gamedays/{id}/table") {

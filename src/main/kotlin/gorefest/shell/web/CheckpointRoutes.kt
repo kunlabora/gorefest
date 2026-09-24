@@ -49,8 +49,6 @@ import kotlinx.html.strong
 import java.time.ZoneId
 import kotlin.uuid.Uuid
 
-private val wizard = Wizard()
-
 /** Duration options: label to minutes. */
 private val DURATIONS = listOf("15m" to 15, "30m" to 30, "45m" to 45, "1h" to 60, "90m" to 90, "2h" to 120, "3h+" to 180)
 
@@ -125,7 +123,7 @@ fun Route.checkpointRoutes(app: App) {
             val tableLink = "/gamedays/${gameDay.id}/table?" + players.joinToString("&") { "players=$it" }
             val player = PlayerGames(app.tastes.state[me.id] ?: TasteHistory(), app.collectionSync.collection(me.id))
             val candidates = (player.history.played.filterValues { it }.keys + player.owned + player.history.comparedGames).mapNotNull(app.catalog::get)
-            val other = wizard.partner(player, game.id, candidates, app.clock.instant()) ?: return@authenticated redirect(tableLink)
+            val other = app.wizard.partner(player, game.id, candidates, app.clock.instant()) ?: return@authenticated redirect(tableLink)
             call.respondHtml {
                 page("One quick question", appBar = { appBarTitle(gameDay.title); a(tableLink, classes = "gf-btn gf-btn--ghost gf-btn--sm") { attributes["style"] = "margin-left: auto"; +"Skip" } }, mainClasses = "gf-wizard") {
                     div("gf-notice gf-notice--good") {

@@ -20,7 +20,7 @@ A story is done when every criterion is ticked and covered by a test (decider gi
 | S12 | [Checkpoint play log](#s12-checkpoint-play-log)   | ✅     | S11        |
 | S13 | [Host readiness view](#s13-host-readiness-view)   | ✅     | S10        |
 | S14 | [Returning-player top-up](#s14-returning-player-top-up) | ✅ | S10      |
-| S15 | [Taste model v1: features, appeal vs enjoyment](#s15-taste-model-v1-features-appeal-vs-enjoyment) | 📋 | S12 |
+| S15 | [Taste model v1: features, appeal vs enjoyment](#s15-taste-model-v1-features-appeal-vs-enjoyment) | ✅ | S12 |
 | S16 | [Auto-close and summary](#s16-auto-close-and-summary) | 📋   | S12        |
 
 S1–S13 is the MVP. S14–S16 make it good.
@@ -198,9 +198,9 @@ Follow-ups, not blocking:
 
 *As a player I want good suggestions for games I've never compared.*
 
-- [ ] Feature weights over mechanics, categories, weight, playtime, interaction, best-count poll, separate for appeal and enjoyment
-- [ ] Per-player calibration: how well my vibes predict my post-play enjoyment
-- [ ] Beats v0 on the replay harness before it replaces v0
+- [x] Feature weights over mechanics, categories, weight, playtime and best-count poll, separate for appeal (VIBE) and enjoyment (PLAYED). BGG has no "interaction" field; mechanics stand in for it
+- [x] Per-player calibration: how well my vibes predict my post-play enjoyment (`vibeTrust`), used to blend appeal and expected enjoyment for unplayed games
+- [x] Beats v0 on the replay harness (lower log loss, higher accuracy on a feature-driven player) and now replaces it in the app
 
 ## S16 Auto-close and summary
 

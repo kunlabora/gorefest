@@ -15,9 +15,12 @@ data class Score(val mean: Double, val variance: Double) {
     val sd get() = sqrt(variance)
 }
 
-/** One player's scores for one basis. Games never compared get the prior. */
-data class Scores(val byGame: Map<BggId, Score>, val prior: Score) {
-    operator fun get(game: BggId): Score = byGame[game] ?: prior
+/**
+ * One player's scores for one basis. Games never compared get [unseen] (a model that generalises,
+ * like one on game features) or else the prior.
+ */
+data class Scores(val byGame: Map<BggId, Score>, val prior: Score, val unseen: ((BggId) -> Score)? = null) {
+    operator fun get(game: BggId): Score = byGame[game] ?: unseen?.invoke(game) ?: prior
 
     /** Probability that the player prefers [a] over [b], accounting for uncertainty. */
     fun pPrefers(a: BggId, b: BggId): Double {

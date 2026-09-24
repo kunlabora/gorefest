@@ -86,7 +86,7 @@ Tag convention: `player:{id}`, `gameday:{id}`, `game:{bggId}`.
 - Separate **appeal** (VIBE) from **enjoyment** (PLAYED); separate feature weights.
 - Calibrate per player: how well their vibes predict their post-play enjoyment.
 - Time decay: half-life 6–12 months; occasionally re-ask old pairs.
-- Model is a pure projection of `ComparisonRecorded` events, so algorithm versions can be compared by replay.
+- Model is a pure projection of `ComparisonRecorded` events, so algorithm versions can be compared by replay (`Evaluation`). `App.tasteModel` picks the version: `FeatureModel` (v1) since it beat `BradleyTerry` (v0).
 
 ## Wizard
 
