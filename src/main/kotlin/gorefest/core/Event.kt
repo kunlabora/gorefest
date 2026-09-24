@@ -66,6 +66,13 @@ data class GameDayDetailsChanged(
     override val tags get() = setOf(Tags.gameDay(gameDay))
 }
 
+/** The host replaced the invite link; links signed for earlier versions stop working. */
+@Serializable
+@SerialName("InviteLinkRotated")
+data class InviteLinkRotated(val gameDay: GameDayId, val version: Int) : Event {
+    override val tags get() = setOf(Tags.gameDay(gameDay))
+}
+
 @Serializable
 @SerialName("PlayerJoined")
 data class PlayerJoined(val gameDay: GameDayId, val player: PlayerId) : Event {

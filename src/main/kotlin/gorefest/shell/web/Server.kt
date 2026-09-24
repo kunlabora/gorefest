@@ -29,7 +29,8 @@ fun Application.web(app: App) {
         get("/health") { call.respondText("ok") }
         staticResources("/static", "static")
         context(app.login, app.config) { authRoutes() }
-        context(app.ids, app.clock, app.login) { gameDayRoutes(app) }
+        context(app.ids, app.clock, app.login, app.config) { gameDayRoutes(app) }
+        context(app.login, app.config) { inviteRoutes(app, app.invites) }
         if (app.config.dev && app.mailer is DevMailbox) devRoutes(app.mailer)
     }
 }

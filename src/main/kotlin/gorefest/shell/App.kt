@@ -19,6 +19,7 @@ class App(
     val gameDays = Projector(GameDays, db, store)
     val commands = CommandHandler(db, store, afterAppend = { gameDays.catchUp() })
     val login = Login(db, commands, mailer, config, clock, ids)
+    val invites = InviteLinks(config.secretKey)
 
     suspend fun start() {
         db.migrate()

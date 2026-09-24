@@ -11,7 +11,7 @@ A story is done when every criterion is ticked and covered by a test (decider gi
 | S3  | [Link BGG account](#s3-link-bgg-account)          | 📋     | S2         |
 | S4  | [Collection sync](#s4-collection-sync)            | 📋     | S3         |
 | S5  | [Create and edit a game day](#s5-create-and-edit-a-game-day) | ✅ | S2   |
-| S6  | [Invite link and landing page](#s6-invite-link-and-landing-page) | 📋 | S5 |
+| S6  | [Invite link and landing page](#s6-invite-link-and-landing-page) | ✅ | S5 |
 | S7  | [Bring games from my collection](#s7-bring-games-from-my-collection) | 📋 | S4, S6 |
 | S8  | [Bring a game by search](#s8-bring-a-game-by-search) | 📋  | S7         |
 | S9  | [Taste model v0: per-game scores](#s9-taste-model-v0-per-game-scores) | 📋 | S0 |
@@ -48,7 +48,8 @@ S1–S13 is the MVP. S14–S16 make it good.
 - [ ] App config (DB URL, mail API key, signing secret) comes from an env file that isn't in the repo
 - [ ] Nightly `pg_dump` uploaded to object storage; restoring it into a fresh database is tested once and written down
 - [ ] `/health` checks DB connectivity; a failed deploy leaves the previous jar running
-- [ ] A real mail provider sends login mail; logging in from WhatsApp's and Signal's in-app browsers works on a real phone
+- [ ] A real mail provider sends login mail; logging in from WhatsApp's and Signal's in-app browsers works on a real phone, and invite links show their preview there
+- [ ] The server has fontconfig and a font installed, for the invite preview image
 - [ ] Login mails are rate-limited per email and per IP
 
 ## S2 Magic-link login
@@ -104,12 +105,13 @@ Follow-ups, not blocking:
 
 *As a host I want to share one link in the group chat so that friends can join.*
 
-- [ ] The game day page has a copyable invite link (signed token, valid until the game day ends)
-- [ ] The host can rotate the link (`InviteLinkRotated`); the old link stops working
-- [ ] Pasting the link in WhatsApp/Signal shows an Open Graph preview: title, date, place, shelf size
-- [ ] Opening the link shows a landing page (host, date, place, shelf) without logging in
-- [ ] "Join" goes through login if needed, then emits `PlayerJoined` and lands me on the game day
-- [ ] An ended game day's link shows "this game day has ended"
+- [x] The game day page has a copyable invite link (signed token, valid until the game day ends), for everyone who joined
+- [x] The host can rotate the link (`InviteLinkRotated`); the old link stops working
+- [x] The link has Open Graph tags and a rendered 1200×630 image: title, date, place, going, shelf size (shelf count comes with S7; checked in real chat apps in S1)
+- [x] Opening the link shows a landing page (host, date, place, who's going) without logging in
+- [x] "Join" goes through login if needed, then emits `PlayerJoined` and lands me on the game day
+- [x] An ended game day's link shows "this game day has ended"
+- [x] Added: joining only works through a valid invite; the game day page is for members only
 
 ## S7 Bring games from my collection
 

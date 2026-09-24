@@ -1,6 +1,8 @@
 package gorefest.shell.web
 
 import gorefest.core.GameDayEnded
+import gorefest.core.PlayerId
+import kotlin.uuid.Uuid
 import gorefest.core.PlayerJoined
 import gorefest.core.gameday.anna
 import gorefest.core.gameday.bram
@@ -21,12 +23,13 @@ import org.junit.jupiter.api.Test
 class GameDayRoutesTest {
     private val test = TestApp()
     private val app = test.app
+    private val timId = PlayerId(Uuid.random())
     private lateinit var tim: String
 
     @BeforeEach
     fun reset(): Unit = kotlinx.coroutines.runBlocking {
         test.reset()
-        tim = test.loggedIn("Tim")
+        tim = test.loggedIn("Tim", id = timId)
         test.loggedIn("Anna", id = anna)
     }
 
@@ -125,68 +128,26 @@ class GameDayRoutesTest {
     }
 
     @Test
-    fun `a player who hasn't joined sees a join button that swaps the player list`() = webTest { client ->
-        given(gameDayCreated(host = anna), PlayerJoined(gorefest7, anna))
-
-        val page = client.get("/gamedays/$gorefest7").page()
-
-        val join = page.one("#players button")
-        join.attr("hx-post") shouldBe "/gamedays/$gorefest7/join"
-        join.attr("hx-target") shouldBe "#players"
-        join.attr("hx-swap") shouldBe "outerHTML"
-    }
-
-    @Test
-    fun `joining returns the updated player list`() = webTest { client ->
-        given(gameDayCreated(host = anna), PlayerJoined(gorefest7, anna))
-
-        val players = client.htmxPost("/gamedays/$gorefest7/join").fragment()
-
-        players shouldReplace "players"
-        players.players() shouldContainExactly listOf("Anna Host", "Tim You")
-        players.select("button").shouldBeEmpty()
-    }
-
-    @Test
-    fun `joining an ended game day explains why`() = webTest { client ->
-        given(gameDayCreated(host = anna), PlayerJoined(gorefest7, anna), GameDayEnded(gorefest7))
-
-        val response = client.htmxPost("/gamedays/$gorefest7/join").fragment()
-
-        response shouldReplace "players"
-        response.text() shouldBe "This game day has ended"
-    }
-
-    @Test
     fun `unknown game days are not found`() = webTest { client ->
         client.get("/gamedays/00000000-0000-0000-0000-00000000beef").status shouldBe HttpStatusCode.NotFound
         client.get("/gamedays/not-a-uuid").status shouldBe HttpStatusCode.NotFound
-        client.post("/gamedays/not-a-uuid/join").status shouldBe HttpStatusCode.NotFound
-    }
-
-    @Test
-    fun `joining an unknown game day explains why`() = webTest { client ->
-        val response = client.htmxPost("/gamedays/00000000-0000-0000-0000-00000000beef/join").fragment()
-
-        response shouldReplace "players"
-        response.text() shouldBe "No such game day"
     }
 
     @Test
     fun `players show as initials and names`() = webTest { client ->
-        given(gameDayCreated(host = anna), PlayerJoined(gorefest7, anna))
+        given(gameDayCreated(host = anna), PlayerJoined(gorefest7, anna), PlayerJoined(gorefest7, timId))
 
-        client.get("/gamedays/$gorefest7").page().one("#players .gf-avatar").text() shouldBe "A"
+        client.get("/gamedays/$gorefest7").page().select("#players .gf-avatar").map { it.text() } shouldContainExactly listOf("A", "T")
     }
 
     @Test
     fun `players without a name show as unknown`() = webTest { client ->
-        given(gameDayCreated(host = bram), PlayerJoined(gorefest7, bram))
+        given(gameDayCreated(host = bram), PlayerJoined(gorefest7, bram), PlayerJoined(gorefest7, timId))
 
         val page = client.get("/gamedays/$gorefest7").page()
 
-        page.players() shouldContainExactly listOf("Unknown player Host")
-        page.one("#players .gf-avatar").text() shouldBe "?"
+        page.players() shouldContainExactly listOf("Unknown player Host", "Tim You")
+        page.select("#players .gf-avatar").first()!!.text() shouldBe "?"
     }
 
     @Test
@@ -240,7 +201,7 @@ class GameDayRoutesTest {
 
     @Test
     fun `other players can't edit`() = webTest { client ->
-        given(gameDayCreated(host = anna), PlayerJoined(gorefest7, anna))
+        given(gameDayCreated(host = anna), PlayerJoined(gorefest7, anna), PlayerJoined(gorefest7, timId))
 
         client.get("/gamedays/$gorefest7").page().select(".gf-appbar a[href$=/edit]").shouldBeEmpty()
         client.get("/gamedays/$gorefest7/edit").status shouldBe HttpStatusCode.NotFound

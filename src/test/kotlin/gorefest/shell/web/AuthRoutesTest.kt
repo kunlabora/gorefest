@@ -56,7 +56,7 @@ class AuthRoutesTest {
 
     @Test
     fun `htmx requests go to login from the page they were made on`() = test.webTest { client ->
-        val response = client.htmxPost("/gamedays/abc/join", currentUrl = "http://localhost/gamedays/abc")
+        val response = client.htmxPost("/gamedays/abc/invite", currentUrl = "http://localhost/gamedays/abc")
 
         response.headers["HX-Redirect"] shouldBe "/login?returnTo=%2Fgamedays%2Fabc"
     }

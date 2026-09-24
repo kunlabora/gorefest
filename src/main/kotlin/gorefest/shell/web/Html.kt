@@ -3,6 +3,7 @@ package gorefest.shell.web
 import gorefest.core.PlayerId
 import kotlinx.html.DIV
 import kotlinx.html.FlowContent
+import kotlinx.html.HEAD
 import kotlinx.html.HTML
 import kotlinx.html.HTMLTag
 import kotlinx.html.MAIN
@@ -39,6 +40,7 @@ fun HTML.page(
     title: String,
     appBar: FlowContent.() -> Unit = {},
     dock: (DIV.() -> Unit)? = null,
+    head: HEAD.() -> Unit = {},
     content: MAIN.() -> Unit,
 ) {
     lang = "en"
@@ -50,6 +52,7 @@ fun HTML.page(
         link(rel = "stylesheet", href = "/static/css/gorefest.css")
         script(src = "/webjars/htmx.org/dist/htmx.min.js") {}
         script(src = "/webjars/hyperscript.org/dist/_hyperscript.min.js") {}
+        head()
     }
     body {
         div("gf-screen") {

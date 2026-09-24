@@ -5,6 +5,7 @@ import gorefest.core.GameDayCreated
 import gorefest.core.GameDayDetailsChanged
 import gorefest.core.GameDayEnded
 import gorefest.core.GameDayId
+import gorefest.core.InviteLinkRotated
 import gorefest.core.PlayerId
 import gorefest.core.PlayerJoined
 import gorefest.core.eventsourcing.Projection
@@ -19,6 +20,8 @@ data class GameDaySummary(
     val timeZone: String,
     val players: List<PlayerId>,
     val ended: Boolean,
+    /** Only invite links signed for this version work. */
+    val inviteVersion: Int = 0,
 )
 
 /** Read model of all game days, keyed by id. */
@@ -30,6 +33,7 @@ object GameDays : Projection<Map<GameDayId, GameDaySummary>> {
             GameDaySummary(gameDay, host, title, date, place, timeZone, players = emptyList(), ended = false)
         })
         is GameDayDetailsChanged -> state.update(event.gameDay) { it.copy(title = event.title, date = event.date, place = event.place) }
+        is InviteLinkRotated -> state.update(event.gameDay) { it.copy(inviteVersion = event.version) }
         is PlayerJoined -> state.update(event.gameDay) { it.copy(players = it.players + event.player) }
         is GameDayEnded -> state.update(event.gameDay) { it.copy(ended = true) }
         else -> state

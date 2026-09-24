@@ -8,10 +8,12 @@ import gorefest.core.gameday.EditGameDay
 import gorefest.core.gameday.EditGameDayDecider
 import gorefest.core.gameday.GameDaySummary
 import gorefest.core.gameday.GameDays
-import gorefest.core.gameday.JoinGameDay
-import gorefest.core.gameday.JoinGameDayDecider
+import gorefest.core.gameday.RotateInviteLink
+import gorefest.core.gameday.RotateInviteLinkDecider
 import gorefest.core.PlayerId
 import gorefest.shell.App
+import gorefest.shell.AppConfig
+import gorefest.shell.InviteLinks
 import gorefest.shell.auth.Login
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.Parameters
@@ -49,7 +51,7 @@ import java.time.Clock
 
 private const val DEFAULT_TIME_ZONE = "Europe/Brussels"
 
-context(ids: IdGenerator, clock: Clock, login: Login)
+context(ids: IdGenerator, clock: Clock, login: Login, config: AppConfig)
 fun Route.gameDayRoutes(app: App) {
     get("/") {
         authenticated {
@@ -145,7 +147,8 @@ fun Route.gameDayRoutes(app: App) {
 
     get("/gamedays/{id}") {
         authenticated {
-            val gameDay = gameDayFromPath(app) ?: return@authenticated call.respond(HttpStatusCode.NotFound)
+            val gameDay = gameDayFromPath(app)?.takeIf { contextOf<CurrentPlayer>().id in it.players }
+                ?: return@authenticated call.respond(HttpStatusCode.NotFound)
             val names = login.names(gameDay.players)
             call.respondHtml {
                 val isHost = gameDay.host == contextOf<CurrentPlayer>().id
@@ -165,25 +168,23 @@ fun Route.gameDayRoutes(app: App) {
                         h2("gf-h2") { +"Players" }
                         consumer.players(gameDay, names)
                     }
+                    if (!gameDay.ended) section("gf-section") {
+                        h2("gf-h2") { +"Invite friends" }
+                        consumer.invite(gameDay, app.invites)
+                    }
                 }
             }
         }
     }
 
-    post("/gamedays/{id}/join") {
+    post("/gamedays/{id}/invite") {
         authenticated {
-            val gameDayId = call.parameters["id"]?.let { runCatching { GameDayId.parse(it) }.getOrNull() }
-                ?: return@authenticated call.respond(HttpStatusCode.NotFound)
-            val command = JoinGameDay(gameDayId, contextOf<CurrentPlayer>().id)
-            when (val decision = app.commands.handle(JoinGameDayDecider, command)) {
-                is Decision.Accepted -> {
-                    val gameDay = app.gameDays.state.getValue(gameDayId)
-                    val names = login.names(gameDay.players)
-                    respondFragment { players(gameDay, names) }
-                }
-                is Decision.Rejected -> respondFragment(HttpStatusCode.OK) {
+            val gameDay = gameDayFromPath(app) ?: return@authenticated call.respond(HttpStatusCode.NotFound)
+            when (val decision = app.commands.handle(RotateInviteLinkDecider, RotateInviteLink(gameDay.id, contextOf<CurrentPlayer>().id))) {
+                is Decision.Accepted -> respondFragment { invite(app.gameDays.state.getValue(gameDay.id), app.invites) }
+                is Decision.Rejected -> respondFragment(HttpStatusCode.Forbidden) {
                     div("gf-notice gf-notice--error") {
-                        id = "players"
+                        id = "invite"
                         role = "alert"
                         icon("alert")
                         p { +decision.reason }
@@ -215,15 +216,31 @@ private fun TagConsumer<*>.players(gameDay: GameDaySummary, names: Map<PlayerId,
                 }
             }
         }
-        if (me.id !in gameDay.players && !gameDay.ended) {
-            button(classes = "gf-btn gf-btn--primary gf-btn--lg gf-btn--block") {
-                hx("post", "/gamedays/${gameDay.id}/join")
-                hx("target", "#players")
-                hx("swap", "outerHTML")
-                hyperscript("on click set @aria-busy to 'true'")
-                span("gf-spin") { attributes["aria-hidden"] = "true" }
-                +"Join ${gameDay.title}"
+    }
+}
+
+/** The invite link to copy; the host can also replace it, which kills the old one. */
+context(me: CurrentPlayer, config: AppConfig)
+private fun TagConsumer<*>.invite(gameDay: GameDaySummary, invites: InviteLinks) {
+    val link = "${config.baseUrl}/i/${invites.token(gameDay)}"
+    div("gf-stack") {
+        id = "invite"
+        p("gf-small gf-muted") { +"Share this link in your group chat. Anyone with it can join." }
+        div("gf-copy") {
+            span("gf-copy__value gf-copy__value--small") { +link }
+            button(classes = "gf-btn gf-btn--secondary gf-btn--sm") {
+                attributes["data-link"] = link
+                hyperscript("on click call navigator.clipboard.writeText(@data-link) then put 'Copied' into me")
+                +"Copy"
             }
+        }
+        if (me.id == gameDay.host) button(classes = "gf-btn gf-btn--ghost gf-btn--sm") {
+            hx("post", "/gamedays/${gameDay.id}/invite")
+            hx("target", "#invite")
+            hx("swap", "outerHTML")
+            hx("confirm", "The current link will stop working. Make a new one?")
+            icon("refresh")
+            +"Make a new link"
         }
     }
 }

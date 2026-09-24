@@ -110,7 +110,7 @@ Tag convention: `player:{id}`, `gameday:{id}`, `game:{bggId}`.
 
 **On the day**: tick who's at the table → suggestions. At each checkpoint: "what did you play, who, how long?" + one comparison → new suggestions. Game day auto-closes at midnight; summary to everyone.
 
-Invite link: signed token, valid until the game day ends, host can rotate it. No email invites. No guests; everyone needs a profile.
+Invite link: signed token (`InviteLinks`: game day id + version, HMAC), valid until the game day ends, host can rotate it (bumps the version). Joining only happens through a valid invite; game day pages are members-only. No email invites. No guests; everyone needs a profile.
 
 ## MVP scope
 
