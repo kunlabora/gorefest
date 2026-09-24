@@ -14,7 +14,7 @@ A story is done when every criterion is ticked and covered by a test (decider gi
 | S6  | [Invite link and landing page](#s6-invite-link-and-landing-page) | ✅ | S5 |
 | S7  | [Bring games from my collection](#s7-bring-games-from-my-collection) | ✅ | S4, S6 |
 | S8  | [Bring a game by search](#s8-bring-a-game-by-search) | ✅  | S7         |
-| S9  | [Taste model v0: per-game scores](#s9-taste-model-v0-per-game-scores) | 📋 | S0 |
+| S9  | [Taste model v0: per-game scores](#s9-taste-model-v0-per-game-scores) | ✅ | S0 |
 | S10 | [First-time wizard](#s10-first-time-wizard)       | 📋     | S7, S9     |
 | S11 | [Ad hoc suggestions](#s11-ad-hoc-suggestions)     | 📋     | S10        |
 | S12 | [Checkpoint play log](#s12-checkpoint-play-log)   | 📋     | S11        |
@@ -139,11 +139,11 @@ Follow-ups, not blocking:
 
 *As a developer I want a replayable taste model so that algorithm changes can be compared.*
 
-- [ ] `ComparisonRecorded(player, winner, loser, basis, at)` plus a tie outcome for "both great" / "both meh"
-- [ ] **Decision needed:** how "haven't played" is recorded (proposal: `GamePlayStatusDeclared(player, game, played)`) so the wizard switches to VIBE and stops asking PLAYED for that game
-- [ ] Per-player Bradley–Terry scores with uncertainty, separate for VIBE and PLAYED, as a pure projection
-- [ ] Time decay with a configurable half-life (default 9 months)
-- [ ] A replay harness runs two model versions over the same log and reports how well each predicts held-out comparisons
+- [x] `ComparisonRecorded(player, a, b, result, basis, at)` with result A, B, BOTH_GREAT or BOTH_MEH
+- [x] **Decided:** "haven't played" is `GamePlayStatusDeclared(player, game, played)`, so the wizard switches to VIBE and stops asking PLAYED for that game
+- [x] Per-player Bradley–Terry scores with uncertainty, separate for VIBE and PLAYED, fitted from the `Tastes` projection; ties also count against a virtual average game, so "both great" lifts both
+- [x] Time decay with a configurable half-life (default 9 months)
+- [x] A replay harness (`Evaluation`) predicts each comparison from earlier ones only and reports accuracy and log loss per model version; v0 beats the coin flip and gets within 0.1 of the best possible on a synthetic player
 
 ## S10 First-time wizard
 

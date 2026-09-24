@@ -44,6 +44,17 @@ class EventStoreTest {
     }
 
     @Test
+    suspend fun `events with timestamps and enums survive the round trip`() {
+        val comparison = gorefest.core.ComparisonRecorded(
+            anna, gorefest.core.BggId(1), gorefest.core.BggId(2), gorefest.core.ComparisonResult.BOTH_GREAT,
+            gorefest.core.Basis.PLAYED, java.time.Instant.parse("2026-09-24T10:15:30.123Z"),
+        )
+        db.transaction { store.append(listOf(comparison)) }
+
+        db.transaction { store.readAll(after = 0) }.single().event shouldBe comparison
+    }
+
+    @Test
     suspend fun `a query item needs every tag`() {
         db.transaction { store.append(listOf(PlayerJoined(gorefest7, anna), PlayerJoined(gorefest7, bram))) }
 

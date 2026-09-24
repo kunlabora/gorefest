@@ -3,6 +3,7 @@ package gorefest.shell
 import gorefest.core.gameday.GameDays
 import gorefest.core.gameday.Shelves
 import gorefest.core.player.BggAccounts
+import gorefest.core.taste.Tastes
 import gorefest.shell.auth.Login
 import gorefest.shell.auth.Mailer
 import gorefest.shell.bgg.BggApi
@@ -43,7 +44,8 @@ class App(
     val gameDays = Projector(GameDays, db, store)
     val bggAccounts = Projector(BggAccounts, db, store)
     val shelves = Projector(Shelves, db, store)
-    private val projectors = listOf(gameDays, bggAccounts, shelves)
+    val tastes = Projector(Tastes, db, store)
+    private val projectors = listOf(gameDays, bggAccounts, shelves, tastes)
     val commands = CommandHandler(db, store, afterAppend = { catchUp() })
 
     val login = Login(db, commands, mailer, config, clock, ids)

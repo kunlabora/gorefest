@@ -4,6 +4,7 @@ import gorefest.core.eventsourcing.Tag
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.serializer
+import java.time.Instant
 import java.time.LocalDate
 
 /**
@@ -106,6 +107,32 @@ data class GameUnbrought(val gameDay: GameDayId, val player: PlayerId, val game:
 @SerialName("PlayWishChanged")
 data class PlayWishChanged(val gameDay: GameDayId, val player: PlayerId, val game: BggId, val wantsToPlay: Boolean) : Event {
     override val tags get() = setOf(Tags.gameDay(gameDay), Tags.player(player), Tags.game(game))
+}
+
+/** VIBE: "which would you rather try?" (unplayed). PLAYED: "which did you enjoy more?". */
+enum class Basis { VIBE, PLAYED }
+
+/** Both great / both meh say something absolute about the pair, not just which one wins. */
+enum class ComparisonResult { A, B, BOTH_GREAT, BOTH_MEH }
+
+@Serializable
+@SerialName("ComparisonRecorded")
+data class ComparisonRecorded(
+    val player: PlayerId,
+    val a: BggId,
+    val b: BggId,
+    val result: ComparisonResult,
+    val basis: Basis,
+    @Serializable(with = InstantSerializer::class) val at: Instant,
+) : Event {
+    override val tags get() = setOf(Tags.player(player), Tags.game(a), Tags.game(b))
+}
+
+/** The player told us whether they've played a game, e.g. "haven't played" in the wizard. */
+@Serializable
+@SerialName("GamePlayStatusDeclared")
+data class GamePlayStatusDeclared(val player: PlayerId, val game: BggId, val played: Boolean) : Event {
+    override val tags get() = setOf(Tags.player(player), Tags.game(game))
 }
 
 @Serializable
