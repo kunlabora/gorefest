@@ -38,6 +38,7 @@ dependencies {
     implementation(libs.ktor.server.webjars)
     implementation(libs.ktor.server.call.logging)
     implementation(libs.ktor.server.status.pages)
+    implementation(libs.ktor.server.forwarded.header)
     implementation(libs.coroutines.core)
     implementation(libs.serialization.json)
     implementation(libs.kotlinx.html)

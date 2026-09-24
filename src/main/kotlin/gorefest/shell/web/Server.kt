@@ -8,6 +8,7 @@ import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.http.content.staticResources
 import io.ktor.server.plugins.calllogging.CallLogging
+import io.ktor.server.plugins.forwardedheaders.XForwardedHeaders
 import io.ktor.server.plugins.statuspages.StatusPages
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
@@ -19,6 +20,8 @@ private val log = LoggerFactory.getLogger("gorefest.web")
 
 fun Application.web(app: App) {
     install(CallLogging)
+    // Caddy in front sets X-Forwarded-For. Safe to trust only because the app listens on localhost.
+    install(XForwardedHeaders)
     install(Webjars)
     install(StatusPages) {
         exception<Throwable> { call, cause ->
@@ -27,7 +30,11 @@ fun Application.web(app: App) {
         }
     }
     routing {
-        get("/health") { call.respondText("ok") }
+        get("/health") {
+            // The deploy script waits for this before switching over, so it checks the database too.
+            val dbUp = runCatching { app.db.transaction { contextOf<gorefest.shell.db.Tx>().connection.isValid(2) } }.getOrDefault(false)
+            if (dbUp) call.respondText("ok") else call.respondText("database unavailable", status = HttpStatusCode.ServiceUnavailable)
+        }
         staticResources("/static", "static")
         context(app.login, app.config) { authRoutes() }
         context(app.ids, app.clock, app.login, app.config) { gameDayRoutes(app) }

@@ -1,0 +1,20 @@
+# /etc/systemd/system/gorefest.service
+[Unit]
+Description=Gorefest game-day matcher
+After=network-online.target postgresql.service
+Wants=network-online.target
+
+[Service]
+User=gorefest
+WorkingDirectory=/opt/gorefest
+EnvironmentFile=/etc/gorefest/env
+ExecStart=/usr/bin/java -Xmx384m -Djava.awt.headless=true -jar /opt/gorefest/current/gorefest.jar
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/opt/gorefest
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

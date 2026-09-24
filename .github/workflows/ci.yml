@@ -13,3 +13,39 @@ jobs:
           java-version: 25
       - uses: gradle/actions/setup-gradle@v5
       - run: ./gradlew test buildFatJar
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gorefest-jar
+          path: build/libs/gorefest.jar
+
+  deploy:
+    needs: build
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    concurrency: deploy
+    env:
+      HAS_SERVER: ${{ secrets.DEPLOY_HOST != '' }}
+    steps:
+      - uses: actions/checkout@v5
+        if: env.HAS_SERVER == 'true'
+      - uses: actions/download-artifact@v4
+        if: env.HAS_SERVER == 'true'
+        with:
+          name: gorefest-jar
+      - name: Deploy
+        if: env.HAS_SERVER == 'true'
+        env:
+          HOST: ${{ secrets.DEPLOY_HOST }}
+          USER: ${{ secrets.DEPLOY_USER }}
+          KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$KEY" > ~/.ssh/deploy && chmod 600 ~/.ssh/deploy
+          echo "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+          scp -i ~/.ssh/deploy gorefest.jar deploy/deploy.sh "$USER@$HOST:/tmp/"
+          ssh -i ~/.ssh/deploy "$USER@$HOST" 'bash /tmp/deploy.sh /tmp/gorefest.jar'
+      - name: No server configured
+        if: env.HAS_SERVER != 'true'
+        run: |
+          echo "Skipping deploy. Set DEPLOY_HOST, DEPLOY_USER, DEPLOY_SSH_KEY and DEPLOY_KNOWN_HOSTS to enable it."

@@ -263,6 +263,29 @@ class AuthRoutesTest {
     }
 
     @Test
+    fun `at most five codes per email per hour`() = test.webTest { client ->
+        repeat(5) { client.askForCode().location shouldStartWith "/login/code" }
+
+        val refused = client.htmxPost("/login", parameters { append("email", "kim@example.com"); append("returnTo", "/") }).fragment()
+        refused.one(".gf-error").text() shouldBe "That's a lot of codes. Wait a bit, then try again."
+        mailbox.all shouldHaveSize 5
+
+        test.clock.advance(Duration.ofMinutes(61))
+        client.askForCode().location shouldStartWith "/login/code"
+    }
+
+    @Test
+    fun `at most twenty codes per address per hour, whatever the email`() = test.webTest { client ->
+        suspend fun ask(i: Int, from: String) = client.submitForm("/login", parameters { append("email", "p$i@example.com"); append("returnTo", "/") }) {
+            header("X-Forwarded-For", from)
+        }
+        repeat(20) { ask(it, "203.0.113.7").location shouldStartWith "/login/code" }
+
+        ask(20, "203.0.113.7").status shouldBe HttpStatusCode.OK // the form again, with the error
+        ask(21, "198.51.100.1").location shouldStartWith "/login/code"
+    }
+
+    @Test
     fun `outside dev mode there is no dev mailbox`() {
         val prod = TestApp(AppConfig.dev().copy(dev = false))
         prod.webTest { client ->

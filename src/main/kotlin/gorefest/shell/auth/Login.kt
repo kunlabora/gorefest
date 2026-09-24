@@ -38,13 +38,25 @@ class Login(
     private val attempts = LoginAttempts()
     private val sessions = Sessions()
 
-    /** Sends the mail and returns the attempt id, which the code form posts back. */
-    suspend fun request(email: String, returnTo: String): Uuid {
+    sealed interface Requested {
+        /** The mail went out; the code form posts [attempt] back. */
+        data class Sent(val attempt: Uuid) : Requested
+
+        /** Too many codes for this email or from this address lately. */
+        data object TooMany : Requested
+    }
+
+    private val perAddress = RateLimiter(limit = MAILS_PER_ADDRESS_PER_HOUR, window = Duration.ofHours(1), clock)
+
+    /** Sends the mail, unless [email] or [address] asked for too many codes in the last hour. */
+    suspend fun request(email: String, returnTo: String, address: String = "unknown"): Requested {
+        val recent = db.transaction { attempts.countSince(email, clock.instant() - Duration.ofHours(1)) }
+        if (recent >= MAILS_PER_EMAIL_PER_HOUR || !perAddress.tryAcquire(address)) return Requested.TooMany
         val id = ids.next()
         val token = secrets.token()
         val code = secrets.code()
         val attempt = LoginAttempt.startingAt(clock.instant())
-        db.transaction { attempts.insert(id, email, secrets.hash(token), secrets.codeHash(id, code), returnTo, attempt) }
+        db.transaction { attempts.insert(id, email, secrets.hash(token), secrets.codeHash(id, code), returnTo, attempt, clock.instant()) }
         mailer.send(
             Mail(
                 to = email,
@@ -61,7 +73,7 @@ class Login(
                 sentAt = clock.instant(),
             ),
         )
-        return id
+        return Requested.Sent(id)
     }
 
     /** Email and return path of an attempt, for the "Check your mail" page. Doesn't use it up. */
@@ -116,5 +128,7 @@ class Login(
 
     companion object {
         val SESSION_TTL: Duration = Duration.ofDays(365)
+        const val MAILS_PER_EMAIL_PER_HOUR = 5
+        const val MAILS_PER_ADDRESS_PER_HOUR = 20
     }
 }

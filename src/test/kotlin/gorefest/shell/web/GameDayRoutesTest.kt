@@ -15,6 +15,7 @@ import io.ktor.client.HttpClient
 import io.ktor.client.request.forms.submitForm
 import io.ktor.client.request.get
 import io.ktor.client.request.post
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.parameters
 import org.junit.jupiter.api.BeforeEach
@@ -103,6 +104,11 @@ class GameDayRoutesTest {
         form.attr("hx-post") shouldBe "/gamedays"
         form.select("input.gf-input").map { it.attr("name") } shouldContainExactly listOf("title", "date", "place")
         form.one("label[for=title]").text() shouldBe "Title"
+    }
+
+    @Test
+    fun `health checks the database`() = webTest { client ->
+        client.get("/health").let { (it.status to it.bodyAsText()) shouldBe (HttpStatusCode.OK to "ok") }
     }
 
     @Test

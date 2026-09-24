@@ -1,0 +1,9 @@
+# /etc/systemd/system/gorefest-backup.service
+[Unit]
+Description=Back up the gorefest database
+
+[Service]
+Type=oneshot
+User=gorefest
+EnvironmentFile=/etc/gorefest/env
+ExecStart=/opt/gorefest/backup.sh

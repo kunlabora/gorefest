@@ -19,7 +19,7 @@ Helps a group of boardgamers pick the games they'll enjoy most at a game day, us
 - Postgres, plain JDBC + HikariCP, Flyway migrations, kotlinx.serialization for event JSON.
 - Tests: JUnit 6 (suspend test functions work), Kotest assertions, Testcontainers for Postgres.
 - No SSE / WebSockets in the MVP (usage is checkpoint-based; refresh is enough).
-- Deploy: fat jar + systemd on a single cheap VPS, Caddy in front for TLS, nightly `pg_dump` to object storage. GitHub Action: build → scp → restart.
+- Deploy: fat jar + systemd on a single cheap VPS, Caddy in front for TLS, nightly `pg_dump` to object storage. GitHub Action: build → scp → restart. Setup, deploy and restore steps: `deploy/README.md`.
 - Offline support: out of scope for now.
 
 ## Architecture

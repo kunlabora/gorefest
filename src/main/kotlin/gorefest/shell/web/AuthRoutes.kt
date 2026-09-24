@@ -6,6 +6,7 @@ import gorefest.shell.auth.Login
 import gorefest.shell.auth.LoginResult
 import io.ktor.http.Cookie
 import io.ktor.server.html.respondHtml
+import io.ktor.server.plugins.origin
 import io.ktor.server.request.receiveParameters
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.RoutingContext
@@ -57,8 +58,11 @@ fun Route.authRoutes() {
         if (!EMAIL.matches(email)) {
             return@post respondFragment { emailForm(returnTo, form["email"].orEmpty(), "That doesn't look like an email address.") }
         }
-        val attempt = login.request(email, returnTo)
-        redirect("/login/code?attempt=$attempt")
+        when (val requested = login.request(email, returnTo, address = call.request.origin.remoteAddress)) {
+            is Login.Requested.Sent -> redirect("/login/code?attempt=${requested.attempt}")
+            Login.Requested.TooMany ->
+                respondFragment { emailForm(returnTo, form["email"].orEmpty(), "That's a lot of codes. Wait a bit, then try again.") }
+        }
     }
 
     get("/login/code") {

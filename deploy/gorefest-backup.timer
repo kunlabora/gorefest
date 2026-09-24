@@ -1,0 +1,11 @@
+# /etc/systemd/system/gorefest-backup.timer
+[Unit]
+Description=Nightly gorefest backup
+
+[Timer]
+OnCalendar=*-*-* 03:30:00
+Persistent=true
+RandomizedDelaySec=15m
+
+[Install]
+WantedBy=timers.target

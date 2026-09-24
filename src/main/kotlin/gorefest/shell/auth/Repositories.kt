@@ -76,9 +76,9 @@ data class StoredLoginAttempt(
 
 class LoginAttempts {
     context(tx: Tx)
-    fun insert(id: Uuid, email: String, tokenHash: ByteArray, codeHash: ByteArray, returnTo: String, attempt: LoginAttempt) {
+    fun insert(id: Uuid, email: String, tokenHash: ByteArray, codeHash: ByteArray, returnTo: String, attempt: LoginAttempt, now: Instant) {
         tx.connection.prepareStatement(
-            "insert into login_attempts (id, email, token_hash, code_hash, return_to, expires_at) values (?, ?, ?, ?, ?, ?)",
+            "insert into login_attempts (id, email, token_hash, code_hash, return_to, expires_at, created_at) values (?, ?, ?, ?, ?, ?, ?)",
         ).use {
             it.setObject(1, id.toJavaUuid())
             it.setString(2, email)
@@ -86,9 +86,19 @@ class LoginAttempts {
             it.setBytes(4, codeHash)
             it.setString(5, returnTo)
             it.setTimestamp(6, Timestamp.from(attempt.expiresAt))
+            it.setTimestamp(7, Timestamp.from(now))
             it.executeUpdate()
         }
     }
+
+    /** How many codes were sent to [email] since [since], for rate limiting. */
+    context(tx: Tx)
+    fun countSince(email: String, since: Instant): Int =
+        tx.connection.prepareStatement("select count(*) from login_attempts where email = ? and created_at > ?").use {
+            it.setString(1, email)
+            it.setTimestamp(2, Timestamp.from(since))
+            it.executeQuery().use { rs -> rs.next(); rs.getInt(1) }
+        }
 
     /** Locks the row, so two concurrent checks of the same attempt can't both succeed. */
     context(tx: Tx)

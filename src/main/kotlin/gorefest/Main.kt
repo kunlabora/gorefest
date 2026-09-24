@@ -3,6 +3,7 @@ package gorefest
 import gorefest.shell.App
 import gorefest.shell.AppConfig
 import gorefest.shell.auth.DevMailbox
+import gorefest.shell.auth.HttpMailer
 import gorefest.shell.bgg.FakeBggApi
 import gorefest.shell.bgg.XmlBggApi
 import gorefest.shell.db.Database
@@ -21,11 +22,11 @@ fun main() {
         password = env("DATABASE_PASSWORD", "gorefest"),
     )
     val config = AppConfig.fromEnv()
-    // A real mail provider is wired up with the deploy story (S1); until then only dev mode runs.
-    check(config.dev) { "No mail provider configured yet: run with GOREFEST_ENV=dev" }
+    // Outside dev mode, mail and BGG must be real: fail at startup rather than on the first login.
+    val mailer = HttpMailer.fromEnv() ?: if (config.dev) DevMailbox() else error("Set MAIL_PROVIDER, MAIL_API_KEY and MAIL_FROM")
     // BGG's XML API needs a registered application's token; without one, dev mode uses a fake BGG.
-    val bggApi = System.getenv("BGG_TOKEN")?.let(::XmlBggApi) ?: FakeBggApi()
-    val app = App(db, Clock.systemUTC(), config = config, mailer = DevMailbox(), bggApi = bggApi)
+    val bggApi = System.getenv("BGG_TOKEN")?.let(::XmlBggApi) ?: if (config.dev) FakeBggApi() else error("Set BGG_TOKEN")
+    val app = App(db, Clock.systemUTC(), config = config, mailer = mailer, bggApi = bggApi)
     runBlocking { app.start() }
     app.startBackgroundJobs()
 
