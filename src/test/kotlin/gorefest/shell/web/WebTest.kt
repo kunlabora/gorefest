@@ -28,7 +28,7 @@ class TestApp(config: AppConfig = AppConfig.dev()) {
     val clock = TestClock()
     val mailbox = DevMailbox()
     val bgg = FakeBggApi()
-    val app = App(TestDatabase.db, clock, IdGenerator.sequential(), config, mailbox, bgg, bggInterval = Duration.ZERO)
+    val app = App(TestDatabase.db, clock, IdGenerator.sequential(), config, mailbox, bgg, bggInterval = Duration.ZERO, bggRetry = Duration.ofMillis(1))
 
     suspend fun reset() {
         TestDatabase.reset()

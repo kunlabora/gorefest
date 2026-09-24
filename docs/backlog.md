@@ -9,7 +9,7 @@ A story is done when every criterion is ticked and covered by a test (decider gi
 | S1  | [Deploy pipeline](#s1-deploy-pipeline)            | 📋     | S0         |
 | S2  | [Magic-link login](#s2-magic-link-login)          | ✅     | S0         |
 | S3  | [Link BGG account](#s3-link-bgg-account)          | ✅     | S2         |
-| S4  | [Collection sync](#s4-collection-sync)            | 📋     | S3         |
+| S4  | [Collection sync](#s4-collection-sync)            | ✅     | S3         |
 | S5  | [Create and edit a game day](#s5-create-and-edit-a-game-day) | ✅ | S2   |
 | S6  | [Invite link and landing page](#s6-invite-link-and-landing-page) | ✅ | S5 |
 | S7  | [Bring games from my collection](#s7-bring-games-from-my-collection) | 📋 | S4, S6 |
@@ -87,12 +87,13 @@ Follow-ups, not blocking:
 
 *As a player with a linked BGG account I want my collection imported so that I can bring games without typing them.*
 
-- [ ] One in-process worker makes all BGG calls through a token bucket of about 1 request per 5 seconds
-- [ ] Priority queue: live searches and fresh account links go before routine refreshes
-- [ ] BGG's "202, try again later" collection response is retried with backoff
-- [ ] Game metadata (name, image, player counts, best-count poll, playtime, weight, mechanics, categories) is fetched once per game globally and cached with `fetched_at`
-- [ ] My collection shows up within a few minutes of linking, with progress visible
-- [ ] Collection is refreshed periodically; games removed on BGG disappear from it
+- [x] One in-process worker makes all BGG calls through a token bucket of about 1 request per 5 seconds (burst of 3)
+- [x] Priority queue: live searches and fresh account links go before routine refreshes
+- [x] BGG's "202, try again later" collection response is retried with backoff
+- [x] Game metadata (name, image, player counts, best-count poll, playtime, weight, mechanics, categories, rank) is fetched once per game globally and cached with `fetched_at`
+- [x] My collection shows up within a few minutes of linking, with progress visible (`/collection` polls every 2 s)
+- [x] Collection is refreshed periodically (daily check, refresh after 7 days); games removed on BGG disappear from it
+- Later: refresh cached game metadata (ranks, weight) monthly
 
 ## S5 Create and edit a game day
 

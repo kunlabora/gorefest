@@ -73,7 +73,7 @@ class BggRoutesTest {
     fun `with the code on the profile, the account is linked and you go back`() = test.webTest(session = kim) { client ->
         test.bgg.putInProfile("KimPlays", "My site: https://example.com $code")
 
-        client.verify("KimPlays").headers["HX-Redirect"] shouldBe "/gamedays/new"
+        client.verify("KimPlays").headers["HX-Redirect"] shouldBe "/collection"
 
         app.bggAccounts.state[kimId] shouldBe "KimPlays"
         client.get("/bgg").page().one("h1").text() shouldBe "You're linked"
@@ -94,6 +94,6 @@ class BggRoutesTest {
 
         button.attr("hx-post") shouldBe "/dev/bgg/profile"
         client.htmxPost("/dev/bgg/profile", parameters { append("username", "KimPlays"); append("code", code) })
-        client.verify("KimPlays").headers["HX-Redirect"] shouldBe "/gamedays/new"
+        client.verify("KimPlays").headers["HX-Redirect"] shouldBe "/collection"
     }
 }

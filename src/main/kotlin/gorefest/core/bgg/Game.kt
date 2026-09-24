@@ -1,11 +1,13 @@
 package gorefest.core.bgg
 
 import gorefest.core.BggId
+import kotlinx.serialization.Serializable
 
 /**
  * What we know about a game from BoardGameGeek. Cached once per game, not per player.
  * [bestPlayers] and [recommendedPlayers] come from BGG's "suggested number of players" poll.
  */
+@Serializable
 data class Game(
     val id: BggId,
     val name: String,

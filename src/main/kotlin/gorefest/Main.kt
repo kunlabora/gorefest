@@ -27,6 +27,7 @@ fun main() {
     val bggApi = System.getenv("BGG_TOKEN")?.let(::XmlBggApi) ?: FakeBggApi()
     val app = App(db, Clock.systemUTC(), config = config, mailer = DevMailbox(), bggApi = bggApi)
     runBlocking { app.start() }
+    app.startBackgroundJobs()
 
     embeddedServer(Netty, port = env("PORT", "8080").toInt(), host = env("HOST", "127.0.0.1")) {
         web(app)

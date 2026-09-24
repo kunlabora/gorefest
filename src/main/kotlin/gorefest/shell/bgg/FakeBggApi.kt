@@ -16,6 +16,12 @@ class FakeBggApi(private val catalog: List<Game> = DevCatalog.games) : BggApi {
     /** Usernames BGG doesn't know. */
     val missingUsers: MutableSet<String> = ConcurrentHashMap.newKeySet()
 
+    /** How many more times a collection request answers "queued" (202) before it's ready. */
+    val queuedFor = ConcurrentHashMap<String, Int>()
+
+    /** The ids asked for in each `things` call. */
+    val thingCalls: MutableList<Collection<BggId>> = java.util.Collections.synchronizedList(mutableListOf())
+
     /** What a player would do on boardgamegeek.com: paste text into a profile field. */
     fun putInProfile(username: String, text: String) {
         profiles[username.lowercase()] = text
@@ -28,10 +34,20 @@ class FakeBggApi(private val catalog: List<Game> = DevCatalog.games) : BggApi {
     override suspend fun user(name: String): BggUser? =
         if (name.isBlank() || name.lowercase() in missingUsers) null else BggUser(id = name.lowercase().hashCode(), name = name, profileText = profiles[name.lowercase()].orEmpty())
 
-    override suspend fun collection(username: String): CollectionResult =
-        CollectionResult.Ready(collections[username.lowercase()] ?: defaultCollection(username))
+    override suspend fun collection(username: String): CollectionResult {
+        val key = username.lowercase()
+        if (key in missingUsers) return CollectionResult.UnknownUser
+        if ((queuedFor[key] ?: 0) > 0) {
+            queuedFor.merge(key, -1, Int::plus)
+            return CollectionResult.Queued
+        }
+        return CollectionResult.Ready(collections[key] ?: defaultCollection(username))
+    }
 
-    override suspend fun things(ids: Collection<BggId>): List<Game> = ids.mapNotNull(byId::get)
+    override suspend fun things(ids: Collection<BggId>): List<Game> {
+        thingCalls += ids.toList()
+        return ids.mapNotNull(byId::get)
+    }
 
     override suspend fun search(query: String): List<SearchHit> =
         catalog.filter { it.name.contains(query.trim(), ignoreCase = true) }.map { SearchHit(it.id, it.name, it.year) }

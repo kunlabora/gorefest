@@ -7,9 +7,13 @@ import gorefest.shell.auth.Mailer
 import gorefest.shell.bgg.BggApi
 import gorefest.shell.bgg.BggGateway
 import gorefest.shell.bgg.BggVerification
+import gorefest.shell.bgg.Catalog
+import gorefest.shell.bgg.CollectionSync
 import gorefest.shell.db.Database
 import gorefest.shell.eventstore.EventStore
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
+import org.slf4j.LoggerFactory
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
@@ -25,9 +29,13 @@ class App(
     val mailer: Mailer,
     val bggApi: BggApi,
     bggInterval: Duration = Duration.ofSeconds(5),
+    bggRetry: Duration = Duration.ofSeconds(5),
 ) {
     /** Background work (the BGG worker); cancelled by [stop]. */
-    val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    val scope = CoroutineScope(
+        SupervisorJob() + Dispatchers.Default +
+            CoroutineExceptionHandler { _, e -> LoggerFactory.getLogger(App::class.java).error("Background job failed", e) },
+    )
 
     val store = EventStore()
     val gameDays = Projector(GameDays, db, store)
@@ -39,11 +47,19 @@ class App(
     val invites = InviteLinks(config.secretKey)
     val bgg = BggGateway(bggApi, bggInterval)
     val bggVerification = BggVerification(config.secretKey)
+    val catalog = Catalog(db)
+    val collectionSync = CollectionSync(db, bgg, catalog, clock, scope, bggRetry)
 
     suspend fun start() {
         db.migrate()
         catchUp()
+        catalog.load()
         bgg.start(scope)
+    }
+
+    /** Background jobs that shouldn't run in tests: the periodic collection refresh. */
+    fun startBackgroundJobs() {
+        collectionSync.startRefreshing()
     }
 
     fun stop() = scope.cancel()

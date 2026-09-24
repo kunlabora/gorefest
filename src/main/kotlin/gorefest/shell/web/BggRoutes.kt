@@ -97,7 +97,10 @@ fun Route.bggRoutes(app: App) {
                 }
             }
             when (val decision = app.commands.handle(LinkBggAccountDecider, LinkBggAccount(me.id, user.name))) {
-                is Decision.Accepted -> redirect(returnTo)
+                is Decision.Accepted -> {
+                    app.collectionSync.request(me.id, user.name, BggPriority.LINK)
+                    redirect("/collection")
+                }
                 is Decision.Rejected -> respondFragment { codeStep(returnTo, username, code, dev, decision.reason) }
             }
         }
