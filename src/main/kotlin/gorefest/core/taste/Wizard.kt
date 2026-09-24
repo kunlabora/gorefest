@@ -32,7 +32,14 @@ class Wizard(
 ) {
     val roundLength get() = maxPairs
 
-    fun next(pool: List<Game>, anchors: List<Game>, player: PlayerGames, round: RoundState, now: Instant): WizardPair? {
+    /**
+     * The next pair. With [mustInclude], every pair has one of those games in it (a top-up round
+     * asks about what's still uncertain, against anything else).
+     */
+    fun next(
+        pool: List<Game>, anchors: List<Game>, player: PlayerGames, round: RoundState, now: Instant,
+        mustInclude: Set<BggId>? = null,
+    ): WizardPair? {
         val games = pool.distinctBy { it.id }.take(poolSize)
         val extra = anchors.filter { a -> games.none { it.id == a.id } }.take(poolSize)
         val anchorTurn = (round.step % anchorEvery == anchorEvery - 1 && extra.isNotEmpty()) || games.size < 2
@@ -43,6 +50,7 @@ class Wizard(
         val played = player.history.scores(model, Basis.PLAYED, now)
         return pairs(candidates)
             .filter { (a, b) -> setOf(a.id, b.id) !in round.asked }
+            .filter { (a, b) -> mustInclude == null || a.id in mustInclude || b.id in mustInclude }
             .filter { (a, b) -> !anchorTurn || games.size < 2 || a.id in anchorIds || b.id in anchorIds }
             .map { (a, b) ->
                 val basis = if (player.hasPlayed(a.id) && player.hasPlayed(b.id)) Basis.PLAYED else Basis.VIBE
@@ -61,6 +69,22 @@ class Wizard(
         val scores = player.history.scores(model, Basis.PLAYED, now)
         return candidates.filter { it.id != justPlayed && player.hasPlayed(it.id) }
             .maxWithOrNull(compareBy<Game> { scores[it.id].variance }.thenBy { it.name })
+    }
+
+    /** Games in [games] whose prediction for this player is still unsure (variance above [threshold]). */
+    fun uncertain(player: PlayerGames, games: List<Game>, now: Instant, threshold: Double = 0.6): Set<BggId> {
+        val vibe = player.history.scores(model, Basis.VIBE, now)
+        val played = player.history.scores(model, Basis.PLAYED, now)
+        return games.filter { g -> (if (player.hasPlayed(g.id)) played else vibe)[g.id].variance > threshold }.map { it.id }.toSet()
+    }
+
+    /** The oldest decisive answer, if it's older than [olderThan]: worth asking again as tastes drift. */
+    fun stalePair(player: PlayerGames, games: (BggId) -> Game?, now: Instant, olderThan: java.time.Duration = java.time.Duration.ofDays(180)): WizardPair? {
+        val old = player.history.comparisons.filter { java.time.Duration.between(it.at, now) > olderThan }.minByOrNull { it.at } ?: return null
+        val a = games(old.a) ?: return null
+        val b = games(old.b) ?: return null
+        val recent = player.history.comparisons.any { setOf(it.a, it.b) == setOf(old.a, old.b) && java.time.Duration.between(it.at, now) <= olderThan }
+        return if (recent) null else WizardPair(a, b, old.basis)
     }
 
     fun shouldStop(round: RoundState) = round.step >= maxPairs || (round.step >= minPairs && round.stableSteps >= 3)

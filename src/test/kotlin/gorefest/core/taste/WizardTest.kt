@@ -77,6 +77,36 @@ class WizardTest {
     }
 
     @Test
+    fun `a focused round only asks pairs with an uncertain game in them`() {
+        val focus = setOf(shelf[3].id)
+        var round = RoundState()
+        repeat(3) {
+            val pair = wizard.next(shelf, anchors, nobody, round, now, mustInclude = focus)!!
+            (pair.a.id in focus || pair.b.id in focus) shouldBe true
+            round = wizard.advance(round, pair, emptyList())
+        }
+        wizard.next(shelf, anchors, nobody, round, now, mustInclude = focus).shouldBeNull()
+    }
+
+    @Test
+    fun `well-compared games are no longer uncertain`() {
+        val (azul, cascadia) = shelf
+        val known = PlayerGames(TasteHistory(List(8) { ComparisonRecorded(anna, azul.id, cascadia.id, ComparisonResult.A, Basis.VIBE, now) }), emptySet())
+
+        wizard.uncertain(known, shelf, now) shouldBe setOf(shelf[2].id, shelf[3].id)
+    }
+
+    @Test
+    fun `an old answer that wasn't asked again recently is stale`() {
+        val (azul, cascadia) = shelf
+        val old = ComparisonRecorded(anna, azul.id, cascadia.id, ComparisonResult.A, Basis.VIBE, now - java.time.Duration.ofDays(200))
+        val lookup = shelf.associateBy { it.id }::get
+
+        wizard.stalePair(PlayerGames(TasteHistory(listOf(old)), emptySet()), lookup, now) shouldBe WizardPair(azul, cascadia, Basis.VIBE)
+        wizard.stalePair(PlayerGames(TasteHistory(listOf(old, old.copy(at = now))), emptySet()), lookup, now).shouldBeNull()
+    }
+
+    @Test
     fun `the round stops at 15, or from 10 once the top 3 settled`() {
         wizard.shouldStop(RoundState(step = 15)) shouldBe true
         wizard.shouldStop(RoundState(step = 10, stableSteps = 3)) shouldBe true

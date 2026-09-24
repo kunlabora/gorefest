@@ -159,6 +159,11 @@ fun Route.gameDayRoutes(app: App) {
             val shelf = app.shelves.state[gameDay.id].orEmpty().mapNotNull { entry -> app.catalog[entry.game]?.let { it to entry } }
             val answers = app.tastes.state[contextOf<CurrentPlayer>().id]?.comparisons?.size ?: 0
             val onTheDay = gameDay.date == todayIn(gameDay.timeZone)
+            val uncertain = if (answers < TOP_UP_AFTER) 0 else {
+                val me = contextOf<CurrentPlayer>()
+                val player = gorefest.core.taste.PlayerGames(app.tastes.state[me.id] ?: gorefest.core.taste.TasteHistory(), app.collectionSync.collection(me.id))
+                gorefest.core.taste.Wizard().uncertain(player, shelf.map { it.first }, app.clock.instant()).size
+            }
             val played = app.plays.state[gameDay.id].orEmpty().mapNotNull { log -> app.catalog[log.game]?.let { it to log } }
             call.respondHtml {
                 val isHost = gameDay.host == contextOf<CurrentPlayer>().id
@@ -185,6 +190,10 @@ fun Route.gameDayRoutes(app: App) {
                             h2("gf-next__title") { +"Tell us what you like" }
                             p("gf-next__text") { +"A dozen quick \"which of these two?\" questions, about 2 minutes. Then you'll see your likely favourites on this shelf." }
                             a("/gamedays/${gameDay.id}/taste", classes = "gf-btn gf-btn--primary gf-btn--block") { +"Start the taste round" }
+                        } else if (uncertain > 0) {
+                            h2("gf-next__title") { +"Sharpen your picks" }
+                            p("gf-next__text") { +"${countWord(uncertain)} ${if (uncertain == 1) "game" else "games"} on the shelf we're not sure about for you. A few quick pairs will sharpen your picks." }
+                            a("/gamedays/${gameDay.id}/taste", classes = "gf-btn gf-btn--primary gf-btn--block") { +"A few quick pairs" }
                         } else {
                             h2("gf-next__title") { +"Your likely favourites" }
                             p("gf-next__text") { +"Based on your $answers answers. New games on the shelf? A few more pairs sharpen it." }
@@ -371,6 +380,8 @@ private fun FlowContent.field(id: String, label: String, hint: String? = null, i
     input()
     if (hint != null) p("gf-hint") { +hint }
 }
+
+private fun countWord(n: Int) = listOf("No", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine").getOrElse(n) { "$n" }
 
 context(clock: Clock)
 private fun todayIn(timeZone: String): LocalDate = LocalDate.now(clock.withZone(zoneOrDefault(timeZone)))

@@ -141,10 +141,40 @@ class WizardRoutesTest {
     }
 
     @Test
-    fun `after enough answers the game day points to the favourites`() = test.webTest(session = kim) { client ->
+    fun `after a round, uncertain shelf games lead to a short top-up`() = test.webTest(session = kim) { client ->
         given(*List(10) { ComparisonRecorded(kimId, shelf[0], shelf[1], ComparisonResult.A, gorefest.core.Basis.VIBE, test.clock.instant()) }.toTypedArray())
+
+        val next = client.get("/gamedays/$gorefest7").page().one(".gf-next")
+        next.one("h2").text() shouldBe "Sharpen your picks"
+        next.one(".gf-next__text").text() shouldStartWith "Four games on the shelf we're not sure about"
+        next.one("a").attr("href") shouldBe taste
+
+        val round = client.get(taste).page().one("#wizard")
+        round.one("input[name=mode]").`val`() shouldBe "topup"
+        round.one(".gf-progress__count").text() shouldBe "1 / 5"
+        val pair = setOf(round.one("input[name=a]").`val`(), round.one("input[name=b]").`val`()).map { BggId(it.toInt()) }
+        pair.any { it in shelf.drop(2) } shouldBe true
+    }
+
+    @Test
+    fun `when the whole shelf is well known, the game day points to the favourites`() = test.webTest(session = kim) { client ->
+        val answers = (0 until 4).flatMap { round -> shelf.zipWithNext().map { (a, b) -> ComparisonRecorded(kimId, a, b, ComparisonResult.A, gorefest.core.Basis.VIBE, test.clock.instant()) } }
+        given(*answers.toTypedArray())
 
         client.get("/gamedays/$gorefest7").page().one(".gf-next a").attr("href") shouldBe "/gamedays/$gorefest7/favourites"
         GamePlayStatusDeclared(kimId, shelf[0], true).played shouldBe true
+    }
+
+    @Test
+    fun `a top-up re-asks an answer from long ago first`() = test.webTest(session = kim) { client ->
+        val longAgo = test.clock.instant() - java.time.Duration.ofDays(400)
+        given(
+            ComparisonRecorded(kimId, shelf[4], shelf[5], ComparisonResult.A, gorefest.core.Basis.VIBE, longAgo),
+            *List(10) { ComparisonRecorded(kimId, shelf[0], shelf[1], ComparisonResult.A, gorefest.core.Basis.VIBE, test.clock.instant()) }.toTypedArray(),
+        )
+
+        val round = client.get(taste).page().one("#wizard")
+
+        (round.one("input[name=a]").`val`() to round.one("input[name=b]").`val`()) shouldBe (shelf[4].toString() to shelf[5].toString())
     }
 }

@@ -19,7 +19,7 @@ A story is done when every criterion is ticked and covered by a test (decider gi
 | S11 | [Ad hoc suggestions](#s11-ad-hoc-suggestions)     | ✅     | S10        |
 | S12 | [Checkpoint play log](#s12-checkpoint-play-log)   | ✅     | S11        |
 | S13 | [Host readiness view](#s13-host-readiness-view)   | ✅     | S10        |
-| S14 | [Returning-player top-up](#s14-returning-player-top-up) | 📋 | S10      |
+| S14 | [Returning-player top-up](#s14-returning-player-top-up) | ✅ | S10      |
 | S15 | [Taste model v1: features, appeal vs enjoyment](#s15-taste-model-v1-features-appeal-vs-enjoyment) | 📋 | S12 |
 | S16 | [Auto-close and summary](#s16-auto-close-and-summary) | 📋   | S12        |
 
@@ -190,8 +190,9 @@ Follow-ups, not blocking:
 
 *As a returning player I want a short round on new shelf games only.*
 
-- [ ] Only shelf games whose prediction for me is uncertain; 3–5 pairs
-- [ ] Occasionally re-asks an old pair to keep time decay honest
+- [x] Only shelf games whose prediction for me is uncertain; 3–5 pairs (every pair includes one)
+- [x] Occasionally re-asks an old pair to keep time decay honest (the oldest answer over 6 months old, first)
+- [x] Added: the hub's next-step card says how many shelf games are still uncertain
 
 ## S15 Taste model v1: features, appeal vs enjoyment
 

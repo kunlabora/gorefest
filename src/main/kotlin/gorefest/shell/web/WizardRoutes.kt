@@ -50,7 +50,15 @@ import kotlinx.html.strong
 import kotlinx.html.id
 
 private val wizard = Wizard()
+
+/** For players who already did a round: a few pairs on what's still uncertain. */
+private val topUp = Wizard(minPairs = 3, maxPairs = 5)
 private val predictor = Predictor()
+
+/** Players with this many answers get a top-up round instead of the full one. */
+const val TOP_UP_AFTER = 10
+
+private fun wizardFor(topUpRound: Boolean) = if (topUpRound) topUp else wizard
 
 /** The games a taste round draws from, and what we know about the player. */
 private data class RoundInputs(val pool: List<Game>, val shelf: List<Game>, val anchors: List<Game>, val player: PlayerGames)
@@ -69,14 +77,19 @@ fun Route.wizardRoutes(app: App) {
 
     fun RoundInputs.top(now: java.time.Instant) = predictor.favourites(player, shelf.ifEmpty { pool }, now).map { it.game.id }
 
+    fun RoundInputs.focus(topUpRound: Boolean, now: java.time.Instant) =
+        if (topUpRound) topUp.uncertain(player, shelf, now).ifEmpty { null } else null
+
     get("/gamedays/{id}/taste") {
         authenticated {
             val me = contextOf<CurrentPlayer>()
             val gameDay = memberGameDay(app, me) ?: return@authenticated call.respond(HttpStatusCode.NotFound)
             val inputs = inputs(gameDay, me)
             val now = app.clock.instant()
+            val topUpRound = inputs.player.history.comparisons.size >= TOP_UP_AFTER
             val round = RoundState(top = inputs.top(now))
-            val pair = wizard.next(inputs.pool, inputs.anchors, inputs.player, round, now)
+            val pair = (if (topUpRound) topUp.stalePair(inputs.player, app.catalog::get, now) else null)
+                ?: wizardFor(topUpRound).next(inputs.pool, inputs.anchors, inputs.player, round, now, inputs.focus(topUpRound, now))
                 ?: return@authenticated redirect("/gamedays/${gameDay.id}/favourites")
             call.respondHtml {
                 page(
@@ -87,7 +100,7 @@ fun Route.wizardRoutes(app: App) {
                     },
                     mainClasses = "gf-wizard",
                     mainId = "wizard",
-                ) { wizardContent(gameDay, pair, round) }
+                ) { wizardContent(gameDay, pair, round, topUpRound) }
             }
         }
     }
@@ -111,12 +124,14 @@ fun Route.wizardRoutes(app: App) {
             }
 
             val inputs = inputs(gameDay, me)
-            val round = wizard.advance(form.round(), WizardPair(a, b, basis), inputs.top(now))
-            val next = if (wizard.shouldStop(round)) null else wizard.next(inputs.pool, inputs.anchors, inputs.player, round, now)
+            val topUpRound = form["mode"] == "topup"
+            val w = wizardFor(topUpRound)
+            val round = w.advance(form.round(), WizardPair(a, b, basis), inputs.top(now))
+            val next = if (w.shouldStop(round)) null else w.next(inputs.pool, inputs.anchors, inputs.player, round, now, inputs.focus(topUpRound, now))
             if (next == null) return@authenticated redirect("/gamedays/${gameDay.id}/favourites?answers=${round.step}")
             val html = createHTML().main("gf-body gf-wizard") {
                 id = "wizard"
-                wizardContent(gameDay, next, round)
+                wizardContent(gameDay, next, round, topUpRound)
             }
             respondTextHtml(html)
         }
@@ -195,8 +210,8 @@ private fun Parameters.round() = RoundState(
     top = this["top"].orEmpty().split(',').mapNotNull { it.toIntOrNull()?.let(::BggId) },
 )
 
-private fun FlowContent.wizardContent(gameDay: GameDaySummary, pair: WizardPair, round: RoundState) {
-    val total = wizard.roundLength
+private fun FlowContent.wizardContent(gameDay: GameDaySummary, pair: WizardPair, round: RoundState, topUpRound: Boolean) {
+    val total = wizardFor(topUpRound).roundLength
     div("gf-progress") {
         role = "progressbar"
         attributes["aria-label"] = "Taste round"
@@ -228,6 +243,7 @@ private fun FlowContent.wizardContent(gameDay: GameDaySummary, pair: WizardPair,
         hidden("stable", round.stableSteps.toString())
         hidden("asked", round.asked.joinToString(",") { it.joinToString("-") })
         hidden("top", round.top.joinToString(","))
+        hidden("mode", if (topUpRound) "topup" else "full")
         div("gf-duel gf-deal") {
             pick(pair.a, "A")
             span("gf-duel__or") { attributes["aria-hidden"] = "true"; +"or" }
