@@ -90,6 +90,25 @@ data class PlayerJoined(val gameDay: GameDayId, val player: PlayerId) : Event {
 }
 
 @Serializable
+@SerialName("GameBrought")
+data class GameBrought(val gameDay: GameDayId, val player: PlayerId, val game: BggId) : Event {
+    override val tags get() = setOf(Tags.gameDay(gameDay), Tags.player(player), Tags.game(game))
+}
+
+@Serializable
+@SerialName("GameUnbrought")
+data class GameUnbrought(val gameDay: GameDayId, val player: PlayerId, val game: BggId) : Event {
+    override val tags get() = setOf(Tags.gameDay(gameDay), Tags.player(player), Tags.game(game))
+}
+
+/** The owner really wants to play a game they brought (or no longer does). A matching bonus. */
+@Serializable
+@SerialName("PlayWishChanged")
+data class PlayWishChanged(val gameDay: GameDayId, val player: PlayerId, val game: BggId, val wantsToPlay: Boolean) : Event {
+    override val tags get() = setOf(Tags.gameDay(gameDay), Tags.player(player), Tags.game(game))
+}
+
+@Serializable
 @SerialName("GameDayEnded")
 data class GameDayEnded(val gameDay: GameDayId) : Event {
     override val tags get() = setOf(Tags.gameDay(gameDay))

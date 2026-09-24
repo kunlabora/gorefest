@@ -34,6 +34,7 @@ fun Application.web(app: App) {
         context(app.login, app.config) { inviteRoutes(app, app.invites) }
         context(app.login) { bggRoutes(app) }
         context(app.login) { collectionRoutes(app) }
+        context(app.login) { bringRoutes(app) }
         if (app.config.dev && app.mailer is DevMailbox) devRoutes(app.mailer)
         if (app.config.dev && app.bggApi is FakeBggApi) devBggRoutes(app.bggApi)
     }

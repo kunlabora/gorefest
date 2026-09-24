@@ -156,6 +156,7 @@ fun Route.gameDayRoutes(app: App) {
             val gameDay = gameDayFromPath(app)?.takeIf { contextOf<CurrentPlayer>().id in it.players }
                 ?: return@authenticated call.respond(HttpStatusCode.NotFound)
             val names = login.names(gameDay.players)
+            val shelf = app.shelves.state[gameDay.id].orEmpty().mapNotNull { entry -> app.catalog[entry.game]?.let { it to entry } }
             call.respondHtml {
                 val isHost = gameDay.host == contextOf<CurrentPlayer>().id
                 page(gameDay.title, appBar = {
@@ -169,6 +170,22 @@ fun Route.gameDayRoutes(app: App) {
                         p("gf-kicker") { +listOf(gameDay.date.long(), gameDay.place).filter { it.isNotBlank() }.joinToString(" · ") }
                         h1("gf-h1") { +gameDay.title }
                         if (gameDay.ended) span("gf-tag") { +"Ended" }
+                    }
+                    section("gf-section") {
+                        div("gf-sechead") {
+                            h2("gf-h2") { +"The shelf · ${shelf.size}" }
+                            if (!gameDay.ended) a("/gamedays/${gameDay.id}/bring", classes = "gf-link") { +"Bring games" }
+                        }
+                        if (shelf.isEmpty()) emptyState("Nothing on the shelf yet", "Tick the games you're bringing, and ask the others to do the same.")
+                        else div("gf-tiles") {
+                            shelf.forEach { (game, entry) ->
+                                div("gf-tile") {
+                                    art(game)
+                                    span("gf-tile__owner") { entry.owners.firstOrNull()?.let { avatar(it, names[it]) } }
+                                    span("gf-tile__name") { +game.name }
+                                }
+                            }
+                        }
                     }
                     section("gf-section") {
                         h2("gf-h2") { +"Players" }

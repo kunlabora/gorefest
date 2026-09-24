@@ -12,7 +12,7 @@ A story is done when every criterion is ticked and covered by a test (decider gi
 | S4  | [Collection sync](#s4-collection-sync)            | ✅     | S3         |
 | S5  | [Create and edit a game day](#s5-create-and-edit-a-game-day) | ✅ | S2   |
 | S6  | [Invite link and landing page](#s6-invite-link-and-landing-page) | ✅ | S5 |
-| S7  | [Bring games from my collection](#s7-bring-games-from-my-collection) | 📋 | S4, S6 |
+| S7  | [Bring games from my collection](#s7-bring-games-from-my-collection) | ✅ | S4, S6 |
 | S8  | [Bring a game by search](#s8-bring-a-game-by-search) | 📋  | S7         |
 | S9  | [Taste model v0: per-game scores](#s9-taste-model-v0-per-game-scores) | 📋 | S0 |
 | S10 | [First-time wizard](#s10-first-time-wizard)       | 📋     | S7, S9     |
@@ -120,11 +120,11 @@ Follow-ups, not blocking:
 
 *As a participant I want to tick the games I'm bringing so that everyone knows what's on the shelf.*
 
-- [ ] The game day page lists my collection with a "bringing" toggle (`GameBrought` / `GameUnbrought`)
-- [ ] The shelf shows every brought game with who brings it
-- [ ] Two people bringing the same game is allowed and shown once, with both owners
-- [ ] I can mark a brought game "I really want to play this" (owner's desire, used by S11)
-- [ ] Only players who joined can bring games; no changes after the game day ended
+- [x] The bring page lists my collection with a "bringing" switch (`GameBrought` / `GameUnbrought`)
+- [x] The shelf shows every brought game with who brings it (game day hub, invite landing, preview image)
+- [x] Two people bringing the same game is allowed and shown once, with both owners
+- [x] I can mark a brought game "I really want to play this" (`PlayWishChanged`, used by S11)
+- [x] Only players who joined can bring games; no changes after the game day ended
 
 ## S8 Bring a game by search
 

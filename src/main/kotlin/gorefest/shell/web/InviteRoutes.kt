@@ -26,6 +26,7 @@ import kotlinx.html.button
 import kotlinx.html.div
 import kotlinx.html.form
 import kotlinx.html.h1
+import kotlinx.html.h2
 import kotlinx.html.li
 import kotlinx.html.meta
 import kotlinx.html.p
@@ -69,7 +70,8 @@ fun Route.inviteRoutes(app: App, invites: InviteLinks) {
 
         val names = login.names(gameDay.players)
         val host = names[gameDay.host] ?: "Someone"
-        val preview = gameDay.preview(host, shelf = 0)
+        val shelf = app.shelves.state[gameDay.id].orEmpty().mapNotNull { app.catalog[it.game] }
+        val preview = gameDay.preview(host, shelf = shelf.size)
         call.respondHtml {
             page(
                 "${gameDay.title}: you're invited",
@@ -112,6 +114,21 @@ fun Route.inviteRoutes(app: App, invites: InviteLinks) {
                         +"${gameDay.players.size} ${if (gameDay.players.size == 1) "player" else "players"} going"
                     }
                 }
+                if (shelf.isNotEmpty()) div("gf-section") {
+                    h2("gf-h2") { +"On the shelf" }
+                    div {
+                        style = "display: flex; align-items: center; gap: var(--space-4)"
+                        div("gf-fan") {
+                            // Each box tilts a little differently, like a hand of cards.
+                            shelf.take(4).zip(listOf(-6, 3, -2, 5)).forEach { (game, tilt) -> art(game, extraStyle = "--r:${tilt}deg") }
+                        }
+                        p {
+                            style = "margin: 0; font: 800 30px/30px var(--font-display)"
+                            +"${shelf.size}"
+                            span("gf-muted") { style = "display: block; font: 400 14px/20px var(--font-sans)"; +if (shelf.size == 1) "game so far" else "games so far" }
+                        }
+                    }
+                }
                 p("gf-small gf-muted") {
                     +"Answer a few \"which of these two?\" questions and the app picks the games you'll enjoy most on the day."
                 }
@@ -139,7 +156,8 @@ fun Route.inviteRoutes(app: App, invites: InviteLinks) {
             ?: return@get call.respond(HttpStatusCode.NotFound)
         val host = login.names(listOf(gameDay.host))[gameDay.host] ?: "Someone"
         call.response.header(HttpHeaders.CacheControl, "public, max-age=300")
-        call.respondBytes(OgImage.png(gameDay.preview(host, shelf = 0)), ContentType.Image.PNG)
+        val shelf = app.shelves.state[gameDay.id].orEmpty().size
+        call.respondBytes(OgImage.png(gameDay.preview(host, shelf = shelf)), ContentType.Image.PNG)
     }
 }
 

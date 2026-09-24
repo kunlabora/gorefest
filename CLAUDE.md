@@ -33,7 +33,7 @@ Helps a group of boardgamers pick the games they'll enjoy most at a game day, us
 
 ### Events (initial)
 
-`PlayerRegistered`, `LoggedIn`, `BggAccountLinked`, `GameDayCreated`, `InviteLinkRotated`, `PlayerJoined`, `GameBrought`, `GameUnbrought`, `ComparisonRecorded(player, winner, loser, basis, at)`, `PlayLogged(gameday, game, players, minutes)`, `GameDayEnded`.
+`PlayerRegistered`, `LoggedIn`, `BggAccountLinked`, `GameDayCreated`, `InviteLinkRotated`, `PlayerJoined`, `GameBrought`, `GameUnbrought`, `PlayWishChanged`, `ComparisonRecorded(player, winner, loser, basis, at)`, `PlayLogged(gameday, game, players, minutes)`, `GameDayEnded`.
 
 Tag convention: `player:{id}`, `gameday:{id}`, `game:{bggId}`.
 
