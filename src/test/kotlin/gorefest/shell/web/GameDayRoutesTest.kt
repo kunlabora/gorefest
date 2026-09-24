@@ -71,7 +71,7 @@ class GameDayRoutesTest {
         val page = client.get("/gamedays/00000000-0000-0000-0000-000000000001").page()
 
         page.one("h1").text() shouldBe "Gorefest #7"
-        page.one(".gf-kicker").text() shouldBe "Sun 27 Sep 2026 · Anna's place"
+        page.one("main > .gf-stack > .gf-kicker").text() shouldBe "Sun 27 Sep 2026 · Anna's place"
         page.players() shouldContainExactly listOf("Tim You Host")
         page.select("#players button").shouldBeEmpty()
     }
@@ -183,7 +183,7 @@ class GameDayRoutesTest {
         saved.headers["HX-Redirect"] shouldBe "/gamedays/$id"
         val after = client.get("/gamedays/$id").page()
         after.one("h1").text() shouldBe "Gorefest #7½"
-        after.one(".gf-kicker").text() shouldBe "Mon 28 Sep 2026 · Bram's attic"
+        after.one("main > .gf-stack > .gf-kicker").text() shouldBe "Mon 28 Sep 2026 · Bram's attic"
     }
 
     @Test

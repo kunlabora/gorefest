@@ -15,7 +15,7 @@ A story is done when every criterion is ticked and covered by a test (decider gi
 | S7  | [Bring games from my collection](#s7-bring-games-from-my-collection) | ✅ | S4, S6 |
 | S8  | [Bring a game by search](#s8-bring-a-game-by-search) | ✅  | S7         |
 | S9  | [Taste model v0: per-game scores](#s9-taste-model-v0-per-game-scores) | ✅ | S0 |
-| S10 | [First-time wizard](#s10-first-time-wizard)       | 📋     | S7, S9     |
+| S10 | [First-time wizard](#s10-first-time-wizard)       | ✅     | S7, S9     |
 | S11 | [Ad hoc suggestions](#s11-ad-hoc-suggestions)     | 📋     | S10        |
 | S12 | [Checkpoint play log](#s12-checkpoint-play-log)   | 📋     | S11        |
 | S13 | [Host readiness view](#s13-host-readiness-view)   | 📋     | S10        |
@@ -149,12 +149,13 @@ Follow-ups, not blocking:
 
 *As a new participant I want to answer a few quick "which one?" questions so that suggestions fit my taste.*
 
-- [ ] Each step shows two games (image, name, one-line facts) with: A, B, haven't played, both meh, both great
-- [ ] Games come from shelf → host's collection → my collection → BGG top-ranked, with about 20% popular anchors
-- [ ] The next pair is the one the model is most uncertain about
-- [ ] Stops after 10–15 pairs, or earlier when predictions stop changing
-- [ ] Payoff screen: "Your likely favourites today: X, Y, Z" from this game day's shelf
-- [ ] Works one-handed on a phone; each answer is a single tap with no full page reload
+- [x] Each step shows two games (image, name, one-line facts) with: A, B, haven't played, both meh, both great ("Don't know" instead of "haven't played" on unplayed pairs)
+- [x] Games come from shelf → host's collection → my collection → BGG top-ranked, with every fifth pair an anchor
+- [x] The next pair is the one the model is most uncertain about (closeness × combined variance)
+- [x] Stops after 15 pairs, or from 10 once the top 3 hasn't changed for three answers
+- [x] Payoff screen: "Your likely favourites today" from this game day's shelf, with a reason each; an empty shelf suggests games from the host's collection
+- [x] Works one-handed on a phone; each answer is a single tap with no full page reload; A/B keys work on a keyboard
+- [x] Added: the game day hub's next-step card leads to the taste round, then to the favourites
 
 ## S11 Ad hoc suggestions
 

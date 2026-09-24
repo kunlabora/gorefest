@@ -157,6 +157,7 @@ fun Route.gameDayRoutes(app: App) {
                 ?: return@authenticated call.respond(HttpStatusCode.NotFound)
             val names = login.names(gameDay.players)
             val shelf = app.shelves.state[gameDay.id].orEmpty().mapNotNull { entry -> app.catalog[entry.game]?.let { it to entry } }
+            val answers = app.tastes.state[contextOf<CurrentPlayer>().id]?.comparisons?.size ?: 0
             call.respondHtml {
                 val isHost = gameDay.host == contextOf<CurrentPlayer>().id
                 page(gameDay.title, appBar = {
@@ -170,6 +171,18 @@ fun Route.gameDayRoutes(app: App) {
                         p("gf-kicker") { +listOf(gameDay.date.long(), gameDay.place).filter { it.isNotBlank() }.joinToString(" · ") }
                         h1("gf-h1") { +gameDay.title }
                         if (gameDay.ended) span("gf-tag") { +"Ended" }
+                    }
+                    if (!gameDay.ended) section("gf-next") {
+                        p("gf-kicker") { +"Your next step" }
+                        if (answers < 10) {
+                            h2("gf-next__title") { +"Tell us what you like" }
+                            p("gf-next__text") { +"A dozen quick \"which of these two?\" questions, about 2 minutes. Then you'll see your likely favourites on this shelf." }
+                            a("/gamedays/${gameDay.id}/taste", classes = "gf-btn gf-btn--primary gf-btn--block") { +"Start the taste round" }
+                        } else {
+                            h2("gf-next__title") { +"Your likely favourites" }
+                            p("gf-next__text") { +"Based on your $answers answers. New games on the shelf? A few more pairs sharpen it." }
+                            a("/gamedays/${gameDay.id}/favourites", classes = "gf-btn gf-btn--primary gf-btn--block") { +"See your favourites" }
+                        }
                     }
                     section("gf-section") {
                         div("gf-sechead") {

@@ -126,9 +126,6 @@ fun Route.bringRoutes(app: App) {
     }
 }
 
-private fun RoutingContext.memberGameDay(app: App, me: CurrentPlayer): GameDaySummary? =
-    call.parameters["id"]?.let { runCatching { GameDayId.parse(it) }.getOrNull() }
-        ?.let(app.gameDays.state::get)?.takeIf { me.id in it.players }
 
 private fun RoutingContext.shelfTarget(app: App, me: CurrentPlayer): Pair<GameDaySummary, Game>? {
     val gameDay = memberGameDay(app, me) ?: return null

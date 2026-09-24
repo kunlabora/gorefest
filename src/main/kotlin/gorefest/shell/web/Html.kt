@@ -18,6 +18,7 @@ import kotlinx.html.div
 import kotlinx.html.h3
 import kotlinx.html.head
 import kotlinx.html.header
+import kotlinx.html.id
 import kotlinx.html.lang
 import kotlinx.html.link
 import kotlinx.html.main
@@ -41,6 +42,8 @@ fun HTML.page(
     appBar: FlowContent.() -> Unit = {},
     dock: (DIV.() -> Unit)? = null,
     head: HEAD.() -> Unit = {},
+    mainClasses: String = "",
+    mainId: String? = null,
     content: MAIN.() -> Unit,
 ) {
     lang = "en"
@@ -57,7 +60,10 @@ fun HTML.page(
     body {
         div("gf-screen") {
             header("gf-appbar") { appBar() }
-            main("gf-body") { content() }
+            main("gf-body $mainClasses".trim()) {
+                if (mainId != null) id = mainId
+                content()
+            }
             if (dock != null) div("gf-dock") { dock() }
         }
     }
