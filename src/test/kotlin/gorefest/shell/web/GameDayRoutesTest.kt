@@ -3,44 +3,35 @@ package gorefest.shell.web
 import gorefest.core.GameDayEnded
 import gorefest.core.PlayerJoined
 import gorefest.core.gameday.anna
+import gorefest.core.gameday.bram
 import gorefest.core.gameday.gameDayCreated
 import gorefest.core.gameday.gorefest7
-import gorefest.shell.App
-import gorefest.shell.IdGenerator
-import gorefest.shell.TestDatabase
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.ktor.client.HttpClient
 import io.ktor.client.request.forms.submitForm
 import io.ktor.client.request.get
-import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.http.HttpStatusCode
-import io.ktor.http.Parameters
 import io.ktor.http.parameters
-import io.ktor.server.testing.ApplicationTestBuilder
-import io.ktor.server.testing.testApplication
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import java.time.Clock
-import java.time.Instant
-import java.time.ZoneOffset
 
 class GameDayRoutesTest {
-    private val clock = Clock.fixed(Instant.parse("2026-09-24T10:00:00Z"), ZoneOffset.UTC)
-    private val app = App(TestDatabase.db, clock, IdGenerator.sequential())
+    private val test = TestApp()
+    private val app = test.app
+    private lateinit var tim: String
 
     @BeforeEach
-    fun reset() = kotlinx.coroutines.runBlocking {
-        TestDatabase.reset()
-        app.start()
+    fun reset(): Unit = kotlinx.coroutines.runBlocking {
+        test.reset()
+        tim = test.loggedIn("Tim")
+        test.loggedIn("Anna", id = anna)
     }
 
-    private fun webTest(block: suspend ApplicationTestBuilder.(HttpClient) -> Unit) = testApplication {
-        application { web(app) }
-        block(createClient { followRedirects = false })
-    }
+    /** Requests as Tim. */
+    private fun webTest(block: suspend io.ktor.server.testing.ApplicationTestBuilder.(HttpClient) -> Unit) = test.webTest(session = tim, block = block)
 
     private suspend fun given(vararg events: gorefest.core.Event) {
         app.db.transaction { app.store.append(events.toList()) }
@@ -53,9 +44,6 @@ class GameDayRoutesTest {
         append("place", "Anna's place")
         append("timeZone", "Europe/Brussels")
     }
-
-    private suspend fun HttpClient.htmxPost(url: String, form: Parameters = Parameters.Empty) =
-        submitForm(url, form) { header("HX-Request", "true") }
 
     @Test
     fun `creating a game day redirects htmx to its page`() = webTest { client ->
@@ -81,7 +69,7 @@ class GameDayRoutesTest {
 
         page.one("h1").text() shouldBe "Gorefest #7"
         page.one(".gf-kicker").text() shouldBe "Sun 27 Sep 2026 · Anna's place"
-        page.players() shouldContainExactly listOf("00000000 You Host")
+        page.players() shouldContainExactly listOf("Tim You Host")
         page.select("#players button").shouldBeEmpty()
     }
 
@@ -155,7 +143,7 @@ class GameDayRoutesTest {
         val players = client.htmxPost("/gamedays/$gorefest7/join").fragment()
 
         players shouldReplace "players"
-        players.players() shouldContainExactly listOf("${anna.toString().take(8)} Host", "00000000 You")
+        players.players() shouldContainExactly listOf("Anna Host", "Tim You")
         players.select("button").shouldBeEmpty()
     }
 
@@ -184,7 +172,29 @@ class GameDayRoutesTest {
         response.text() shouldBe "No such game day"
     }
 
-    /** One line per player row: id, "You" for the viewer, "Host" tag. */
+    @Test
+    fun `players show as initials and names`() = webTest { client ->
+        given(gameDayCreated(host = anna), PlayerJoined(gorefest7, anna))
+
+        client.get("/gamedays/$gorefest7").page().one("#players .gf-avatar").text() shouldBe "A"
+    }
+
+    @Test
+    fun `players without a name show as unknown`() = webTest { client ->
+        given(gameDayCreated(host = bram), PlayerJoined(gorefest7, bram))
+
+        val page = client.get("/gamedays/$gorefest7").page()
+
+        page.players() shouldContainExactly listOf("Unknown player Host")
+        page.one("#players .gf-avatar").text() shouldBe "?"
+    }
+
+    @Test
+    fun `the home page has a way out`() = webTest { client ->
+        client.get("/").page().one("form[action=/logout] button").text() shouldBe "Log out"
+    }
+
+    /** One line per player row: name, "You" for the viewer, "Host" tag. */
     private fun org.jsoup.nodes.Element.players() =
         select("#players li").map { row -> row.select(".gf-row__title, .gf-row__sub, .gf-tag").joinToString(" ") { it.text() } }
 }

@@ -1,6 +1,8 @@
 package gorefest
 
 import gorefest.shell.App
+import gorefest.shell.AppConfig
+import gorefest.shell.auth.DevMailbox
 import gorefest.shell.db.Database
 import gorefest.shell.web.web
 import io.ktor.server.engine.embeddedServer
@@ -16,7 +18,10 @@ fun main() {
         user = env("DATABASE_USER", "gorefest"),
         password = env("DATABASE_PASSWORD", "gorefest"),
     )
-    val app = App(db, Clock.systemUTC())
+    val config = AppConfig.fromEnv()
+    // A real mail provider is wired up with the deploy story (S1); until then only dev mode runs.
+    check(config.dev) { "No mail provider configured yet: run with GOREFEST_ENV=dev" }
+    val app = App(db, Clock.systemUTC(), config = config, mailer = DevMailbox())
     runBlocking { app.start() }
 
     embeddedServer(Netty, port = env("PORT", "8080").toInt(), host = env("HOST", "127.0.0.1")) {

@@ -6,7 +6,12 @@ import kotlinx.html.FlowContent
 import kotlinx.html.HTML
 import kotlinx.html.HTMLTag
 import kotlinx.html.MAIN
+import kotlinx.html.ButtonType
+import kotlinx.html.FormMethod
 import kotlinx.html.a
+import kotlinx.html.button
+import kotlinx.html.form
+import kotlinx.html.style
 import kotlinx.html.body
 import kotlinx.html.div
 import kotlinx.html.h3
@@ -77,11 +82,19 @@ object Icons {
     }
 }
 
-/** Initials disc; players have no names yet, so it shows the start of the id. */
-fun FlowContent.avatar(player: PlayerId, size: String = "") = span("gf-avatar $size".trim()) {
+/** Initials disc, coloured by player so the same person always gets the same hue. */
+fun FlowContent.avatar(player: PlayerId, name: String?, size: String = "") = span("gf-avatar $size".trim()) {
     attributes["aria-hidden"] = "true"
     attributes["data-hue"] = player.toString().sumOf { it.code }.mod(4).toString()
-    +player.toString().take(2).uppercase()
+    +(name?.let(::initials) ?: "?")
+}
+
+fun initials(name: String): String =
+    name.split(' ', '-').filter { it.isNotBlank() }.take(2).joinToString("") { it.first().uppercase() }.ifEmpty { "?" }
+
+fun FlowContent.logoutButton() = form(action = "/logout", method = FormMethod.post) {
+    style = "margin-left: auto"
+    button(type = ButtonType.submit, classes = "gf-btn gf-btn--ghost gf-btn--sm") { +"Log out" }
 }
 
 fun FlowContent.emptyState(title: String, text: String, action: FlowContent.() -> Unit = {}) = div("gf-empty") {

@@ -27,6 +27,19 @@ inline fun <reified E : Event> typeName(): String = serializer<E>().descriptor.s
 /** The stored type name of this event. */
 val Event.type: String get() = serializer(javaClass).descriptor.serialName
 
+/** First login. The player's email and name live in the `players` table, not in events, so they can be erased. */
+@Serializable
+@SerialName("PlayerRegistered")
+data class PlayerRegistered(val player: PlayerId) : Event {
+    override val tags get() = setOf(Tags.player(player))
+}
+
+@Serializable
+@SerialName("LoggedIn")
+data class LoggedIn(val player: PlayerId) : Event {
+    override val tags get() = setOf(Tags.player(player))
+}
+
 @Serializable
 @SerialName("GameDayCreated")
 data class GameDayCreated(

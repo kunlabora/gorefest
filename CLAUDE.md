@@ -29,7 +29,7 @@ Helps a group of boardgamers pick the games they'll enjoy most at a game day, us
   - Append: in one transaction, take `pg_advisory_xact_lock`, verify no events matching the decision's query (types + tags) exist after the read position, then insert.
 - **Hand-rolled deciders**: sealed interfaces for commands/events; pure `decide(cmd, state)` and `evolve(state, event)`. Each decider declares its DCB query. Test with given/when/then.
 - **Projections**: in-memory, rebuilt on startup by replaying the log.
-- **Not events** (plain tables): BGG metadata cache (`fetched_at`), magic-link tokens, sessions.
+- **Not events** (plain tables): BGG metadata cache (`fetched_at`), players (email, name), login attempts, sessions.
 
 ### Events (initial)
 
@@ -42,12 +42,12 @@ Tag convention: `player:{id}`, `gameday:{id}`, `game:{bggId}`.
 - **Functional core, imperative shell.**
   - `gorefest.core`: pure code only (events, deciders, projections, and later the taste model and matching). No IO, no clock, no random. Everything a decision needs (ids, today, acting player) is in the command.
   - `gorefest.shell`: DB, event store, command handler, projectors, web. Builds commands and calls the core.
-- **Context parameters for cross-cutting concerns.** `context(tx: Tx)` for anything that must run inside `Database.transaction`, `context(me: CurrentPlayer)` for handlers that need the logged-in player, `context(ids: IdGenerator, clock: Clock)` for routes that mint ids or need "now". Prefer them over passing these explicitly. Never call `Uuid.random()` or `now()` directly; tests use `IdGenerator.sequential()` and a fixed clock.
+- **Context parameters for cross-cutting concerns.** `context(tx: Tx)` for anything that must run inside `Database.transaction`, `context(me: CurrentPlayer)` for handlers that need the logged-in player, `context(ids: IdGenerator, clock: Clock)` for routes that mint ids or need "now". Prefer them over passing these explicitly. Never call `Uuid.random()` or `now()` directly; tests use `IdGenerator.sequential()` and `TestClock`. Secrets (login tokens, codes, session tokens) are the exception: they come from `SecureRandom` in `Secrets`, and tests read them from the mailbox or cookie.
 - **Events** live in `core/Event.kt` as one sealed interface. `@SerialName` is the stored type: never rename it; add a new event instead. Each event declares its `tags`.
 - **Deciders** are `object`s implementing `Decider`. Keep the query as narrow as the invariant allows, because anything outside it can't conflict (see `JoinGameDayDecider`).
 - Deciders and projections end their `when` with `else -> state`, so adding an event doesn't touch unrelated code.
 - **htmx:** handlers answer htmx requests with a fragment (one top-level element) and plain requests with a full page or redirect.
-- **Web tests** parse responses with Jsoup (`page()`, `fragment()` in `HtmlAssertions.kt`) and assert with CSS selectors, not substrings. `page()` also checks every `hx-target="#id"` resolves; `shouldReplace` checks an `outerHTML` fragment's root id. HTTP behaviour (status, `HX-Redirect`) is asserted directly.
+- **Web tests** use `TestApp` (`WebTest.kt`): `webTest(session = test.loggedIn("Tim")) { client -> … }`. They parse responses with Jsoup (`page()`, `fragment()` in `HtmlAssertions.kt`) and assert with CSS selectors, not substrings. `page()` also checks every `hx-target="#id"` resolves; `shouldReplace` checks an `outerHTML` fragment's root id. HTTP behaviour (status, `HX-Redirect`) is asserted directly.
 - **Design:** `docs/design/` holds the design system (tokens, `gorefest.css` components, brand book, microcopy) and HTML mockups of every screen. Build pages from those class names and follow the brand book's voice.
 - **Backlog:** `docs/backlog.md`. Update story status and tick criteria as work lands.
 
@@ -70,6 +70,9 @@ Tag convention: `player:{id}`, `gameday:{id}`, `game:{bggId}`.
 
 - Email magic link **plus** a 6-digit code in the same email (in-app browsers of WhatsApp/Signal break cookie-based magic links).
 - Tokens: random, stored hashed, single-use, ~15 min expiry. Long-lived session cookie afterwards.
+- The code is in the mail subject too. The link opens a confirm page and logs in on POST, because mail scanners pre-fetch GET links.
+- Email and display name live in the plain `players` table; events only carry player ids, so a player can be erased.
+- `GOREFEST_ENV=dev` (the default for now) sends mail to an in-memory dev mailbox at `/dev/mailbox`. Production needs `SECRET_KEY` and a mail provider (S1).
 - Transactional mail provider (Postmark / Resend / SES).
 
 ## Taste model

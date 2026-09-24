@@ -1,6 +1,7 @@
 package gorefest.shell.web
 
 import gorefest.shell.App
+import gorefest.shell.auth.DevMailbox
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
@@ -27,6 +28,8 @@ fun Application.web(app: App) {
     routing {
         get("/health") { call.respondText("ok") }
         staticResources("/static", "static")
-        context(app.ids, app.clock) { gameDayRoutes(app) }
+        context(app.login, app.config) { authRoutes() }
+        context(app.ids, app.clock, app.login) { gameDayRoutes(app) }
+        if (app.config.dev && app.mailer is DevMailbox) devRoutes(app.mailer)
     }
 }

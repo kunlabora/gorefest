@@ -14,6 +14,6 @@ object TestDatabase {
     }
 
     suspend fun reset() {
-        db.transaction { contextOf<gorefest.shell.db.Tx>().connection.createStatement().use { it.execute("truncate events restart identity") } }
+        db.transaction { contextOf<gorefest.shell.db.Tx>().connection.createStatement().use { it.execute("truncate events, sessions, login_attempts, players restart identity") } }
     }
 }

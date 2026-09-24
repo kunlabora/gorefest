@@ -7,7 +7,7 @@ A story is done when every criterion is ticked and covered by a test (decider gi
 |-----|---------------------------------------------------|--------|------------|
 | S0  | [Walking skeleton](#s0-walking-skeleton)          | ✅     |            |
 | S1  | [Deploy pipeline](#s1-deploy-pipeline)            | 📋     | S0         |
-| S2  | [Magic-link login](#s2-magic-link-login)          | 📋     | S0         |
+| S2  | [Magic-link login](#s2-magic-link-login)          | ✅     | S0         |
 | S3  | [Link BGG account](#s3-link-bgg-account)          | 📋     | S2         |
 | S4  | [Collection sync](#s4-collection-sync)            | 📋     | S3         |
 | S5  | [Create and edit a game day](#s5-create-and-edit-a-game-day) | 📋 | S2   |
@@ -48,19 +48,27 @@ S1–S13 is the MVP. S14–S16 make it good.
 - [ ] App config (DB URL, mail API key, signing secret) comes from an env file that isn't in the repo
 - [ ] Nightly `pg_dump` uploaded to object storage; restoring it into a fresh database is tested once and written down
 - [ ] `/health` checks DB connectivity; a failed deploy leaves the previous jar running
+- [ ] A real mail provider sends login mail; logging in from WhatsApp's and Signal's in-app browsers works on a real phone
+- [ ] Login mails are rate-limited per email and per IP
 
 ## S2 Magic-link login
 
 *As a player I want to log in with just my email so that there's no password to forget.*
 
-- [ ] Entering an email sends one mail containing both a magic link and a 6-digit code
-- [ ] Either one logs me in; both stop working once one is used, and after 15 minutes
-- [ ] Tokens and codes are random and stored hashed; after 5 wrong codes that login attempt is dead
-- [ ] First login emits `PlayerRegistered`, every login emits `LoggedIn`
-- [ ] A long-lived session cookie keeps me logged in; logging out ends the session
-- [ ] Login works when the link is opened in WhatsApp/Signal's in-app browser (the code path)
-- [ ] The dev-player stub in `CurrentPlayer.kt` is gone; unauthenticated requests go to login
-- [ ] **Decision needed:** email and display name live in a plain `players` table, not in events, so a player can be erased (GDPR)
+- [x] Entering an email sends one mail containing both a magic link and a 6-digit code (the code is also in the subject, so it shows in the notification)
+- [x] Either one logs me in; both stop working once one is used, and after 15 minutes
+- [x] Tokens and codes are random and stored hashed (codes with an HMAC keyed by `SECRET_KEY`); after 5 wrong codes that login attempt is dead
+- [x] First login emits `PlayerRegistered`, every login emits `LoggedIn`
+- [x] A long-lived session cookie keeps me logged in; logging out ends the session
+- [x] The code works in any browser, so login works from WhatsApp/Signal's in-app browser (checked on a real phone in S1)
+- [x] The dev-player stub in `CurrentPlayer.kt` is gone; unauthenticated requests go to login and come back afterwards
+- [x] **Decided:** email and display name live in a plain `players` table, not in events, so a player can be erased (GDPR)
+- [x] Added: first login asks for a display name; the magic link opens a "Let me in" confirm page, so mail scanners that pre-fetch links can't use it up
+- [x] Added: in dev mode, mail goes to `/dev/mailbox` instead of being sent
+
+Follow-ups, not blocking:
+- Delete expired login attempts and sessions nightly
+- Let players change their name later
 
 ## S3 Link BGG account
 
@@ -88,7 +96,7 @@ S1–S13 is the MVP. S14–S16 make it good.
 *As a host I want to set up a game day so that I can invite people to it.*
 
 - [x] Title, date, place and time zone; the host auto-joins (in the skeleton)
-- [ ] Only logged-in players can create one
+- [x] Only logged-in players can create one (S2)
 - [ ] Only the host can edit title, date and place (`GameDayDetailsChanged`)
 - [ ] My game days (hosting or joined) are listed on my home page, upcoming first
 

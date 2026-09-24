@@ -7,14 +7,14 @@ import gorefest.core.gameday.CreateGameDayDecider
 import gorefest.core.gameday.GameDaySummary
 import gorefest.core.gameday.JoinGameDay
 import gorefest.core.gameday.JoinGameDayDecider
+import gorefest.core.PlayerId
 import gorefest.shell.App
+import gorefest.shell.auth.Login
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.Parameters
 import io.ktor.server.html.respondHtml
 import io.ktor.server.request.receiveParameters
-import io.ktor.server.response.header
 import io.ktor.server.response.respond
-import io.ktor.server.response.respondRedirect
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.RoutingContext
 import io.ktor.server.routing.get
@@ -31,7 +31,6 @@ import kotlinx.html.input
 import kotlinx.html.label
 import kotlinx.html.li
 import kotlinx.html.p
-import kotlinx.html.stream.createHTML
 import kotlinx.html.ul
 import kotlinx.html.InputType
 import kotlinx.html.DIV
@@ -41,15 +40,13 @@ import kotlinx.html.span
 import kotlinx.html.style
 import java.time.LocalDate
 import java.time.ZoneId
-import io.ktor.http.ContentType
-import io.ktor.server.response.respondText
 import kotlinx.html.TagConsumer
 import gorefest.shell.IdGenerator
 import java.time.Clock
 
 private const val DEFAULT_TIME_ZONE = "Europe/Brussels"
 
-context(ids: IdGenerator, clock: Clock)
+context(ids: IdGenerator, clock: Clock, login: Login)
 fun Route.gameDayRoutes(app: App) {
     get("/") {
         authenticated {
@@ -58,7 +55,7 @@ fun Route.gameDayRoutes(app: App) {
             call.respondHtml {
                 page(
                     "Game days",
-                    appBar = { appBarTitle("Gorefest") },
+                    appBar = { appBarTitle("Gorefest"); logoutButton() },
                     dock = {
                         a("/gamedays/new", classes = "gf-btn gf-btn--primary gf-btn--lg gf-btn--block") { icon("plus"); +"Host a game day" }
                     },
@@ -107,6 +104,7 @@ fun Route.gameDayRoutes(app: App) {
     get("/gamedays/{id}") {
         authenticated {
             val gameDay = gameDayFromPath(app) ?: return@authenticated call.respond(HttpStatusCode.NotFound)
+            val names = login.names(gameDay.players)
             call.respondHtml {
                 page(gameDay.title, appBar = { backLink("/", "All game days"); appBarTitle("Game days") }) {
                     div("gf-stack") {
@@ -116,7 +114,7 @@ fun Route.gameDayRoutes(app: App) {
                     }
                     section("gf-section") {
                         h2("gf-h2") { +"Players" }
-                        consumer.players(gameDay)
+                        consumer.players(gameDay, names)
                     }
                 }
             }
@@ -129,7 +127,11 @@ fun Route.gameDayRoutes(app: App) {
                 ?: return@authenticated call.respond(HttpStatusCode.NotFound)
             val command = JoinGameDay(gameDayId, contextOf<CurrentPlayer>().id)
             when (val decision = app.commands.handle(JoinGameDayDecider, command)) {
-                is Decision.Accepted -> respondFragment(HttpStatusCode.OK) { players(app.gameDays.state.getValue(gameDayId)) }
+                is Decision.Accepted -> {
+                    val gameDay = app.gameDays.state.getValue(gameDayId)
+                    val names = login.names(gameDay.players)
+                    respondFragment { players(gameDay, names) }
+                }
                 is Decision.Rejected -> respondFragment(HttpStatusCode.OK) {
                     div("gf-notice gf-notice--error") {
                         id = "players"
@@ -147,15 +149,17 @@ private fun RoutingContext.gameDayFromPath(app: App): GameDaySummary? =
     call.parameters["id"]?.let { runCatching { GameDayId.parse(it) }.getOrNull() }?.let(app.gameDays.state::get)
 
 context(me: CurrentPlayer)
-private fun TagConsumer<*>.players(gameDay: GameDaySummary) {
+private fun TagConsumer<*>.players(gameDay: GameDaySummary, names: Map<PlayerId, String>) {
     div("gf-stack") {
         id = "players"
         if (gameDay.players.isNotEmpty()) ul("gf-list") {
             gameDay.players.forEach { player ->
                 li("gf-row") {
-                    avatar(player)
+                    // No name: the player never finished signing up, or was erased.
+                    val name = names[player]
+                    avatar(player, name)
                     span("gf-row__main") {
-                        span("gf-row__title") { +player.toString().take(8) }
+                        span("gf-row__title") { +(name ?: "Unknown player") }
                         if (player == me.id) span("gf-row__sub") { +"You" }
                     }
                     if (player == gameDay.host) span("gf-tag gf-tag--brand") { +"Host" }
@@ -235,18 +239,3 @@ private fun FlowContent.field(id: String, label: String, hint: String? = null, i
 private fun zoneOrDefault(id: String?): ZoneId =
     id?.let { runCatching { ZoneId.of(it) }.getOrNull() } ?: ZoneId.of(DEFAULT_TIME_ZONE)
 
-/** Full redirect for plain form posts, `HX-Redirect` for htmx requests. */
-private suspend fun RoutingContext.redirect(to: String) {
-    if (call.request.headers["HX-Request"] == "true") {
-        call.response.header("HX-Redirect", to)
-        call.respond(HttpStatusCode.NoContent)
-    } else {
-        call.respondRedirect(to)
-    }
-}
-
-/** Renders a single top-level element for htmx to swap in. */
-private suspend fun RoutingContext.respondFragment(status: HttpStatusCode, content: TagConsumer<String>.() -> Unit) {
-    val html = createHTML().apply(content).finalize()
-    call.respondText(html, ContentType.Text.Html, status)
-}
