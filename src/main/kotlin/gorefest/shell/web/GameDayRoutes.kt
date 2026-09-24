@@ -40,10 +40,12 @@ import java.time.ZoneId
 import io.ktor.http.ContentType
 import io.ktor.server.response.respondText
 import kotlinx.html.TagConsumer
-import kotlin.uuid.Uuid
+import gorefest.shell.IdGenerator
+import java.time.Clock
 
 private const val DEFAULT_TIME_ZONE = "Europe/Brussels"
 
+context(ids: IdGenerator, clock: Clock)
 fun Route.gameDayRoutes(app: App) {
     get("/") {
         authenticated {
@@ -63,13 +65,13 @@ fun Route.gameDayRoutes(app: App) {
         authenticated {
             val form = call.receiveParameters()
             val command = CreateGameDay(
-                gameDay = GameDayId(Uuid.random()),
+                gameDay = GameDayId(ids.next()),
                 host = contextOf<CurrentPlayer>().id,
                 title = form["title"].orEmpty(),
                 date = form["date"]?.let { runCatching { LocalDate.parse(it) }.getOrNull() } ?: LocalDate.MIN,
                 place = form["place"].orEmpty(),
                 timeZone = form["timeZone"] ?: DEFAULT_TIME_ZONE,
-                today = LocalDate.now(app.clock.withZone(zoneOrDefault(form["timeZone"]))),
+                today = LocalDate.now(clock.withZone(zoneOrDefault(form["timeZone"]))),
             )
             when (val decision = app.commands.handle(CreateGameDayDecider, command)) {
                 is Decision.Accepted -> redirect("/gamedays/${command.gameDay}")

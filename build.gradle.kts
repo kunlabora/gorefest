@@ -54,6 +54,7 @@ dependencies {
     testImplementation(libs.kotest.assertions)
     testImplementation(libs.ktor.server.test.host)
     testImplementation(libs.testcontainers.postgresql)
+    testImplementation(libs.jsoup)
 }
 
 tasks.test {

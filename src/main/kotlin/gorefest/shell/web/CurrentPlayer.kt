@@ -15,4 +15,4 @@ suspend fun RoutingContext.authenticated(block: suspend context(CurrentPlayer) R
     block(CurrentPlayer(DEV_PLAYER), this)
 }
 
-val DEV_PLAYER = PlayerId(Uuid.parse("00000000-0000-0000-0000-000000000001"))
+val DEV_PLAYER = PlayerId(Uuid.parse("00000000-0000-0000-0000-00000000de00"))

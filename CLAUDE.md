@@ -42,11 +42,12 @@ Tag convention: `player:{id}`, `gameday:{id}`, `game:{bggId}`.
 - **Functional core, imperative shell.**
   - `gorefest.core`: pure code only (events, deciders, projections, and later the taste model and matching). No IO, no clock, no random. Everything a decision needs (ids, today, acting player) is in the command.
   - `gorefest.shell`: DB, event store, command handler, projectors, web. Builds commands and calls the core.
-- **Context parameters for cross-cutting concerns.** `context(tx: Tx)` for anything that must run inside `Database.transaction`, `context(me: CurrentPlayer)` for handlers that need the logged-in player. Prefer them over passing these explicitly.
+- **Context parameters for cross-cutting concerns.** `context(tx: Tx)` for anything that must run inside `Database.transaction`, `context(me: CurrentPlayer)` for handlers that need the logged-in player, `context(ids: IdGenerator, clock: Clock)` for routes that mint ids or need "now". Prefer them over passing these explicitly. Never call `Uuid.random()` or `now()` directly; tests use `IdGenerator.sequential()` and a fixed clock.
 - **Events** live in `core/Event.kt` as one sealed interface. `@SerialName` is the stored type: never rename it; add a new event instead. Each event declares its `tags`.
 - **Deciders** are `object`s implementing `Decider`. Keep the query as narrow as the invariant allows, because anything outside it can't conflict (see `JoinGameDayDecider`).
 - Deciders and projections end their `when` with `else -> state`, so adding an event doesn't touch unrelated code.
 - **htmx:** handlers answer htmx requests with a fragment (one top-level element) and plain requests with a full page or redirect.
+- **Web tests** parse responses with Jsoup (`page()`, `fragment()` in `HtmlAssertions.kt`) and assert with CSS selectors, not substrings. `page()` also checks every `hx-target="#id"` resolves; `shouldReplace` checks an `outerHTML` fragment's root id. HTTP behaviour (status, `HX-Redirect`) is asserted directly.
 - **Backlog:** `docs/backlog.md`. Update story status and tick criteria as work lands.
 
 ### Dev commands

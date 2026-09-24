@@ -25,6 +25,6 @@ fun Application.web(app: App) {
     }
     routing {
         get("/health") { call.respondText("ok") }
-        gameDayRoutes(app)
+        context(app.ids, app.clock) { gameDayRoutes(app) }
     }
 }
