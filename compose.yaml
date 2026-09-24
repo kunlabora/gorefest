@@ -1,0 +1,14 @@
+# Local dev database. Tests don't need this; they start their own via Testcontainers.
+services:
+  postgres:
+    image: postgres:18
+    environment:
+      POSTGRES_DB: gorefest
+      POSTGRES_USER: gorefest
+      POSTGRES_PASSWORD: gorefest
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql
+volumes:
+  pgdata:

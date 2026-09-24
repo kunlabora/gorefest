@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "gorefest",
+      "runtimeExecutable": "java",
+      "runtimeArgs": ["-jar", "build/libs/gorefest.jar"],
+      "port": 8080
+    }
+  ]
+}
