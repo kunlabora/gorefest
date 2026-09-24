@@ -225,7 +225,10 @@ fun Route.gameDayRoutes(app: App) {
                         }
                     }
                     section("gf-section") {
-                        h2("gf-h2") { +"Players" }
+                        div("gf-sechead") {
+                            h2("gf-h2") { +"Players" }
+                            if (isHost && !gameDay.ended) a("/gamedays/${gameDay.id}/ready", classes = "gf-link") { +"How ready are we?" }
+                        }
                         consumer.players(gameDay, names)
                     }
                     if (!gameDay.ended) section("gf-section") {

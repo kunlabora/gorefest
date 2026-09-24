@@ -94,7 +94,7 @@ class BringRoutesTest {
 
         val page = client.get("/gamedays/$gorefest7").page()
 
-        page.one(".gf-sechead h2").text() shouldBe "The shelf · 2"
+        page.select(".gf-sechead h2").first()!!.text() shouldBe "The shelf · 2"
         page.select(".gf-tile").map { it.one(".gf-tile__name").text() to it.one(".gf-tile__owner").text() } shouldContainExactly
             listOf("Brass: Birmingham" to "K", "Azul" to "A")
         page.one(".gf-sechead a").attr("href") shouldBe bringPage

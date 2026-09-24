@@ -38,6 +38,7 @@ fun Application.web(app: App) {
         context(app.login) { wizardRoutes(app) }
         context(app.login) { tableRoutes(app) }
         context(app.login) { checkpointRoutes(app) }
+        context(app.login, app.config) { readinessRoutes(app) }
         if (app.config.dev && app.mailer is DevMailbox) devRoutes(app.mailer)
         if (app.config.dev && app.bggApi is FakeBggApi) devBggRoutes(app.bggApi)
     }
