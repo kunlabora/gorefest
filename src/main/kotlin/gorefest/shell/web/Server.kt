@@ -4,6 +4,7 @@ import gorefest.shell.App
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
+import io.ktor.server.http.content.staticResources
 import io.ktor.server.plugins.calllogging.CallLogging
 import io.ktor.server.plugins.statuspages.StatusPages
 import io.ktor.server.response.respondText
@@ -25,6 +26,7 @@ fun Application.web(app: App) {
     }
     routing {
         get("/health") { call.respondText("ok") }
+        staticResources("/static", "static")
         context(app.ids, app.clock) { gameDayRoutes(app) }
     }
 }

@@ -3,6 +3,7 @@
 /* Gorefest components: plain CSS on top of tokens.css. Prefix gf-. No build step. */
 
 *, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; background: var(--surface); }
 :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 .gf-vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .gf-icon { width: 20px; height: 20px; flex: none; }

@@ -80,8 +80,8 @@ class GameDayRoutesTest {
         val page = client.get("/gamedays/00000000-0000-0000-0000-000000000001").page()
 
         page.one("h1").text() shouldBe "Gorefest #7"
-        page.one("main > p").text() shouldBe "2026-09-27 · Anna's place"
-        page.texts("#players li") shouldContainExactly listOf("00000000 host (you)")
+        page.one(".gf-kicker").text() shouldBe "Sun 27 Sep 2026 · Anna's place"
+        page.players() shouldContainExactly listOf("00000000 You Host")
         page.select("#players button").shouldBeEmpty()
     }
 
@@ -89,10 +89,38 @@ class GameDayRoutesTest {
     fun `the home page lists game days by date, linking to each`() = webTest { client ->
         client.htmxPost("/gamedays", validForm)
 
-        val link = client.get("/").page().one("ul li a")
+        val card = client.get("/").page().one("a.gf-daycard")
 
-        link.text() shouldBe "Gorefest #7 — 2026-09-27"
-        link.attr("href") shouldBe "/gamedays/00000000-0000-0000-0000-000000000001"
+        card.attr("href") shouldBe "/gamedays/00000000-0000-0000-0000-000000000001"
+        card.one(".gf-date").text() shouldBe "Sep 27"
+        card.one(".gf-daycard__title").text() shouldBe "Gorefest #7"
+        card.one(".gf-daycard__meta").text() shouldBe "Anna's place · 1 going"
+    }
+
+    @Test
+    fun `the home page without game days explains how to get one`() = webTest { client ->
+        val page = client.get("/").page()
+
+        page.one(".gf-empty__title").text() shouldBe "No game days yet"
+        page.one(".gf-dock a").attr("href") shouldBe "/gamedays/new"
+    }
+
+    @Test
+    fun `hosting starts from a form that posts with htmx`() = webTest { client ->
+        val form = client.get("/gamedays/new").page().one("form")
+
+        form.attr("hx-post") shouldBe "/gamedays"
+        form.select("input.gf-input").map { it.attr("name") } shouldContainExactly listOf("title", "date", "place")
+        form.one("label[for=title]").text() shouldBe "Title"
+    }
+
+    @Test
+    fun `the design system stylesheets are served`() = webTest { client ->
+        listOf("/static/css/tokens.css", "/static/css/gorefest.css").forEach { url ->
+            val response = client.get(url)
+            response.status shouldBe HttpStatusCode.OK
+            response.headers["Content-Type"]!!.startsWith("text/css") shouldBe true
+        }
     }
 
     @Test
@@ -103,7 +131,7 @@ class GameDayRoutesTest {
         }).fragment()
 
         form.tagName() shouldBe "form"
-        form.one("p").text() shouldBe "That date is in the past"
+        form.one("[role=alert]").text() shouldBe "That date is in the past"
         form.one("input[name=title]").`val`() shouldBe "Gorefest #7"
         form.one("input[name=date]").`val`() shouldBe "2020-01-01"
     }
@@ -127,7 +155,7 @@ class GameDayRoutesTest {
         val players = client.htmxPost("/gamedays/$gorefest7/join").fragment()
 
         players shouldReplace "players"
-        players.texts("li") shouldContainExactly listOf("${anna.toString().take(8)} host", "00000000 (you)")
+        players.players() shouldContainExactly listOf("${anna.toString().take(8)} Host", "00000000 You")
         players.select("button").shouldBeEmpty()
     }
 
@@ -155,4 +183,8 @@ class GameDayRoutesTest {
         response shouldReplace "players"
         response.text() shouldBe "No such game day"
     }
+
+    /** One line per player row: id, "You" for the viewer, "Host" tag. */
+    private fun org.jsoup.nodes.Element.players() =
+        select("#players li").map { row -> row.select(".gf-row__title, .gf-row__sub, .gf-tag").joinToString(" ") { it.text() } }
 }

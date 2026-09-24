@@ -34,7 +34,11 @@ import kotlinx.html.p
 import kotlinx.html.stream.createHTML
 import kotlinx.html.ul
 import kotlinx.html.InputType
-import kotlinx.html.small
+import kotlinx.html.DIV
+import kotlinx.html.role
+import kotlinx.html.section
+import kotlinx.html.span
+import kotlinx.html.style
 import java.time.LocalDate
 import java.time.ZoneId
 import io.ktor.http.ContentType
@@ -50,11 +54,31 @@ fun Route.gameDayRoutes(app: App) {
     get("/") {
         authenticated {
             val gameDays = app.gameDays.state.values.sortedBy { it.date }
+            val today = LocalDate.now(clock.withZone(ZoneId.of(DEFAULT_TIME_ZONE)))
             call.respondHtml {
-                page("Game days") {
-                    h1 { +"Game days" }
-                    ul { gameDays.forEach { li { a("/gamedays/${it.id}") { +"${it.title} — ${it.date}" } } } }
-                    h2 { +"Host a game day" }
+                page(
+                    "Game days",
+                    appBar = { appBarTitle("Gorefest") },
+                    dock = {
+                        a("/gamedays/new", classes = "gf-btn gf-btn--primary gf-btn--lg gf-btn--block") { icon("plus"); +"Host a game day" }
+                    },
+                ) {
+                    h1("gf-h1") { +"Your game days" }
+                    if (gameDays.isEmpty()) {
+                        emptyState("No game days yet", "Got an invite? Tap the link in your group chat. Or host one yourself.")
+                    } else {
+                        div("gf-stack") { gameDays.forEach { dayCard(it, today) } }
+                    }
+                }
+            }
+        }
+    }
+
+    get("/gamedays/new") {
+        authenticated {
+            call.respondHtml {
+                page("Host a game day", appBar = { backLink("/", "All game days"); appBarTitle("New game day") }) {
+                    h1("gf-h1") { +"Host a game day" }
                     consumer.createGameDayForm()
                 }
             }
@@ -84,12 +108,16 @@ fun Route.gameDayRoutes(app: App) {
         authenticated {
             val gameDay = gameDayFromPath(app) ?: return@authenticated call.respond(HttpStatusCode.NotFound)
             call.respondHtml {
-                page(gameDay.title) {
-                    a("/") { +"← all game days" }
-                    h1 { +gameDay.title }
-                    p { +"${gameDay.date} · ${gameDay.place}" }
-                    h2 { +"Players" }
-                    consumer.players(gameDay)
+                page(gameDay.title, appBar = { backLink("/", "All game days"); appBarTitle("Game days") }) {
+                    div("gf-stack") {
+                        p("gf-kicker") { +listOf(gameDay.date.long(), gameDay.place).filter { it.isNotBlank() }.joinToString(" · ") }
+                        h1("gf-h1") { +gameDay.title }
+                        if (gameDay.ended) span("gf-tag") { +"Ended" }
+                    }
+                    section("gf-section") {
+                        h2("gf-h2") { +"Players" }
+                        consumer.players(gameDay)
+                    }
                 }
             }
         }
@@ -102,7 +130,14 @@ fun Route.gameDayRoutes(app: App) {
             val command = JoinGameDay(gameDayId, contextOf<CurrentPlayer>().id)
             when (val decision = app.commands.handle(JoinGameDayDecider, command)) {
                 is Decision.Accepted -> respondFragment(HttpStatusCode.OK) { players(app.gameDays.state.getValue(gameDayId)) }
-                is Decision.Rejected -> respondFragment(HttpStatusCode.OK) { p { id = "players"; +decision.reason } }
+                is Decision.Rejected -> respondFragment(HttpStatusCode.OK) {
+                    div("gf-notice gf-notice--error") {
+                        id = "players"
+                        role = "alert"
+                        icon("alert")
+                        p { +decision.reason }
+                    }
+                }
             }
         }
     }
@@ -113,43 +148,88 @@ private fun RoutingContext.gameDayFromPath(app: App): GameDaySummary? =
 
 context(me: CurrentPlayer)
 private fun TagConsumer<*>.players(gameDay: GameDaySummary) {
-    div {
+    div("gf-stack") {
         id = "players"
-        ul {
+        if (gameDay.players.isNotEmpty()) ul("gf-list") {
             gameDay.players.forEach { player ->
-                li {
-                    +player.toString().take(8)
-                    if (player == gameDay.host) small { +" host" }
-                    if (player == me.id) small { +" (you)" }
+                li("gf-row") {
+                    avatar(player)
+                    span("gf-row__main") {
+                        span("gf-row__title") { +player.toString().take(8) }
+                        if (player == me.id) span("gf-row__sub") { +"You" }
+                    }
+                    if (player == gameDay.host) span("gf-tag gf-tag--brand") { +"Host" }
                 }
             }
         }
         if (me.id !in gameDay.players && !gameDay.ended) {
-            button {
+            button(classes = "gf-btn gf-btn--primary gf-btn--lg gf-btn--block") {
                 hx("post", "/gamedays/${gameDay.id}/join")
                 hx("target", "#players")
                 hx("swap", "outerHTML")
-                hyperscript("on click add @aria-busy='true' to me")
-                +"Join"
+                hyperscript("on click set @aria-busy to 'true'")
+                span("gf-spin") { attributes["aria-hidden"] = "true" }
+                +"Join ${gameDay.title}"
             }
         }
     }
 }
 
+private fun FlowContent.dayCard(gameDay: GameDaySummary, today: LocalDate) {
+    a("/gamedays/${gameDay.id}", classes = "gf-daycard") {
+        span("gf-date") {
+            span("gf-date__month") { +if (gameDay.date == today) "Today" else gameDay.date.monthShort() }
+            +" " // flex ignores it; screen readers and text extraction need it
+            span("gf-date__day") { +gameDay.date.dayOfMonth.toString() }
+        }
+        span {
+            style = "min-width: 0"
+            span("gf-daycard__title") { +gameDay.title }
+            span("gf-daycard__meta") {
+                +listOf(gameDay.place, "${gameDay.players.size} going").filter { it.isNotBlank() }.joinToString(" · ")
+            }
+            if (gameDay.ended) span("gf-tag") { style = "margin-top: 6px"; +"Ended" }
+        }
+        span {
+            style = "display: flex; transform: rotate(180deg); color: var(--ink-muted)"
+            icon("back")
+        }
+    }
+}
+
 private fun TagConsumer<*>.createGameDayForm(error: String? = null, values: Parameters = Parameters.Empty) {
-    form(action = "/gamedays", method = kotlinx.html.FormMethod.post) {
+    form(action = "/gamedays", method = kotlinx.html.FormMethod.post, classes = "gf-section") {
         hx("post", "/gamedays")
         hx("swap", "outerHTML")
-        if (error != null) p { +error }
-        label { +"Title"; input(InputType.text, name = "title") { placeholder = "Gorefest #7"; required = true; value = values["title"].orEmpty() } }
-        label { +"Date"; input(InputType.date, name = "date") { required = true; value = values["date"].orEmpty() } }
-        label { +"Place"; input(InputType.text, name = "place") { value = values["place"].orEmpty() } }
+        if (error != null) div("gf-notice gf-notice--error") {
+            role = "alert"
+            icon("alert")
+            p { +error }
+        }
+        field("title", "Title", hint = "Whatever your group calls it.") {
+            input(InputType.text, name = "title", classes = "gf-input") { id = "title"; placeholder = "Gorefest #7"; required = true; value = values["title"].orEmpty() }
+        }
+        field("date", "Date") {
+            input(InputType.date, name = "date", classes = "gf-input") { id = "date"; required = true; value = values["date"].orEmpty() }
+        }
+        field("place", "Where", hint = "Shown on the invite. Leave out the house number if you like.") {
+            input(InputType.text, name = "place", classes = "gf-input") { id = "place"; value = values["place"].orEmpty() }
+        }
         input(InputType.hidden, name = "timeZone") {
             value = DEFAULT_TIME_ZONE
             hyperscript("init set my value to Intl.DateTimeFormat().resolvedOptions().timeZone")
         }
-        button { +"Create" }
+        button(classes = "gf-btn gf-btn--primary gf-btn--lg gf-btn--block") {
+            span("gf-spin") { attributes["aria-hidden"] = "true" }
+            +"Create game day"
+        }
     }
+}
+
+private fun FlowContent.field(id: String, label: String, hint: String? = null, input: DIV.() -> Unit) = div("gf-field") {
+    label("gf-label") { htmlFor = id; +label }
+    input()
+    if (hint != null) p("gf-hint") { +hint }
 }
 
 private fun zoneOrDefault(id: String?): ZoneId =

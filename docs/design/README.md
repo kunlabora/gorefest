@@ -14,4 +14,4 @@ The live, browsable version is the "Gorefest" design system artifact on claude.a
 
 ## Using it in the app
 
-Serve `tokens.css` and `gorefest.css` as static resources, link them (in that order) from the page shell in `Html.kt` in place of Pico, and build pages from the markup in the mockups. The mockups use the real class names and `hx-*` attributes, so a screen's HTML can be ported to kotlinx.html almost line by line.
+The app serves these files directly: Gradle copies `css/` and `icons/` into the jar's `static/` resources, and Ktor serves them under `/static`. Edit them here, not in `build/`. `Html.kt` has the page shell (`page`, app bar, dock) and helpers for icons, avatars and empty states. Port a screen by copying the mockup's markup into kotlinx.html; the mockups use the real class names and `hx-*` attributes.
