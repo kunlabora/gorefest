@@ -54,6 +54,18 @@ data class GameDayCreated(
     override val tags get() = setOf(Tags.gameDay(gameDay), Tags.player(host))
 }
 
+/** The host changed what's on the invite. The time zone stays as created. */
+@Serializable
+@SerialName("GameDayDetailsChanged")
+data class GameDayDetailsChanged(
+    val gameDay: GameDayId,
+    val title: String,
+    @Serializable(with = LocalDateSerializer::class) val date: LocalDate,
+    val place: String,
+) : Event {
+    override val tags get() = setOf(Tags.gameDay(gameDay))
+}
+
 @Serializable
 @SerialName("PlayerJoined")
 data class PlayerJoined(val gameDay: GameDayId, val player: PlayerId) : Event {

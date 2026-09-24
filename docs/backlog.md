@@ -10,7 +10,7 @@ A story is done when every criterion is ticked and covered by a test (decider gi
 | S2  | [Magic-link login](#s2-magic-link-login)          | ✅     | S0         |
 | S3  | [Link BGG account](#s3-link-bgg-account)          | 📋     | S2         |
 | S4  | [Collection sync](#s4-collection-sync)            | 📋     | S3         |
-| S5  | [Create and edit a game day](#s5-create-and-edit-a-game-day) | 📋 | S2   |
+| S5  | [Create and edit a game day](#s5-create-and-edit-a-game-day) | ✅ | S2   |
 | S6  | [Invite link and landing page](#s6-invite-link-and-landing-page) | 📋 | S5 |
 | S7  | [Bring games from my collection](#s7-bring-games-from-my-collection) | 📋 | S4, S6 |
 | S8  | [Bring a game by search](#s8-bring-a-game-by-search) | 📋  | S7         |
@@ -97,8 +97,8 @@ Follow-ups, not blocking:
 
 - [x] Title, date, place and time zone; the host auto-joins (in the skeleton)
 - [x] Only logged-in players can create one (S2)
-- [ ] Only the host can edit title, date and place (`GameDayDetailsChanged`)
-- [ ] My game days (hosting or joined) are listed on my home page, upcoming first
+- [x] Only the host can edit title, date and place (`GameDayDetailsChanged`); the time zone stays as created
+- [x] My game days (hosting or joined) are listed on my home page, upcoming first (soonest first), then past ones
 
 ## S6 Invite link and landing page
 

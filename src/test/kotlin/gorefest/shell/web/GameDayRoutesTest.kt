@@ -194,6 +194,60 @@ class GameDayRoutesTest {
         client.get("/").page().one("form[action=/logout] button").text() shouldBe "Log out"
     }
 
+    @Test
+    fun `the home page only shows game days I host or joined`() = webTest { client ->
+        given(gameDayCreated(host = anna), PlayerJoined(gorefest7, anna))
+
+        client.get("/").page().select("a.gf-daycard").shouldBeEmpty()
+    }
+
+    @Test
+    fun `the host can edit the details`() = webTest { client ->
+        client.htmxPost("/gamedays", validForm)
+        val id = "00000000-0000-0000-0000-000000000001"
+
+        val page = client.get("/gamedays/$id").page()
+        page.one(".gf-appbar a[href=/gamedays/$id/edit]").text() shouldBe "Edit"
+
+        val form = client.get("/gamedays/$id/edit").page().one("form")
+        form.attr("hx-post") shouldBe "/gamedays/$id/edit"
+        form.one("input[name=title]").`val`() shouldBe "Gorefest #7"
+        form.select("input[name=timeZone]").shouldBeEmpty()
+
+        val saved = client.htmxPost("/gamedays/$id/edit", parameters {
+            append("title", "Gorefest #7½")
+            append("date", "2026-09-28")
+            append("place", "Bram's attic")
+        })
+        saved.headers["HX-Redirect"] shouldBe "/gamedays/$id"
+        val after = client.get("/gamedays/$id").page()
+        after.one("h1").text() shouldBe "Gorefest #7½"
+        after.one(".gf-kicker").text() shouldBe "Mon 28 Sep 2026 · Bram's attic"
+    }
+
+    @Test
+    fun `an edit rejection keeps what was typed`() = webTest { client ->
+        client.htmxPost("/gamedays", validForm)
+
+        val form = client.htmxPost("/gamedays/00000000-0000-0000-0000-000000000001/edit", parameters {
+            append("title", "")
+            append("date", "2026-09-28")
+        }).fragment()
+
+        form.one("[role=alert]").text() shouldBe "Give the game day a title"
+        form.one("input[name=date]").`val`() shouldBe "2026-09-28"
+    }
+
+    @Test
+    fun `other players can't edit`() = webTest { client ->
+        given(gameDayCreated(host = anna), PlayerJoined(gorefest7, anna))
+
+        client.get("/gamedays/$gorefest7").page().select(".gf-appbar a[href$=/edit]").shouldBeEmpty()
+        client.get("/gamedays/$gorefest7/edit").status shouldBe HttpStatusCode.NotFound
+        client.htmxPost("/gamedays/$gorefest7/edit", validForm).fragment().one("[role=alert]").text() shouldBe
+            "Only the host can change this game day"
+    }
+
     /** One line per player row: name, "You" for the viewer, "Host" tag. */
     private fun org.jsoup.nodes.Element.players() =
         select("#players li").map { row -> row.select(".gf-row__title, .gf-row__sub, .gf-tag").joinToString(" ") { it.text() } }

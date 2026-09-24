@@ -4,7 +4,10 @@ import gorefest.core.GameDayId
 import gorefest.core.eventsourcing.Decision
 import gorefest.core.gameday.CreateGameDay
 import gorefest.core.gameday.CreateGameDayDecider
+import gorefest.core.gameday.EditGameDay
+import gorefest.core.gameday.EditGameDayDecider
 import gorefest.core.gameday.GameDaySummary
+import gorefest.core.gameday.GameDays
 import gorefest.core.gameday.JoinGameDay
 import gorefest.core.gameday.JoinGameDayDecider
 import gorefest.core.PlayerId
@@ -50,8 +53,9 @@ context(ids: IdGenerator, clock: Clock, login: Login)
 fun Route.gameDayRoutes(app: App) {
     get("/") {
         authenticated {
-            val gameDays = app.gameDays.state.values.sortedBy { it.date }
-            val today = LocalDate.now(clock.withZone(ZoneId.of(DEFAULT_TIME_ZONE)))
+            val me = contextOf<CurrentPlayer>()
+            val gameDays = with(GameDays) { app.gameDays.state.forPlayer(me.id) { zone -> todayIn(zone) } }
+            val today = todayIn(DEFAULT_TIME_ZONE)
             call.respondHtml {
                 page(
                     "Game days",
@@ -76,7 +80,7 @@ fun Route.gameDayRoutes(app: App) {
             call.respondHtml {
                 page("Host a game day", appBar = { backLink("/", "All game days"); appBarTitle("New game day") }) {
                     h1("gf-h1") { +"Host a game day" }
-                    consumer.createGameDayForm()
+                    consumer.gameDayForm(action = "/gamedays", submitLabel = "Create game day")
                 }
             }
         }
@@ -96,7 +100,45 @@ fun Route.gameDayRoutes(app: App) {
             )
             when (val decision = app.commands.handle(CreateGameDayDecider, command)) {
                 is Decision.Accepted -> redirect("/gamedays/${command.gameDay}")
-                is Decision.Rejected -> respondFragment(HttpStatusCode.OK) { createGameDayForm(decision.reason, form) }
+                is Decision.Rejected -> respondFragment { gameDayForm("/gamedays", "Create game day", decision.reason, form) }
+            }
+        }
+    }
+
+    get("/gamedays/{id}/edit") {
+        authenticated {
+            val gameDay = gameDayFromPath(app)?.takeIf { it.host == contextOf<CurrentPlayer>().id }
+                ?: return@authenticated call.respond(HttpStatusCode.NotFound)
+            val values = Parameters.build {
+                append("title", gameDay.title)
+                append("date", gameDay.date.toString())
+                append("place", gameDay.place)
+            }
+            call.respondHtml {
+                page("Edit ${gameDay.title}", appBar = { backLink("/gamedays/${gameDay.id}", gameDay.title); appBarTitle("Edit game day") }) {
+                    h1("gf-h1") { +"Edit game day" }
+                    consumer.gameDayForm("/gamedays/${gameDay.id}/edit", "Save changes", values = values, editing = true)
+                }
+            }
+        }
+    }
+
+    post("/gamedays/{id}/edit") {
+        authenticated {
+            val gameDay = gameDayFromPath(app) ?: return@authenticated call.respond(HttpStatusCode.NotFound)
+            val form = call.receiveParameters()
+            val command = EditGameDay(
+                gameDay = gameDay.id,
+                editor = contextOf<CurrentPlayer>().id,
+                title = form["title"].orEmpty(),
+                date = form["date"]?.let { runCatching { LocalDate.parse(it) }.getOrNull() } ?: LocalDate.MIN,
+                place = form["place"].orEmpty(),
+                today = todayIn(gameDay.timeZone),
+            )
+            when (val decision = app.commands.handle(EditGameDayDecider, command)) {
+                is Decision.Accepted -> redirect("/gamedays/${gameDay.id}")
+                is Decision.Rejected ->
+                    respondFragment { gameDayForm("/gamedays/${gameDay.id}/edit", "Save changes", decision.reason, form, editing = true) }
             }
         }
     }
@@ -106,7 +148,14 @@ fun Route.gameDayRoutes(app: App) {
             val gameDay = gameDayFromPath(app) ?: return@authenticated call.respond(HttpStatusCode.NotFound)
             val names = login.names(gameDay.players)
             call.respondHtml {
-                page(gameDay.title, appBar = { backLink("/", "All game days"); appBarTitle("Game days") }) {
+                val isHost = gameDay.host == contextOf<CurrentPlayer>().id
+                page(gameDay.title, appBar = {
+                    backLink("/", "All game days")
+                    appBarTitle("Game days")
+                    if (isHost && !gameDay.ended) {
+                        a("/gamedays/${gameDay.id}/edit", classes = "gf-btn gf-btn--ghost gf-btn--sm") { style = "margin-left: auto"; +"Edit" }
+                    }
+                }) {
                     div("gf-stack") {
                         p("gf-kicker") { +listOf(gameDay.date.long(), gameDay.place).filter { it.isNotBlank() }.joinToString(" · ") }
                         h1("gf-h1") { +gameDay.title }
@@ -201,9 +250,16 @@ private fun FlowContent.dayCard(gameDay: GameDaySummary, today: LocalDate) {
     }
 }
 
-private fun TagConsumer<*>.createGameDayForm(error: String? = null, values: Parameters = Parameters.Empty) {
-    form(action = "/gamedays", method = kotlinx.html.FormMethod.post, classes = "gf-section") {
-        hx("post", "/gamedays")
+/** Create and edit share this form; editing leaves the time zone as it was created. */
+private fun TagConsumer<*>.gameDayForm(
+    action: String,
+    submitLabel: String,
+    error: String? = null,
+    values: Parameters = Parameters.Empty,
+    editing: Boolean = false,
+) {
+    form(action = action, method = kotlinx.html.FormMethod.post, classes = "gf-section") {
+        hx("post", action)
         hx("swap", "outerHTML")
         if (error != null) div("gf-notice gf-notice--error") {
             role = "alert"
@@ -219,13 +275,13 @@ private fun TagConsumer<*>.createGameDayForm(error: String? = null, values: Para
         field("place", "Where", hint = "Shown on the invite. Leave out the house number if you like.") {
             input(InputType.text, name = "place", classes = "gf-input") { id = "place"; value = values["place"].orEmpty() }
         }
-        input(InputType.hidden, name = "timeZone") {
+        if (!editing) input(InputType.hidden, name = "timeZone") {
             value = DEFAULT_TIME_ZONE
             hyperscript("init set my value to Intl.DateTimeFormat().resolvedOptions().timeZone")
         }
         button(classes = "gf-btn gf-btn--primary gf-btn--lg gf-btn--block") {
             span("gf-spin") { attributes["aria-hidden"] = "true" }
-            +"Create game day"
+            +submitLabel
         }
     }
 }
@@ -235,6 +291,9 @@ private fun FlowContent.field(id: String, label: String, hint: String? = null, i
     input()
     if (hint != null) p("gf-hint") { +hint }
 }
+
+context(clock: Clock)
+private fun todayIn(timeZone: String): LocalDate = LocalDate.now(clock.withZone(zoneOrDefault(timeZone)))
 
 private fun zoneOrDefault(id: String?): ZoneId =
     id?.let { runCatching { ZoneId.of(it) }.getOrNull() } ?: ZoneId.of(DEFAULT_TIME_ZONE)
