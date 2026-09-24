@@ -55,7 +55,7 @@ class TestApp(config: AppConfig = AppConfig.dev()) {
         app.db.transaction {
             val player = Players().findOrCreate("${name.lowercase()}@example.com", id)
             Players().rename(player.id, name)
-            Sessions().create(secrets.hash(token), player.id, clock.instant() + Duration.ofDays(1))
+            Sessions().create(secrets.hash(token), player.id, clock.instant() + Duration.ofDays(365))
         }
         return token
     }

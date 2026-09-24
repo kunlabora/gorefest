@@ -158,6 +158,8 @@ fun Route.gameDayRoutes(app: App) {
             val names = login.names(gameDay.players)
             val shelf = app.shelves.state[gameDay.id].orEmpty().mapNotNull { entry -> app.catalog[entry.game]?.let { it to entry } }
             val answers = app.tastes.state[contextOf<CurrentPlayer>().id]?.comparisons?.size ?: 0
+            val onTheDay = gameDay.date == todayIn(gameDay.timeZone)
+            val played = app.plays.state[gameDay.id].orEmpty().mapNotNull { log -> app.catalog[log.game]?.let { it to log } }
             call.respondHtml {
                 val isHost = gameDay.host == contextOf<CurrentPlayer>().id
                 page(gameDay.title, appBar = {
@@ -172,7 +174,12 @@ fun Route.gameDayRoutes(app: App) {
                         h1("gf-h1") { +gameDay.title }
                         if (gameDay.ended) span("gf-tag") { +"Ended" }
                     }
-                    if (!gameDay.ended) section("gf-next") {
+                    if (!gameDay.ended && onTheDay) section("gf-next") {
+                        p("gf-kicker") { +checkpointLabel(gameDay, clock) }
+                        h2("gf-next__title") { +"What did you play?" }
+                        p("gf-next__text") { +"Log it in 20 seconds and get fresh suggestions for the next round." }
+                        a("/gamedays/${gameDay.id}/log", classes = "gf-btn gf-btn--primary gf-btn--block") { +"Log a game" }
+                    } else if (!gameDay.ended) section("gf-next") {
                         p("gf-kicker") { +"Your next step" }
                         if (answers < 10) {
                             h2("gf-next__title") { +"Tell us what you like" }
@@ -186,6 +193,20 @@ fun Route.gameDayRoutes(app: App) {
                     }
                     if (!gameDay.ended && shelf.isNotEmpty()) div("gf-stack") {
                         a("/gamedays/${gameDay.id}/table", classes = "gf-btn gf-btn--secondary gf-btn--lg gf-btn--block") { icon("dice"); +"Pick a game for my table" }
+                    }
+                    if (played.isNotEmpty()) section("gf-section") {
+                        h2("gf-h2") { +"Played today" }
+                        ul("gf-list") {
+                            played.forEach { (game, log) ->
+                                li {
+                                    gameRow(game, meta = "${log.players.map { names[it] ?: "?" }.joinToString(", ")} · ${log.minutes} min") {
+                                        span("gf-small gf-muted") {
+                                            +log.at.atZone(zoneOrDefault(gameDay.timeZone)).toLocalTime().withSecond(0).withNano(0).toString()
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                     section("gf-section") {
                         div("gf-sechead") {

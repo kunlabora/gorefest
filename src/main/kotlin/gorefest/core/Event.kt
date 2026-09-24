@@ -135,6 +135,20 @@ data class GamePlayStatusDeclared(val player: PlayerId, val game: BggId, val pla
     override val tags get() = setOf(Tags.player(player), Tags.game(game))
 }
 
+/** At a checkpoint: this game was played at the game day, by these players, for about this long. */
+@Serializable
+@SerialName("PlayLogged")
+data class PlayLogged(
+    val gameDay: GameDayId,
+    val game: BggId,
+    val players: List<PlayerId>,
+    val minutes: Int,
+    val loggedBy: PlayerId,
+    @Serializable(with = InstantSerializer::class) val at: Instant,
+) : Event {
+    override val tags get() = setOf(Tags.gameDay(gameDay), Tags.game(game)) + players.map(Tags::player)
+}
+
 @Serializable
 @SerialName("GameDayEnded")
 data class GameDayEnded(val gameDay: GameDayId) : Event {

@@ -53,6 +53,16 @@ class Wizard(
             .maxByOrNull { it.second }?.first
     }
 
+    /**
+     * After a play: something to compare the game just played with. One of [candidates] the player
+     * has played, whose PLAYED score we're least sure about.
+     */
+    fun partner(player: PlayerGames, justPlayed: BggId, candidates: List<Game>, now: Instant): Game? {
+        val scores = player.history.scores(model, Basis.PLAYED, now)
+        return candidates.filter { it.id != justPlayed && player.hasPlayed(it.id) }
+            .maxWithOrNull(compareBy<Game> { scores[it.id].variance }.thenBy { it.name })
+    }
+
     fun shouldStop(round: RoundState) = round.step >= maxPairs || (round.step >= minPairs && round.stableSteps >= 3)
 
     /** After an answer: one step further, and whether the player's top 3 stayed put. */

@@ -5,6 +5,7 @@ import gorefest.core.BggId
 import gorefest.core.ComparisonRecorded
 import gorefest.core.Event
 import gorefest.core.GamePlayStatusDeclared
+import gorefest.core.PlayLogged
 import gorefest.core.PlayerId
 import gorefest.core.eventsourcing.Decider
 import gorefest.core.eventsourcing.Decision
@@ -30,6 +31,7 @@ object Tastes : Projection<Map<PlayerId, TasteHistory>> {
     override fun evolve(state: Map<PlayerId, TasteHistory>, event: Event) = when (event) {
         is ComparisonRecorded -> state.change(event.player) { it.copy(comparisons = it.comparisons + event) }
         is GamePlayStatusDeclared -> state.change(event.player) { it.copy(played = it.played + (event.game to event.played)) }
+        is PlayLogged -> event.players.fold(state) { s, p -> s.change(p) { it.copy(played = it.played + (event.game to true)) } }
         else -> state
     }
 

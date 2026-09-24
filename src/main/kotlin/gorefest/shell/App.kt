@@ -1,6 +1,7 @@
 package gorefest.shell
 
 import gorefest.core.gameday.GameDays
+import gorefest.core.gameday.Plays
 import gorefest.core.gameday.Shelves
 import gorefest.core.player.BggAccounts
 import gorefest.core.taste.Tastes
@@ -45,7 +46,8 @@ class App(
     val bggAccounts = Projector(BggAccounts, db, store)
     val shelves = Projector(Shelves, db, store)
     val tastes = Projector(Tastes, db, store)
-    private val projectors = listOf(gameDays, bggAccounts, shelves, tastes)
+    val plays = Projector(Plays, db, store)
+    private val projectors = listOf(gameDays, bggAccounts, shelves, tastes, plays)
     val commands = CommandHandler(db, store, afterAppend = { catchUp() })
 
     val login = Login(db, commands, mailer, config, clock, ids)
@@ -70,8 +72,9 @@ class App(
 
     fun stop() = scope.cancel()
 
-    /** How fast this group plays compared to BGG's box times; 1.0 until play logs say otherwise (S12). */
-    fun groupSpeed(gameDay: gorefest.core.gameday.GameDaySummary, players: List<gorefest.core.PlayerId>): Double = 1.0
+    /** How fast these players play compared to BGG's box times, learned from all their play logs. */
+    fun groupSpeed(players: List<gorefest.core.PlayerId>): Double =
+        gorefest.core.gameday.groupSpeed(plays.state.values.flatten(), catalog::get, players)
 
     private suspend fun catchUp() = projectors.forEach { it.catchUp() }
 }

@@ -51,7 +51,7 @@ fun Route.tableRoutes(app: App) {
             TablePlayer(id, names[id] ?: "Someone", PlayerGames(app.tastes.state[id] ?: TasteHistory(), app.collectionSync.collection(id)))
         }
         val shelf = app.shelves.state[gameDay.id].orEmpty().mapNotNull { entry -> app.catalog[entry.game]?.let { it to entry } }
-        return matcher.suggest(table, shelf, budget, app.clock.instant(), speed = app.groupSpeed(gameDay, chosen)) to table.size
+        return matcher.suggest(table, shelf, budget, app.clock.instant(), speed = app.groupSpeed(chosen)) to table.size
     }
 
     get("/gamedays/{id}/table") {

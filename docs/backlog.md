@@ -17,7 +17,7 @@ A story is done when every criterion is ticked and covered by a test (decider gi
 | S9  | [Taste model v0: per-game scores](#s9-taste-model-v0-per-game-scores) | ✅ | S0 |
 | S10 | [First-time wizard](#s10-first-time-wizard)       | ✅     | S7, S9     |
 | S11 | [Ad hoc suggestions](#s11-ad-hoc-suggestions)     | ✅     | S10        |
-| S12 | [Checkpoint play log](#s12-checkpoint-play-log)   | 📋     | S11        |
+| S12 | [Checkpoint play log](#s12-checkpoint-play-log)   | ✅     | S11        |
 | S13 | [Host readiness view](#s13-host-readiness-view)   | 📋     | S10        |
 | S14 | [Returning-player top-up](#s14-returning-player-top-up) | 📋 | S10      |
 | S15 | [Taste model v1: features, appeal vs enjoyment](#s15-taste-model-v1-features-appeal-vs-enjoyment) | 📋 | S12 |
@@ -172,10 +172,11 @@ Follow-ups, not blocking:
 
 *As a table I want to log what we played so that later suggestions get better.*
 
-- [ ] At a checkpoint: pick game, players, minutes played (`PlayLogged`)
-- [ ] Then one PLAYED comparison against a game I've played before
-- [ ] Suggestions refresh right after
-- [ ] Learned group speed from `PlayLogged` adjusts duration estimates
+- [x] At a checkpoint: pick game, players, minutes played (`PlayLogged`); on the day the hub leads with it (morning / lunch / evening in the game day's time zone)
+- [x] Then one PLAYED comparison against a game I've played before (the one we know least about)
+- [x] Suggestions refresh right after, for the table that just played
+- [x] Learned group speed from `PlayLogged` adjusts duration estimates (median ratio to box time, 0.6–1.8×)
+- [x] Added: the hub lists what was played today; logged games count as played for everyone at the table
 
 ## S13 Host readiness view
 
