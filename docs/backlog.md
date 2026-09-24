@@ -16,7 +16,7 @@ A story is done when every criterion is ticked and covered by a test (decider gi
 | S8  | [Bring a game by search](#s8-bring-a-game-by-search) | ✅  | S7         |
 | S9  | [Taste model v0: per-game scores](#s9-taste-model-v0-per-game-scores) | ✅ | S0 |
 | S10 | [First-time wizard](#s10-first-time-wizard)       | ✅     | S7, S9     |
-| S11 | [Ad hoc suggestions](#s11-ad-hoc-suggestions)     | 📋     | S10        |
+| S11 | [Ad hoc suggestions](#s11-ad-hoc-suggestions)     | ✅     | S10        |
 | S12 | [Checkpoint play log](#s12-checkpoint-play-log)   | 📋     | S11        |
 | S13 | [Host readiness view](#s13-host-readiness-view)   | 📋     | S10        |
 | S14 | [Returning-player top-up](#s14-returning-player-top-up) | 📋 | S10      |
@@ -161,12 +161,12 @@ Follow-ups, not blocking:
 
 *As a table I want three suggestions so that we stop debating and start playing.*
 
-- [ ] I tick who's at the table (joined players only) and optionally a time budget
-- [ ] Candidates: shelf games whose BGG best/recommended player count includes the table size and that fit the time budget
-- [ ] Top 3 by mean predicted enjoyment minus λ·spread, with novelty and owner-desire bonuses
-- [ ] Each suggestion has a one-line reason ("everyone's likely to enjoy it, nobody's played it")
-- [ ] Unplayed games blend appeal and enjoyment; players with thin profiles count for less
-- [ ] "Nothing fits" is shown clearly, with the constraint to relax
+- [x] I tick who's at the table (joined players only) and optionally a time budget
+- [x] Candidates: shelf games whose BGG best/recommended player count includes the table size and that fit the time budget
+- [x] Top 3 by mean predicted enjoyment minus λ·spread (λ = 0.5), with novelty and owner-desire bonuses
+- [x] Each suggestion has a one-line reason (owner's wish, novelty, safe bet, best player count, time)
+- [x] Unplayed games use appeal (VIBE), played ones enjoyment (PLAYED); players with thin profiles count for less
+- [x] "Nothing fits" is shown clearly, with a button that loosens the time budget when that would help
 
 ## S12 Checkpoint play log
 

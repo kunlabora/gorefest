@@ -70,5 +70,8 @@ class App(
 
     fun stop() = scope.cancel()
 
+    /** How fast this group plays compared to BGG's box times; 1.0 until play logs say otherwise (S12). */
+    fun groupSpeed(gameDay: gorefest.core.gameday.GameDaySummary, players: List<gorefest.core.PlayerId>): Double = 1.0
+
     private suspend fun catchUp() = projectors.forEach { it.catchUp() }
 }

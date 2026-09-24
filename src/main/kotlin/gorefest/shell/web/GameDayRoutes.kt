@@ -184,6 +184,9 @@ fun Route.gameDayRoutes(app: App) {
                             a("/gamedays/${gameDay.id}/favourites", classes = "gf-btn gf-btn--primary gf-btn--block") { +"See your favourites" }
                         }
                     }
+                    if (!gameDay.ended && shelf.isNotEmpty()) div("gf-stack") {
+                        a("/gamedays/${gameDay.id}/table", classes = "gf-btn gf-btn--secondary gf-btn--lg gf-btn--block") { icon("dice"); +"Pick a game for my table" }
+                    }
                     section("gf-section") {
                         div("gf-sechead") {
                             h2("gf-h2") { +"The shelf · ${shelf.size}" }
