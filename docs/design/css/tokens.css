@@ -1,0 +1,96 @@
+/* Gorefest design tokens. Generated from docs/design/tokens.json; edit that file and regenerate, or edit both.
+   Theme: follows the OS (prefers-color-scheme) unless <html data-theme="light|dark"> forces one. */
+
+:root {
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-pill: 999px;
+  --font-display: "Bricolage Grotesque", ui-rounded, system-ui, sans-serif;
+  --font-sans: "Atkinson Hyperlegible Next", "Atkinson Hyperlegible", system-ui, sans-serif;
+}
+
+:root, [data-theme="light"] {
+  color-scheme: light;
+  --charcoal-brown: #30362f;
+  --olive-bark: #625834;
+  --golden-bronze: #a59132;
+  --light-yellow: #fffbdb;
+  --chocolate: #da7422;
+  --surface: var(--light-yellow);
+  --surface-raised: #fffef3;
+  --surface-sunk: #f3edc4;
+  --ink: var(--charcoal-brown);
+  --ink-muted: var(--olive-bark);
+  --line: #e6dcaa;
+  --line-strong: #857a55;
+  --brand: var(--chocolate);
+  --on-brand: #1e2119;
+  --brand-ink: #9a4d12;
+  --brand-soft: #f9dfc2;
+  --accent: var(--golden-bronze);
+  --on-accent: #1e2119;
+  --accent-soft: #efe4a8;
+  --olive: var(--olive-bark);
+  --on-olive: var(--light-yellow);
+  --olive-soft: #e9e3c3;
+  --danger: #b3261e;
+  --danger-soft: #f8d9d2;
+  --focus: var(--ink);
+  --shadow-edge: 0 3px 0 #e6dcaa;
+  --shadow-brand-edge: 0 3px 0 #9a4d12;
+  --shadow-lift: 0 10px 24px rgba(48,54,47,0.16);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --surface: #1c201b;
+    --surface-raised: var(--charcoal-brown);
+    --surface-sunk: #141713;
+    --ink: var(--light-yellow);
+    --ink-muted: #c9c19a;
+    --line: #434a41;
+    --line-strong: #8a9387;
+    --brand-ink: #f0a060;
+    --brand-soft: #4a2c12;
+    --accent-soft: #3a3517;
+    --olive: #c4b877;
+    --on-olive: #1c201b;
+    --olive-soft: #34331f;
+    --danger: #ff8a7a;
+    --danger-soft: #4a1d18;
+    --shadow-edge: 0 3px 0 #0e100d;
+    --shadow-brand-edge: 0 3px 0 #8a4410;
+    --shadow-lift: 0 10px 24px rgba(0,0,0,0.5);
+  }
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --surface: #1c201b;
+  --surface-raised: var(--charcoal-brown);
+  --surface-sunk: #141713;
+  --ink: var(--light-yellow);
+  --ink-muted: #c9c19a;
+  --line: #434a41;
+  --line-strong: #8a9387;
+  --brand-ink: #f0a060;
+  --brand-soft: #4a2c12;
+  --accent-soft: #3a3517;
+  --olive: #c4b877;
+  --on-olive: #1c201b;
+  --olive-soft: #34331f;
+  --danger: #ff8a7a;
+  --danger-soft: #4a1d18;
+  --shadow-edge: 0 3px 0 #0e100d;
+  --shadow-brand-edge: 0 3px 0 #8a4410;
+  --shadow-lift: 0 10px 24px rgba(0,0,0,0.5);
+}

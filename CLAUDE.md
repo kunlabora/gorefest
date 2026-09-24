@@ -48,6 +48,7 @@ Tag convention: `player:{id}`, `gameday:{id}`, `game:{bggId}`.
 - Deciders and projections end their `when` with `else -> state`, so adding an event doesn't touch unrelated code.
 - **htmx:** handlers answer htmx requests with a fragment (one top-level element) and plain requests with a full page or redirect.
 - **Web tests** parse responses with Jsoup (`page()`, `fragment()` in `HtmlAssertions.kt`) and assert with CSS selectors, not substrings. `page()` also checks every `hx-target="#id"` resolves; `shouldReplace` checks an `outerHTML` fragment's root id. HTTP behaviour (status, `HX-Redirect`) is asserted directly.
+- **Design:** `docs/design/` holds the design system (tokens, `gorefest.css` components, brand book, microcopy) and HTML mockups of every screen. Build pages from those class names and follow the brand book's voice.
 - **Backlog:** `docs/backlog.md`. Update story status and tick criteria as work lands.
 
 ### Dev commands
