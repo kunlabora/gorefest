@@ -30,6 +30,10 @@ class Catalog(private val db: Database) {
 
     fun all(): Collection<Game> = games.values
 
+    /** Cached games whose name contains [query], best ranked first. */
+    fun search(query: String): List<Game> =
+        games.values.filter { it.name.contains(query, ignoreCase = true) }.sortedBy { it.rank ?: Int.MAX_VALUE }
+
     fun missing(ids: Collection<BggId>): List<BggId> = ids.filterNot(games::containsKey)
 
     suspend fun put(fetched: Collection<Game>, at: Instant) {

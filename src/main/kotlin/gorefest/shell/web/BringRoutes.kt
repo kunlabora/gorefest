@@ -68,6 +68,21 @@ fun Route.bringRoutes(app: App) {
                         }
                     }
                     if (gameDay.ended) p("gf-muted") { +"This game day has ended, so the shelf is final." }
+                    else {
+                        div("gf-search") {
+                            icon("search")
+                            input(InputType.search, classes = "gf-input", name = "q") {
+                                placeholder = if (linked) "Search your collection or BGG" else "Search BGG"
+                                attributes["aria-label"] = "Search games"
+                                attributes["autocomplete"] = "off"
+                                hx("get", "/gamedays/${gameDay.id}/bring/search")
+                                hx("trigger", "input changed delay:300ms, search")
+                                hx("target", "#search-results")
+                                hx("swap", "outerHTML")
+                            }
+                        }
+                        consumer.searchResults(gameDay, emptyList(), bggUnavailable = false)
+                    }
                     ul("gf-list") {
                         id = "bring-list"
                         rows.forEach { consumer.bringItem(gameDay, it, readOnly = gameDay.ended) }
@@ -78,12 +93,24 @@ fun Route.bringRoutes(app: App) {
         }
     }
 
+    get("/gamedays/{id}/bring/search") {
+        authenticated {
+            val me = contextOf<CurrentPlayer>()
+            val gameDay = memberGameDay(app, me) ?: return@authenticated call.respond(HttpStatusCode.NotFound)
+            val result = app.gameSearch.search(call.parameters["q"].orEmpty())
+            val shelf = app.shelves.state[gameDay.id].orEmpty()
+            respondFragment { searchResults(gameDay, result.games.map { bringRow(it, shelf, me) }, result.bggUnavailable) }
+        }
+    }
+
     post("/gamedays/{id}/shelf/{game}") {
         authenticated {
             val me = contextOf<CurrentPlayer>()
             val (gameDay, game) = shelfTarget(app, me) ?: return@authenticated call.respond(HttpStatusCode.NotFound)
-            val bringing = call.receiveParameters()["bringing"] == "true"
-            respondBringDecision(app, gameDay, game, me, app.commands.handle(BringGameDecider, BringGame(gameDay.id, me.id, game.id, bringing)))
+            val form = call.receiveParameters()
+            val bringing = form["bringing"] == "true"
+            val decision = app.commands.handle(BringGameDecider, BringGame(gameDay.id, me.id, game.id, bringing))
+            respondBringDecision(app, gameDay, game, me, decision, rowPrefix = form["row"] ?: "bring")
         }
     }
 
@@ -91,8 +118,10 @@ fun Route.bringRoutes(app: App) {
         authenticated {
             val me = contextOf<CurrentPlayer>()
             val (gameDay, game) = shelfTarget(app, me) ?: return@authenticated call.respond(HttpStatusCode.NotFound)
-            val wants = call.receiveParameters()["wants"] == "true"
-            respondBringDecision(app, gameDay, game, me, app.commands.handle(SetPlayWishDecider, SetPlayWish(gameDay.id, me.id, game.id, wants)))
+            val form = call.receiveParameters()
+            val wants = form["wants"] == "true"
+            val decision = app.commands.handle(SetPlayWishDecider, SetPlayWish(gameDay.id, me.id, game.id, wants))
+            respondBringDecision(app, gameDay, game, me, decision, rowPrefix = form["row"] ?: "bring")
         }
     }
 }
@@ -107,11 +136,20 @@ private fun RoutingContext.shelfTarget(app: App, me: CurrentPlayer): Pair<GameDa
     return gameDay to game
 }
 
-private suspend fun RoutingContext.respondBringDecision(app: App, gameDay: GameDaySummary, game: Game, me: CurrentPlayer, decision: Decision<*>) {
+private suspend fun RoutingContext.respondBringDecision(
+    app: App, gameDay: GameDaySummary, game: Game, me: CurrentPlayer, decision: Decision<*>, rowPrefix: String,
+) {
     val row = bringRow(game, app.shelves.state[gameDay.id].orEmpty(), me)
+    val prefix = if (rowPrefix == "search") "search" else "bring"
     respondFragment(if (decision is Decision.Rejected) HttpStatusCode.Conflict else HttpStatusCode.OK) {
-        bringItem(gameDay, row, readOnly = gameDay.ended, error = (decision as? Decision.Rejected)?.reason)
+        bringItem(gameDay, row, readOnly = gameDay.ended, error = (decision as? Decision.Rejected)?.reason, prefix = prefix)
     }
+}
+
+private fun TagConsumer<*>.searchResults(gameDay: GameDaySummary, rows: List<BringRow>, bggUnavailable: Boolean) = div {
+    id = "search-results"
+    if (bggUnavailable) p("gf-small gf-muted") { +"BGG isn't answering right now, so these are only games we already know." }
+    if (rows.isNotEmpty()) ul("gf-list") { rows.forEach { consumer.bringItem(gameDay, it, readOnly = false, prefix = "search") } }
 }
 
 private fun bringRow(game: Game, shelf: List<ShelfGame>, me: CurrentPlayer): BringRow {
@@ -119,9 +157,13 @@ private fun bringRow(game: Game, shelf: List<ShelfGame>, me: CurrentPlayer): Bri
     return BringRow(game, bringing = entry != null && me.id in entry.owners, wants = entry != null && me.id in entry.eager)
 }
 
-/** One row with the bringing switch; once brought, a "really want to play" toggle appears. */
-fun TagConsumer<*>.bringItem(gameDay: GameDaySummary, row: BringRow, readOnly: Boolean, error: String? = null) = li {
-    id = "bring-${row.game.id}"
+/**
+ * One row with the bringing switch; once brought, a "really want to play" toggle appears.
+ * Search results use [prefix] "search" so they don't share ids with the same game in the list.
+ */
+fun TagConsumer<*>.bringItem(gameDay: GameDaySummary, row: BringRow, readOnly: Boolean, error: String? = null, prefix: String = "bring") = li {
+    val rowId = "$prefix-${row.game.id}"
+    id = rowId
     gameRow(row.game) {
         input(InputType.checkBox, classes = "gf-switch", name = "bringing") {
             role("switch")
@@ -131,21 +173,22 @@ fun TagConsumer<*>.bringItem(gameDay: GameDaySummary, row: BringRow, readOnly: B
             attributes["aria-label"] = "Bringing ${row.game.name}"
             hx("post", "/gamedays/${gameDay.id}/shelf/${row.game.id}")
             hx("trigger", "change")
-            hx("target", "#bring-${row.game.id}")
+            hx("target", "#$rowId")
             hx("swap", "outerHTML")
+            hx("vals", """{"row": "$prefix"}""")
         }
     }
-    if (row.bringing && !readOnly) wishToggle(gameDay, row)
+    if (row.bringing && !readOnly) wishToggle(gameDay, row, rowId, prefix)
     if (error != null) p("gf-error") { attributes["role"] = "alert"; icon("alert"); +error }
 }
 
-private fun FlowContent.wishToggle(gameDay: GameDaySummary, row: BringRow) =
+private fun FlowContent.wishToggle(gameDay: GameDaySummary, row: BringRow, rowId: String, prefix: String) =
     button(type = ButtonType.button, classes = if (row.wants) "gf-chip gf-chip--text" else "gf-chip") {
         attributes["aria-pressed"] = row.wants.toString()
         attributes["style"] = "margin: 0 0 var(--space-2) var(--space-4)"
         hx("post", "/gamedays/${gameDay.id}/shelf/${row.game.id}/wish")
-        hx("vals", """{"wants": "${!row.wants}"}""")
-        hx("target", "#bring-${row.game.id}")
+        hx("vals", """{"wants": "${!row.wants}", "row": "$prefix"}""")
+        hx("target", "#$rowId")
         hx("swap", "outerHTML")
         icon("heart")
         span { +if (row.wants) "Itching to play this" else "I really want to play this" }

@@ -10,6 +10,7 @@ import gorefest.shell.bgg.BggGateway
 import gorefest.shell.bgg.BggVerification
 import gorefest.shell.bgg.Catalog
 import gorefest.shell.bgg.CollectionSync
+import gorefest.shell.bgg.GameSearch
 import gorefest.shell.db.Database
 import gorefest.shell.eventstore.EventStore
 import kotlinx.coroutines.CoroutineExceptionHandler
@@ -51,6 +52,7 @@ class App(
     val bggVerification = BggVerification(config.secretKey)
     val catalog = Catalog(db)
     val collectionSync = CollectionSync(db, bgg, catalog, clock, scope, bggRetry)
+    val gameSearch = GameSearch(catalog, bgg, clock)
 
     suspend fun start() {
         db.migrate()

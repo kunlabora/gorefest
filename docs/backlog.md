@@ -13,7 +13,7 @@ A story is done when every criterion is ticked and covered by a test (decider gi
 | S5  | [Create and edit a game day](#s5-create-and-edit-a-game-day) | ✅ | S2   |
 | S6  | [Invite link and landing page](#s6-invite-link-and-landing-page) | ✅ | S5 |
 | S7  | [Bring games from my collection](#s7-bring-games-from-my-collection) | ✅ | S4, S6 |
-| S8  | [Bring a game by search](#s8-bring-a-game-by-search) | 📋  | S7         |
+| S8  | [Bring a game by search](#s8-bring-a-game-by-search) | ✅  | S7         |
 | S9  | [Taste model v0: per-game scores](#s9-taste-model-v0-per-game-scores) | 📋 | S0 |
 | S10 | [First-time wizard](#s10-first-time-wizard)       | 📋     | S7, S9     |
 | S11 | [Ad hoc suggestions](#s11-ad-hoc-suggestions)     | 📋     | S10        |
@@ -130,9 +130,10 @@ Follow-ups, not blocking:
 
 *As a participant I want to add a game that's not in my BGG collection, e.g. on the day.*
 
-- [ ] Search looks in the local metadata cache first and falls back to BGG search through the worker
-- [ ] Results appear as I type (htmx, debounced); picking one brings it
-- [ ] A game found via search gets its metadata fetched and cached like a collection game
+- [x] Search looks in the local metadata cache first and falls back to BGG search through the worker (LIVE priority) when that finds fewer than 5
+- [x] Results appear as I type (htmx, debounced 300 ms); picking one brings it
+- [x] A game found via search gets its metadata fetched and cached like a collection game
+- [x] Added: when BGG is down, local matches still show, with a note
 
 ## S9 Taste model v0: per-game scores
 

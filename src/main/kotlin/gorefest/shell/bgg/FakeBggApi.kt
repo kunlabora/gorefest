@@ -19,6 +19,9 @@ class FakeBggApi(private val catalog: List<Game> = DevCatalog.games) : BggApi {
     /** How many more times a collection request answers "queued" (202) before it's ready. */
     val queuedFor = ConcurrentHashMap<String, Int>()
 
+    /** Every search query sent. */
+    val searchCalls: MutableList<String> = java.util.Collections.synchronizedList(mutableListOf())
+
     /** The ids asked for in each `things` call. */
     val thingCalls: MutableList<Collection<BggId>> = java.util.Collections.synchronizedList(mutableListOf())
 
@@ -50,7 +53,7 @@ class FakeBggApi(private val catalog: List<Game> = DevCatalog.games) : BggApi {
     }
 
     override suspend fun search(query: String): List<SearchHit> =
-        catalog.filter { it.name.contains(query.trim(), ignoreCase = true) }.map { SearchHit(it.id, it.name, it.year) }
+        also { searchCalls += query }.catalog.filter { it.name.contains(query.trim(), ignoreCase = true) }.map { SearchHit(it.id, it.name, it.year) }
 
     /** 15 games, the same ones every time for the same username. */
     private fun defaultCollection(username: String): Set<BggId> {
