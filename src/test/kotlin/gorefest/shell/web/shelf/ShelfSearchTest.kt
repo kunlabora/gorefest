@@ -26,7 +26,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.uuid.Uuid
 
-class BringSearchTest {
+class ShelfSearchTest {
     private val test = TestApp()
     private val app = test.app
     private val kimId = PlayerId(Uuid.random())

@@ -1,4 +1,4 @@
-package gorefest.shell
+package gorefest.shell.gameday
 
 import gorefest.core.gameday.gorefest7
 import io.kotest.matchers.nulls.shouldBeNull

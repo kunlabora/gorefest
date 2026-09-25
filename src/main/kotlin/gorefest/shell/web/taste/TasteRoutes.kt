@@ -41,7 +41,7 @@ private fun App.wizardFor(topUpRound: Boolean) = if (topUpRound) topUpWizard els
 private data class RoundInputs(val pool: List<Game>, val shelf: List<Game>, val anchors: List<Game>, val player: PlayerGames)
 
 context(login: Login)
-fun Route.wizardRoutes(app: App) {
+fun Route.tasteRoutes(app: App) {
     suspend fun inputs(gameDay: GameDaySummary, me: CurrentPlayer): RoundInputs {
         val shelf = app.shelves.state[gameDay.id].orEmpty().map { it.game }
         val hosts = app.collectionSync.collection(gameDay.host)

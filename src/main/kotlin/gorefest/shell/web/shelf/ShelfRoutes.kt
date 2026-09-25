@@ -26,7 +26,7 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 
 context(login: Login)
-fun Route.bringRoutes(app: App) {
+fun Route.shelfRoutes(app: App) {
     get("/gamedays/{id}/bring") {
         authenticated {
             val me = contextOf<CurrentPlayer>()

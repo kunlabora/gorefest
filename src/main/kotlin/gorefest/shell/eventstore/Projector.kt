@@ -1,4 +1,4 @@
-package gorefest.shell
+package gorefest.shell.eventstore
 
 import gorefest.core.eventsourcing.Projection
 import gorefest.shell.db.Database

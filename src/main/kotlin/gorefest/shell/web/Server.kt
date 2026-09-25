@@ -12,9 +12,9 @@ import gorefest.shell.web.dev.devRoutes
 import gorefest.shell.web.gameday.gameDayRoutes
 import gorefest.shell.web.gameday.readinessRoutes
 import gorefest.shell.web.invite.inviteRoutes
-import gorefest.shell.web.shelf.bringRoutes
-import gorefest.shell.web.suggestions.tableRoutes
-import gorefest.shell.web.taste.wizardRoutes
+import gorefest.shell.web.shelf.shelfRoutes
+import gorefest.shell.web.suggestions.suggestionsRoutes
+import gorefest.shell.web.taste.tasteRoutes
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
@@ -53,9 +53,9 @@ fun Application.web(app: App) {
         context(app.login, app.config) { inviteRoutes(app, app.invites) }
         context(app.login) { bggRoutes(app) }
         context(app.login) { collectionRoutes(app) }
-        context(app.login) { bringRoutes(app) }
-        context(app.login) { wizardRoutes(app) }
-        context(app.login) { tableRoutes(app) }
+        context(app.login) { shelfRoutes(app) }
+        context(app.login) { tasteRoutes(app) }
+        context(app.login) { suggestionsRoutes(app) }
         context(app.login) { checkpointRoutes(app) }
         context(app.login, app.config) { readinessRoutes(app) }
         if (app.config.dev && app.mailer is DevMailbox) devRoutes(app.mailer)

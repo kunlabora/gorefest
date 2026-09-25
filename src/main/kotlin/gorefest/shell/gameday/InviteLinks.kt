@@ -1,4 +1,4 @@
-package gorefest.shell
+package gorefest.shell.gameday
 
 import gorefest.core.GameDayId
 import gorefest.core.gameday.GameDaySummary

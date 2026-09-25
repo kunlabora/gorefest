@@ -46,7 +46,7 @@ private fun FlowContent.wizardContent(step: WizardStep) {
         hx("swap", "outerHTML")
         // A and B on the keyboard, as the key hints promise.
         hyperscript("on keydown from window if event.key is 'a' or event.key is 'A' then call #pick-a.click() else if event.key is 'b' or event.key is 'B' then call #pick-b.click() end")
-        // The round travels in hidden fields: see Parameters.round() in WizardRoutes.
+        // The round travels in hidden fields: see Parameters.round() in TasteRoutes.
         hiddenInput("a", pair.a.id.toString())
         hiddenInput("b", pair.b.id.toString())
         hiddenInput("basis", pair.basis.name)

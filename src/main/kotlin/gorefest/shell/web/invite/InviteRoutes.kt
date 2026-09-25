@@ -6,8 +6,8 @@ import gorefest.core.gameday.JoinGameDay
 import gorefest.core.gameday.JoinGameDayDecider
 import gorefest.shell.App
 import gorefest.shell.AppConfig
-import gorefest.shell.InviteLinks
 import gorefest.shell.auth.Login
+import gorefest.shell.gameday.InviteLinks
 import gorefest.shell.web.components.full
 import gorefest.shell.web.gameday.invite
 import gorefest.shell.web.redirect

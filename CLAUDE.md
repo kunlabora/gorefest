@@ -41,7 +41,7 @@ Tag convention: `player:{id}`, `gameday:{id}`, `game:{bggId}`.
 
 - **Functional core, imperative shell.**
   - `gorefest.core`: pure code only (events, deciders, projections, and later the taste model and matching). No IO, no clock, no random. Everything a decision needs (ids, today, acting player) is in the command.
-  - `gorefest.shell`: DB, event store, command handler, projectors, web. Builds commands and calls the core.
+  - `gorefest.shell`: DB, event store, command handler, projectors, web. Builds commands and calls the core. The root holds only the wiring (`App`, `AppConfig`, `IdGenerator`); `shell.eventstore` has `EventStore`, `CommandHandler` and `Projector`; `shell.gameday` has `InviteLinks` and `GameDayCloser`; `shell.auth`, `shell.bgg` and `shell.db` hold the rest.
   - External systems stay in the shell: BGG's XML, HTTP and caching live in `shell.bgg` and translate into core types (`core.game.Game`). Core types don't carry display text; that belongs in `shell.web` views (e.g. `Game.facts`).
 - **Context parameters for cross-cutting concerns.** `context(tx: Tx)` for anything that must run inside `Database.transaction`, `context(me: CurrentPlayer)` for handlers that need the logged-in player, `context(ids: IdGenerator, clock: Clock)` for routes that mint ids or need "now". Prefer them over passing these explicitly. Never call `Uuid.random()` or `now()` directly; tests use `IdGenerator.sequential()` and `TestClock`. Secrets (login tokens, codes, session tokens) are the exception: they come from `SecureRandom` in `Secrets`, and tests read them from the mailbox or cookie.
 - **Events** live in `core/Event.kt` as one sealed interface. `@SerialName` is the stored type: never rename it; add a new event instead. Each event declares its `tags`.

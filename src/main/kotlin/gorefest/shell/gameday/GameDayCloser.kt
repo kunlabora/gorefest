@@ -1,10 +1,11 @@
-package gorefest.shell
+package gorefest.shell.gameday
 
 import gorefest.core.eventsourcing.Decision
 import gorefest.core.gameday.EndGameDay
 import gorefest.core.gameday.EndGameDayDecider
 import gorefest.core.gameday.GameDaySummary
 import gorefest.core.gameday.dueToEnd
+import gorefest.shell.App
 import gorefest.shell.auth.Mail
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive

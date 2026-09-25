@@ -1,4 +1,4 @@
-package gorefest.shell
+package gorefest.shell.gameday
 
 import gorefest.core.GameBrought
 import gorefest.core.PlayLogged

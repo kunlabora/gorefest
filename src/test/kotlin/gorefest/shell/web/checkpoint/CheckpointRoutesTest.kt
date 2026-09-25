@@ -30,7 +30,7 @@ import org.junit.jupiter.api.Test
 import java.time.Duration
 import kotlin.uuid.Uuid
 
-class CheckpointTest {
+class CheckpointRoutesTest {
     private val test = TestApp()
     private val app = test.app
     private val kimId = PlayerId(Uuid.random())

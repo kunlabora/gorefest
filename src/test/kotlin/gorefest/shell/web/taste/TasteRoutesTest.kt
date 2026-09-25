@@ -33,7 +33,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.uuid.Uuid
 
-class WizardRoutesTest {
+class TasteRoutesTest {
     private val test = TestApp()
     private val app = test.app
     private val kimId = PlayerId(Uuid.random())

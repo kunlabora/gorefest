@@ -1,4 +1,4 @@
-package gorefest.shell
+package gorefest.shell.eventstore
 
 import gorefest.core.PlayerId
 import gorefest.core.PlayerJoined
@@ -8,6 +8,7 @@ import gorefest.core.gameday.JoinGameDay
 import gorefest.core.gameday.JoinGameDayDecider
 import gorefest.core.gameday.gameDayCreated
 import gorefest.core.gameday.gorefest7
+import gorefest.shell.TestDatabase
 import gorefest.shell.TestDatabase.db
 import gorefest.shell.eventstore.EventStore
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder

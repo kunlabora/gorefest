@@ -22,7 +22,7 @@ import io.ktor.server.routing.get
 import kotlin.uuid.Uuid
 
 context(login: Login)
-fun Route.tableRoutes(app: App) {
+fun Route.suggestionsRoutes(app: App) {
     suspend fun suggestionsFor(gameDay: GameDaySummary, params: Parameters, me: CurrentPlayer): Pair<Suggestions, Int> {
         val chosen = params.getAll("players")?.mapNotNull { runCatching { PlayerId(Uuid.parse(it)) }.getOrNull() }
             ?.filter { it in gameDay.players } ?: gameDay.players

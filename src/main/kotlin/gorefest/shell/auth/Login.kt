@@ -9,10 +9,10 @@ import gorefest.core.auth.checkLink
 import gorefest.core.player.LogIn
 import gorefest.core.player.LogInDecider
 import gorefest.shell.AppConfig
-import gorefest.shell.CommandHandler
 import gorefest.shell.IdGenerator
 import gorefest.shell.db.Database
 import gorefest.shell.db.Tx
+import gorefest.shell.eventstore.CommandHandler
 import java.time.Clock
 import java.time.Duration
 import kotlin.uuid.Uuid
