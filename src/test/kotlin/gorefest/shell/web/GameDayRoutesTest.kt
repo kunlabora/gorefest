@@ -11,6 +11,7 @@ import gorefest.core.gameday.gorefest7
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 import io.ktor.client.HttpClient
 import io.ktor.client.request.forms.submitForm
 import io.ktor.client.request.get
@@ -116,20 +117,23 @@ class GameDayRoutesTest {
     }
 
     @Test
-    fun `the home page has an appearance picker that follows the system by default`() = webTest { client ->
-        val picker = client.get("/").page().one("fieldset.gf-seg:has(input[name=theme])")
+    fun `every page ends its app bar with the light and dark toggle`() = webTest { client ->
+        client.htmxPost("/gamedays", validForm)
+        val pages = listOf("/", "/gamedays/new", "/gamedays/00000000-0000-0000-0000-000000000001", "/gamedays/00000000-0000-0000-0000-000000000001/edit")
 
-        picker.select("input[name=theme]").map { it.`val`() } shouldContainExactly listOf("system", "light", "dark")
-        picker.select("label").map { it.text() } shouldContainExactly listOf("System", "Light", "Dark")
-        picker.one("input[checked]").`val`() shouldBe "system"
-        picker.parent()!!.attr("_") shouldBe "on change call gorefestSetTheme(event.target.value)"
+        pages.forEach { url ->
+            val toggle = client.get(url).page().one(".gf-appbar > :last-child")
+            toggle.hasClass("gf-theme-toggle") shouldBe true
+            toggle.attr("_") shouldBe "on click call gorefestToggleTheme()"
+            toggle.attr("aria-label") shouldBe "Dark mode"
+            toggle.select(".gf-theme-toggle__moon svg, .gf-theme-toggle__sun svg").size shouldBe 2
+        }
     }
 
     @Test
-    fun `the picker shows the theme that was chosen before`() = test.webTest { client ->
-        val page = client.get("/") { header(io.ktor.http.HttpHeaders.Cookie, "$SESSION_COOKIE=$tim; gf_theme=dark") }.page()
-
-        page.one("input[name=theme][checked]").`val`() shouldBe "dark"
+    fun `logged-out pages have the toggle too, and the CSS picks the right icon`() = test.webTest { client ->
+        client.get("/login").page().select(".gf-appbar .gf-theme-toggle").size shouldBe 1
+        client.get("/static/css/gorefest.css").bodyAsText() shouldContain "[data-theme=\"dark\"] .gf-theme-toggle__sun"
     }
 
     @Test

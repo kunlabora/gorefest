@@ -240,3 +240,12 @@ div.gf-tile { cursor: default; }
 @media (min-width: 720px) {
   .gf-screen { max-width: 480px; margin-inline: auto; }
 }
+
+/* Theme toggle in the app bar: a moon while light (tap for dark), a sun while dark. Mirrors tokens.css's theme selectors. */
+.gf-theme-toggle__sun { display: none; }
+[data-theme="dark"] .gf-theme-toggle__sun { display: contents; }
+[data-theme="dark"] .gf-theme-toggle__moon { display: none; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .gf-theme-toggle__sun { display: contents; }
+  :root:not([data-theme="light"]) .gf-theme-toggle__moon { display: none; }
+}

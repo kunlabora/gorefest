@@ -7,8 +7,6 @@ import gorefest.core.gameday.GameDaySummary
 import gorefest.core.gameday.ShelfGame
 import gorefest.shell.web.components.ButtonSize
 import gorefest.shell.web.components.ButtonStyle
-import gorefest.shell.web.components.Theme
-import gorefest.shell.web.components.themePicker
 import gorefest.shell.web.components.appBarAction
 import gorefest.shell.web.components.appBarTitle
 import gorefest.shell.web.components.avatar
@@ -58,7 +56,7 @@ import java.time.ZoneId
 
 const val DEFAULT_TIME_ZONE = "Europe/Brussels"
 
-fun HTML.homePage(gameDays: List<GameDaySummary>, today: LocalDate, bggLinked: Boolean, theme: Theme) = page(
+fun HTML.homePage(gameDays: List<GameDaySummary>, today: LocalDate, bggLinked: Boolean) = page(
     "Game days",
     appBar = { appBarTitle("Gorefest"); logoutButton() },
     dock = { primaryLink("/gamedays/new", "Host a game day", icon = "plus") },
@@ -76,7 +74,6 @@ fun HTML.homePage(gameDays: List<GameDaySummary>, today: LocalDate, bggLinked: B
     } else {
         div("gf-stack") { gameDays.forEach { dayCard(it, today) } }
     }
-    themePicker(theme)
 }
 
 /** Creating and editing a game day: same form, different target. */

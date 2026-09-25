@@ -55,7 +55,10 @@ fun HTML.page(
     }
     body {
         div("gf-screen") {
-            header("gf-appbar") { appBar() }
+            header("gf-appbar") {
+                appBar()
+                themeToggle()
+            }
             main("gf-body $mainClasses".trim()) {
                 if (mainId != null) id = mainId
                 content()
