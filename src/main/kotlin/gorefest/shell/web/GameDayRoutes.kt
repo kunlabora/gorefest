@@ -16,6 +16,7 @@ import gorefest.shell.App
 import gorefest.shell.AppConfig
 import gorefest.shell.IdGenerator
 import gorefest.shell.auth.Login
+import gorefest.shell.web.components.Theme
 import gorefest.shell.web.components.errorNotice
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.Parameters
@@ -40,7 +41,7 @@ fun Route.gameDayRoutes(app: App) {
         authenticated {
             val me = contextOf<CurrentPlayer>()
             val gameDays = with(GameDays) { app.gameDays.state.forPlayer(me.id) { zone -> todayIn(zone) } }
-            call.respondHtml { homePage(gameDays, todayIn(DEFAULT_TIME_ZONE), bggLinked = me.id in app.bggAccounts.state) }
+            call.respondHtml { homePage(gameDays, todayIn(DEFAULT_TIME_ZONE), bggLinked = me.id in app.bggAccounts.state, theme = Theme.of(call.request)) }
         }
     }
 

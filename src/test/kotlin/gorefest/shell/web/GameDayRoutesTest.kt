@@ -14,6 +14,7 @@ import io.kotest.matchers.shouldBe
 import io.ktor.client.HttpClient
 import io.ktor.client.request.forms.submitForm
 import io.ktor.client.request.get
+import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
@@ -104,6 +105,31 @@ class GameDayRoutesTest {
         form.attr("hx-post") shouldBe "/gamedays"
         form.select("input.gf-input").map { it.attr("name") } shouldContainExactly listOf("title", "date", "place")
         form.one("label[for=title]").text() shouldBe "Title"
+    }
+
+    @Test
+    fun `the saved theme is applied before anything else loads`() = webTest { client ->
+        val head = client.get("/").page().head()
+
+        head.select("script, link[rel=stylesheet]").first()!!.attr("src") shouldBe "/static/js/theme.js"
+        client.get("/static/js/theme.js").let { (it.status to it.headers["Content-Type"]!!.startsWith("text/javascript")) shouldBe (HttpStatusCode.OK to true) }
+    }
+
+    @Test
+    fun `the home page has an appearance picker that follows the system by default`() = webTest { client ->
+        val picker = client.get("/").page().one("fieldset.gf-seg:has(input[name=theme])")
+
+        picker.select("input[name=theme]").map { it.`val`() } shouldContainExactly listOf("system", "light", "dark")
+        picker.select("label").map { it.text() } shouldContainExactly listOf("System", "Light", "Dark")
+        picker.one("input[checked]").`val`() shouldBe "system"
+        picker.parent()!!.attr("_") shouldBe "on change call gorefestSetTheme(event.target.value)"
+    }
+
+    @Test
+    fun `the picker shows the theme that was chosen before`() = test.webTest { client ->
+        val page = client.get("/") { header(io.ktor.http.HttpHeaders.Cookie, "$SESSION_COOKIE=$tim; gf_theme=dark") }.page()
+
+        page.one("input[name=theme][checked]").`val`() shouldBe "dark"
     }
 
     @Test

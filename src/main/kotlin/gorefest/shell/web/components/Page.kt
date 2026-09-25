@@ -45,6 +45,8 @@ fun HTML.page(
         meta(charset = "utf-8")
         meta(name = "viewport", content = "width=device-width, initial-scale=1")
         title(title)
+        // First, and blocking: it sets the saved theme before anything paints.
+        script(src = "/static/js/theme.js") {}
         link(rel = "stylesheet", href = "/static/css/tokens.css")
         link(rel = "stylesheet", href = "/static/css/gorefest.css")
         script(src = "/webjars/htmx.org/dist/htmx.min.js") {}

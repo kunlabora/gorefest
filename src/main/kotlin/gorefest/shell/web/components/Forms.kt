@@ -40,8 +40,13 @@ fun FlowContent.playerChips(
     }
 }
 
-/** A segmented control: radios named [name] with [options] as labels and values. With [idPrefix], each gets id `prefix-option`. */
-fun FlowContent.segmented(name: String, legend: String, options: List<String>, checked: String, idPrefix: String? = null) = fieldSet("gf-seg") {
+/**
+ * A segmented control: radios named [name], one per option value, shown as [label] (the value itself by default).
+ * With [idPrefix], each gets id `prefix-option`.
+ */
+fun FlowContent.segmented(
+    name: String, legend: String, options: List<String>, checked: String, idPrefix: String? = null, label: (String) -> String = { it },
+) = fieldSet("gf-seg") {
     attributes["style"] = "border: 1px solid var(--line); margin: 0"
     legend("gf-vh") { +legend }
     options.forEach { option ->
@@ -51,7 +56,7 @@ fun FlowContent.segmented(name: String, legend: String, options: List<String>, c
                 value = option
                 this.checked = option == checked
             }
-            +option
+            +label(option)
         }
     }
 }
