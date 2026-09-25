@@ -19,7 +19,7 @@ Helps a group of boardgamers pick the games they'll enjoy most at a game day, us
 - Postgres, plain JDBC + HikariCP, Flyway migrations, kotlinx.serialization for event JSON.
 - Tests: JUnit 6 (suspend test functions work), Kotest assertions, Testcontainers for Postgres.
 - No SSE / WebSockets in the MVP (usage is checkpoint-based; refresh is enough).
-- Deploy: fat jar + systemd on a single cheap VPS, Caddy in front for TLS, nightly `pg_dump` to object storage. GitHub Action: build → scp → restart. Setup, deploy and restore steps: `deploy/README.md`.
+- Deploy: fat jar + systemd on a single cheap VPS, Caddy in front for TLS, nightly `pg_dump` to object storage. GitHub Action: build → scp → restart. Hosted on Scaleway (`deploy/scaleway.md`, `deploy/provision.sh`); general setup, deploy and restore steps in `deploy/README.md`.
 - Offline support: out of scope for now.
 
 ## Architecture
@@ -83,7 +83,7 @@ Tag convention: `player:{id}`, `gameday:{id}`, `game:{bggId}`.
 - The code is in the mail subject too. The link opens a confirm page and logs in on POST, because mail scanners pre-fetch GET links.
 - Email and display name live in the plain `players` table; events only carry player ids, so a player can be erased.
 - `GOREFEST_ENV=dev` (the default for now) sends mail to an in-memory dev mailbox at `/dev/mailbox`. Production needs `SECRET_KEY` and a mail provider (S1).
-- Transactional mail provider (Postmark / Resend / SES).
+- Transactional mail: Scaleway TEM (production), Postmark or Resend, picked by `MAIL_PROVIDER`.
 
 ## Taste model
 

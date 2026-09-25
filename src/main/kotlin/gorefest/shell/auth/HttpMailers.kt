@@ -1,10 +1,13 @@
 package gorefest.shell.auth
 
+import gorefest.shell.AppConfig
+
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
+import kotlinx.serialization.json.putJsonObject
 import kotlinx.serialization.json.add
 import java.net.URI
 import java.net.http.HttpClient
@@ -22,14 +25,18 @@ abstract class HttpMailer(private val http: HttpClient = HttpClient.newBuilder()
     }
 
     companion object {
-        /** `MAIL_PROVIDER` = postmark or resend, with `MAIL_API_KEY` and `MAIL_FROM`. */
-        fun fromEnv(env: (String) -> String? = System::getenv): Mailer? {
+        /**
+         * `MAIL_PROVIDER` = scaleway, postmark or resend, with `MAIL_API_KEY` and `MAIL_FROM`
+         * ("Name <address>" or a bare address). Scaleway also needs `SCW_PROJECT_ID`.
+         */
+        fun fromEnv(env: (String) -> String? = AppConfig::setting): Mailer? {
             val key = env("MAIL_API_KEY") ?: return null
             val from = env("MAIL_FROM") ?: error("MAIL_FROM is required with MAIL_API_KEY")
             return when (env("MAIL_PROVIDER")) {
+                "scaleway" -> ScalewayMailer(key, from, env("SCW_PROJECT_ID") ?: error("SCW_PROJECT_ID is required for Scaleway mail"))
                 "postmark" -> PostmarkMailer(key, from)
                 "resend" -> ResendMailer(key, from)
-                else -> error("MAIL_PROVIDER must be postmark or resend")
+                else -> error("MAIL_PROVIDER must be scaleway, postmark or resend")
             }
         }
     }
@@ -63,4 +70,30 @@ class ResendMailer(private val key: String, private val from: String) : HttpMail
             put("text", mail.text)
         }.toString()))
         .build()
+}
+
+/**
+ * Scaleway Transactional Email. [secretKey] is an IAM API key allowed to send mail in [projectId];
+ * the sending domain must be verified in TEM. Only the fr-par region offers TEM.
+ */
+class ScalewayMailer(private val secretKey: String, from: String, private val projectId: String, private val region: String = "fr-par") : HttpMailer() {
+    private val fromName = from.substringBefore('<', "").trim()
+    private val fromEmail = from.substringAfter('<').substringBefore('>').trim()
+
+    override fun request(mail: Mail): HttpRequest =
+        HttpRequest.newBuilder(URI("https://api.scaleway.com/transactional-email/v1alpha1/regions/$region/emails"))
+            .header("X-Auth-Token", secretKey)
+            .header("Content-Type", "application/json")
+            .timeout(Duration.ofSeconds(20))
+            .POST(HttpRequest.BodyPublishers.ofString(buildJsonObject {
+                putJsonObject("from") {
+                    put("email", fromEmail)
+                    if (fromName.isNotEmpty()) put("name", fromName)
+                }
+                putJsonArray("to") { add(buildJsonObject { put("email", mail.to) }) }
+                put("subject", mail.subject)
+                put("text", mail.text)
+                put("project_id", projectId)
+            }.toString()))
+            .build()
 }

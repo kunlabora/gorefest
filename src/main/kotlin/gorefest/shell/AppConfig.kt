@@ -10,7 +10,7 @@ data class AppConfig(val baseUrl: String, val secretKey: String, val dev: Boolea
     companion object {
         fun dev(baseUrl: String = "http://localhost:8080") = AppConfig(baseUrl, DEV_SECRET, dev = true)
 
-        fun fromEnv(env: (String) -> String? = System::getenv): AppConfig {
+        fun fromEnv(env: (String) -> String? = ::setting): AppConfig {
             val dev = (env("GOREFEST_ENV") ?: "dev") == "dev"
             return AppConfig(
                 baseUrl = (env("BASE_URL") ?: "http://localhost:8080").trimEnd('/'),
@@ -18,6 +18,12 @@ data class AppConfig(val baseUrl: String, val secretKey: String, val dev: Boolea
                 dev = dev,
             )
         }
+
+        /**
+         * An environment variable, with empty meaning unset: the env file has lines like
+         * `BGG_TOKEN=` that systemd passes on as empty strings.
+         */
+        fun setting(name: String): String? = System.getenv(name)?.ifBlank { null }
 
         private const val DEV_SECRET = "dev-only-secret-do-not-use-in-production"
     }

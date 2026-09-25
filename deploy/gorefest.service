@@ -8,7 +8,7 @@ Wants=network-online.target
 User=gorefest
 WorkingDirectory=/opt/gorefest
 EnvironmentFile=/etc/gorefest/env
-ExecStart=/usr/bin/java -Xmx384m -Djava.awt.headless=true -jar /opt/gorefest/current/gorefest.jar
+ExecStart=/usr/bin/java -Xmx512m -Djava.awt.headless=true -jar /opt/gorefest/current/gorefest.jar
 Restart=on-failure
 RestartSec=5
 NoNewPrivileges=true

@@ -2,6 +2,8 @@
 
 One cheap VPS: the fat jar under systemd, Postgres, Caddy in front for TLS, and a nightly `pg_dump` to object storage. GitHub Actions builds, tests and deploys every push to `main`.
 
+**On Scaleway: follow [scaleway.md](scaleway.md).** `provision.sh` does the one-time setup below in one go on Ubuntu 24.04; the manual steps are here for other hosts.
+
 ## One-time server setup (Debian/Ubuntu)
 
 1. **Packages**
