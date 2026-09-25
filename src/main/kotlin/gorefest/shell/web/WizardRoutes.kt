@@ -6,7 +6,7 @@ import gorefest.core.ComparisonRecorded
 import gorefest.core.ComparisonResult
 import gorefest.core.GameDayId
 import gorefest.core.GamePlayStatusDeclared
-import gorefest.core.bgg.Game
+import gorefest.core.game.Game
 import gorefest.core.gameday.GameDaySummary
 import gorefest.core.taste.DeclarePlayStatusDecider
 import gorefest.core.taste.PlayerGames
@@ -64,7 +64,7 @@ fun Route.wizardRoutes(app: App) {
         val hosts = app.collectionSync.collection(gameDay.host)
         val mine = app.collectionSync.collection(me.id)
         val pool = (shelf + hosts + mine).distinct().mapNotNull(app.catalog::get)
-        val anchors = app.catalog.all().filter { it.rank != null }.sortedBy { it.rank }.take(30)
+        val anchors = app.catalog.all().filter { it.popularityRank != null }.sortedBy { it.popularityRank }.take(30)
         val player = PlayerGames(app.tastes.state[me.id] ?: TasteHistory(), mine)
         return RoundInputs(pool, shelf.mapNotNull(app.catalog::get), anchors, player)
     }

@@ -82,7 +82,7 @@ class BggXmlTest {
         game.weight shouldBe 3.8871
         game.mechanics shouldBe setOf("Hand Management", "Network and Route Building")
         game.categories shouldBe setOf("Economic")
-        game.rank shouldBe 1
+        game.popularityRank shouldBe 1
     }
 
     @Test
@@ -90,7 +90,7 @@ class BggXmlTest {
         BggXml.things(BggXml.parse("""
             <items><item type="boardgame" id="1"><name type="primary" value="Homebrew"/><minplayers value="2"/><maxplayers value="2"/>
             <statistics><ratings><averageweight value="0"/><ranks><rank type="subtype" name="boardgame" value="Not Ranked"/></ranks></ratings></statistics>
-            </item></items>""".trimIndent())).single().rank.shouldBeNull()
+            </item></items>""".trimIndent())).single().popularityRank.shouldBeNull()
     }
 
     @Test

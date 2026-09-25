@@ -9,7 +9,7 @@ import gorefest.core.PlayLogged
 import gorefest.core.PlayerId
 import gorefest.core.PlayerJoined
 import gorefest.core.Tags
-import gorefest.core.bgg.Game
+import gorefest.core.game.Game
 import gorefest.core.eventsourcing.Decider
 import gorefest.core.eventsourcing.Decision
 import gorefest.core.eventsourcing.Decision.Accepted

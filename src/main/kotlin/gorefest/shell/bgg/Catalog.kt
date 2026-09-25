@@ -2,7 +2,7 @@ package gorefest.shell.bgg
 
 import gorefest.core.BggId
 import gorefest.core.PlayerId
-import gorefest.core.bgg.Game
+import gorefest.core.game.Game
 import gorefest.shell.db.Database
 import gorefest.shell.db.Tx
 import kotlinx.serialization.json.Json
@@ -32,7 +32,7 @@ class Catalog(private val db: Database) {
 
     /** Cached games whose name contains [query], best ranked first. */
     fun search(query: String): List<Game> =
-        games.values.filter { it.name.contains(query, ignoreCase = true) }.sortedBy { it.rank ?: Int.MAX_VALUE }
+        games.values.filter { it.name.contains(query, ignoreCase = true) }.sortedBy { it.popularityRank ?: Int.MAX_VALUE }
 
     fun missing(ids: Collection<BggId>): List<BggId> = ids.filterNot(games::containsKey)
 

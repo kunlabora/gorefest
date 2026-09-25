@@ -4,7 +4,7 @@ import gorefest.core.Basis
 import gorefest.core.BggId
 import gorefest.core.ComparisonRecorded
 import gorefest.core.ComparisonResult
-import gorefest.core.bgg.Game
+import gorefest.core.game.Game
 import java.time.Duration
 import java.time.Instant
 import kotlin.math.ln

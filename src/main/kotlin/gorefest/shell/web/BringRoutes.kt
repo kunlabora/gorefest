@@ -2,7 +2,7 @@ package gorefest.shell.web
 
 import gorefest.core.BggId
 import gorefest.core.GameDayId
-import gorefest.core.bgg.Game
+import gorefest.core.game.Game
 import gorefest.core.eventsourcing.Decision
 import gorefest.core.gameday.BringGame
 import gorefest.core.gameday.BringGameDecider

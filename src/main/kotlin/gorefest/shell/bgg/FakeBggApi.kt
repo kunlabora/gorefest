@@ -1,7 +1,7 @@
 package gorefest.shell.bgg
 
 import gorefest.core.BggId
-import gorefest.core.bgg.Game
+import gorefest.core.game.Game
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -70,7 +70,7 @@ object DevCatalog {
     ) = Game(
         id = BggId(id), name = name, year = year, minPlayers = players.first, maxPlayers = players.last,
         bestPlayers = best, recommendedPlayers = players.toSet() - best, minPlaytime = time.first, maxPlaytime = time.last,
-        weight = weight, rank = rank, mechanics = mechanics, categories = categories,
+        weight = weight, popularityRank = rank, mechanics = mechanics, categories = categories,
     )
 
     private val euro = setOf("Economic")

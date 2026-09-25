@@ -1,7 +1,7 @@
 package gorefest.shell.bgg
 
 import gorefest.core.BggId
-import gorefest.core.bgg.Game
+import gorefest.core.game.Game
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope

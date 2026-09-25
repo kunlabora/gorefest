@@ -1,7 +1,7 @@
 package gorefest.shell.bgg
 
 import gorefest.core.BggId
-import gorefest.core.bgg.Game
+import gorefest.core.game.Game
 
 /** A BGG user as the XML API shows them. [profileText] is every profile field it returns, joined. */
 data class BggUser(val id: Int, val name: String, val profileText: String)

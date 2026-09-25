@@ -1,7 +1,7 @@
 package gorefest.core.matching
 
 import gorefest.core.PlayerId
-import gorefest.core.bgg.Game
+import gorefest.core.game.Game
 import gorefest.core.gameday.ShelfGame
 import gorefest.core.taste.PlayerGames
 import gorefest.core.taste.Predictor

@@ -1,7 +1,7 @@
 package gorefest.core.gameday
 
 import gorefest.core.PlayerId
-import gorefest.core.bgg.Game
+import gorefest.core.game.Game
 import gorefest.core.taste.TasteHistory
 
 enum class TasteStatus { NONE, THIN, READY }

@@ -7,7 +7,7 @@ import gorefest.core.ComparisonResult
 import gorefest.core.GamePlayStatusDeclared
 import gorefest.core.PlayLogged
 import gorefest.core.PlayerId
-import gorefest.core.bgg.Game
+import gorefest.core.game.Game
 import gorefest.core.eventsourcing.Decision
 import gorefest.core.gameday.GameDaySummary
 import gorefest.core.gameday.LogPlayDecider

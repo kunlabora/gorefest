@@ -5,7 +5,7 @@ import gorefest.core.BggId
 import gorefest.core.ComparisonRecorded
 import gorefest.core.ComparisonResult
 import gorefest.core.PlayerId
-import gorefest.core.bgg.Game
+import gorefest.core.game.Game
 import gorefest.core.gameday.ShelfGame
 import gorefest.core.taste.PlayerGames
 import gorefest.core.taste.TasteHistory

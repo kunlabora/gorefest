@@ -1,6 +1,6 @@
 package gorefest.shell.bgg
 
-import gorefest.core.bgg.Game
+import gorefest.core.game.Game
 import java.time.Clock
 
 /** Searches games we know first, and asks BGG only when that comes up short. */
@@ -17,7 +17,7 @@ class GameSearch(private val catalog: Catalog, private val bgg: BggGateway, priv
             val missing = catalog.missing(hits.map { it.id }.take(BggApi.THINGS_PER_CALL))
             if (missing.isNotEmpty()) catalog.put(bgg.call(BggPriority.LIVE) { things(missing) }, clock.instant())
             val fromBgg = hits.mapNotNull { catalog[it.id] }
-            Result((local + fromBgg).distinctBy { it.id }.sortedBy { it.rank ?: Int.MAX_VALUE }.take(LIMIT))
+            Result((local + fromBgg).distinctBy { it.id }.sortedBy { it.popularityRank ?: Int.MAX_VALUE }.take(LIMIT))
         } catch (_: BggUnavailable) {
             Result(local.take(LIMIT), bggUnavailable = true)
         }

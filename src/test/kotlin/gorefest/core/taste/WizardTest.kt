@@ -20,7 +20,7 @@ class WizardTest {
     private val games = DevCatalog.games
     private fun g(name: String) = games.first { it.name == name }
     private val shelf = listOf(g("Azul"), g("Cascadia"), g("Brass: Birmingham"), g("Root"))
-    private val anchors = games.filter { it.rank != null }.sortedBy { it.rank }.take(10).filter { it !in shelf }
+    private val anchors = games.filter { it.popularityRank != null }.sortedBy { it.popularityRank }.take(10).filter { it !in shelf }
     private val wizard = Wizard()
     private val nobody = PlayerGames(TasteHistory(), owned = emptySet())
 

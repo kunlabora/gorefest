@@ -1,6 +1,6 @@
 package gorefest.shell.web
 
-import gorefest.core.bgg.Game
+import gorefest.core.game.Game
 import kotlinx.html.FlowContent
 import kotlinx.html.HtmlBlockTag
 import kotlinx.html.div
@@ -9,6 +9,25 @@ import kotlinx.html.img
 import kotlinx.html.p
 import kotlinx.html.span
 import kotlinx.html.style
+
+/** BGG's complexity in words, as the design uses it. */
+val Game.weightLabel: String
+    get() = when {
+        weight == 0.0 -> ""
+        weight < 1.8 -> "light"
+        weight < 2.6 -> "medium-light"
+        weight < 3.4 -> "medium"
+        weight < 4.0 -> "medium-heavy"
+        else -> "heavy"
+    }
+
+/** "60–90 min · medium · 1–4" */
+val Game.facts: String
+    get() = listOf(
+        if (minPlaytime == maxPlaytime) "$minPlaytime min" else "$minPlaytime–$maxPlaytime min",
+        weightLabel,
+        if (minPlayers == maxPlayers) "$minPlayers" else "$minPlayers–$maxPlayers",
+    ).filter { it.isNotBlank() }.joinToString(" · ")
 
 /** Box art in its frame: the image letterboxed on a blurred copy, or a monogram when BGG has none. */
 fun FlowContent.art(game: Game, extraClasses: String = "", extraStyle: String = "") {

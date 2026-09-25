@@ -1,7 +1,7 @@
 package gorefest.shell.bgg
 
 import gorefest.core.BggId
-import gorefest.core.bgg.Game
+import gorefest.core.game.Game
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.w3c.dom.Document
@@ -110,7 +110,7 @@ object BggXml {
             weight = ratings?.value("averageweight")?.toDoubleOrNull() ?: 0.0,
             mechanics = item.links("boardgamemechanic"),
             categories = item.links("boardgamecategory"),
-            rank = ratings?.child("ranks")?.children("rank")
+            popularityRank = ratings?.child("ranks")?.children("rank")
                 ?.firstOrNull { it.getAttribute("name") == "boardgame" }?.getAttribute("value")?.toIntOrNull(),
         )
     }

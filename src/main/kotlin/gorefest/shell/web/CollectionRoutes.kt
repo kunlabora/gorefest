@@ -53,7 +53,7 @@ fun Route.collectionRoutes(app: App) {
     }
 }
 
-private data class CollectionView(val sync: CollectionSyncState?, val games: List<gorefest.core.bgg.Game>)
+private data class CollectionView(val sync: CollectionSyncState?, val games: List<gorefest.core.game.Game>)
 
 private suspend fun collectionView(app: App, me: CurrentPlayer) = CollectionView(
     sync = app.collectionSync.status(me.id),

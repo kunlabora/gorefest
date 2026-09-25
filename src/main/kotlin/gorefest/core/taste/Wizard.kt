@@ -3,7 +3,7 @@ package gorefest.core.taste
 import gorefest.core.Basis
 import gorefest.core.BggId
 import gorefest.core.ComparisonResult
-import gorefest.core.bgg.Game
+import gorefest.core.game.Game
 import java.time.Instant
 
 /** A question in the taste round. */
