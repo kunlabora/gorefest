@@ -1,6 +1,5 @@
-package gorefest.shell.web
+package gorefest.shell.web.components
 
-import gorefest.core.PlayerId
 import kotlinx.html.DIV
 import kotlinx.html.FlowContent
 import kotlinx.html.HEAD
@@ -15,7 +14,6 @@ import kotlinx.html.form
 import kotlinx.html.style
 import kotlinx.html.body
 import kotlinx.html.div
-import kotlinx.html.h3
 import kotlinx.html.head
 import kotlinx.html.header
 import kotlinx.html.id
@@ -23,14 +21,10 @@ import kotlinx.html.lang
 import kotlinx.html.link
 import kotlinx.html.main
 import kotlinx.html.meta
-import kotlinx.html.p
 import kotlinx.html.script
 import kotlinx.html.span
 import kotlinx.html.title
 import kotlinx.html.unsafe
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-import java.util.Locale
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -76,6 +70,12 @@ fun FlowContent.backLink(href: String, label: String) = a(href, classes = "gf-ic
     icon("back")
 }
 
+/** A small ghost action at the right end of the app bar ("Edit", "Done for now", "Skip"). */
+fun FlowContent.appBarAction(href: String, label: String) = a(href, classes = "gf-btn gf-btn--ghost gf-btn--sm") {
+    style = "margin-left: auto"
+    +label
+}
+
 /** An icon from docs/design/icons, inlined so it takes the text colour. */
 fun HTMLTag.icon(name: String) = unsafe { +Icons.svg(name) }
 
@@ -91,37 +91,10 @@ object Icons {
     }
 }
 
-/** Initials disc, coloured by player so the same person always gets the same hue. */
-fun FlowContent.avatar(player: PlayerId, name: String?, size: String = "") = span("gf-avatar $size".trim()) {
-    attributes["aria-hidden"] = "true"
-    attributes["data-hue"] = player.toString().sumOf { it.code }.mod(4).toString()
-    +(name?.let(::initials) ?: "?")
-}
-
-fun initials(name: String): String =
-    name.split(' ', '-').filter { it.isNotBlank() }.take(2).joinToString("") { it.first().uppercase() }.ifEmpty { "?" }
-
 fun FlowContent.logoutButton() = form(action = "/logout", method = FormMethod.post) {
     style = "margin-left: auto"
     button(type = ButtonType.submit, classes = "gf-btn gf-btn--ghost gf-btn--sm") { +"Log out" }
 }
-
-fun FlowContent.emptyState(title: String, text: String, action: FlowContent.() -> Unit = {}) = div("gf-empty") {
-    unsafe { +EMPTY_ART }
-    h3("gf-empty__title") { +title }
-    p("gf-empty__text") { +text }
-    action()
-}
-
-private const val EMPTY_ART = """<svg class="gf-empty__art" viewBox="0 0 96 72" aria-hidden="true"><rect class="box" x="6" y="30" width="56" height="36" rx="6"/><rect class="box" x="30" y="16" width="56" height="36" rx="6"/><rect class="lid" x="18" y="4" width="40" height="40" rx="8" transform="rotate(-8 38 24)"/><circle class="pip" cx="30" cy="16" r="3.5"/><circle class="pip" cx="38" cy="24" r="3.5"/><circle class="pip" cx="46" cy="32" r="3.5"/></svg>"""
-
-private val longDate = DateTimeFormatter.ofPattern("EEE d MMM yyyy", Locale.ENGLISH)
-private val shortMonth = DateTimeFormatter.ofPattern("MMM", Locale.ENGLISH)
-
-/** "Sun 27 Sep 2026" */
-fun LocalDate.long(): String = format(longDate)
-
-fun LocalDate.monthShort(): String = format(shortMonth)
 
 /** htmx attribute, e.g. `hx("post", "/gamedays")` → `hx-post="/gamedays"`. */
 fun HTMLTag.hx(name: String, value: String) {

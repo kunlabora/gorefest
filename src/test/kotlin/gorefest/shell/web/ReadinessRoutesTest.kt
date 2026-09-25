@@ -49,8 +49,8 @@ class ReadinessRoutesTest {
         page.select(".gf-row") shouldHaveSize 2
         val nudge = page.one(".gf-row button")
         nudge.attr("aria-label") shouldBe "Copy a nudge for Kim"
-        nudge.attr("data-message") shouldContain "Hey Kim"
-        nudge.attr("data-message") shouldContain "http://localhost:8080/gamedays/$gorefest7/taste"
+        nudge.attr("data-copy") shouldContain "Hey Kim"
+        nudge.attr("data-copy") shouldContain "http://localhost:8080/gamedays/$gorefest7/taste"
     }
 
     @Test

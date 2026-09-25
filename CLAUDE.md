@@ -47,6 +47,10 @@ Tag convention: `player:{id}`, `gameday:{id}`, `game:{bggId}`.
 - **Events** live in `core/Event.kt` as one sealed interface. `@SerialName` is the stored type: never rename it; add a new event instead. Each event declares its `tags`.
 - **Deciders** are `object`s implementing `Decider`. Keep the query as narrow as the invariant allows, because anything outside it can't conflict (see `JoinGameDayDecider`).
 - Deciders and projections end their `when` with `else -> state`, so adding an event doesn't touch unrelated code.
+- **Web layer, three levels.**
+  - `XRoutes.kt`: HTTP only. Parse the request, run the decider, gather data into a small view model, and pick the view to respond with.
+  - `XViews.kt`: the pages and fragments for that feature, as `HTML.xPage(view)` and `TagConsumer<*>.fragment(...)` functions, built from components.
+  - `web/components/`: shared design-system components (`page`, `notice`, `field`, `primaryButton`, `playerChips`, `segmented`, `copyBox`, `nextStep`, `rankedGame`, `duel`…). Reach for these before writing `gf-*` markup by hand. Components that can be a fragment's root have a `TagConsumer<*>` overload too.
 - **htmx:** handlers answer htmx requests with a fragment (one top-level element) and plain requests with a full page or redirect.
 - **Web tests** use `TestApp` (`WebTest.kt`): `webTest(session = test.loggedIn("Tim")) { client -> … }`. They parse responses with Jsoup (`page()`, `fragment()` in `HtmlAssertions.kt`) and assert with CSS selectors, not substrings. `page()` also checks every `hx-target="#id"` resolves; `shouldReplace` checks an `outerHTML` fragment's root id. HTTP behaviour (status, `HX-Redirect`) is asserted directly.
 - **Design:** `docs/design/` holds the design system (tokens, `gorefest.css` components, brand book, microcopy) and HTML mockups of every screen. Build pages from those class names and follow the brand book's voice.
