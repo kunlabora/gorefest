@@ -1,5 +1,6 @@
 package gorefest.shell.web.components
 
+import gorefest.shell.web.gameday.invite
 import kotlinx.html.ButtonType
 import kotlinx.html.FlowContent
 import kotlinx.html.button

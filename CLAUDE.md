@@ -47,6 +47,7 @@ Tag convention: `player:{id}`, `gameday:{id}`, `game:{bggId}`.
 - **Events** live in `core/Event.kt` as one sealed interface. `@SerialName` is the stored type: never rename it; add a new event instead. Each event declares its `tags`.
 - **Deciders** are `object`s implementing `Decider`. Keep the query as narrow as the invariant allows, because anything outside it can't conflict (see `JoinGameDayDecider`).
 - Deciders and projections end their `when` with `else -> state`, so adding an event doesn't touch unrelated code.
+- **Web packages by feature**, named after the vocabulary: `web.auth`, `web.bgg` (linking, collection), `web.gameday` (hub, create/edit, readiness), `web.invite`, `web.shelf` (bringing games), `web.taste` (wizard, favourites), `web.suggestions`, `web.checkpoint`, `web.dev`. Shared plumbing (`Server`, `Responses`, `CurrentPlayer`, `memberGameDay`) sits in `web` itself, components in `web.components`. Tests mirror this.
 - **Web layer, three levels.**
   - `XRoutes.kt`: HTTP only. Parse the request, run the decider, gather data into a small view model, and pick the view to respond with.
   - `XViews.kt`: the pages and fragments for that feature, as `HTML.xPage(view)` and `TagConsumer<*>.fragment(...)` functions, built from components.

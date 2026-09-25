@@ -2,19 +2,20 @@ package gorefest.shell.web.components
 
 import gorefest.core.PlayerId
 import gorefest.core.game.Game
+import gorefest.shell.web.suggestions.suggestions
 import kotlinx.html.ButtonType
+import kotlinx.html.FlowContent
+import kotlinx.html.HtmlBlockTag
 import kotlinx.html.InputType
 import kotlinx.html.P
 import kotlinx.html.article
 import kotlinx.html.button
-import kotlinx.html.id
-import kotlinx.html.input
-import kotlinx.html.label
-import kotlinx.html.FlowContent
-import kotlinx.html.HtmlBlockTag
 import kotlinx.html.div
 import kotlinx.html.h3
+import kotlinx.html.id
 import kotlinx.html.img
+import kotlinx.html.input
+import kotlinx.html.label
 import kotlinx.html.p
 import kotlinx.html.span
 import kotlinx.html.style

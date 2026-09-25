@@ -1,19 +1,18 @@
 package gorefest.shell.web.components
 
+import kotlinx.html.ButtonType
 import kotlinx.html.DIV
 import kotlinx.html.FlowContent
+import kotlinx.html.FormMethod
 import kotlinx.html.HEAD
 import kotlinx.html.HTML
 import kotlinx.html.HTMLTag
 import kotlinx.html.MAIN
-import kotlinx.html.ButtonType
-import kotlinx.html.FormMethod
 import kotlinx.html.a
-import kotlinx.html.button
-import kotlinx.html.form
-import kotlinx.html.style
 import kotlinx.html.body
+import kotlinx.html.button
 import kotlinx.html.div
+import kotlinx.html.form
 import kotlinx.html.head
 import kotlinx.html.header
 import kotlinx.html.id
@@ -23,6 +22,7 @@ import kotlinx.html.main
 import kotlinx.html.meta
 import kotlinx.html.script
 import kotlinx.html.span
+import kotlinx.html.style
 import kotlinx.html.title
 import kotlinx.html.unsafe
 import java.util.concurrent.ConcurrentHashMap
