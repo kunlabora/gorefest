@@ -48,7 +48,7 @@ class GameDayRoutesTest {
 
     private suspend fun given(vararg events: gorefest.core.Event) {
         app.db.transaction { app.store.append(events.toList()) }
-        app.gameDays.catchUp()
+        app.catchUp()
     }
 
     private val validForm = parameters {

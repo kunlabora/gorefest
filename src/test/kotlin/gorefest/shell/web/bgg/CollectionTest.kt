@@ -39,7 +39,7 @@ class CollectionTest {
         kim = test.loggedIn("Kim", id = kimId)
         test.loggedIn("Bram", id = bramId)
         app.db.transaction { app.store.append(listOf(BggAccountLinked(kimId, "KimPlays"))) }
-        app.bggAccounts.catchUp()
+        app.catchUp()
         test.bgg.setCollection("KimPlays", setOf(brass, azul))
     }
 

@@ -29,6 +29,7 @@ Helps a group of boardgamers pick the games they'll enjoy most at a game day, us
   - Append: in one transaction, take `pg_advisory_xact_lock`, verify no events matching the decision's query (types + tags) exist after the read position, then insert.
 - **Hand-rolled deciders**: sealed interfaces for commands/events; pure `decide(cmd, state)` and `evolve(state, event)`. Each decider declares its DCB query. Test with given/when/then.
 - **Projections**: in-memory, rebuilt on startup by replaying the log.
+  - Web code reads them through the named read-only properties on `App` (`gameDaysById`, `shelfByGameDay`, `tasteByPlayer`, `playsByGameDay`, `bggUsernames`), not through `Projector.state`.
 - **Not events** (plain tables): BGG metadata cache (`fetched_at`), players (email, name), login attempts, sessions.
 
 ### Events (initial)

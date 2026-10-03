@@ -40,7 +40,7 @@ class GameDayCloserTest {
                 PlayLogged(gorefest7, cascadia, listOf(anna, kimId), 40, kimId, Instant.parse("2026-09-27T11:00:00Z")),
             ))
         }
-        app.gameDays.catchUp(); app.shelves.catchUp(); app.plays.catchUp()
+        app.catchUp()
     }
 
     @Test
@@ -49,7 +49,7 @@ class GameDayCloserTest {
 
         app.closer.closeDue()
 
-        app.gameDays.state.getValue(gorefest7).ended shouldBe false
+        app.gameDaysById.getValue(gorefest7).ended shouldBe false
         test.mailbox.all shouldHaveSize 0
     }
 
@@ -60,7 +60,7 @@ class GameDayCloserTest {
         app.closer.closeDue()
         app.closer.closeDue()
 
-        app.gameDays.state.getValue(gorefest7).ended shouldBe true
+        app.gameDaysById.getValue(gorefest7).ended shouldBe true
         test.mailbox.all.map { it.to }.toSet() shouldBe setOf("anna@example.com", "kim@example.com")
         test.mailbox.all shouldHaveSize 2
         val mail = test.mailbox.latestTo("kim@example.com")!!

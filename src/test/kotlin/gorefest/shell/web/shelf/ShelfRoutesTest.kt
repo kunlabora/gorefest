@@ -55,7 +55,7 @@ class ShelfRoutesTest {
 
     private suspend fun given(vararg events: gorefest.core.Event) {
         app.db.transaction { app.store.append(events.toList()) }
-        app.gameDays.catchUp(); app.shelves.catchUp(); app.bggAccounts.catchUp()
+        app.catchUp()
     }
 
     private val bringPage = "/gamedays/$gorefest7/bring"
@@ -78,7 +78,7 @@ class ShelfRoutesTest {
         row shouldReplace "bring-$brass"
         row.one("input.gf-switch").hasAttr("checked") shouldBe true
         row.one("button[hx-post]").attr("hx-post") shouldBe "/gamedays/$gorefest7/shelf/$brass/wish"
-        app.shelves.state.getValue(gorefest7).map { it.game } shouldBe listOf(brass)
+        app.shelfByGameDay.getValue(gorefest7).map { it.game } shouldBe listOf(brass)
     }
 
     @Test
@@ -89,7 +89,7 @@ class ShelfRoutesTest {
 
         row.one("input.gf-switch").hasAttr("checked") shouldBe false
         row.select("button").shouldBeEmpty()
-        app.shelves.state.getValue(gorefest7).shouldBeEmpty()
+        app.shelfByGameDay.getValue(gorefest7).shouldBeEmpty()
     }
 
     @Test
@@ -99,7 +99,7 @@ class ShelfRoutesTest {
         val row = client.htmxPost("/gamedays/$gorefest7/shelf/$brass/wish", parameters { append("wants", "true") }).fragment()
 
         row.one("button").attr("aria-pressed") shouldBe "true"
-        app.shelves.state.getValue(gorefest7).single().eager shouldBe setOf(kimId)
+        app.shelfByGameDay.getValue(gorefest7).single().eager shouldBe setOf(kimId)
     }
 
     @Test
@@ -117,7 +117,7 @@ class ShelfRoutesTest {
     @Test
     fun `the invite shows the shelf size`() = test.webTest { client ->
         given(GameBrought(gorefest7, kimId, brass), GameBrought(gorefest7, anna, azul))
-        val link = "/i/" + app.invites.token(app.gameDays.state.getValue(gorefest7))
+        val link = "/i/" + app.invites.token(app.gameDaysById.getValue(gorefest7))
 
         val page = client.get(link).page()
 

@@ -1,12 +1,18 @@
 package gorefest.shell
 
+import gorefest.core.GameDayId
+import gorefest.core.PlayLogged
+import gorefest.core.PlayerId
+import gorefest.core.gameday.GameDaySummary
 import gorefest.core.gameday.GameDays
 import gorefest.core.gameday.Plays
+import gorefest.core.gameday.ShelfGame
 import gorefest.core.gameday.Shelves
 import gorefest.core.matching.Matcher
 import gorefest.core.player.BggAccounts
 import gorefest.core.taste.FeatureModel
 import gorefest.core.taste.Predictor
+import gorefest.core.taste.TasteHistory
 import gorefest.core.taste.TasteModel
 import gorefest.core.taste.Tastes
 import gorefest.core.taste.Wizard
@@ -51,12 +57,19 @@ class App(
     )
 
     val store = EventStore()
-    val gameDays = Projector(GameDays, db, store)
-    val bggAccounts = Projector(BggAccounts, db, store)
-    val shelves = Projector(Shelves, db, store)
-    val tastes = Projector(Tastes, db, store)
-    val plays = Projector(Plays, db, store)
-    private val projectors = listOf(gameDays, bggAccounts, shelves, tastes, plays)
+    private val gameDayProjector = Projector(GameDays, db, store)
+    private val bggAccountProjector = Projector(BggAccounts, db, store)
+    private val shelfProjector = Projector(Shelves, db, store)
+    private val tasteProjector = Projector(Tastes, db, store)
+    private val playProjector = Projector(Plays, db, store)
+    private val projectors = listOf(gameDayProjector, bggAccountProjector, shelfProjector, tasteProjector, playProjector)
+
+    /** Read models: the latest snapshot of each projection, kept current by [commands] and [start]. */
+    val gameDaysById: Map<GameDayId, GameDaySummary> get() = gameDayProjector.state
+    val bggUsernames: Map<PlayerId, String> get() = bggAccountProjector.state
+    val shelfByGameDay: Map<GameDayId, List<ShelfGame>> get() = shelfProjector.state
+    val tasteByPlayer: Map<PlayerId, TasteHistory> get() = tasteProjector.state
+    val playsByGameDay: Map<GameDayId, List<PlayLogged>> get() = playProjector.state
     val commands = CommandHandler(db, store, afterAppend = { catchUp() })
 
     val login = Login(db, commands, mailer, config, clock, ids)
@@ -92,7 +105,8 @@ class App(
 
     /** How fast these players play compared to BGG's box times, learned from all their play logs. */
     fun groupSpeed(players: List<gorefest.core.PlayerId>): Double =
-        gorefest.core.gameday.groupSpeed(plays.state.values.flatten(), catalog::get, players)
+        gorefest.core.gameday.groupSpeed(playsByGameDay.values.flatten(), catalog::get, players)
 
-    private suspend fun catchUp() = projectors.forEach { it.catchUp() }
+    /** Bring every read model up to date with the log; for code that appends events outside [commands]. */
+    suspend fun catchUp() = projectors.forEach { it.catchUp() }
 }

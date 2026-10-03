@@ -44,15 +44,15 @@ class InviteRoutesTest {
         annaSession = test.loggedIn("Anna", id = anna)
         kim = test.loggedIn("Kim", id = kimId)
         app.db.transaction { app.store.append(listOf(gameDayCreated(host = anna), PlayerJoined(gorefest7, anna))) }
-        app.gameDays.catchUp()
+        app.catchUp()
     }
 
-    private val token get() = app.invites.token(app.gameDays.state.getValue(gorefest7))
+    private val token get() = app.invites.token(app.gameDaysById.getValue(gorefest7))
     private val link get() = "/i/$token"
 
     private suspend fun given(vararg events: gorefest.core.Event) {
         app.db.transaction { app.store.append(events.toList()) }
-        app.gameDays.catchUp()
+        app.catchUp()
     }
 
     @Test
@@ -89,7 +89,7 @@ class InviteRoutesTest {
     fun `a logged-in player joins and lands on the game day`() = test.webTest(session = kim) { client ->
         client.submitForm("$link/join", parameters {}).headers[HttpHeaders.Location] shouldBe "/gamedays/$gorefest7"
 
-        app.gameDays.state.getValue(gorefest7).players shouldBe listOf(anna, kimId)
+        app.gameDaysById.getValue(gorefest7).players shouldBe listOf(anna, kimId)
         client.get(link).headers[HttpHeaders.Location] shouldBe "/gamedays/$gorefest7"
     }
 

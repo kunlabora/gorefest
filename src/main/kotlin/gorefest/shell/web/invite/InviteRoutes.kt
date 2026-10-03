@@ -35,7 +35,7 @@ context(login: Login, config: AppConfig)
 fun Route.inviteRoutes(app: App, invites: InviteLinks) {
     fun resolve(token: String?): Invite {
         val (id, version) = token?.let(invites::parse) ?: return Invite.Dead
-        val gameDay = app.gameDays.state[id] ?: return Invite.Dead
+        val gameDay = app.gameDaysById[id] ?: return Invite.Dead
         return when {
             gameDay.ended -> Invite.Ended(gameDay)
             gameDay.inviteVersion != version -> Invite.Dead
@@ -54,7 +54,7 @@ fun Route.inviteRoutes(app: App, invites: InviteLinks) {
         if (me != null && me.id in gameDay.players) return@get redirect("/gamedays/${gameDay.id}")
 
         val names = login.names(gameDay.players)
-        val shelf = app.shelves.state[gameDay.id].orEmpty().mapNotNull { app.catalog[it.game] }
+        val shelf = app.shelfByGameDay[gameDay.id].orEmpty().mapNotNull { app.catalog[it.game] }
         val landing = InviteLanding(
             gameDay = gameDay,
             names = names,
@@ -87,7 +87,7 @@ fun Route.inviteRoutes(app: App, invites: InviteLinks) {
             ?: return@get call.respond(HttpStatusCode.NotFound)
         val host = login.names(listOf(gameDay.host))[gameDay.host] ?: "Someone"
         call.response.header(HttpHeaders.CacheControl, "public, max-age=300")
-        val shelf = app.shelves.state[gameDay.id].orEmpty().size
+        val shelf = app.shelfByGameDay[gameDay.id].orEmpty().size
         call.respondBytes(OgImage.png(gameDay.preview(host, shelf = shelf)), ContentType.Image.PNG)
     }
 }

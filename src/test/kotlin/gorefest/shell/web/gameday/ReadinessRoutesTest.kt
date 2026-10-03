@@ -38,7 +38,7 @@ class ReadinessRoutesTest {
         app.db.transaction {
             app.store.append(listOf(gameDayCreated(host = anna), PlayerJoined(gorefest7, anna), PlayerJoined(gorefest7, kimId), GameBrought(gorefest7, anna, id("Twilight Struggle"))))
         }
-        app.gameDays.catchUp(); app.shelves.catchUp()
+        app.catchUp()
     }
 
     private val ready = "/gamedays/$gorefest7/ready"

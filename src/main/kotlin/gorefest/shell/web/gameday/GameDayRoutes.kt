@@ -48,8 +48,8 @@ fun Route.gameDayRoutes(app: App) {
     get("/") {
         authenticated {
             val me = contextOf<CurrentPlayer>()
-            val gameDays = with(GameDays) { app.gameDays.state.forPlayer(me.id) { zone -> todayIn(zone) } }
-            call.respondHtml { homePage(gameDays, todayIn(DEFAULT_TIME_ZONE), bggLinked = me.id in app.bggAccounts.state) }
+            val gameDays = with(GameDays) { app.gameDaysById.forPlayer(me.id) { zone -> todayIn(zone) } }
+            call.respondHtml { homePage(gameDays, todayIn(DEFAULT_TIME_ZONE), bggLinked = me.id in app.bggUsernames) }
         }
     }
 
@@ -112,12 +112,12 @@ fun Route.gameDayRoutes(app: App) {
         authenticated {
             val me = contextOf<CurrentPlayer>()
             val gameDay = memberGameDay(app, me) ?: return@authenticated call.respond(HttpStatusCode.NotFound)
-            val shelf = app.shelves.state[gameDay.id].orEmpty().mapNotNull { entry -> app.catalog[entry.game]?.let { it to entry } }
+            val shelf = app.shelfByGameDay[gameDay.id].orEmpty().mapNotNull { entry -> app.catalog[entry.game]?.let { it to entry } }
             val hub = GameDayHub(
                 gameDay = gameDay,
                 names = login.names(gameDay.players),
                 shelf = shelf,
-                played = app.plays.state[gameDay.id].orEmpty().mapNotNull { log -> app.catalog[log.game]?.let { it to log } },
+                played = app.playsByGameDay[gameDay.id].orEmpty().mapNotNull { log -> app.catalog[log.game]?.let { it to log } },
                 next = nextStep(app, gameDay, me, shelf.map { it.first }),
                 inviteLink = inviteLink(app, gameDay),
             )
@@ -130,7 +130,7 @@ fun Route.gameDayRoutes(app: App) {
             val gameDay = gameDayFromPath(app) ?: return@authenticated call.respond(HttpStatusCode.NotFound)
             when (val decision = app.commands.handle(RotateInviteLinkDecider, RotateInviteLink(gameDay.id, contextOf<CurrentPlayer>().id))) {
                 is Decision.Accepted -> {
-                    val rotated = app.gameDays.state.getValue(gameDay.id)
+                    val rotated = app.gameDaysById.getValue(gameDay.id)
                     respondFragment { invite(rotated, inviteLink(app, rotated)) }
                 }
                 is Decision.Rejected -> respondFragment(HttpStatusCode.Forbidden) { errorNotice(decision.reason, id = "invite") }
@@ -144,7 +144,7 @@ context(clock: Clock)
 private suspend fun nextStep(app: App, gameDay: GameDaySummary, me: CurrentPlayer, shelf: List<gorefest.core.game.Game>): NextStep? {
     if (gameDay.ended) return null
     if (gameDay.date == todayIn(gameDay.timeZone)) return NextStep.Checkpoint(checkpointLabel(gameDay, clock))
-    val history = app.tastes.state[me.id] ?: TasteHistory()
+    val history = app.tasteByPlayer[me.id] ?: TasteHistory()
     val answers = history.comparisons.size
     if (answers < TOP_UP_AFTER) return NextStep.TasteRound
     val uncertain = app.topUpWizard.uncertain(PlayerGames(history, app.collectionSync.collection(me.id)), shelf, clock.instant()).size
@@ -155,7 +155,7 @@ context(config: AppConfig)
 private fun inviteLink(app: App, gameDay: GameDaySummary) = "${config.baseUrl}/i/${app.invites.token(gameDay)}"
 
 private fun RoutingContext.gameDayFromPath(app: App): GameDaySummary? =
-    call.parameters["id"]?.let { runCatching { GameDayId.parse(it) }.getOrNull() }?.let(app.gameDays.state::get)
+    call.parameters["id"]?.let { runCatching { GameDayId.parse(it) }.getOrNull() }?.let(app.gameDaysById::get)
 
 private fun Parameters.date(): LocalDate = this["date"]?.let { runCatching { LocalDate.parse(it) }.getOrNull() } ?: LocalDate.MIN
 

@@ -52,7 +52,7 @@ class TasteRoutesTest {
 
     private suspend fun given(vararg events: gorefest.core.Event) {
         app.db.transaction { app.store.append(events.toList()) }
-        app.gameDays.catchUp(); app.shelves.catchUp(); app.tastes.catchUp()
+        app.catchUp()
     }
 
     private val taste = "/gamedays/$gorefest7/taste"
@@ -91,7 +91,7 @@ class TasteRoutesTest {
         next shouldReplace "wizard"
         next.one(".gf-progress__count").text() shouldBe "2 / 15"
         next.one(".gf-duel").hasClass("gf-deal") shouldBe true
-        val recorded = app.tastes.state.getValue(kimId).comparisons.single()
+        val recorded = app.tasteByPlayer.getValue(kimId).comparisons.single()
         (recorded.a to recorded.result) shouldBe (a to ComparisonResult.A)
         setOf(next.one("input[name=a]").`val`(), next.one("input[name=b]").`val`()) shouldBe
             setOf(next.one("input[name=a]").`val`(), next.one("input[name=b]").`val`()).also {
@@ -108,7 +108,7 @@ class TasteRoutesTest {
 
             client.answer(first, "UNPLAYED")
 
-            val history = app.tastes.state.getValue(kimId)
+            val history = app.tasteByPlayer.getValue(kimId)
             history.comparisons shouldHaveSize 0
             history.played.values.toSet() shouldBe setOf(false)
             history.played.keys shouldBe setOf(first.one("input[name=a]").`val`(), first.one("input[name=b]").`val`()).map { BggId(it.toInt()) }.toSet()

@@ -52,7 +52,7 @@ class CheckpointRoutesTest {
 
     private suspend fun given(vararg events: gorefest.core.Event) {
         app.db.transaction { app.store.append(events.toList()) }
-        app.gameDays.catchUp(); app.shelves.catchUp(); app.tastes.catchUp(); app.plays.catchUp()
+        app.catchUp()
     }
 
     private val log = "/gamedays/$gorefest7/log"
@@ -84,7 +84,7 @@ class CheckpointRoutesTest {
         })
         val compare = logged.headers["HX-Redirect"]!!
         compare shouldStartWith "/gamedays/$gorefest7/log/compare?game=$azul"
-        app.plays.state.getValue(gorefest7).single().let { (it.players to it.minutes) shouldBe (listOf(kimId, anna) to 45) }
+        app.playsByGameDay.getValue(gorefest7).single().let { (it.players to it.minutes) shouldBe (listOf(kimId, anna) to 45) }
 
         val page = client.get(compare).page()
         page.one(".gf-notice--good").text() shouldBe "Logged Azul: 2 players, 45 min."
@@ -95,7 +95,7 @@ class CheckpointRoutesTest {
             append("answer", "A")
         })
         done.headers["Location"] shouldBe "/gamedays/$gorefest7/table?players=$kimId&players=$anna"
-        app.tastes.state.getValue(kimId).comparisons.single().let { (it.basis to it.a) shouldBe (Basis.PLAYED to azul) }
+        app.tasteByPlayer.getValue(kimId).comparisons.single().let { (it.basis to it.a) shouldBe (Basis.PLAYED to azul) }
     }
 
     @Test

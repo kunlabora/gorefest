@@ -19,10 +19,10 @@ class GameDayCloser(private val app: App) {
 
     /** Ends every due game day. Summaries go out only for the ones this run actually ended. */
     suspend fun closeDue() {
-        for (id in app.gameDays.state.dueToEnd(app.clock.instant())) {
+        for (id in app.gameDaysById.dueToEnd(app.clock.instant())) {
             val decision = app.commands.handle(EndGameDayDecider, EndGameDay(id))
             if (decision is Decision.Accepted && decision.events.isNotEmpty()) {
-                runCatching { sendSummary(app.gameDays.state.getValue(id)) }.onFailure { log.error("Summary for {} failed", id, it) }
+                runCatching { sendSummary(app.gameDaysById.getValue(id)) }.onFailure { log.error("Summary for {} failed", id, it) }
             }
         }
     }
@@ -37,7 +37,7 @@ class GameDayCloser(private val app: App) {
     private suspend fun sendSummary(gameDay: GameDaySummary) {
         val people = app.db.transaction { app.login.players.emails(gameDay.players) }
         val names = app.login.names(gameDay.players)
-        val plays = app.plays.state[gameDay.id].orEmpty()
+        val plays = app.playsByGameDay[gameDay.id].orEmpty()
         val lines = plays.map { play ->
             val game = app.catalog[play.game]?.name ?: "A game"
             "- $game: ${play.players.map { names[it] ?: "someone" }.joinToString(", ")} · ${play.minutes} min"

@@ -31,9 +31,9 @@ fun Route.shelfRoutes(app: App) {
         authenticated {
             val me = contextOf<CurrentPlayer>()
             val gameDay = memberGameDay(app, me) ?: return@authenticated call.respond(HttpStatusCode.NotFound)
-            val linked = me.id in app.bggAccounts.state
+            val linked = me.id in app.bggUsernames
             val owned = if (linked) app.collectionSync.collection(me.id) else emptySet()
-            val shelf = app.shelves.state[gameDay.id].orEmpty()
+            val shelf = app.shelfByGameDay[gameDay.id].orEmpty()
             // My collection, plus anything I brought that isn't in it (found by search).
             val ids = owned + shelf.filter { me.id in it.owners }.map { it.game }
             val rows = ids.mapNotNull(app.catalog::get).sortedBy { it.name.lowercase() }.map { bringRow(it, shelf, me) }
@@ -46,7 +46,7 @@ fun Route.shelfRoutes(app: App) {
             val me = contextOf<CurrentPlayer>()
             val gameDay = memberGameDay(app, me) ?: return@authenticated call.respond(HttpStatusCode.NotFound)
             val result = app.gameSearch.search(call.parameters["q"].orEmpty())
-            val shelf = app.shelves.state[gameDay.id].orEmpty()
+            val shelf = app.shelfByGameDay[gameDay.id].orEmpty()
             respondFragment { searchResults(gameDay, result.games.map { bringRow(it, shelf, me) }, result.bggUnavailable) }
         }
     }
@@ -83,7 +83,7 @@ private fun RoutingContext.shelfTarget(app: App, me: CurrentPlayer): Pair<GameDa
 private suspend fun RoutingContext.respondBringDecision(
     app: App, gameDay: GameDaySummary, game: Game, me: CurrentPlayer, decision: Decision<*>, rowPrefix: String,
 ) {
-    val row = bringRow(game, app.shelves.state[gameDay.id].orEmpty(), me)
+    val row = bringRow(game, app.shelfByGameDay[gameDay.id].orEmpty(), me)
     val prefix = if (rowPrefix == "search") "search" else "bring"
     respondFragment(if (decision is Decision.Rejected) HttpStatusCode.Conflict else HttpStatusCode.OK) {
         bringItem(gameDay, row, readOnly = gameDay.ended, error = (decision as? Decision.Rejected)?.reason, prefix = prefix)

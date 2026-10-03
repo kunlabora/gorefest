@@ -8,4 +8,4 @@ import io.ktor.server.routing.RoutingContext
 /** The game day in the `{id}` path parameter, if [me] joined it. Everyone else gets nothing (404). */
 fun RoutingContext.memberGameDay(app: App, me: CurrentPlayer): GameDaySummary? =
     call.parameters["id"]?.let { runCatching { GameDayId.parse(it) }.getOrNull() }
-        ?.let(app.gameDays.state::get)?.takeIf { me.id in it.players }
+        ?.let(app.gameDaysById::get)?.takeIf { me.id in it.players }

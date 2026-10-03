@@ -29,9 +29,9 @@ fun Route.suggestionsRoutes(app: App) {
         val budget = TIMES.firstOrNull { it.first == params["time"] }?.second
         val names = login.names(chosen)
         val table = chosen.map { id ->
-            TablePlayer(id, names[id] ?: "Someone", PlayerGames(app.tastes.state[id] ?: TasteHistory(), app.collectionSync.collection(id)))
+            TablePlayer(id, names[id] ?: "Someone", PlayerGames(app.tasteByPlayer[id] ?: TasteHistory(), app.collectionSync.collection(id)))
         }
-        val shelf = app.shelves.state[gameDay.id].orEmpty().mapNotNull { entry -> app.catalog[entry.game]?.let { it to entry } }
+        val shelf = app.shelfByGameDay[gameDay.id].orEmpty().mapNotNull { entry -> app.catalog[entry.game]?.let { it to entry } }
         return app.matcher.suggest(table, shelf, budget, app.clock.instant(), speed = app.groupSpeed(chosen)) to table.size
     }
 

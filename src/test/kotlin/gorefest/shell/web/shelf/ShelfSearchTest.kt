@@ -41,7 +41,7 @@ class ShelfSearchTest {
         // We only know two games locally; the fake BGG knows the whole dev catalogue.
         app.catalog.put(DevCatalog.games.filter { it.name in setOf("Azul", "The Crew: Mission Deep Sea") }, test.clock.instant())
         app.db.transaction { app.store.append(listOf(gameDayCreated(host = anna), PlayerJoined(gorefest7, anna), PlayerJoined(gorefest7, kimId))) }
-        app.gameDays.catchUp()
+        app.catchUp()
     }
 
     private suspend fun io.ktor.client.HttpClient.search(q: String) =
@@ -74,7 +74,7 @@ class ShelfSearchTest {
 
         row shouldReplace "search-$wingspan"
         row.one("input.gf-switch").attr("hx-target") shouldBe "#search-$wingspan"
-        app.shelves.state.getValue(gorefest7).map { it.game } shouldBe listOf(wingspan)
+        app.shelfByGameDay.getValue(gorefest7).map { it.game } shouldBe listOf(wingspan)
         client.get("/gamedays/$gorefest7/bring").page().select("#bring-list .gf-game__name").map { it.text() } shouldContainExactly listOf("Wingspan")
     }
 

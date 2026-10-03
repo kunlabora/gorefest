@@ -73,7 +73,7 @@ class BggRoutesTest {
     fun `verifying before the code is on the profile says so`() = test.webTest(session = kim) { client ->
         client.verify("KimPlays").fragment().one(".gf-error").text() shouldBe
             "We can't see the code on your profile yet. Saved it? Then try again in a minute."
-        app.bggAccounts.state[kimId] shouldBe null
+        app.bggUsernames[kimId] shouldBe null
     }
 
     @Test
@@ -82,7 +82,7 @@ class BggRoutesTest {
 
         client.verify("KimPlays").headers["HX-Redirect"] shouldBe "/collection"
 
-        app.bggAccounts.state[kimId] shouldBe "KimPlays"
+        app.bggUsernames[kimId] shouldBe "KimPlays"
         client.get("/bgg").page().one("h1").text() shouldBe "You're linked"
     }
 

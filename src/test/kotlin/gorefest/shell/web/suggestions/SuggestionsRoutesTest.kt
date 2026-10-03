@@ -37,7 +37,7 @@ class SuggestionsRoutesTest {
         app.catalog.put(DevCatalog.games, test.clock.instant())
         val shelf = listOf("Azul", "Cascadia", "Brass: Birmingham", "Codenames", "Twilight Imperium: Fourth Edition").map { GameBrought(gorefest7, anna, id(it)) }
         app.db.transaction { app.store.append(listOf(gameDayCreated(host = anna), PlayerJoined(gorefest7, anna), PlayerJoined(gorefest7, kimId)) + shelf) }
-        app.gameDays.catchUp(); app.shelves.catchUp()
+        app.catchUp()
     }
 
     private val table = "/gamedays/$gorefest7/table"
@@ -73,7 +73,7 @@ class SuggestionsRoutesTest {
         fragment.select("article") shouldHaveSize 3 // strangers are ignored
 
         app.db.transaction { app.store.append(listOf(gorefest.core.GameUnbrought(gorefest7, anna, id("Azul")), gorefest.core.GameUnbrought(gorefest7, anna, id("Cascadia")), gorefest.core.GameUnbrought(gorefest7, anna, id("Codenames")))) }
-        app.shelves.catchUp()
+        app.catchUp()
         val tight = client.get("/gamedays/$gorefest7/suggestions?players=$kimId&players=$anna&time=45m").fragment()
         tight.one(".gf-empty__title").text() shouldBe "Nothing fits 2 players in 45 minutes"
         val relax = tight.one(".gf-empty button")

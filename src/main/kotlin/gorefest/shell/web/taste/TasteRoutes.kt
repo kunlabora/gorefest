@@ -43,12 +43,12 @@ private data class RoundInputs(val pool: List<Game>, val shelf: List<Game>, val 
 context(login: Login)
 fun Route.tasteRoutes(app: App) {
     suspend fun inputs(gameDay: GameDaySummary, me: CurrentPlayer): RoundInputs {
-        val shelf = app.shelves.state[gameDay.id].orEmpty().map { it.game }
+        val shelf = app.shelfByGameDay[gameDay.id].orEmpty().map { it.game }
         val hosts = app.collectionSync.collection(gameDay.host)
         val mine = app.collectionSync.collection(me.id)
         val pool = (shelf + hosts + mine).distinct().mapNotNull(app.catalog::get)
         val anchors = app.catalog.all().filter { it.popularityRank != null }.sortedBy { it.popularityRank }.take(30)
-        val player = PlayerGames(app.tastes.state[me.id] ?: TasteHistory(), mine)
+        val player = PlayerGames(app.tasteByPlayer[me.id] ?: TasteHistory(), mine)
         return RoundInputs(pool, shelf.mapNotNull(app.catalog::get), anchors, player)
     }
 

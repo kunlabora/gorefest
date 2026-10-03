@@ -19,7 +19,7 @@ fun Route.collectionRoutes(app: App) {
     get("/collection") {
         authenticated {
             val me = contextOf<CurrentPlayer>()
-            if (me.id !in app.bggAccounts.state) return@authenticated redirect("/bgg?returnTo=%2Fcollection")
+            if (me.id !in app.bggUsernames) return@authenticated redirect("/bgg?returnTo=%2Fcollection")
             val view = collectionView(app, me)
             call.respondHtml { collectionPage(view) }
         }
@@ -35,7 +35,7 @@ fun Route.collectionRoutes(app: App) {
     post("/collection/sync") {
         authenticated {
             val me = contextOf<CurrentPlayer>()
-            val username = app.bggAccounts.state[me.id] ?: return@authenticated redirect("/bgg?returnTo=%2Fcollection")
+            val username = app.bggUsernames[me.id] ?: return@authenticated redirect("/bgg?returnTo=%2Fcollection")
             app.collectionSync.request(me.id, username, BggPriority.LINK)
             respondFragment { collection(CollectionView(CollectionSyncState(username, SyncStatus.QUEUED, "Asking BGG for your collection", null), emptyList())) }
         }
