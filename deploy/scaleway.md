@@ -17,6 +17,7 @@ Use region **Paris (fr-par)** for everything: Transactional Email only exists th
   ```bash
   ssh-keygen -t ed25519 -f ~/.ssh/gorefest_deploy -N "" -C gorefest-deploy
   ```
+  Handy: an `~/.ssh/config` entry (`Host gorefest`, `HostName IP`, `User root`, `IdentityFile ~/.ssh/gorefest_deploy`) lets you write `ssh gorefest` and `deploy@gorefest` instead of the IP below.
 
 ## 3. Instance
 
@@ -31,7 +32,7 @@ Once it's running, note the **public IPv4**. Security group: the default one let
 
 ## 4. DNS
 
-At your DNS provider, add an **A record**: `gorefest.example.org → IP` (and AAAA if you enabled IPv6). Check it before going on, since Caddy needs it to get a certificate:
+At your DNS provider, add an **A record**: `gorefest.example.org → IP` (and AAAA if you enabled IPv6). If the domain lives with someone else (e.g. Route 53 at your company), ask them to delegate the subdomain to Scaleway (NS records to `ns0.dom.scw.cloud` and `ns1.dom.scw.cloud`), then add the record in Scaleway under Network → Domains and DNS. Check it before going on, since Caddy needs it to get a certificate:
 ```bash
 dig +short gorefest.example.org
 ```
@@ -43,7 +44,7 @@ From the repository:
 scp -r deploy root@IP:/root/
 ```
 ```bash
-ssh root@IP bash /root/deploy/provision.sh gorefest.example.org "$(cat ~/.ssh/gorefest_deploy.pub)"
+ssh root@IP "bash /root/deploy/provision.sh gorefest.example.org '$(cat ~/.ssh/gorefest_deploy.pub)'"
 ```
 This installs Java 25, Postgres, Caddy and rclone, creates the `gorefest` (app) and `deploy` (CI) users, the database, the systemd units, the firewall and automatic security updates. It also writes `/etc/gorefest/env` with a fresh `SECRET_KEY` and database password.
 
@@ -65,19 +66,24 @@ Then Applications → `gorefest-server` → API keys → Generate. You get an **
 
 ## 8. Backup bucket
 
-Object Storage → Create bucket `gorefest-backups` in fr-par, **private**.
+Object Storage → Create bucket in fr-par, **private**. Bucket names are unique across all of Scaleway, so a plain `gorefest-backups` is probably taken: use something like `<company>-<you>-gorefest-backups` and put it in `BACKUP_REMOTE` below. Leave versioning and object lock off (the nightly job deletes dumps older than 30 days), and you don't need a bucket policy: the key's IAM policy is enough.
 
 ## 9. Fill in the config and deploy
 
 On the server:
 ```bash
-ssh root@IP nano /etc/gorefest/env
+ssh -t root@IP nano /etc/gorefest/env
 ```
 Set:
 - `MAIL_API_KEY`: the secret key
 - `SCW_PROJECT_ID`: from step 1
 - `RCLONE_CONFIG_SCALEWAY_ACCESS_KEY_ID` and `…_SECRET_ACCESS_KEY`: the access and secret key
+- `BACKUP_REMOTE`: `scaleway:<your bucket name>`. The `scaleway:` prefix is required; without it rclone treats the name as a local folder.
 - `BGG_TOKEN`: once BGG approves your application. Until then, leave it empty: the app runs with BGG switched off.
+
+If `nano` says `cannot initialize terminal type` (e.g. Ghostty's `xterm-ghostty`), install the terminal definition once with `infocmp -x $TERM | ssh root@IP 'tic -x -'`, or prefix the command with `TERM=xterm-256color`.
+
+Empty `RCLONE_CONFIG_SCALEWAY_…` keys make rclone connect anonymously and the backup fails with a 403.
 
 `MAIL_FROM` already says `hello@gorefest.example.org`; it must be on the domain you verified in step 6.
 
