@@ -1,0 +1,89 @@
+package gorefest.shell.eventstore
+
+import gorefest.core.Basis
+import gorefest.core.BggAccountLinked
+import gorefest.core.BggId
+import gorefest.core.ComparisonRecorded
+import gorefest.core.ComparisonResult
+import gorefest.core.Event
+import gorefest.core.GameBrought
+import gorefest.core.GameDayCreated
+import gorefest.core.GameDayDetailsChanged
+import gorefest.core.GameDayEnded
+import gorefest.core.GameDayId
+import gorefest.core.GamePlayStatusDeclared
+import gorefest.core.GameUnbrought
+import gorefest.core.InviteLinkRotated
+import gorefest.core.LoggedIn
+import gorefest.core.PlayLogged
+import gorefest.core.PlayWishChanged
+import gorefest.core.PlayerId
+import gorefest.core.PlayerJoined
+import gorefest.core.PlayerRegistered
+import gorefest.core.type
+import io.kotest.matchers.collections.shouldBeEmpty
+import io.kotest.matchers.shouldBe
+import kotlinx.serialization.descriptors.elementNames
+import org.junit.jupiter.api.Test
+import java.time.Instant
+import java.time.LocalDate
+import kotlin.uuid.Uuid
+
+/**
+ * Stored events are decoded into the current classes on every replay, so a change to an event must
+ * keep old rows decodable. Each entry is an event exactly as first stored.
+ *
+ * Add an entry when you add an event. Never edit an existing one: if one has to change to make this
+ * pass, you're making a breaking change. Add a new event, or an upcaster, instead.
+ */
+class EventCompatibilityTest {
+    private val p1 = "00000000-0000-0000-0000-000000000001"
+    private val p2 = "00000000-0000-0000-0000-000000000002"
+    private val d1 = "00000000-0000-0000-0000-0000000000d1"
+    private fun player(s: String) = PlayerId(Uuid.parse(s))
+    private val gameDay = GameDayId.parse(d1)
+
+    private val stored: List<Pair<String, Event>> = listOf(
+        """{"type":"PlayerRegistered","player":"$p1"}""" to
+            PlayerRegistered(player(p1)),
+        """{"type":"LoggedIn","player":"$p1"}""" to
+            LoggedIn(player(p1)),
+        """{"type":"BggAccountLinked","player":"$p1","username":"Anna"}""" to
+            BggAccountLinked(player(p1), "Anna"),
+        """{"type":"GameDayCreated","gameDay":"$d1","host":"$p1","title":"Gorefest #7","date":"2026-10-03","place":"Tim's","timeZone":"Europe/Brussels"}""" to
+            GameDayCreated(gameDay, player(p1), "Gorefest #7", LocalDate.parse("2026-10-03"), "Tim's", "Europe/Brussels"),
+        """{"type":"GameDayDetailsChanged","gameDay":"$d1","title":"Gorefest #8","date":"2026-10-04","place":"Anna's"}""" to
+            GameDayDetailsChanged(gameDay, "Gorefest #8", LocalDate.parse("2026-10-04"), "Anna's"),
+        """{"type":"InviteLinkRotated","gameDay":"$d1","version":2}""" to
+            InviteLinkRotated(gameDay, 2),
+        """{"type":"PlayerJoined","gameDay":"$d1","player":"$p2"}""" to
+            PlayerJoined(gameDay, player(p2)),
+        """{"type":"GameBrought","gameDay":"$d1","player":"$p1","game":13}""" to
+            GameBrought(gameDay, player(p1), BggId(13)),
+        """{"type":"GameUnbrought","gameDay":"$d1","player":"$p1","game":13}""" to
+            GameUnbrought(gameDay, player(p1), BggId(13)),
+        """{"type":"PlayWishChanged","gameDay":"$d1","player":"$p1","game":13,"wantsToPlay":true}""" to
+            PlayWishChanged(gameDay, player(p1), BggId(13), true),
+        """{"type":"ComparisonRecorded","player":"$p1","a":13,"b":822,"result":"BOTH_GREAT","basis":"VIBE","at":"2026-10-03T09:00:00Z"}""" to
+            ComparisonRecorded(player(p1), BggId(13), BggId(822), ComparisonResult.BOTH_GREAT, Basis.VIBE, Instant.parse("2026-10-03T09:00:00Z")),
+        """{"type":"GamePlayStatusDeclared","player":"$p1","game":13,"played":false}""" to
+            GamePlayStatusDeclared(player(p1), BggId(13), false),
+        """{"type":"PlayLogged","gameDay":"$d1","game":13,"players":["$p1","$p2"],"minutes":90,"loggedBy":"$p1","at":"2026-10-03T14:00:00Z"}""" to
+            PlayLogged(gameDay, BggId(13), listOf(player(p1), player(p2)), 90, player(p1), Instant.parse("2026-10-03T14:00:00Z")),
+        """{"type":"GameDayEnded","gameDay":"$d1"}""" to
+            GameDayEnded(gameDay),
+    )
+
+    @Test
+    fun `every stored shape still decodes`() {
+        for ((json, expected) in stored) {
+            EventStore.json.decodeFromString(Event.serializer(), json) shouldBe expected
+        }
+    }
+
+    @Test
+    fun `every event type has a stored sample`() {
+        val allTypes = Event.serializer().descriptor.getElementDescriptor(1).elementNames.toSet()
+        (allTypes - stored.map { (_, event) -> event.type }.toSet()).shouldBeEmpty()
+    }
+}
