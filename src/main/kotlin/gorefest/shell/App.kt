@@ -30,6 +30,7 @@ import gorefest.shell.eventstore.EventStore
 import gorefest.shell.eventstore.Projector
 import gorefest.shell.gameday.GameDayCloser
 import gorefest.shell.gameday.InviteLinks
+import gorefest.shell.gameday.RecapMailer
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -87,7 +88,11 @@ class App(
     val topUpWizard = Wizard(tasteModel, minPairs = 3, maxPairs = 5)
     val predictor = Predictor(tasteModel)
     val matcher = Matcher(predictor)
-    val closer = GameDayCloser(this)
+    val closer = GameDayCloser(
+        commands, gameDays = { gameDaysById },
+        recaps = RecapMailer(db, login.players, plays = { plays }, catalog, mailer, config, clock),
+        clock, scope,
+    )
 
     suspend fun start() {
         db.migrate()
