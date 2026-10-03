@@ -5,7 +5,7 @@ import gorefest.core.ComparisonRecorded
 import gorefest.core.ComparisonResult
 import gorefest.core.PlayerId
 import gorefest.core.PlayerJoined
-import gorefest.core.taste.TasteHistory
+import gorefest.core.taste.Tastes
 import gorefest.shell.bgg.DevCatalog
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
@@ -18,9 +18,9 @@ class ReadinessTest {
     private val kim = PlayerId(Uuid.random())
     private val jo = PlayerId(Uuid.random())
 
-    private fun answers(player: PlayerId, n: Int) = TasteHistory(List(n) {
-        ComparisonRecorded(player, g("Azul").id, g("Cascadia").id, ComparisonResult.A, Basis.VIBE, Instant.EPOCH)
-    })
+    private fun tastes(vararg answers: Pair<PlayerId, Int>) = answers.flatMap { (player, n) ->
+        List(n) { ComparisonRecorded(player, g("Azul").id, g("Cascadia").id, ComparisonResult.A, Basis.VIBE, Instant.EPOCH) }
+    }.fold(Tastes.initialState, Tastes::evolve)
 
     private val gameDay = listOf(gameDayCreated(), PlayerJoined(gorefest7, anna), PlayerJoined(gorefest7, bram), PlayerJoined(gorefest7, kim), PlayerJoined(gorefest7, jo))
         .fold(GameDays.initialState, GameDays::evolve).getValue(gorefest7)
@@ -29,7 +29,7 @@ class ReadinessTest {
 
     @Test
     fun `players who need a nudge come first, with their answer counts`() {
-        val readiness = Readiness.of(gameDay, shelf("Azul"), mapOf(anna to answers(anna, 12), bram to answers(bram, 3), kim to answers(kim, 10)))
+        val readiness = Readiness.of(gameDay, shelf("Azul"), tastes(anna to 12, bram to 3, kim to 10))
 
         readiness.players.map { it.status } shouldContainExactly listOf(TasteStatus.NONE, TasteStatus.THIN, TasteStatus.READY, TasteStatus.READY)
         readiness.players.first().player shouldBe jo
@@ -39,11 +39,11 @@ class ReadinessTest {
 
     @Test
     fun `gaps are table sizes that fewer than three shelf games serve`() {
-        val readiness = Readiness.of(gameDay, shelf("Azul", "Cascadia", "Brass: Birmingham", "Codenames"), emptyMap())
+        val readiness = Readiness.of(gameDay, shelf("Azul", "Cascadia", "Brass: Birmingham", "Codenames"), tastes())
 
         readiness.gaps shouldBe emptyList() // 3 and 4 are fine
 
-        val party = Readiness.of(gameDay, shelf("Azul", "Codenames", "Twilight Struggle"), emptyMap())
+        val party = Readiness.of(gameDay, shelf("Azul", "Codenames", "Twilight Struggle"), tastes())
         party.gaps.map { it.players } shouldBe listOf(3, 4)
         party.gaps.last().games.map { it.name } shouldContainExactly listOf("Azul", "Codenames")
     }

@@ -39,7 +39,7 @@ class PlaysTest {
     fun `a logged play means everyone at the table has played it`() {
         val tastes = listOf(log(45)).fold(Tastes.initialState, Tastes::evolve)
 
-        tastes.getValue(bram).played shouldBe mapOf(azul.id to true)
+        tastes.of(bram).played shouldBe mapOf(azul.id to true)
     }
 
     @Test
@@ -57,7 +57,7 @@ class PlaysTest {
     fun `after a play, compare it with a played game we know least about`() {
         val cascadia = DevCatalog.games.first { it.name == "Cascadia" }
         val brass = DevCatalog.games.first { it.name == "Brass: Birmingham" }
-        val player = PlayerGames(listOf(log(45)).fold(Tastes.initialState, Tastes::evolve).getValue(anna), owned = setOf(cascadia.id))
+        val player = PlayerGames(listOf(log(45)).fold(Tastes.initialState, Tastes::evolve).of(anna), owned = setOf(cascadia.id))
 
         Wizard().partner(player, azul.id, listOf(azul, cascadia, brass), now) shouldBe cascadia
         Wizard().partner(player, azul.id, listOf(azul, brass), now) shouldBe null

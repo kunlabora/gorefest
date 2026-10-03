@@ -47,12 +47,25 @@ object LogPlayDecider : Decider<PlayLogged, LogPlayDecider.State, PlayLogged> {
     }
 }
 
-/** Every play log, per game day, in order. */
-object Plays : Projection<Map<GameDayId, List<PlayLogged>>> {
-    override val initialState = emptyMap<GameDayId, List<PlayLogged>>()
+/** Every play log, per game day. */
+class GameDayPlays private constructor(private val byGameDay: Map<GameDayId, List<PlayLogged>>) {
+    /** What was played at [gameDay], in the order logged; empty if nothing yet. */
+    fun on(gameDay: GameDayId): List<PlayLogged> = byGameDay[gameDay].orEmpty()
 
-    override fun evolve(state: Map<GameDayId, List<PlayLogged>>, event: Event) =
-        if (event is PlayLogged) state + (event.gameDay to state[event.gameDay].orEmpty() + event) else state
+    /** Every log from every game day. */
+    val all: List<PlayLogged> get() = byGameDay.values.flatten()
+
+    internal fun logged(play: PlayLogged) = GameDayPlays(byGameDay + (play.gameDay to on(play.gameDay) + play))
+
+    companion object {
+        val none = GameDayPlays(emptyMap())
+    }
+}
+
+object Plays : Projection<GameDayPlays> {
+    override val initialState = GameDayPlays.none
+
+    override fun evolve(state: GameDayPlays, event: Event) = if (event is PlayLogged) state.logged(event) else state
 }
 
 /**

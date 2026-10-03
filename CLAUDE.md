@@ -29,7 +29,7 @@ Helps a group of boardgamers pick the games they'll enjoy most at a game day, us
   - Append: in one transaction, take `pg_advisory_xact_lock`, verify no events matching the decision's query (types + tags) exist after the read position, then insert.
 - **Hand-rolled deciders**: sealed interfaces for commands/events; pure `decide(cmd, state)` and `evolve(state, event)`. Each decider declares its DCB query. Test with given/when/then.
 - **Projections**: in-memory, rebuilt on startup by replaying the log.
-  - Web code reads them through the named read-only properties on `App` (`gameDaysById`, `shelfByGameDay`, `tasteByPlayer`, `playsByGameDay`, `bggUsernames`), not through `Projector.state`.
+  - Each projection's state is a read-model class in `core` that owns its queries and their defaults (`GameDayShelves.of(gameDay)`, `PlayerTastes.of(player)`, `GameDayPlays.on(gameDay)`, `LinkedBggAccounts.isLinked(player)`). Callers never see a raw `Map` or repeat `?: default`. `App` exposes them as `shelves`, `tastes`, `plays`, `bggAccounts` (and `gameDaysById`); nothing outside `App` touches `Projector.state`. A new query goes on the read-model class.
 - **Not events** (plain tables): BGG metadata cache (`fetched_at`), players (email, name), login attempts, sessions.
 
 ### Events (initial)

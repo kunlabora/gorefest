@@ -23,8 +23,8 @@ fun Route.readinessRoutes(app: App) {
         authenticated {
             val me = contextOf<CurrentPlayer>()
             val gameDay = memberGameDay(app, me)?.takeIf { it.host == me.id } ?: return@authenticated call.respond(HttpStatusCode.NotFound)
-            val shelf = app.shelfByGameDay[gameDay.id].orEmpty().mapNotNull { entry -> app.catalog[entry.game]?.let { it to entry } }
-            val readiness = Readiness.of(gameDay, shelf, app.tasteByPlayer)
+            val shelf = app.shelves.of(gameDay.id).mapNotNull { entry -> app.catalog[entry.game]?.let { it to entry } }
+            val readiness = Readiness.of(gameDay, shelf, app.tastes)
             val names = login.names(gameDay.players)
             val today = LocalDate.now(app.clock.withZone(runCatching { ZoneId.of(gameDay.timeZone) }.getOrDefault(ZoneId.of("UTC"))))
             val days = ChronoUnit.DAYS.between(today, gameDay.date)

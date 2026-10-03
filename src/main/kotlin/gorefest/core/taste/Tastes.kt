@@ -25,18 +25,28 @@ data class TasteHistory(
     val comparedGames: Set<BggId> get() = comparisons.flatMap { listOf(it.a, it.b) }.toSet()
 }
 
-object Tastes : Projection<Map<PlayerId, TasteHistory>> {
-    override val initialState = emptyMap<PlayerId, TasteHistory>()
+/** What every player told us about their taste. */
+class PlayerTastes private constructor(private val byPlayer: Map<PlayerId, TasteHistory>) {
+    /** [player]'s history; empty if they haven't told us anything yet. */
+    fun of(player: PlayerId): TasteHistory = byPlayer[player] ?: TasteHistory()
 
-    override fun evolve(state: Map<PlayerId, TasteHistory>, event: Event) = when (event) {
-        is ComparisonRecorded -> state.change(event.player) { it.copy(comparisons = it.comparisons + event) }
-        is GamePlayStatusDeclared -> state.change(event.player) { it.copy(played = it.played + (event.game to event.played)) }
-        is PlayLogged -> event.players.fold(state) { s, p -> s.change(p) { it.copy(played = it.played + (event.game to true)) } }
+    internal fun changed(player: PlayerId, f: (TasteHistory) -> TasteHistory) =
+        PlayerTastes(byPlayer + (player to f(of(player))))
+
+    companion object {
+        val none = PlayerTastes(emptyMap())
+    }
+}
+
+object Tastes : Projection<PlayerTastes> {
+    override val initialState = PlayerTastes.none
+
+    override fun evolve(state: PlayerTastes, event: Event) = when (event) {
+        is ComparisonRecorded -> state.changed(event.player) { it.copy(comparisons = it.comparisons + event) }
+        is GamePlayStatusDeclared -> state.changed(event.player) { it.copy(played = it.played + (event.game to event.played)) }
+        is PlayLogged -> event.players.fold(state) { s, p -> s.changed(p) { it.copy(played = it.played + (event.game to true)) } }
         else -> state
     }
-
-    private fun Map<PlayerId, TasteHistory>.change(player: PlayerId, f: (TasteHistory) -> TasteHistory) =
-        this + (player to f(this[player] ?: TasteHistory()))
 }
 
 /** A comparison has no invariant across events, so its boundary is empty: it never conflicts. */

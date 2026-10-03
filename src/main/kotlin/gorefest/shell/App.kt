@@ -1,18 +1,18 @@
 package gorefest.shell
 
 import gorefest.core.GameDayId
-import gorefest.core.PlayLogged
-import gorefest.core.PlayerId
 import gorefest.core.gameday.GameDaySummary
 import gorefest.core.gameday.GameDays
 import gorefest.core.gameday.Plays
-import gorefest.core.gameday.ShelfGame
+import gorefest.core.gameday.GameDayPlays
+import gorefest.core.gameday.GameDayShelves
 import gorefest.core.gameday.Shelves
 import gorefest.core.matching.Matcher
 import gorefest.core.player.BggAccounts
+import gorefest.core.player.LinkedBggAccounts
 import gorefest.core.taste.FeatureModel
 import gorefest.core.taste.Predictor
-import gorefest.core.taste.TasteHistory
+import gorefest.core.taste.PlayerTastes
 import gorefest.core.taste.TasteModel
 import gorefest.core.taste.Tastes
 import gorefest.core.taste.Wizard
@@ -66,10 +66,11 @@ class App(
 
     /** Read models: the latest snapshot of each projection, kept current by [commands] and [start]. */
     val gameDaysById: Map<GameDayId, GameDaySummary> get() = gameDayProjector.state
-    val bggUsernames: Map<PlayerId, String> get() = bggAccountProjector.state
-    val shelfByGameDay: Map<GameDayId, List<ShelfGame>> get() = shelfProjector.state
-    val tasteByPlayer: Map<PlayerId, TasteHistory> get() = tasteProjector.state
-    val playsByGameDay: Map<GameDayId, List<PlayLogged>> get() = playProjector.state
+    val bggAccounts: LinkedBggAccounts get() = bggAccountProjector.state
+    val shelves: GameDayShelves get() = shelfProjector.state
+    val tastes: PlayerTastes get() = tasteProjector.state
+    val plays: GameDayPlays get() = playProjector.state
+
     val commands = CommandHandler(db, store, afterAppend = { catchUp() })
 
     val login = Login(db, commands, mailer, config, clock, ids)
@@ -105,7 +106,7 @@ class App(
 
     /** How fast these players play compared to BGG's box times, learned from all their play logs. */
     fun groupSpeed(players: List<gorefest.core.PlayerId>): Double =
-        gorefest.core.gameday.groupSpeed(playsByGameDay.values.flatten(), catalog::get, players)
+        gorefest.core.gameday.groupSpeed(plays.all, catalog::get, players)
 
     /** Bring every read model up to date with the log; for code that appends events outside [commands]. */
     suspend fun catchUp() = projectors.forEach { it.catchUp() }

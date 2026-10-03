@@ -37,7 +37,7 @@ class GameDayCloser(private val app: App) {
     private suspend fun sendSummary(gameDay: GameDaySummary) {
         val people = app.db.transaction { app.login.players.emails(gameDay.players) }
         val names = app.login.names(gameDay.players)
-        val plays = app.playsByGameDay[gameDay.id].orEmpty()
+        val plays = app.plays.on(gameDay.id)
         val lines = plays.map { play ->
             val game = app.catalog[play.game]?.name ?: "A game"
             "- $game: ${play.players.map { names[it] ?: "someone" }.joinToString(", ")} · ${play.minutes} min"

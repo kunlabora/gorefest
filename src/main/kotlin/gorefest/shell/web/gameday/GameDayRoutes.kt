@@ -11,7 +11,6 @@ import gorefest.core.gameday.GameDays
 import gorefest.core.gameday.RotateInviteLink
 import gorefest.core.gameday.RotateInviteLinkDecider
 import gorefest.core.taste.PlayerGames
-import gorefest.core.taste.TasteHistory
 import gorefest.shell.App
 import gorefest.shell.AppConfig
 import gorefest.shell.IdGenerator
@@ -49,7 +48,7 @@ fun Route.gameDayRoutes(app: App) {
         authenticated {
             val me = contextOf<CurrentPlayer>()
             val gameDays = with(GameDays) { app.gameDaysById.forPlayer(me.id) { zone -> todayIn(zone) } }
-            call.respondHtml { homePage(gameDays, todayIn(DEFAULT_TIME_ZONE), bggLinked = me.id in app.bggUsernames) }
+            call.respondHtml { homePage(gameDays, todayIn(DEFAULT_TIME_ZONE), bggLinked = app.bggAccounts.isLinked(me.id)) }
         }
     }
 
@@ -112,12 +111,12 @@ fun Route.gameDayRoutes(app: App) {
         authenticated {
             val me = contextOf<CurrentPlayer>()
             val gameDay = memberGameDay(app, me) ?: return@authenticated call.respond(HttpStatusCode.NotFound)
-            val shelf = app.shelfByGameDay[gameDay.id].orEmpty().mapNotNull { entry -> app.catalog[entry.game]?.let { it to entry } }
+            val shelf = app.shelves.of(gameDay.id).mapNotNull { entry -> app.catalog[entry.game]?.let { it to entry } }
             val hub = GameDayHub(
                 gameDay = gameDay,
                 names = login.names(gameDay.players),
                 shelf = shelf,
-                played = app.playsByGameDay[gameDay.id].orEmpty().mapNotNull { log -> app.catalog[log.game]?.let { it to log } },
+                played = app.plays.on(gameDay.id).mapNotNull { log -> app.catalog[log.game]?.let { it to log } },
                 next = nextStep(app, gameDay, me, shelf.map { it.first }),
                 inviteLink = inviteLink(app, gameDay),
             )
@@ -144,7 +143,7 @@ context(clock: Clock)
 private suspend fun nextStep(app: App, gameDay: GameDaySummary, me: CurrentPlayer, shelf: List<gorefest.core.game.Game>): NextStep? {
     if (gameDay.ended) return null
     if (gameDay.date == todayIn(gameDay.timeZone)) return NextStep.Checkpoint(checkpointLabel(gameDay, clock))
-    val history = app.tasteByPlayer[me.id] ?: TasteHistory()
+    val history = app.tastes.of(me.id)
     val answers = history.comparisons.size
     if (answers < TOP_UP_AFTER) return NextStep.TasteRound
     val uncertain = app.topUpWizard.uncertain(PlayerGames(history, app.collectionSync.collection(me.id)), shelf, clock.instant()).size

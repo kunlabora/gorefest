@@ -88,21 +88,33 @@ object SetPlayWishDecider : Decider<SetPlayWish, BringState, PlayWishChanged> {
 /** One game on a shelf: who brings it, and which of them really wants to play it. */
 data class ShelfGame(val game: BggId, val owners: List<PlayerId>, val eager: Set<PlayerId> = emptySet())
 
-/** Every game day's shelf, in the order games were first brought. */
-object Shelves : Projection<Map<GameDayId, List<ShelfGame>>> {
-    override val initialState = emptyMap<GameDayId, List<ShelfGame>>()
+/** The shelf of every game day. */
+class GameDayShelves private constructor(private val byGameDay: Map<GameDayId, List<ShelfGame>>) {
+    /** The games brought to [gameDay], in the order they were first brought; empty if none. */
+    fun of(gameDay: GameDayId): List<ShelfGame> = byGameDay[gameDay].orEmpty()
 
-    override fun evolve(state: Map<GameDayId, List<ShelfGame>>, event: Event): Map<GameDayId, List<ShelfGame>> = when (event) {
-        is GameBrought -> state.change(event.gameDay) { shelf ->
+    internal fun changed(gameDay: GameDayId, f: (List<ShelfGame>) -> List<ShelfGame>) =
+        GameDayShelves(byGameDay + (gameDay to f(of(gameDay))))
+
+    companion object {
+        val none = GameDayShelves(emptyMap())
+    }
+}
+
+object Shelves : Projection<GameDayShelves> {
+    override val initialState = GameDayShelves.none
+
+    override fun evolve(state: GameDayShelves, event: Event): GameDayShelves = when (event) {
+        is GameBrought -> state.changed(event.gameDay) { shelf ->
             val existing = shelf.firstOrNull { it.game == event.game }
             if (existing == null) shelf + ShelfGame(event.game, listOf(event.player))
             else shelf.map { if (it.game == event.game && event.player !in it.owners) it.copy(owners = it.owners + event.player) else it }
         }
-        is GameUnbrought -> state.change(event.gameDay) { shelf ->
+        is GameUnbrought -> state.changed(event.gameDay) { shelf ->
             shelf.map { if (it.game == event.game) it.copy(owners = it.owners - event.player, eager = it.eager - event.player) else it }
                 .filter { it.owners.isNotEmpty() }
         }
-        is PlayWishChanged -> state.change(event.gameDay) { shelf ->
+        is PlayWishChanged -> state.changed(event.gameDay) { shelf ->
             shelf.map {
                 if (it.game != event.game) it
                 else it.copy(eager = if (event.wantsToPlay) it.eager + event.player else it.eager - event.player)
@@ -110,7 +122,4 @@ object Shelves : Projection<Map<GameDayId, List<ShelfGame>>> {
         }
         else -> state
     }
-
-    private fun Map<GameDayId, List<ShelfGame>>.change(id: GameDayId, f: (List<ShelfGame>) -> List<ShelfGame>) =
-        this + (id to f(this[id].orEmpty()))
 }

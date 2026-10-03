@@ -67,7 +67,7 @@ class ShelfTest {
         val shelf = listOf(
             GameBrought(gorefest7, anna, brass), GameBrought(gorefest7, bram, azul), GameBrought(gorefest7, bram, brass),
             PlayWishChanged(gorefest7, bram, brass, true), GameUnbrought(gorefest7, bram, azul),
-        ).fold(Shelves.initialState, Shelves::evolve).getValue(gorefest7)
+        ).fold(Shelves.initialState, Shelves::evolve).of(gorefest7)
 
         shelf shouldBe listOf(ShelfGame(brass, owners = listOf(anna, bram), eager = setOf(bram)))
     }

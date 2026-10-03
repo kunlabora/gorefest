@@ -14,7 +14,6 @@ import gorefest.core.gameday.LogPlayDecider
 import gorefest.core.taste.DeclarePlayStatusDecider
 import gorefest.core.taste.PlayerGames
 import gorefest.core.taste.RecordComparisonDecider
-import gorefest.core.taste.TasteHistory
 import gorefest.shell.App
 import gorefest.shell.auth.Login
 import gorefest.shell.web.CurrentPlayer
@@ -81,7 +80,7 @@ fun Route.checkpointRoutes(app: App) {
             val game = call.parameters["game"]?.toIntOrNull()?.let(::BggId)?.let(app.catalog::get) ?: return@authenticated redirect("/gamedays/${gameDay.id}")
             val players = call.parameters.getAll("players").orEmpty()
             val tableLink = "/gamedays/${gameDay.id}/table?" + players.joinToString("&") { "players=$it" }
-            val player = PlayerGames(app.tasteByPlayer[me.id] ?: TasteHistory(), app.collectionSync.collection(me.id))
+            val player = PlayerGames(app.tastes.of(me.id), app.collectionSync.collection(me.id))
             val candidates = (player.history.played.filterValues { it }.keys + player.owned + player.history.comparedGames).mapNotNull(app.catalog::get)
             val other = app.wizard.partner(player, game.id, candidates, app.clock.instant()) ?: return@authenticated redirect(tableLink)
             call.respondHtml { logComparePage(LogCompareView(gameDay, game, other, players.size, call.parameters["minutes"].orEmpty(), tableLink)) }
@@ -108,7 +107,7 @@ fun Route.checkpointRoutes(app: App) {
 
 /** Shelf games not logged yet today come first: that's likeliest what was just played. */
 private fun logChoices(app: App, gameDay: GameDaySummary): List<Game> {
-    val logged = app.playsByGameDay[gameDay.id].orEmpty().map { it.game }.toSet()
-    val shelf = app.shelfByGameDay[gameDay.id].orEmpty().mapNotNull { app.catalog[it.game] }
+    val logged = app.plays.on(gameDay.id).map { it.game }.toSet()
+    val shelf = app.shelves.of(gameDay.id).mapNotNull { app.catalog[it.game] }
     return shelf.sortedBy { it.id in logged }
 }

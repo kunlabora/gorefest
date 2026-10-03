@@ -74,7 +74,7 @@ class ShelfSearchTest {
 
         row shouldReplace "search-$wingspan"
         row.one("input.gf-switch").attr("hx-target") shouldBe "#search-$wingspan"
-        app.shelfByGameDay.getValue(gorefest7).map { it.game } shouldBe listOf(wingspan)
+        app.shelves.of(gorefest7).map { it.game } shouldBe listOf(wingspan)
         client.get("/gamedays/$gorefest7/bring").page().select("#bring-list .gf-game__name").map { it.text() } shouldContainExactly listOf("Wingspan")
     }
 

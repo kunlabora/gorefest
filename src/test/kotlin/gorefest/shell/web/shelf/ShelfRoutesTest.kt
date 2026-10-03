@@ -78,7 +78,7 @@ class ShelfRoutesTest {
         row shouldReplace "bring-$brass"
         row.one("input.gf-switch").hasAttr("checked") shouldBe true
         row.one("button[hx-post]").attr("hx-post") shouldBe "/gamedays/$gorefest7/shelf/$brass/wish"
-        app.shelfByGameDay.getValue(gorefest7).map { it.game } shouldBe listOf(brass)
+        app.shelves.of(gorefest7).map { it.game } shouldBe listOf(brass)
     }
 
     @Test
@@ -89,7 +89,7 @@ class ShelfRoutesTest {
 
         row.one("input.gf-switch").hasAttr("checked") shouldBe false
         row.select("button").shouldBeEmpty()
-        app.shelfByGameDay.getValue(gorefest7).shouldBeEmpty()
+        app.shelves.of(gorefest7).shouldBeEmpty()
     }
 
     @Test
@@ -99,7 +99,7 @@ class ShelfRoutesTest {
         val row = client.htmxPost("/gamedays/$gorefest7/shelf/$brass/wish", parameters { append("wants", "true") }).fragment()
 
         row.one("button").attr("aria-pressed") shouldBe "true"
-        app.shelfByGameDay.getValue(gorefest7).single().eager shouldBe setOf(kimId)
+        app.shelves.of(gorefest7).single().eager shouldBe setOf(kimId)
     }
 
     @Test

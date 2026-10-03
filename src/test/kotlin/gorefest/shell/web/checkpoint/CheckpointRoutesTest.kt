@@ -84,7 +84,7 @@ class CheckpointRoutesTest {
         })
         val compare = logged.headers["HX-Redirect"]!!
         compare shouldStartWith "/gamedays/$gorefest7/log/compare?game=$azul"
-        app.playsByGameDay.getValue(gorefest7).single().let { (it.players to it.minutes) shouldBe (listOf(kimId, anna) to 45) }
+        app.plays.on(gorefest7).single().let { (it.players to it.minutes) shouldBe (listOf(kimId, anna) to 45) }
 
         val page = client.get(compare).page()
         page.one(".gf-notice--good").text() shouldBe "Logged Azul: 2 players, 45 min."
@@ -95,7 +95,7 @@ class CheckpointRoutesTest {
             append("answer", "A")
         })
         done.headers["Location"] shouldBe "/gamedays/$gorefest7/table?players=$kimId&players=$anna"
-        app.tasteByPlayer.getValue(kimId).comparisons.single().let { (it.basis to it.a) shouldBe (Basis.PLAYED to azul) }
+        app.tastes.of(kimId).comparisons.single().let { (it.basis to it.a) shouldBe (Basis.PLAYED to azul) }
     }
 
     @Test

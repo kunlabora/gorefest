@@ -88,7 +88,7 @@ class TasteModelTest {
     @Test
     fun `the taste history keeps comparisons and play status per player`() {
         val events = listOf<Event>(c(brass, azul, A), GamePlayStatusDeclared(anna, catan, played = false))
-        val history = events.fold(Tastes.initialState, Tastes::evolve).getValue(anna)
+        val history = events.fold(Tastes.initialState, Tastes::evolve).of(anna)
 
         history.comparisons.size shouldBe 1
         history.played shouldBe mapOf(catan to false)

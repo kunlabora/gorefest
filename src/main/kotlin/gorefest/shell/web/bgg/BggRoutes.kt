@@ -23,7 +23,7 @@ context(login: Login)
 fun Route.bggRoutes(app: App) {
     get("/bgg") {
         authenticated {
-            call.respondHtml { bggPage(safeReturnTo(call.parameters["returnTo"]), app.bggUsernames[contextOf<CurrentPlayer>().id]) }
+            call.respondHtml { bggPage(safeReturnTo(call.parameters["returnTo"]), app.bggAccounts.usernameOf(contextOf<CurrentPlayer>().id)) }
         }
     }
 
