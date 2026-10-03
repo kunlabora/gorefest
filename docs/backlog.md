@@ -51,6 +51,7 @@ S1–S13 is the MVP. S14–S16 make it good.
 - [x] `/health` checks DB connectivity; a failed deploy leaves the previous jar running (`deploy.sh` waits for health and switches back)
 - [ ] A real mail provider sends login mail; logging in from WhatsApp's and Signal's in-app browsers works on a real phone, and invite links show their preview there. **Scaleway TEM, Postmark and Resend clients written** (`MAIL_PROVIDER`); the phone check needs the live site
 - [ ] The server has fontconfig and a font installed, for the invite preview image (in the setup steps)
+- [x] BGG is credited on every page and game names link to BGG; the site tells search engines to stay away (`robots.txt`, `X-Robots-Tag`, meta tag)
 - [ ] BGG application registered, `BGG_TOKEN` set, and the XML parsing checked against live responses (fixtures were written from the docs)
 - [x] Login mails are rate-limited: 5 per email and 20 per IP per hour
 

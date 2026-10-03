@@ -20,6 +20,7 @@ import kotlinx.html.lang
 import kotlinx.html.link
 import kotlinx.html.main
 import kotlinx.html.meta
+import kotlinx.html.p
 import kotlinx.html.script
 import kotlinx.html.span
 import kotlinx.html.style
@@ -45,6 +46,8 @@ fun HTML.page(
         meta(charset = "utf-8")
         meta(name = "viewport", content = "width=device-width, initial-scale=1")
         title(title)
+        // The app is for one friend group: keep it out of search engines (see also robots.txt and X-Robots-Tag).
+        meta(name = "robots", content = "noindex, nofollow, noarchive, noimageindex")
         // First, and blocking: it sets the saved theme before anything paints.
         script(src = "/static/js/theme.js") {}
         link(rel = "stylesheet", href = "/static/css/tokens.css")
@@ -62,10 +65,18 @@ fun HTML.page(
             main("gf-body $mainClasses".trim()) {
                 if (mainId != null) id = mainId
                 content()
+                bggCredit()
             }
             if (dock != null) div("gf-dock") { dock() }
         }
     }
+}
+
+/** BoardGameGeek's data and box art are on every screen, so every screen credits it. */
+fun FlowContent.bggCredit() = p("gf-credit") {
+    +"Game data and images from "
+    a("https://boardgamegeek.com", target = "_blank") { attributes["rel"] = "noopener noreferrer"; +"BoardGameGeek" }
+    +"."
 }
 
 fun FlowContent.appBarTitle(text: String) = span("gf-appbar__title") { +text }

@@ -249,3 +249,9 @@ div.gf-tile { cursor: default; }
   :root:not([data-theme="light"]) .gf-theme-toggle__sun { display: contents; }
   :root:not([data-theme="light"]) .gf-theme-toggle__moon { display: none; }
 }
+
+/* BoardGameGeek credit: the footer line and links to each game's BGG page */
+.gf-credit { margin: var(--space-4) 0 0; font-size: 13px; line-height: 18px; color: var(--ink-muted); text-align: center; }
+.gf-credit a, .gf-bgglink { color: inherit; text-decoration: none; }
+.gf-credit a { text-decoration: underline; }
+.gf-bgglink:hover, .gf-bgglink:focus-visible { text-decoration: underline; }

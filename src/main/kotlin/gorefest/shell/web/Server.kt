@@ -16,7 +16,9 @@ import gorefest.shell.web.shelf.shelfRoutes
 import gorefest.shell.web.suggestions.suggestionsRoutes
 import gorefest.shell.web.taste.tasteRoutes
 import io.ktor.http.HttpStatusCode
+import io.ktor.server.response.header
 import io.ktor.server.application.Application
+import io.ktor.server.application.createApplicationPlugin
 import io.ktor.server.application.install
 import io.ktor.server.http.content.staticResources
 import io.ktor.server.plugins.calllogging.CallLogging
@@ -30,11 +32,17 @@ import org.slf4j.LoggerFactory
 
 private val log = LoggerFactory.getLogger("gorefest.web")
 
+private val NoIndex = createApplicationPlugin("NoIndex") {
+    onCall { call -> call.response.header("X-Robots-Tag", "noindex, nofollow, noarchive, noimageindex, nosnippet") }
+}
+
 fun Application.web(app: App) {
     install(CallLogging)
     // Caddy in front sets X-Forwarded-For. Safe to trust only because the app listens on localhost.
     install(XForwardedHeaders)
     install(Webjars)
+    // Private by design: no search engine or archive should list this site, so nobody finds it by accident.
+    install(NoIndex)
     install(StatusPages) {
         exception<Throwable> { call, cause ->
             log.error("Unhandled error on ${call.request.local.uri}", cause)
@@ -47,6 +55,7 @@ fun Application.web(app: App) {
             val dbUp = runCatching { app.db.transaction { contextOf<gorefest.shell.db.Tx>().connection.isValid(2) } }.getOrDefault(false)
             if (dbUp) call.respondText("ok") else call.respondText("database unavailable", status = HttpStatusCode.ServiceUnavailable)
         }
+        get("/robots.txt") { call.respondText("User-agent: *\nDisallow: /\n") }
         staticResources("/static", "static")
         context(app.login, app.config) { authRoutes() }
         context(app.ids, app.clock, app.login, app.config) { gameDayRoutes(app) }

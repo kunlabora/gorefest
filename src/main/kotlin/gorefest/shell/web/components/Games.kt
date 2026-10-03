@@ -8,6 +8,7 @@ import kotlinx.html.FlowContent
 import kotlinx.html.HtmlBlockTag
 import kotlinx.html.InputType
 import kotlinx.html.P
+import kotlinx.html.a
 import kotlinx.html.article
 import kotlinx.html.button
 import kotlinx.html.div
@@ -39,6 +40,15 @@ val Game.facts: String
         if (minPlayers == maxPlayers) "$minPlayers" else "$minPlayers–$maxPlayers",
     ).filter { it.isNotBlank() }.joinToString(" · ")
 
+/** The game's page on BoardGameGeek, which we credit wherever its data is shown. */
+val Game.bggUrl: String get() = "https://boardgamegeek.com/boardgame/${id.value}"
+
+/** The game's name as a link to its BGG page. For places that aren't buttons or labels themselves. */
+fun FlowContent.bggNameLink(game: Game) = a(game.bggUrl, target = "_blank", classes = "gf-bgglink") {
+    attributes["rel"] = "noopener noreferrer"
+    +game.name
+}
+
 /** Box art in its frame: the image letterboxed on a blurred copy, or a monogram when BGG has none. */
 fun FlowContent.art(game: Game, extraClasses: String = "", extraStyle: String = "") {
     val image = game.thumbnail ?: game.image
@@ -60,7 +70,7 @@ fun FlowContent.art(game: Game, extraClasses: String = "", extraStyle: String = 
 fun FlowContent.gameRow(game: Game, meta: String = game.facts, trailing: HtmlBlockTag.() -> Unit = {}) = div("gf-game gf-game--compact") {
     art(game)
     div("gf-game__body") {
-        h3("gf-game__name") { +game.name }
+        h3("gf-game__name") { bggNameLink(game) }
         if (meta.isNotBlank()) p("gf-game__meta") { +meta }
     }
     trailing()
@@ -70,7 +80,7 @@ fun FlowContent.gameRow(game: Game, meta: String = game.facts, trailing: HtmlBlo
 fun FlowContent.gameTile(game: Game, owner: PlayerId?, ownerName: String?) = div("gf-tile") {
     art(game)
     span("gf-tile__owner") { if (owner != null) avatar(owner, ownerName) }
-    span("gf-tile__name") { +game.name }
+    span("gf-tile__name") { bggNameLink(game) }
 }
 
 /** A game tile that's a radio button, for "which game?" pickers. */
@@ -89,7 +99,7 @@ fun FlowContent.rankedGame(rank: Int, game: Game, reason: String, meta: P.() -> 
         span("gf-game__rank") { +"$rank" }
         art(game, if (rank == 1) "gf-art--wide" else "")
         div("gf-game__body") {
-            h3("gf-game__name") { +game.name }
+            h3("gf-game__name") { bggNameLink(game) }
             p("gf-game__meta") { meta() }
             p("gf-game__reason") { icon("spark"); +reason }
         }

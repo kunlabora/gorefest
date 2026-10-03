@@ -67,6 +67,8 @@ Tag convention: `player:{id}`, `gameday:{id}`, `game:{bggId}`.
 ## BGG integration
 
 - Since 2025 the XML API2 needs a registered application: every request sends `Authorization: Bearer <BGG_TOKEN>`, and unauthenticated calls get 401. boardgamegeek.com blocks scripted access to its docs, so read them in a browser.
+- Attribution: every page (`page()`) carries a "Game data and images from BoardGameGeek" footer (`bggCredit`), and game names link to their BGG page (`bggNameLink`). We promised this in the BGG application: keep it.
+- The site is private by design: `robots.txt` disallows all, every response sends `X-Robots-Tag: noindex`, and `page()` adds a robots meta tag. Keep it that way, so nobody finds the app by accident and loads BGG through us.
 - Without `BGG_TOKEN` the app uses `FakeBggApi` with `DevCatalog` (dev mode and tests). All real calls go through `BggGateway`.
 - The `user` endpoint has no free-text bio, so verification looks for the code in any profile field it returns (we suggest "Web address").
 - BGG has no API for the top-ranked list; wizard anchors come from game ranks in the metadata cache.
