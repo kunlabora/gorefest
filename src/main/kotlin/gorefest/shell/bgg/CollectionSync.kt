@@ -3,6 +3,8 @@ package gorefest.shell.bgg
 import gorefest.core.PlayerId
 import gorefest.shell.db.Database
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -27,24 +29,39 @@ class CollectionSync(
 ) {
     private val log = LoggerFactory.getLogger(CollectionSync::class.java)
     private val collections = Collections()
-    private val running = ConcurrentHashMap<PlayerId, Job>()
+    private class Running(val username: String, val job: Job)
 
-    /** Starts a sync unless one is already running for this player. */
-    fun request(player: PlayerId, username: String, priority: BggPriority): Job =
-        running.computeIfAbsent(player) {
-            scope.launch {
-                try {
-                    sync(player, username, priority)
-                } catch (e: kotlinx.coroutines.CancellationException) {
-                    throw e
-                } catch (e: Exception) {
-                    log.error("Collection sync for {} failed", username, e)
-                    runCatching { setStatus(player, username, SyncStatus.FAILED, "Something went wrong. We'll try again later.") }
-                } finally {
-                    running.remove(player)
-                }
+    private val running = ConcurrentHashMap<PlayerId, Running>()
+
+    /**
+     * Starts a sync unless one is already running for this player and username. A sync for a
+     * different username (the player relinked) replaces the old one: it is cancelled and finished
+     * before the new one writes anything.
+     */
+    fun request(player: PlayerId, username: String, priority: BggPriority): Job = synchronized(running) {
+        val current = running[player]
+        if (current != null && current.username == username && current.job.isActive) return current.job
+        val job = scope.launch(start = CoroutineStart.LAZY) {
+            val me = this.coroutineContext[Job]
+            try {
+                current?.job?.cancelAndJoin()
+                sync(player, username, priority)
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: BggUnauthorized) {
+                log.error("Collection sync for {} stopped: {}", username, e.message)
+                runCatching { setStatus(player, username, SyncStatus.FAILED, "We can't reach BGG right now. We'll try again later.") }
+            } catch (e: Exception) {
+                log.error("Collection sync for {} failed", username, e)
+                runCatching { setStatus(player, username, SyncStatus.FAILED, "Something went wrong. We'll try again later.") }
+            } finally {
+                running.computeIfPresent(player) { _, r -> if (r.job === me) null else r }
             }
         }
+        running[player] = Running(username, job)
+        job.start()
+        job
+    }
 
     suspend fun status(player: PlayerId): CollectionSyncState? = db.transaction { collections.status(player) }
 
@@ -65,6 +82,8 @@ class CollectionSync(
         repeat(MAX_TRIES) { attempt ->
             val result = try {
                 bgg.call(priority) { collection(username) }
+            } catch (e: BggUnauthorized) {
+                throw e
             } catch (e: BggUnavailable) {
                 log.info("BGG unavailable for {} (try {}): {}", username, attempt + 1, e.message)
                 CollectionResult.Queued

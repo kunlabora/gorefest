@@ -60,9 +60,15 @@ class XmlBggApi(
             .GET().build()
         val response = http.send(request, HttpResponse.BodyHandlers.ofString())
         if (response.statusCode() == 429 || response.statusCode() >= 500) throw BggUnavailable("BGG answered ${response.statusCode()}")
-        if (response.statusCode() == 401) error("BGG rejected the API token (401). Check BGG_TOKEN.")
+        if (response.statusCode() == 401) {
+            if (warnedUnauthorized.compareAndSet(false, true)) log.error("BGG rejected the API token (401). Check BGG_TOKEN; BGG calls fail until it is fixed.")
+            throw BggUnauthorized("BGG rejected the API token (401)")
+        }
         response.statusCode() to response.body()
     }
+
+    private val warnedUnauthorized = java.util.concurrent.atomic.AtomicBoolean()
+    private val log = org.slf4j.LoggerFactory.getLogger(XmlBggApi::class.java)
 
     private fun String.enc() = URLEncoder.encode(this, Charsets.UTF_8)
 }
