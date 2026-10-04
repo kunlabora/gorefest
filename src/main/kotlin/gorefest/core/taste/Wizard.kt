@@ -2,6 +2,7 @@ package gorefest.core.taste
 
 import gorefest.core.Basis
 import gorefest.core.BggId
+import gorefest.core.ComparisonRecorded
 import gorefest.core.ComparisonResult
 import gorefest.core.game.Game
 import java.time.Instant
@@ -78,13 +79,23 @@ class Wizard(
         return games.filter { g -> (if (player.hasPlayed(g.id)) played else vibe)[g.id].variance > threshold }.map { it.id }.toSet()
     }
 
-    /** The oldest decisive answer, if it's older than [olderThan]: worth asking again as tastes drift. */
+    /**
+     * The oldest decisive answer older than [olderThan] whose pair wasn't answered again since:
+     * worth asking again as tastes drift. Pairs re-answered recently are skipped, so the next one comes up.
+     */
     fun stalePair(player: PlayerGames, games: (BggId) -> Game?, now: Instant, olderThan: java.time.Duration = java.time.Duration.ofDays(180)): WizardPair? {
-        val old = player.history.comparisons.filter { java.time.Duration.between(it.at, now) > olderThan }.minByOrNull { it.at } ?: return null
-        val a = games(old.a) ?: return null
-        val b = games(old.b) ?: return null
-        val recent = player.history.comparisons.any { setOf(it.a, it.b) == setOf(old.a, old.b) && java.time.Duration.between(it.at, now) <= olderThan }
-        return if (recent) null else WizardPair(a, b, old.basis)
+        val all = player.history.comparisons
+        fun age(c: ComparisonRecorded) = java.time.Duration.between(c.at, now)
+        val recentPairs = all.filter { age(it) <= olderThan }.map { setOf(it.a, it.b) }.toSet()
+        return all.asSequence()
+            .filter { age(it) > olderThan && it.result != ComparisonResult.BOTH_GREAT && it.result != ComparisonResult.BOTH_MEH }
+            .filter { setOf(it.a, it.b) !in recentPairs }
+            .sortedBy { it.at }
+            .firstNotNullOfOrNull { old ->
+                val a = games(old.a) ?: return@firstNotNullOfOrNull null
+                val b = games(old.b) ?: return@firstNotNullOfOrNull null
+                WizardPair(a, b, old.basis)
+            }
     }
 
     fun shouldStop(round: RoundState) = round.step >= maxPairs || (round.step >= minPairs && round.stableSteps >= 3)

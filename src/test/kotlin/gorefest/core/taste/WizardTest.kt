@@ -5,6 +5,7 @@ import gorefest.core.BggId
 import gorefest.core.ComparisonRecorded
 import gorefest.core.ComparisonResult
 import gorefest.core.GamePlayStatusDeclared
+import gorefest.core.game.Game
 import gorefest.core.gameday.anna
 import gorefest.shell.bgg.DevCatalog
 import io.kotest.matchers.collections.shouldContain
@@ -156,5 +157,21 @@ class WizardTest {
 
         Predictor().favourites(PlayerGames(history, emptySet()), listOf(azul, cascadia), now).first().game shouldBe cascadia
         GamePlayStatusDeclared(anna, azul.id, true).played shouldBe true
+    }
+
+
+    @Test
+    fun `a stale pair that was re-answered doesn't hide the next stale pair`() {
+        val (azul, cascadia, brass, root) = shelf
+        val lookup = shelf.associateBy { it.id }::get
+        fun answer(a: Game, b: Game, days: Long, result: ComparisonResult = ComparisonResult.A) =
+            ComparisonRecorded(anna, a.id, b.id, result, Basis.VIBE, now - java.time.Duration.ofDays(days))
+        val history = TasteHistory(listOf(
+            answer(azul, cascadia, 300), answer(cascadia, azul, 10),   // oldest pair, asked again since
+            answer(brass, root, 250),
+            answer(azul, root, 280, ComparisonResult.BOTH_GREAT),      // not decisive: never re-asked
+        ))
+
+        wizard.stalePair(PlayerGames(history, emptySet()), lookup, now) shouldBe WizardPair(brass, root, Basis.VIBE)
     }
 }

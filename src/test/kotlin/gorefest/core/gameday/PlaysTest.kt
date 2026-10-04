@@ -63,4 +63,15 @@ class PlaysTest {
         Wizard().partner(player, azul.id, listOf(azul, cascadia, brass), now) shouldBe cascadia
         Wizard().partner(player, azul.id, listOf(azul, brass), now) shouldBe null
     }
+
+
+    @Test
+    fun `games without a playtime don't skew the group's speed`() {
+        val unknown = azul.copy(id = BggId(999_001), minPlaytime = 0, maxPlaytime = 0)
+        val games = (DevCatalog.games + unknown).associateBy { it.id }::get
+
+        // Estimated at 5 minutes, a 60 minute log would read as 12x and clamp the speed to 1.8.
+        groupSpeed(listOf(log(60, game = unknown.id)), games, listOf(anna, bram)) shouldBe 1.0
+        groupSpeed(listOf(log(60, game = unknown.id), log(45)), games, listOf(anna, bram)) shouldBe 1.5
+    }
 }

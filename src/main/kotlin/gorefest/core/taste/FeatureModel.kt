@@ -7,6 +7,7 @@ import gorefest.core.ComparisonResult
 import gorefest.core.game.Game
 import java.time.Duration
 import java.time.Instant
+import kotlin.math.abs
 import kotlin.math.ln
 import kotlin.math.sqrt
 
@@ -43,7 +44,13 @@ class FeatureModel(
     private data class Outcome(val i: BggId?, val j: BggId?, val y: Double, val w: Double)
 
     private val cache = java.util.concurrent.ConcurrentHashMap<BggId, Features>()
-    private fun f(id: BggId?): Features = if (id == null) emptyMap() else cache.getOrPut(id) { games(id)?.let(::features) ?: emptyMap() }
+    /** Features of a game; a game the catalog doesn't know yet is not cached, so it gets real features once it is. */
+    private fun f(id: BggId?): Features {
+        if (id == null) return emptyMap()
+        cache[id]?.let { return it }
+        val game = games(id) ?: return emptyMap()
+        return features(game).also { cache[id] = it }
+    }
 
     override fun fit(comparisons: List<ComparisonRecorded>, basis: Basis, now: Instant): Scores {
         val outcomes = comparisons.filter { it.basis == basis }.flatMap { c ->
@@ -109,7 +116,10 @@ fun vibeTrust(history: TasteHistory, model: TasteModel, now: Instant): Double {
     val played = history.comparisons.filter { it.basis == Basis.PLAYED && (it.result == ComparisonResult.A || it.result == ComparisonResult.B) }
     if (played.isEmpty()) return 0.5
     val vibe = history.scores(model, Basis.VIBE, now)
-    val agree = played.count { c -> (vibe.pPrefers(c.a, c.b) > 0.5) == (c.result == ComparisonResult.A) }
-    val accuracy = (agree + 1.5) / (played.size + 2)
+    // A prediction of (nearly) 0.5 says nothing: it counts neither as right nor wrong.
+    val informative = played.filter { c -> abs(vibe.pPrefers(c.a, c.b) - 0.5) > 0.01 }
+    if (informative.isEmpty()) return 0.5
+    val agree = informative.count { c -> (vibe.pPrefers(c.a, c.b) > 0.5) == (c.result == ComparisonResult.A) }
+    val accuracy = (agree + 1.5) / (informative.size + 2)
     return ((accuracy - 0.5) * 2).coerceIn(0.0, 1.0)
 }

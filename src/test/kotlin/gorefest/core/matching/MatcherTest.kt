@@ -123,4 +123,16 @@ class MatcherTest {
         Matcher.estimatedMinutes(g("Twilight Struggle"), 2) shouldBe 150
         BggId(1).value shouldBe 1
     }
+
+
+    @Test
+    fun `a game without a playtime is assumed to take an hour, not a few minutes`() {
+        val mystery = codenames.copy(id = BggId(999_002), name = "Mystery", minPlaytime = 0, maxPlaytime = 0)
+        val table = List(3) { player("P$it") }
+
+        Matcher.estimatedMinutes(mystery, 3) shouldBe Matcher.UNKNOWN_MINUTES
+        Matcher.estimatedMinutes(mystery, 3, speed = 1.5) shouldBe 90
+        matcher.suggest(table, shelf(mystery, azul), timeBudget = 45, now).names() shouldBe listOf("Azul")
+        matcher.suggest(table, shelf(mystery), timeBudget = 90, now).names() shouldBe listOf("Mystery")
+    }
 }

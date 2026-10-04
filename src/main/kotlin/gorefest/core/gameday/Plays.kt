@@ -71,11 +71,12 @@ object Plays : Projection<GameDayPlays> {
 
 /**
  * How fast a group plays compared to the box: the median of actual ÷ estimated minutes over logs
- * where at least half of [table] played. 1.0 without such logs; clamped to 0.6–1.8.
+ * of games with a known playtime where at least half of [table] played. 1.0 without such logs; clamped to 0.6–1.8.
  */
 fun groupSpeed(logs: List<PlayLogged>, games: (BggId) -> Game?, table: Collection<PlayerId>): Double {
     val ratios = logs.filter { log -> log.players.count { it in table } * 2 >= table.size }.mapNotNull { log ->
-        games(log.game)?.let { log.minutes.toDouble() / Matcher.estimatedMinutes(it, log.players.size) }
+        // A game without a playtime has no box time to compare with.
+        games(log.game)?.takeIf(Matcher::hasPlaytime)?.let { log.minutes.toDouble() / Matcher.estimatedMinutes(it, log.players.size) }
     }.sorted()
     if (ratios.isEmpty()) return 1.0
     val median = if (ratios.size % 2 == 1) ratios[ratios.size / 2] else (ratios[ratios.size / 2 - 1] + ratios[ratios.size / 2]) / 2

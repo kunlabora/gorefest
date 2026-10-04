@@ -9,6 +9,7 @@ import io.kotest.matchers.doubles.plusOrMinus
 import io.kotest.matchers.doubles.shouldBeGreaterThan
 import io.kotest.matchers.doubles.shouldBeLessThan
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import org.junit.jupiter.api.Test
 import java.time.Duration
 import java.time.Instant
@@ -75,5 +76,33 @@ class FeatureModelTest {
         f.keys.filter { it.startsWith("mechanic:") }.size shouldBe 3
         f.getValue("weight") shouldBe ((1.8 - 2.5) plusOrMinus 1e-9)
         f.getValue("best:2") shouldBe 0.5
+    }
+
+
+    @Test
+    fun `a game missing from the catalog is not cached as having no features`() {
+        val azul = g("Azul")
+        val cascadia = g("Cascadia")
+        var known = false
+        val model = FeatureModel({ id -> if (known) catalog[id] else null })
+        val answers = List(3) { ComparisonRecorded(anna, azul.id, cascadia.id, ComparisonResult.A, Basis.VIBE, now) }
+
+        val blind = model.fit(answers, Basis.VIBE, now)
+        val blindAzul = blind[azul.id].mean
+        known = true
+        val sighted = model.fit(answers, Basis.VIBE, now)
+
+        // With real features the weights take part of the credit, so the offsets differ from the featureless fit.
+        sighted[azul.id].mean shouldNotBe blindAzul
+        sighted.unseen!!(g("Root").id).mean shouldNotBe 0.0
+    }
+
+    @Test
+    fun `vibes that predict nothing leave trust at one half whatever the answers`() {
+        val (a, b) = g("Azul") to g("Cascadia")
+        val played = List(4) { ComparisonRecorded(anna, a.id, b.id, ComparisonResult.B, Basis.PLAYED, now) }
+
+        vibeTrust(TasteHistory(played), v1, now) shouldBe 0.5
+        vibeTrust(TasteHistory(played.map { it.copy(result = ComparisonResult.A) }), v1, now) shouldBe 0.5
     }
 }
