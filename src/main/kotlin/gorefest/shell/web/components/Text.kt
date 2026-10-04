@@ -23,3 +23,10 @@ fun Int.inWords(): String =
 
 /** "1 game", "3 games" */
 fun Int.of(singular: String, plural: String = singular + "s") = "$this ${if (this == 1) singular else plural}"
+
+/** "45 minutes", "2 hours", "2 h 30 min" */
+fun Int.asDuration(): String = when {
+    this < 120 -> "$this minutes"
+    this % 60 == 0 -> "${this / 60} hours"
+    else -> "${this / 60} h ${this % 60} min"
+}

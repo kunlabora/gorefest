@@ -138,8 +138,8 @@ class WizardTest {
         val favourites = Predictor().favourites(PlayerGames(history, emptySet()), shelf, now)
 
         favourites.first().game shouldBe brass
-        favourites.first().reason shouldBe "You picked it over Azul and Cascadia."
-        favourites.first { it.game == root }.reason shouldBe "You called it great."
+        favourites.first().reason shouldBe FavouriteReason.PickedOver(listOf("Azul", "Cascadia"))
+        favourites.first { it.game == root }.reason shouldBe FavouriteReason.CalledItGreat
     }
 
     @Test

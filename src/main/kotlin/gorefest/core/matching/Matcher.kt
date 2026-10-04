@@ -11,14 +11,49 @@ import kotlin.math.sqrt
 
 data class TablePlayer(val id: PlayerId, val name: String, val games: PlayerGames)
 
-data class Suggestion(val game: Game, val minutes: Int, val reason: String, val score: Double)
+data class Suggestion(val game: Game, val minutes: Int, val reason: SuggestionReason, val score: Double)
+
+/** Why a game was suggested. The web layer words it. */
+sealed interface SuggestionReason {
+    /** An owner at the table brought it and really wants to play it. */
+    data class EagerOwner(val name: String) : SuggestionReason
+
+    /** Nobody has played it and everyone's predicted to enjoy it. */
+    data object NewAndLiked : SuggestionReason
+
+    /** Everyone rated it highly and they agree. */
+    data class SafeBet(val tableSize: Int) : SuggestionReason
+
+    /** The BGG poll says it's best at exactly this table size. */
+    data class BestAtTableSize(val tableSize: Int) : SuggestionReason
+
+    /** Nobody at the table has played it. */
+    data object NobodyPlayedIt : SuggestionReason
+
+    /** It finishes well inside the time budget. */
+    data class FitsWithRoomToSpare(val budget: Int) : SuggestionReason
+
+    /** All we know is that it plays well at this table size. */
+    data class PlaysWellWith(val tableSize: Int) : SuggestionReason
+
+    data object GoodMiddleGround : SuggestionReason
+}
 
 sealed interface Suggestions {
     /** [unknown]: table players with too few answers for their taste to count much; the picks lean on fit for them. */
     data class Found(val top: List<Suggestion>, val unknown: List<PlayerId> = emptyList()) : Suggestions
 
-    /** Nothing passes the filters. [relaxTo] is a time budget at which [fitsThen] games would fit, if any. */
-    data class NothingFits(val title: String, val text: String, val relaxTo: Int? = null, val fitsThen: Int = 0) : Suggestions
+    /** Nothing passes the filters. */
+    sealed interface NothingFits : Suggestions {
+        /** Nobody is ticked at the table. */
+        data object NoPlayers : NothingFits
+
+        /** No shelf game plays well with [tableSize]. */
+        data class NoGameForTableSize(val tableSize: Int) : NothingFits
+
+        /** Games play well with [tableSize] but none fit [budget]. [relaxTo] is a budget at which [fitsThen] games would fit, if any. */
+        data class NoGameInTime(val tableSize: Int, val budget: Int, val relaxTo: Int?, val fitsThen: Int) : NothingFits
+    }
 }
 
 /**
@@ -44,7 +79,7 @@ class Matcher(
         count: Int = 3,
     ): Suggestions {
         val n = table.size
-        if (n == 0) return Suggestions.NothingFits("Who's playing?", "Tick the players at your table.")
+        if (n == 0) return Suggestions.NothingFits.NoPlayers
         val playable = shelf.filter { (game, _) -> n in game.goodPlayerCounts }
         val fitting = playable.filter { (game, _) -> timeBudget == null || estimatedMinutes(game, n, speed) <= timeBudget }
         if (fitting.isEmpty()) return nothingFits(n, timeBudget, playable, speed)
@@ -71,35 +106,37 @@ class Matcher(
     }
 
     private fun nothingFits(n: Int, budget: Int?, playable: List<Pair<Game, ShelfGame>>, speed: Double): Suggestions.NothingFits {
-        if (playable.isEmpty()) {
-            return Suggestions.NothingFits("Nothing plays well with $n", "The shelf's short on games for $n players. Try splitting into two tables.")
-        }
-        val relax = BUDGETS.filter { budget == null || it > budget }.firstOrNull { b -> playable.any { estimatedMinutes(it.first, n, speed) <= b } }
+        if (playable.isEmpty()) return Suggestions.NothingFits.NoGameForTableSize(n)
+        // Only reached with a budget: without one, every playable game fits.
+        val limit = checkNotNull(budget)
+        val relax = BUDGETS.filter { it > limit }.firstOrNull { b -> playable.any { estimatedMinutes(it.first, n, speed) <= b } }
         val fits = relax?.let { b -> playable.count { estimatedMinutes(it.first, n, speed) <= b } } ?: 0
-        return Suggestions.NothingFits("Nothing fits $n players in ${budget?.let(::duration)}", "Everything on the shelf takes longer. Loosen the time:", relax, fits)
+        return Suggestions.NothingFits.NoGameInTime(n, limit, relax, fits)
     }
 
     private fun reason(
         game: Game, table: List<TablePlayer>, means: List<Double>, spread: Double, novel: Boolean,
         eagerOwner: String?, minutes: Int, budget: Int?, nobodyKnown: Boolean,
-    ): String {
+    ): SuggestionReason {
         val n = table.size
         val everyoneRated = table.all { game.id in it.games.history.comparedGames }
+        val bestAtN = n in game.bestPlayers && game.bestPlayers.size <= 2
+        val roomFor = budget?.takeIf { minutes <= it - 20 }
         return when {
-            eagerOwner != null -> "$eagerOwner brought it and has been itching to play."
+            eagerOwner != null -> SuggestionReason.EagerOwner(eagerOwner)
             // Without anyone's taste there is nothing to say about enjoyment: only about fit.
             nobodyKnown -> when {
-                n in game.bestPlayers && game.bestPlayers.size <= 2 -> "Best at exactly ${words(n)}, which is you."
-                novel -> "Nobody's played it yet: something new for the table."
-                budget != null && minutes <= budget - 20 -> "Fits your ${duration(budget)} with room for snacks."
-                else -> "Plays well with ${words(n)}."
+                bestAtN -> SuggestionReason.BestAtTableSize(n)
+                novel -> SuggestionReason.NobodyPlayedIt
+                roomFor != null -> SuggestionReason.FitsWithRoomToSpare(roomFor)
+                else -> SuggestionReason.PlaysWellWith(n)
             }
-            novel && means.all { it >= 0 } -> "Nobody's played it and everyone's likely to enjoy it."
-            everyoneRated && means.all { it > 0.3 } && spread < 0.5 -> "Safe bet: ${if (n == 2) "both" else "all ${words(n)}"} of you rated it highly."
-            n in game.bestPlayers && game.bestPlayers.size <= 2 -> "Best at exactly ${words(n)}, which is you."
-            novel -> "Nobody's played it yet: something new for the table."
-            budget != null && minutes <= budget - 20 -> "Fits your ${duration(budget)} with room for snacks."
-            else -> "A good middle ground for this table."
+            novel && means.all { it >= 0 } -> SuggestionReason.NewAndLiked
+            everyoneRated && means.all { it > 0.3 } && spread < 0.5 -> SuggestionReason.SafeBet(n)
+            bestAtN -> SuggestionReason.BestAtTableSize(n)
+            novel -> SuggestionReason.NobodyPlayedIt
+            roomFor != null -> SuggestionReason.FitsWithRoomToSpare(roomFor)
+            else -> SuggestionReason.GoodMiddleGround
         }
     }
 
@@ -117,13 +154,5 @@ class Matcher(
             val base = game.minPlaytime + (game.maxPlaytime - game.minPlaytime) * t
             return ((base * speed / 5).roundToInt() * 5).coerceAtLeast(5)
         }
-
-        fun duration(minutes: Int) = when {
-            minutes < 120 -> "$minutes minutes"
-            minutes % 60 == 0 -> "${minutes / 60} hours"
-            else -> "${minutes / 60} h ${minutes % 60} min"
-        }
-
-        private fun words(n: Int) = listOf("zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten").getOrElse(n) { "$n" }
     }
 }

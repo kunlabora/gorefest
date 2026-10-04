@@ -101,7 +101,18 @@ class Wizard(
 }
 
 /** A predicted favourite and why. */
-data class Favourite(val game: Game, val score: Score, val reason: String)
+data class Favourite(val game: Game, val score: Score, val reason: FavouriteReason)
+
+/** Why a game is among someone's likely favourites, from their own answers. The web layer words it. */
+sealed interface FavouriteReason {
+    data object CalledItGreat : FavouriteReason
+
+    /** It won against these games, in the order they were answered. */
+    data class PickedOver(val games: List<String>) : FavouriteReason
+
+    /** It hasn't won a pair yet: it's ranked on thin evidence. */
+    data object JustAGuess : FavouriteReason
+}
 
 /**
  * Predicted enjoyment: PLAYED scores for games the player has played (falling back to VIBE when
@@ -140,10 +151,9 @@ class Predictor(private val model: TasteModel = BradleyTerry()) {
             .map { Favourite(it, scores.getValue(it.id), reason(it, player, byId)) }
     }
 
-    /** In the player's own answers: "You picked it over Azul and CATAN." */
-    private fun reason(game: Game, player: PlayerGames, names: Map<BggId, Game>): String {
+    private fun reason(game: Game, player: PlayerGames, names: Map<BggId, Game>): FavouriteReason {
         val mine = player.history.comparisons.filter { it.a == game.id || it.b == game.id }
-        if (mine.any { it.result == ComparisonResult.BOTH_GREAT }) return "You called it great."
+        if (mine.any { it.result == ComparisonResult.BOTH_GREAT }) return FavouriteReason.CalledItGreat
         val beaten = mine.mapNotNull { c ->
             when {
                 c.a == game.id && c.result == ComparisonResult.A -> c.b
@@ -151,10 +161,6 @@ class Predictor(private val model: TasteModel = BradleyTerry()) {
                 else -> null
             }
         }.distinct().mapNotNull { names[it]?.name }
-        return when (beaten.size) {
-            0 -> "Just a guess so far: it hasn't won a pair yet."
-            1 -> "You picked it over ${beaten[0]}."
-            else -> "You picked it over ${beaten[0]} and ${beaten[1]}."
-        }
+        return if (beaten.isEmpty()) FavouriteReason.JustAGuess else FavouriteReason.PickedOver(beaten)
     }
 }

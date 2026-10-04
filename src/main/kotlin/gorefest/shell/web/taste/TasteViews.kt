@@ -1,5 +1,6 @@
 package gorefest.shell.web.taste
 
+import gorefest.core.taste.FavouriteReason
 import gorefest.core.Basis
 import gorefest.core.gameday.GameDaySummary
 import gorefest.core.taste.Favourite
@@ -108,8 +109,14 @@ fun HTML.favouritesPage(view: Payoff) {
             view.favourites.isEmpty() -> emptyState("Not enough answers yet", "A few quick pairs and we'll know what you'll enjoy on this shelf.") {
                 linkButton("/gamedays/${gameDay.id}/taste", "Start the taste round", ButtonStyle.SECONDARY)
             }
-            else -> ol("gf-podium") { view.favourites.forEachIndexed { i, f -> li { rankedGame(i + 1, f.game, f.reason) } } }
+            else -> ol("gf-podium") { view.favourites.forEachIndexed { i, f -> li { rankedGame(i + 1, f.game, f.reason.text()) } } }
         }
     }
 }
 
+/** The one-line reason under a favourite. */
+private fun FavouriteReason.text(): String = when (this) {
+    FavouriteReason.CalledItGreat -> "You called it great."
+    is FavouriteReason.PickedOver -> "You picked it over ${games.take(2).joinToString(" and ")}."
+    FavouriteReason.JustAGuess -> "Just a guess so far: it hasn't won a pair yet."
+}

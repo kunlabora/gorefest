@@ -64,7 +64,7 @@ class MatcherTest {
         val result = matcher.suggest(listOf(kim, player("Bram")), shelf(azul, brass, eager = mapOf(brass to kim.id)), null, now) as Suggestions.Found
 
         result.top.first().game shouldBe brass
-        result.top.first().reason shouldBe "Kim brought it and has been itching to play."
+        result.top.first().reason shouldBe SuggestionReason.EagerOwner("Kim")
     }
 
     @Test
@@ -73,7 +73,7 @@ class MatcherTest {
 
         val result = matcher.suggest(table, shelf(azul, codenames), null, now) as Suggestions.Found
 
-        result.top.first { it.game == codenames }.reason shouldBe "Nobody's played it and everyone's likely to enjoy it."
+        result.top.first { it.game == codenames }.reason shouldBe SuggestionReason.NewAndLiked
     }
 
     @Test
@@ -82,9 +82,10 @@ class MatcherTest {
         val strangers = matcher.suggest(listOf(bram, player("Kim")), shelf(azul, brass), null, now) as Suggestions.Found
 
         strangers.unknown.size shouldBe 2
-        strangers.top.map { it.reason }.forEach { it shouldNotContain "enjoy" }
-        strangers.top.single { it.game == azul }.reason shouldBe "Best at exactly two, which is you."
-        strangers.top.single { it.game == brass }.reason shouldBe "Nobody's played it yet: something new for the table."
+        // Without anyone's taste, no claim about enjoyment.
+        strangers.top.map { it.reason }.none { it == SuggestionReason.NewAndLiked || it is SuggestionReason.SafeBet || it == SuggestionReason.GoodMiddleGround } shouldBe true
+        strangers.top.single { it.game == azul }.reason shouldBe SuggestionReason.BestAtTableSize(2)
+        strangers.top.single { it.game == brass }.reason shouldBe SuggestionReason.NobodyPlayedIt
 
         val mixed = matcher.suggest(listOf(player("Anna", azul, brass, times = Matcher.KNOWN_AFTER), bram), shelf(azul), null, now) as Suggestions.Found
         mixed.unknown shouldBe listOf(bram.id)
@@ -96,25 +97,21 @@ class MatcherTest {
 
         val result = matcher.suggest(table, shelf(azul), null, now) as Suggestions.Found
 
-        result.top.single().reason shouldBe "Safe bet: all four of you rated it highly."
+        result.top.single().reason shouldBe SuggestionReason.SafeBet(4)
     }
 
     @Test
     fun `nothing fitting in time suggests a longer budget`() {
         val result = matcher.suggest(List(4) { player("P$it") }, shelf(brass), timeBudget = 45, now)
 
-        result.shouldBeInstanceOf<Suggestions.NothingFits>()
-        result.title shouldBe "Nothing fits 4 players in 45 minutes"
-        (result.relaxTo to result.fitsThen) shouldBe (120 to 1)
+        result shouldBe Suggestions.NothingFits.NoGameInTime(tableSize = 4, budget = 45, relaxTo = 120, fitsThen = 1)
     }
 
     @Test
     fun `nothing for this many players says so`() {
         val result = matcher.suggest(List(7) { player("P$it") }, shelf(azul, brass), null, now)
 
-        result.shouldBeInstanceOf<Suggestions.NothingFits>()
-        result.title shouldBe "Nothing plays well with 7"
-        result.relaxTo shouldBe null
+        result shouldBe Suggestions.NothingFits.NoGameForTableSize(7)
     }
 
     @Test

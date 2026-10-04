@@ -46,15 +46,17 @@ fun TagConsumer<*>.suggestions(suggestions: Suggestions, tableSize: Int, gameDay
             h2("gf-h2") { +"Play this" }
             if (suggestions.unknown.isNotEmpty()) unknownTaste(suggestions.unknown, tableSize, gameDay, names, me)
             suggestions.top.forEachIndexed { i, s ->
-                rankedGame(i + 1, s.game, s.reason) { icon("clock"); +"~${s.minutes} min for ${if (i == 0) "the $tableSize of you" else "$tableSize"}" }
+                rankedGame(i + 1, s.game, s.reason.text()) { icon("clock"); +"~${s.minutes} min for ${if (i == 0) "the $tableSize of you" else "$tableSize"}" }
             }
         }
-        is Suggestions.NothingFits -> emptyState(suggestions.title, suggestions.text) {
+        is Suggestions.NothingFits -> emptyState(suggestions.title(), suggestions.text()) {
+            if (suggestions !is Suggestions.NothingFits.NoGameInTime) return@emptyState
             val relax = suggestions.relaxTo ?: return@emptyState
+            val fitsThen = suggestions.fitsThen
             val label = TIMES.firstOrNull { it.second == relax }?.first ?: "Any"
             div("gf-stack") {
                 style = "width: 100%"
-                relaxButton(label, "Try ${Matcher.duration(relax)}: ${suggestions.fitsThen} ${if (suggestions.fitsThen == 1) "game fits" else "games fit"}")
+                relaxButton(label, "Try ${relax.asDuration()}: $fitsThen ${if (fitsThen == 1) "game fits" else "games fit"}")
             }
         }
     }
