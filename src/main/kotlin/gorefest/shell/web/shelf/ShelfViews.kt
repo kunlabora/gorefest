@@ -77,10 +77,9 @@ fun TagConsumer<*>.bringItem(gameDay: GameDaySummary, row: BringRow, readOnly: B
     if (error != null) fieldError(error)
 }
 
-private fun FlowContent.wishToggle(gameDay: GameDaySummary, row: BringRow, rowId: String, prefix: String) =
-    button(type = ButtonType.button, classes = if (row.wants) "gf-chip gf-chip--text" else "gf-chip") {
+private fun FlowContent.wishToggle(gameDay: GameDaySummary, row: BringRow, rowId: String, prefix: String) = div("gf-wish") {
+    button(type = ButtonType.button, classes = "gf-chip gf-chip--text") {
         attributes["aria-pressed"] = row.wants.toString()
-        attributes["style"] = "margin: 0 0 var(--space-2) var(--space-4)"
         hx("post", "/gamedays/${gameDay.id}/shelf/${row.game.id}/wish")
         hx("vals", """{"wants": "${!row.wants}", "row": "$prefix"}""")
         hx("target", "#$rowId")
@@ -88,3 +87,7 @@ private fun FlowContent.wishToggle(gameDay: GameDaySummary, row: BringRow, rowId
         icon("heart")
         span { +if (row.wants) "Itching to play this" else "I really want to play this" }
     }
+    span("gf-small gf-muted") {
+        +if (row.wants) "It gets a nudge in the suggestions. Tap again to undo." else "Gives it a nudge in the suggestions."
+    }
+}
