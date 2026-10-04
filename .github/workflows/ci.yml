@@ -1,7 +1,10 @@
 name: CI
 on:
   push:
+    branches: [main]
   pull_request:
+permissions:
+  contents: read
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -13,6 +16,11 @@ jobs:
           java-version: 25
       - uses: gradle/actions/setup-gradle@v5
       - run: ./gradlew test buildFatJar
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: test-reports
+          path: build/reports/tests
       - uses: actions/upload-artifact@v4
         with:
           name: gorefest-jar

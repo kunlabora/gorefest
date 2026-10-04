@@ -30,9 +30,23 @@ class TestApp(config: AppConfig = AppConfig.dev()) {
     val bgg = FakeBggApi()
     val app = App(TestDatabase.db, clock, IdGenerator.sequential(), config, mailbox, bgg, bggInterval = Duration.ZERO, bggRetry = Duration.ofMillis(1))
 
+    init {
+        live += this
+    }
+
     suspend fun reset() {
+        // Test classes make one TestApp per test and never close it: stop the earlier ones so their
+        // background coroutines can't write into the shared database while this test runs.
+        live.filter { it !== this }.forEach { it.stop() }
+        live.retainAll { it === this }
         TestDatabase.reset()
         app.start()
+    }
+
+    fun stop() = app.stop()
+
+    private companion object {
+        val live = java.util.concurrent.CopyOnWriteArrayList<TestApp>()
     }
 
     /**
