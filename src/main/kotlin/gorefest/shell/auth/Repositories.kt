@@ -100,12 +100,44 @@ class LoginAttempts {
             it.executeQuery().use { rs -> rs.next(); rs.getInt(1) }
         }
 
-    /** Locks the row, so two concurrent checks of the same attempt can't both succeed. */
+    /** Serialises concurrent requests for the same [email] until the transaction ends. */
     context(tx: Tx)
-    fun lockById(id: Uuid): StoredLoginAttempt? = selectForUpdate("id = ?") { it.setObject(1, id.toJavaUuid()) }
+    fun lockEmail(email: String) {
+        tx.connection.prepareStatement("select pg_advisory_xact_lock(hashtext(?))").use {
+            it.setString(1, email)
+            it.execute()
+        }
+    }
 
     context(tx: Tx)
-    fun lockByToken(tokenHash: ByteArray): StoredLoginAttempt? = selectForUpdate("token_hash = ?") { it.setBytes(1, tokenHash) }
+    fun delete(id: Uuid) {
+        tx.connection.prepareStatement("delete from login_attempts where id = ?").use {
+            it.setObject(1, id.toJavaUuid())
+            it.executeUpdate()
+        }
+    }
+
+    /** Drops attempts created before [before]: they no longer count for rate limiting, and they hold emails. */
+    context(tx: Tx)
+    fun purgeBefore(before: Instant): Int =
+        tx.connection.prepareStatement("delete from login_attempts where created_at < ?").use {
+            it.setTimestamp(1, Timestamp.from(before))
+            it.executeUpdate()
+        }
+
+    /** Plain read, for checks that don't use the attempt up. */
+    context(tx: Tx)
+    fun findById(id: Uuid): StoredLoginAttempt? = select("id = ?", lock = false) { it.setObject(1, id.toJavaUuid()) }
+
+    context(tx: Tx)
+    fun findByToken(tokenHash: ByteArray): StoredLoginAttempt? = select("token_hash = ?", lock = false) { it.setBytes(1, tokenHash) }
+
+    /** Locks the row, so two concurrent checks of the same attempt can't both succeed. */
+    context(tx: Tx)
+    fun lockById(id: Uuid): StoredLoginAttempt? = select("id = ?", lock = true) { it.setObject(1, id.toJavaUuid()) }
+
+    context(tx: Tx)
+    fun lockByToken(tokenHash: ByteArray): StoredLoginAttempt? = select("token_hash = ?", lock = true) { it.setBytes(1, tokenHash) }
 
     context(tx: Tx)
     fun save(id: Uuid, attempt: LoginAttempt) {
@@ -118,9 +150,9 @@ class LoginAttempts {
     }
 
     context(tx: Tx)
-    private fun selectForUpdate(where: String, bind: (java.sql.PreparedStatement) -> Unit): StoredLoginAttempt? =
+    private fun select(where: String, lock: Boolean, bind: (java.sql.PreparedStatement) -> Unit): StoredLoginAttempt? =
         tx.connection.prepareStatement(
-            "select id, email, code_hash, return_to, expires_at, used_at, wrong_codes from login_attempts where $where for update",
+            "select id, email, code_hash, return_to, expires_at, used_at, wrong_codes from login_attempts where $where${if (lock) " for update" else ""}",
         ).use {
             bind(it)
             it.executeQuery().use { rs ->
@@ -157,6 +189,13 @@ class Sessions {
             it.setBytes(1, tokenHash)
             it.setTimestamp(2, Timestamp.from(now))
             it.executeQuery().use { rs -> if (rs.next()) rs.playerId("player_id") else null }
+        }
+
+    context(tx: Tx)
+    fun purgeExpired(now: Instant): Int =
+        tx.connection.prepareStatement("delete from sessions where expires_at <= ?").use {
+            it.setTimestamp(1, Timestamp.from(now))
+            it.executeUpdate()
         }
 
     context(tx: Tx)

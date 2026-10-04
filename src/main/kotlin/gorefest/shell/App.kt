@@ -105,6 +105,7 @@ class App(
     fun startBackgroundJobs() {
         collectionSync.startRefreshing()
         closer.start()
+        login.startPurging(scope)
     }
 
     fun stop() = scope.cancel()

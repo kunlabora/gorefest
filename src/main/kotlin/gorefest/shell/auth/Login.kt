@@ -13,6 +13,11 @@ import gorefest.shell.IdGenerator
 import gorefest.shell.db.Database
 import gorefest.shell.db.Tx
 import gorefest.shell.eventstore.CommandHandler
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.time.Clock
 import java.time.Duration
 import kotlin.uuid.Uuid
@@ -50,13 +55,30 @@ class Login(
 
     /** Sends the mail, unless [email] or [address] asked for too many codes in the last hour. */
     suspend fun request(email: String, returnTo: String, address: String = "unknown"): Requested {
-        val recent = db.transaction { attempts.countSince(email, clock.instant() - Duration.ofHours(1)) }
-        if (recent >= MAILS_PER_EMAIL_PER_HOUR || !perAddress.tryAcquire(address)) return Requested.TooMany
         val id = ids.next()
         val token = secrets.token()
         val code = secrets.code()
         val attempt = LoginAttempt.startingAt(clock.instant())
-        db.transaction { attempts.insert(id, email, secrets.hash(token), secrets.codeHash(id, code), returnTo, attempt, clock.instant()) }
+        // Count and insert under one per-email lock, so parallel requests can't all pass the check.
+        val allowed = db.transaction {
+            attempts.lockEmail(email)
+            if (attempts.countSince(email, clock.instant() - Duration.ofHours(1)) >= MAILS_PER_EMAIL_PER_HOUR) return@transaction false
+            if (!perAddress.tryAcquire(address)) return@transaction false
+            attempts.insert(id, email, secrets.hash(token), secrets.codeHash(id, code), returnTo, attempt, clock.instant())
+            true
+        }
+        if (!allowed) return Requested.TooMany
+        try {
+            sendMail(email, code, token)
+        } catch (e: Throwable) {
+            // A mail that never went out must not count against the cap.
+            withContext(NonCancellable) { db.transaction { attempts.delete(id) } }
+            throw e
+        }
+        return Requested.Sent(id)
+    }
+
+    private suspend fun sendMail(email: String, code: String, token: String) {
         mailer.send(
             Mail(
                 to = email,
@@ -73,12 +95,11 @@ class Login(
                 sentAt = clock.instant(),
             ),
         )
-        return Requested.Sent(id)
     }
 
     /** Email and return path of an attempt, for the "Check your mail" page. Doesn't use it up. */
     suspend fun pending(attemptId: Uuid): Pending? =
-        db.transaction { attempts.lockById(attemptId)?.let { Pending(it.email, it.returnTo) } }
+        db.transaction { attempts.findById(attemptId)?.let { Pending(it.email, it.returnTo) } }
 
     data class Pending(val email: String, val returnTo: String)
 
@@ -91,7 +112,7 @@ class Login(
 
     /** Checks a link token without using it up, for the confirm page. */
     suspend fun emailForLink(token: String): String? = db.transaction {
-        attempts.lockByToken(secrets.hash(token))?.takeIf { it.attempt.checkLink(clock.instant()).check == LoginCheck.Ok }?.email
+        attempts.findByToken(secrets.hash(token))?.takeIf { it.attempt.checkLink(clock.instant()).check == LoginCheck.Ok }?.email
     }
 
     suspend fun withLink(token: String): LoginResult = complete {
@@ -107,6 +128,19 @@ class Login(
     suspend fun rename(player: PlayerId, name: String) = db.transaction { players.rename(player, name) }
 
     suspend fun names(ids: Collection<PlayerId>): Map<PlayerId, String> = db.transaction { players.names(ids) }
+
+    /** Drops expired sessions and login attempts older than a day. */
+    suspend fun purge(): Int = db.transaction {
+        sessions.purgeExpired(clock.instant()) + attempts.purgeBefore(clock.instant() - ATTEMPT_RETENTION)
+    }
+
+    /** Runs [purge] every [every] until [scope] is cancelled. */
+    fun startPurging(scope: CoroutineScope, every: Duration = Duration.ofHours(1)) = scope.launch {
+        while (true) {
+            purge()
+            delay(every.toMillis())
+        }
+    }
 
     private suspend fun complete(verify: context(Tx) () -> Pair<StoredLoginAttempt, Verification>?): LoginResult {
         // The player to log in (if any), and what to tell the browser.
@@ -128,6 +162,7 @@ class Login(
 
     companion object {
         val SESSION_TTL: Duration = Duration.ofDays(365)
+        val ATTEMPT_RETENTION: Duration = Duration.ofDays(1)
         const val MAILS_PER_EMAIL_PER_HOUR = 5
         const val MAILS_PER_ADDRESS_PER_HOUR = 20
     }
