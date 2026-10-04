@@ -8,9 +8,12 @@ One cheap VPS: the fat jar under systemd, Postgres, Caddy in front for TLS, and 
 
 1. **Packages**
    ```bash
-   sudo apt install postgresql rclone curl gnupg fontconfig fonts-dejavu-core
+   sudo apt install postgresql-common rclone curl gnupg fontconfig fonts-dejavu-core
+   sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y   # the PostgreSQL project's apt repository
+   sudo apt install postgresql-18
    ```
-   Java 25 and Caddy come from their own apt repositories, because Ubuntu 24.04 ships neither `openjdk-25` nor a current Caddy: Temurin 25 from Adoptium (`temurin-25-jre`) and Caddy from Cloudsmith. `provision.sh` shows the exact repository and key setup.
+   Postgres 18 is what dev (`compose.yaml`) and the tests run; Ubuntu 24.04's own `postgresql` package is 16, so don't install that one. A server that already has an older cluster needs `pg_upgradecluster` before this.
+   Java 25 and Caddy also come from their own apt repositories, because Ubuntu 24.04 ships neither `openjdk-25` nor a current Caddy: Temurin 25 from Adoptium (`temurin-25-jre`) and Caddy from Cloudsmith. `provision.sh` shows the exact repository and key setup.
    `fontconfig` and a font are needed for the invite preview image (Java2D).
 2. **Users and folders**: the service user `gorefest` only reads releases; a `deploy` user (member of group `gorefest`) writes them.
    ```bash

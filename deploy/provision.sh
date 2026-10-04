@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# One-time setup of a fresh Ubuntu 24.04 server for gorefest. Run as root from a copy of deploy/:
+# One-time setup of a fresh Ubuntu 24.04 server for gorefest (Java 25, PostgreSQL 18 and Caddy from their own repositories). Run as root from a copy of deploy/:
 #   bash provision.sh <domain> "<public key GitHub Actions deploys with>"
 # Safe to run again: it keeps existing secrets, the database password and /etc/gorefest/env.
 set -euo pipefail
@@ -11,7 +11,19 @@ export DEBIAN_FRONTEND=noninteractive
 
 echo "== Packages"
 apt-get update -q
-apt-get install -yq curl gnupg ufw postgresql rclone fontconfig fonts-dejavu-core unattended-upgrades debian-keyring debian-archive-keyring apt-transport-https
+apt-get install -yq curl gnupg ufw postgresql-common rclone fontconfig fonts-dejavu-core unattended-upgrades debian-keyring debian-archive-keyring apt-transport-https
+
+# PostgreSQL 18 from the PostgreSQL project's own repository (what dev and the tests run): Ubuntu 24.04 itself ships 16.
+if ! command -v psql >/dev/null || ! pg_lsclusters 2>/dev/null | grep -q '^18 '; then
+  # A server that already runs an older cluster needs an upgrade, not a second install: do that by hand first.
+  if pg_lsclusters 2>/dev/null | grep -qE '^[0-9]+ '; then
+    echo "Found an existing PostgreSQL cluster:" >&2; pg_lsclusters >&2
+    echo "Upgrade it first (pg_upgradecluster <old> main, after installing postgresql-18), then run this again." >&2
+    exit 1
+  fi
+  /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
+  apt-get install -yq postgresql-18
+fi
 
 # Java 25 from Adoptium (Temurin): Ubuntu 24.04 itself ships 21.
 if ! command -v java >/dev/null || ! java -version 2>&1 | grep -q '"25'; then

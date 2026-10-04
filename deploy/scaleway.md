@@ -46,7 +46,7 @@ scp -r deploy root@IP:/root/
 ```bash
 ssh root@IP "bash /root/deploy/provision.sh gorefest.example.org '$(cat ~/.ssh/gorefest_deploy.pub)'"
 ```
-This installs Java 25, Postgres, Caddy and rclone, creates the `gorefest` (app) and `deploy` (CI) users, the database, the systemd units, the firewall and automatic security updates. It also writes `/etc/gorefest/env` with a fresh `SECRET_KEY` and database password.
+This installs Java 25, PostgreSQL 18 (from the PostgreSQL apt repository, as Ubuntu ships 16), Caddy and rclone, creates the `gorefest` (app) and `deploy` (CI) users, the database, the systemd units, the firewall and automatic security updates. It also writes `/etc/gorefest/env` with a fresh `SECRET_KEY` and database password.
 
 ## 6. Transactional Email
 
