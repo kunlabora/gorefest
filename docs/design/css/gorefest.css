@@ -147,6 +147,10 @@ button.gf-link { background: none; border: 0; padding: 0; font: inherit; font-we
 .gf-field { display: flex; flex-direction: column; gap: 6px; }
 .gf-label { font: 700 15px/20px var(--font-sans); }
 .gf-input { width: 100%; min-height: 52px; padding: 0 var(--space-4); border: 2px solid var(--line-strong); border-radius: var(--radius-md); background: var(--surface-raised); color: var(--ink); font: 400 17px/24px var(--font-sans); }
+/* Mobile Safari gives date/time inputs an intrinsic width that overflows the column. */
+.gf-input { display: block; min-width: 0; max-width: 100%; }
+.gf-input[type="date"], .gf-input[type="time"], .gf-input[type="datetime-local"] { -webkit-appearance: none; appearance: none; text-align: left; }
+.gf-input::-webkit-date-and-time-value { text-align: left; min-width: 0; }
 .gf-input::placeholder { color: var(--ink-muted); opacity: 1; }
 .gf-input:focus-visible { outline-offset: 0; border-color: var(--ink); }
 .gf-hint { margin: 0; font-size: 14px; line-height: 20px; color: var(--ink-muted); }
