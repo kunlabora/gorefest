@@ -155,8 +155,9 @@ button.gf-link { background: none; border: 0; padding: 0; font: inherit; font-we
 .gf-input { width: 100%; min-height: 52px; padding: 0 var(--space-4); border: 2px solid var(--line-strong); border-radius: var(--radius-md); background: var(--surface-raised); color: var(--ink); font: 400 17px/24px var(--font-sans); }
 /* Mobile Safari gives date/time inputs an intrinsic width that overflows the column. */
 .gf-input { display: block; min-width: 0; max-width: 100%; }
-.gf-input[type="date"], .gf-input[type="time"], .gf-input[type="datetime-local"] { -webkit-appearance: none; appearance: none; text-align: left; }
-.gf-input::-webkit-date-and-time-value { text-align: left; min-width: 0; }
+/* Safari pins the value box to the top of a tall input: fix the height and pad the 24px value box to the middle (2 + 12 + 24 + 12 + 2 = 52). */
+.gf-input[type="date"], .gf-input[type="time"], .gf-input[type="datetime-local"] { -webkit-appearance: none; appearance: none; text-align: left; height: 52px; padding-top: 12px; padding-bottom: 12px; }
+.gf-input::-webkit-date-and-time-value { text-align: left; min-width: 0; min-height: 24px; margin: 0; }
 .gf-input::placeholder { color: var(--ink-muted); opacity: 1; }
 .gf-input:focus-visible { outline-offset: 0; border-color: var(--ink); }
 .gf-hint { margin: 0; font-size: 14px; line-height: 20px; color: var(--ink-muted); }
