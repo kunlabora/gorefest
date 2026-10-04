@@ -55,4 +55,21 @@ class PrivacyTest {
     fun `the powered by BGG logo is served`() = test.webTest { client ->
         client.get("/static/poweredbybgg.webp").status shouldBe HttpStatusCode.OK
     }
+
+    @Test
+    fun `fonts come from us, kept for a year, and nothing calls Google`() = test.webTest { client ->
+        val page = client.get("/login").page()
+        page.select("link[rel=preload][as=font]").map { it.attr("href") } shouldBe
+            listOf("/static/fonts/atkinson-hyperlegible-next-latin.woff2", "/static/fonts/bricolage-grotesque-latin.woff2")
+
+        val font = client.get("/static/fonts/atkinson-hyperlegible-next-latin.woff2")
+        font.status shouldBe HttpStatusCode.OK
+        font.headers[HttpHeaders.CacheControl] shouldBe "public, max-age=31536000, immutable"
+
+        val css = client.get("/static/css/gorefest.css").bodyAsText()
+        css shouldContain "../fonts/" // faces point at /static/fonts relative to /static/css
+        css.contains("googleapis") shouldBe false
+        css.contains("gstatic") shouldBe false
+        client.get("/static/css/gorefest.css").headers[HttpHeaders.CacheControl] shouldBe null
+    }
 }

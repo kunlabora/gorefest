@@ -15,6 +15,7 @@ import gorefest.shell.web.invite.inviteRoutes
 import gorefest.shell.web.shelf.shelfRoutes
 import gorefest.shell.web.suggestions.suggestionsRoutes
 import gorefest.shell.web.taste.tasteRoutes
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.response.header
 import io.ktor.server.application.Application
@@ -60,7 +61,10 @@ fun Application.web(app: App) {
         get("/robots.txt") { call.respondText("User-agent: *\nDisallow: /\n") }
         // Browsers ask for this by default, whatever the page's <link rel=icon> says.
         get("/favicon.ico") { call.respondRedirect("/static/icons/favicon.ico", permanent = false) }
-        staticResources("/static", "static")
+        staticResources("/static", "static") {
+            // Font files never change under the same name (a new version gets a new file), so browsers may keep them for a year.
+            modify { url, call -> if (url.path.endsWith(".woff2")) call.response.header(HttpHeaders.CacheControl, "public, max-age=31536000, immutable") }
+        }
         context(app.login, app.config) { authRoutes() }
         context(app.ids, app.clock, app.login, app.config) { gameDayRoutes(app) }
         context(app.login, app.config) { inviteRoutes(app, app.invites) }

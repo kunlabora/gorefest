@@ -64,7 +64,7 @@ Tag convention: `player:{id}`, `gameday:{id}`, `game:{bggId}`.
 - **htmx:** handlers answer htmx requests with a fragment (one top-level element) and plain requests with a full page or redirect.
 - **Web tests** use `TestApp` (`WebTest.kt`): `webTest(session = test.loggedIn("Tim")) { client -> … }`. They parse responses with Jsoup (`page()`, `fragment()` in `HtmlAssertions.kt`) and assert with CSS selectors, not substrings. `page()` also checks every `hx-target="#id"` resolves; `shouldReplace` checks an `outerHTML` fragment's root id. HTTP behaviour (status, `HX-Redirect`) is asserted directly.
 - **Theme:** every app bar ends with a sun/moon toggle (`themeToggle`). The choice lives in the `gf_theme` cookie, and `static/js/theme.js`, loaded first in `<head>`, applies it before paint. Before anyone picks, `tokens.css` follows the device. It all happens in the browser; the server doesn't read the cookie.
-- **Design:** `docs/design/` holds the design system (tokens, `gorefest.css` components, brand book, microcopy) and HTML mockups of every screen. Build pages from those class names and follow the brand book's voice.
+- **Design:** `docs/design/` holds the design system (tokens, `gorefest.css` components, brand book, microcopy) and HTML mockups of every screen. Fonts are self-hosted (`docs/design/fonts`, served from `/static/fonts` with a one-year immutable cache): no page may call a third party for fonts, and a font file is never replaced under the same name. Build pages from those class names and follow the brand book's voice.
 - **Backlog:** `docs/backlog.md`. Update story status and tick criteria as work lands.
 
 ### Dev commands

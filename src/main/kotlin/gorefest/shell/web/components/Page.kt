@@ -51,6 +51,10 @@ fun HTML.page(
         meta(name = "robots", content = "noindex, nofollow, noarchive, noimageindex")
         // First, and blocking: it sets the saved theme before anything paints.
         script(src = "/static/js/theme.js") {}
+        // The two fonts every page uses, fetched while the stylesheet still loads (fonts need crossorigin even from the same origin).
+        PRELOADED_FONTS.forEach { font ->
+            link(rel = "preload", href = "/static/fonts/$font", type = "font/woff2") { attributes["as"] = "font"; attributes["crossorigin"] = "" }
+        }
         link(rel = "icon", href = "/static/icons/favicon.svg", type = "image/svg+xml")
         link(rel = "icon", href = "/static/icons/favicon.ico") { attributes["sizes"] = "any" }
         link(rel = "apple-touch-icon", href = "/static/icons/apple-touch-icon.png")
@@ -76,6 +80,8 @@ fun HTML.page(
         }
     }
 }
+
+private val PRELOADED_FONTS = listOf("atkinson-hyperlegible-next-latin.woff2", "bricolage-grotesque-latin.woff2")
 
 /** BoardGameGeek's data and box art are on every screen, so every screen credits it, in words and with its "Powered by BGG" logo. */
 fun FlowContent.bggCredit() = p("gf-credit") {
