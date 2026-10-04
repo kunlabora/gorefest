@@ -152,7 +152,7 @@ class Predictor(private val model: TasteModel = BradleyTerry()) {
             }
         }.distinct().mapNotNull { names[it]?.name }
         return when (beaten.size) {
-            0 -> "Early days: a few more pairs will sharpen this."
+            0 -> "Just a guess so far: it hasn't won a pair yet."
             1 -> "You picked it over ${beaten[0]}."
             else -> "You picked it over ${beaten[0]} and ${beaten[1]}."
         }

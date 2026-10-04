@@ -130,7 +130,7 @@ class TasteRoutesTest {
         val payoff = client.get(redirect!!).page()
         payoff.one("h1").text() shouldBe "Your likely favourites today"
         payoff.select(".gf-podium li") shouldHaveSize 3
-        payoff.select(".gf-game__reason").forEach { (it.text().startsWith("You picked it over") || it.text() == "Early days: a few more pairs will sharpen this.") shouldBe true }
+        payoff.select(".gf-game__reason").forEach { (it.text().startsWith("You picked it over") || it.text() == "Just a guess so far: it hasn't won a pair yet.") shouldBe true }
         payoff.one(".gf-kicker").text() shouldStartWith "Round done ·"
     }
 
