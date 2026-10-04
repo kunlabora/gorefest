@@ -27,7 +27,7 @@ You need JDK 25 and a container runtime (Docker or Podman).
 podman compose up -d
 ```
 ```bash
-./gradlew buildFatJar && java -jar build/libs/gorefest.jar
+./gradlew buildFatJar && java --sun-misc-unsafe-memory-access=allow -jar build/libs/gorefest.jar
 ```
 
 Then open http://localhost:8080. Dev mode (the default) sends login mail to an in-memory mailbox at `/dev/mailbox` and uses a fake BGG with a small catalogue, so you need no accounts or tokens.

@@ -17,14 +17,24 @@ kotlin {
     }
 }
 
+// JDK 25 warns when dependencies load native code (jansi, via ktor call-logging) or use Unsafe (classgraph,
+// via webjars-locator). Both are fine for us, so say so rather than log four warnings on every start.
+val jvmWarningFlags = listOf("--enable-native-access=ALL-UNNAMED", "--sun-misc-unsafe-memory-access=allow")
+
 application {
     mainClass = "gorefest.MainKt"
+    applicationDefaultJvmArgs = jvmWarningFlags
 }
 
 ktor {
     fatJar {
         archiveFileName = "gorefest.jar"
     }
+}
+
+// Native access can be granted from the manifest; the Unsafe flag can't, so `java -jar` still needs it (see deploy/gorefest.service).
+tasks.withType<Jar>().configureEach {
+    manifest { attributes("Enable-Native-Access" to "ALL-UNNAMED") }
 }
 
 repositories {
@@ -66,4 +76,5 @@ tasks.processResources {
 
 tasks.test {
     useJUnitPlatform()
+    jvmArgs(jvmWarningFlags)
 }

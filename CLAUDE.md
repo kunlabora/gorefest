@@ -70,7 +70,7 @@ Tag convention: `player:{id}`, `gameday:{id}`, `game:{bggId}`.
 
 - `podman compose up -d`: local Postgres on 5432
 - `./gradlew test`: all tests (needs a container runtime for Testcontainers)
-- `./gradlew buildFatJar && java -jar build/libs/gorefest.jar`: run on http://localhost:8080
+- `./gradlew buildFatJar && java --sun-misc-unsafe-memory-access=allow -jar build/libs/gorefest.jar`: run on http://localhost:8080
 
 ## BGG integration
 
