@@ -8,13 +8,26 @@ Wants=network-online.target
 User=gorefest
 WorkingDirectory=/opt/gorefest
 EnvironmentFile=/etc/gorefest/env
-ExecStart=/usr/bin/java -Xmx512m -Djava.awt.headless=true --enable-native-access=ALL-UNNAMED --sun-misc-unsafe-memory-access=allow -jar /opt/gorefest/current/gorefest.jar
+ExecStart=/usr/bin/java -Xmx512m -XX:+ExitOnOutOfMemoryError -Djava.awt.headless=true --enable-native-access=ALL-UNNAMED --sun-misc-unsafe-memory-access=allow -jar /opt/gorefest/current/gorefest.jar
+# ExitOnOutOfMemoryError makes the JVM exit non-zero on OOM, so Restart=on-failure brings it back.
 Restart=on-failure
 RestartSec=5
+# Ceiling for the 2 GB host: 512 MB heap plus metaspace, thread stacks, Java2D and JIT come to roughly 800 MB,
+# and Postgres, Caddy and the OS need the rest. If the cgroup limit is hit the JVM is killed and restarted.
+MemoryMax=1G
 NoNewPrivileges=true
 ProtectSystem=strict
 ReadWritePaths=/opt/gorefest
 PrivateTmp=true
+ProtectHome=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictSUIDSGID=true
+LockPersonality=true
+# No SystemCallFilter or MemoryDenyWriteExecute: the JVM's JIT needs writable+executable memory.
 
 [Install]
 WantedBy=multi-user.target
