@@ -47,4 +47,14 @@ class EditGameDayTest {
         EditGameDayDecider.given(gameDayCreated(), GameDayEnded(gorefest7)).whenever(edit).thenRejects("This game day has ended")
         EditGameDayDecider.given().whenever(edit).thenRejects("No such game day")
     }
+
+
+    @Test
+    fun `a game day whose date has passed can still be edited, as long as the date stays`() {
+        val created = gameDayCreated().copy(date = today.minusDays(2))
+        val retitled = edit.copy(date = created.date, place = created.place)
+
+        EditGameDayDecider.given(created).whenever(retitled).thenEmits(GameDayDetailsChanged(gorefest7, "Gorefest #7½", created.date, created.place))
+        EditGameDayDecider.given(created).whenever(retitled.copy(date = today.minusDays(1))).thenRejects("That date is in the past")
+    }
 }

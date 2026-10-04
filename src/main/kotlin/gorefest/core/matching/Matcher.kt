@@ -56,7 +56,7 @@ class Matcher(
         return Suggestions.Found(
             fitting.map { (game, entry) ->
                 val means = table.map { p -> predictions.getValue(p.id).getValue(game.id).mean }
-                val weights = table.map { p -> (p.games.history.comparisons.size / 10.0).coerceIn(0.2, 1.0) }
+                val weights = table.map { p -> (p.games.history.comparisons.size.toDouble() / KNOWN_AFTER).coerceIn(0.2, 1.0) }
                 val mean = means.zip(weights).sumOf { (m, w) -> m * w } / weights.sum()
                 val spread = sqrt(means.zip(weights).sumOf { (m, w) -> w * (m - mean) * (m - mean) } / weights.sum())
                 val novel = table.none { it.games.hasPlayed(game.id) }
@@ -110,11 +110,20 @@ class Matcher(
         /** Time budgets offered when nothing fits, in minutes. */
         val BUDGETS = listOf(45, 90, 120, 180, 240)
 
-        /** BGG's playtime, interpolated from min to max over the player range, times the group's speed. Rounded to 5 min. */
+        /** What we assume for a game BGG has no playtime for (min = max = 0), in minutes. */
+        const val UNKNOWN_MINUTES = 60
+
+        /** Whether BGG gave a playtime for [game]; without one [estimatedMinutes] falls back to [UNKNOWN_MINUTES]. */
+        fun hasPlaytime(game: Game) = game.minPlaytime > 0 || game.maxPlaytime > 0
+
+        /**
+         * BGG's playtime, interpolated from min to max over the player range, times the group's speed.
+         * Rounded to 5 min. A game without a playtime counts as [UNKNOWN_MINUTES], not as quick.
+         */
         fun estimatedMinutes(game: Game, players: Int, speed: Double = 1.0): Int {
             val span = game.maxPlayers - game.minPlayers
             val t = if (span <= 0) 0.5 else ((players - game.minPlayers).toDouble() / span).coerceIn(0.0, 1.0)
-            val base = game.minPlaytime + (game.maxPlaytime - game.minPlaytime) * t
+            val base = if (hasPlaytime(game)) game.minPlaytime + (game.maxPlaytime - game.minPlaytime) * t else UNKNOWN_MINUTES.toDouble()
             return ((base * speed / 5).roundToInt() * 5).coerceAtLeast(5)
         }
 

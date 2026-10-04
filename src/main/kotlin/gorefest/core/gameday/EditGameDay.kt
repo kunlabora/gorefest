@@ -54,7 +54,7 @@ object EditGameDayDecider : Decider<EditGameDay, EditGameDayDecider.State, GameD
         is State.Open -> when {
             command.editor != state.host -> Rejected("Only the host can change this game day")
             command.title.isBlank() -> Rejected("Give the game day a title")
-            command.date < command.today -> Rejected("That date is in the past")
+            command.date != state.date && command.date < command.today -> Rejected("That date is in the past")
             else -> {
                 val changed = GameDayDetailsChanged(command.gameDay, command.title.trim(), command.date, command.place.trim())
                 if (changed.title == state.title && changed.date == state.date && changed.place == state.place) Accepted()

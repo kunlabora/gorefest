@@ -2,6 +2,7 @@ package gorefest.core.gameday
 
 import gorefest.core.PlayerId
 import gorefest.core.game.Game
+import gorefest.core.matching.Matcher
 import gorefest.core.taste.PlayerTastes
 
 enum class TasteStatus { NONE, THIN, READY }
@@ -13,8 +14,6 @@ data class Gap(val players: Int, val games: List<Game>)
 
 data class Readiness(val joined: Int, val shelf: Int, val tasteReady: Int, val players: List<PlayerReadiness>, val gaps: List<Gap>) {
     companion object {
-        const val READY_ANSWERS = 10
-
         /**
          * What the host needs to know before the day. Players who need a nudge come first. Gaps are
          * table sizes from 3 up to everyone who joined where fewer than 3 shelf games play well.
@@ -23,7 +22,7 @@ data class Readiness(val joined: Int, val shelf: Int, val tasteReady: Int, val p
             val players = gameDay.players.map { p ->
                 val answers = tastes.of(p).comparisons.size
                 val status = when {
-                    answers >= READY_ANSWERS -> TasteStatus.READY
+                    answers >= Matcher.KNOWN_AFTER -> TasteStatus.READY
                     answers > 0 -> TasteStatus.THIN
                     else -> TasteStatus.NONE
                 }
