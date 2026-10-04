@@ -59,6 +59,17 @@ fun Route.checkpointRoutes(app: App) {
         }
     }
 
+    get("/gamedays/{id}/log/search") {
+        authenticated {
+            val me = contextOf<CurrentPlayer>()
+            val gameDay = memberGameDay(app, me) ?: return@authenticated call.respond(HttpStatusCode.NotFound)
+            val result = app.gameSearch.search(call.parameters["q"].orEmpty())
+            // Shelf games are tiles already: a second radio for the same game would repeat its id.
+            val onShelf = logChoices(app, gameDay).map { it.id }.toSet()
+            respondFragment { logSearchResults(result.games.filter { it.id !in onShelf }, result.bggUnavailable) }
+        }
+    }
+
     post("/gamedays/{id}/log") {
         authenticated {
             val me = contextOf<CurrentPlayer>()
@@ -67,7 +78,9 @@ fun Route.checkpointRoutes(app: App) {
             val game = form["game"]?.toIntOrNull()?.let(::BggId)?.let(app.catalog::get)
             val players = form.getAll("players").orEmpty().mapNotNull { runCatching { PlayerId(Uuid.parse(it)) }.getOrNull() }
             val minutes = DURATIONS.firstOrNull { it.first == form["duration"] }?.second ?: 0
-            val view = LogFormView(gameDay, logChoices(app, gameDay), login.names(gameDay.players))
+            // A game that isn't on the shelf can be logged too (found by search): keep its tile when the form comes back.
+            val shelf = logChoices(app, gameDay)
+            val view = LogFormView(gameDay, if (game == null || shelf.any { it.id == game.id }) shelf else shelf + game, login.names(gameDay.players))
             if (game == null) return@authenticated respondFragment { logForm(view, me, form, "Pick the game you played") }
             val log = PlayLogged(gameDay.id, game.id, players, minutes, me.id, app.clock.instant())
             when (val decision = app.commands.handle(LogPlayDecider, log)) {

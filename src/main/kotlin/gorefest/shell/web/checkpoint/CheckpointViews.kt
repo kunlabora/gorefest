@@ -32,9 +32,17 @@ fun TagConsumer<*>.logForm(view: LogFormView, me: CurrentPlayer, values: Paramet
         hx("post", "/gamedays/${view.gameDay.id}/log")
         hx("swap", "outerHTML")
         if (error != null) errorNotice(error)
-        if (view.games.isEmpty()) p("gf-muted") { +"Nothing on the shelf yet. Bring the game first, then log it." }
+        if (view.games.isEmpty()) p("gf-muted") { +"Nothing on the shelf yet. Search for the game you played." }
         val chosenGame = values["game"] ?: view.games.firstOrNull()?.id?.toString()
         div("gf-tiles") { view.games.forEach { gameTileChoice(it, "game", checked = it.id.toString() == chosenGame) } }
+        div("gf-section") {
+            h2("gf-h2") { +"Played something else?" }
+            // Enter would submit the whole log form from here.
+            searchField("Search BGG", "Search for the game you played", "/gamedays/${view.gameDay.id}/log/search", "#log-search-results") {
+                hyperscript("on keydown[key=='Enter'] halt the event")
+            }
+            consumer.logSearchResults(emptyList(), bggUnavailable = false)
+        }
         div("gf-section") {
             h2("gf-h2") { +"Who played?" }
             val chosen = values.getAll("players")?.toSet() ?: setOf(me.id.toString())
@@ -45,6 +53,13 @@ fun TagConsumer<*>.logForm(view: LogFormView, me: CurrentPlayer, values: Paramet
             segmented("duration", "Duration", DURATIONS.map { it.first }, checked = values["duration"] ?: "45m")
         }
     }
+
+/** Games found by the search above the form: more tiles in the same radio group. */
+fun TagConsumer<*>.logSearchResults(games: List<Game>, bggUnavailable: Boolean) = div {
+    id = "log-search-results"
+    if (bggUnavailable) p("gf-small gf-muted") { +"BGG isn't answering right now, so these are only games we already know." }
+    if (games.isNotEmpty()) div("gf-tiles") { games.forEach { gameTileChoice(it, "game", checked = false) } }
+}
 
 /** Step 2: one PLAYED comparison between what was just played and something else they played. */
 data class LogCompareView(val gameDay: GameDaySummary, val played: Game, val other: Game, val players: Int, val minutes: String, val next: String)

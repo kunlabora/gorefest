@@ -3,6 +3,7 @@ package gorefest.shell.web.components
 import gorefest.core.PlayerId
 import kotlinx.html.DIV
 import kotlinx.html.FlowContent
+import kotlinx.html.INPUT
 import kotlinx.html.InputType
 import kotlinx.html.div
 import kotlinx.html.fieldSet
@@ -56,5 +57,20 @@ fun FlowContent.segmented(name: String, legend: String, options: List<String>, c
             }
             +option
         }
+    }
+}
+
+/** A search box with its magnifier: as you type it asks [url] and puts the answer at [target]. [extra] adds attributes to the input. */
+fun FlowContent.searchField(placeholder: String, label: String, url: String, target: String, extra: INPUT.() -> Unit = {}) = div("gf-search") {
+    icon("search")
+    input(InputType.search, classes = "gf-input", name = "q") {
+        this.placeholder = placeholder
+        attributes["aria-label"] = label
+        attributes["autocomplete"] = "off"
+        hx("get", url)
+        hx("trigger", "input changed delay:300ms, search")
+        hx("target", target)
+        hx("swap", "outerHTML")
+        extra()
     }
 }

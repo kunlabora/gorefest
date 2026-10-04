@@ -76,6 +76,36 @@ class CheckpointRoutesTest {
     }
 
     @Test
+    fun `a game that isn't on the shelf can be found by search and logged`() = test.webTest(session = kim) { client ->
+        val form = client.get(log).page().one("#log-form")
+        form.one("input[type=search]").attr("hx-get") shouldBe "$log/search"
+        form.one("input[type=search]").attr("hx-target") shouldBe "#log-search-results"
+
+        // Shelf games are tiles already, so the results only add others.
+        val results = client.get("$log/search?q=brass").fragment()
+        results shouldReplace "log-search-results"
+        results.select(".gf-tile .gf-tile__name").map { it.text() } shouldBe listOf("Brass: Birmingham")
+        // ...and the shelf's own games never repeat as results.
+        client.get("$log/search?q=azul").fragment().select(".gf-tile") shouldHaveSize 0
+
+        val brass = id("Brass: Birmingham")
+        val logged = client.htmxPost(log, parameters { append("game", brass.toString()); append("players", kimId.toString()); append("duration", "90m") })
+        logged.headers["HX-Redirect"]!! shouldStartWith "/gamedays/$gorefest7/log/compare?game=$brass"
+        app.plays.on(gorefest7).single().game shouldBe brass
+    }
+
+    @Test
+    fun `a rejected log keeps the off-shelf game's tile`() = test.webTest(session = kim) { client ->
+        val brass = id("Brass: Birmingham")
+
+        val form = client.htmxPost(log, parameters { append("game", brass.toString()); append("duration", "45m") }).fragment()
+
+        form.select("[role=alert]") shouldHaveSize 1
+        form.select(".gf-tile .gf-tile__name").map { it.text() } shouldBe listOf("Azul", "Cascadia", "Brass: Birmingham")
+        form.one("input[name=game][checked]").`val`() shouldBe brass.toString()
+    }
+
+    @Test
     fun `logging a game asks one comparison, then shows fresh suggestions for that table`() = test.webTest(session = kim) { client ->
         given(GamePlayStatusDeclared(kimId, cascadia, played = true))
 

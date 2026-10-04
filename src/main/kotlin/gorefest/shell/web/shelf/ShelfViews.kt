@@ -25,18 +25,10 @@ fun HTML.bringPage(gameDay: GameDaySummary, rows: List<BringRow>, linked: Boolea
     }
     if (gameDay.ended) p("gf-muted") { +"This game day has ended, so the shelf is final." }
     else {
-        div("gf-search") {
-            icon("search")
-            input(InputType.search, classes = "gf-input", name = "q") {
-                placeholder = if (linked) "Search your collection or BGG" else "Search BGG"
-                attributes["aria-label"] = "Search games"
-                attributes["autocomplete"] = "off"
-                hx("get", "/gamedays/${gameDay.id}/bring/search")
-                hx("trigger", "input changed delay:300ms, search")
-                hx("target", "#search-results")
-                hx("swap", "outerHTML")
-            }
-        }
+        searchField(
+            placeholder = if (linked) "Search your collection or BGG" else "Search BGG",
+            label = "Search games", url = "/gamedays/${gameDay.id}/bring/search", target = "#search-results",
+        )
         consumer.searchResults(gameDay, emptyList(), bggUnavailable = false)
     }
     consumer.bringList(gameDay, rows)
