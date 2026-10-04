@@ -4,6 +4,7 @@ import gorefest.shell.App
 import gorefest.shell.AppConfig
 import gorefest.shell.auth.DevMailbox
 import gorefest.shell.auth.HttpMailer
+import gorefest.shell.bgg.DevCatalog
 import gorefest.shell.bgg.FakeBggApi
 import gorefest.shell.bgg.UnavailableBggApi
 import gorefest.shell.bgg.XmlBggApi
@@ -29,7 +30,7 @@ fun main() {
     // BGG's XML API needs a registered application's token. Without one, dev mode uses a fake BGG
     // and production runs with BGG switched off until the token arrives.
     val bggApi = AppConfig.setting("BGG_TOKEN")?.let(::XmlBggApi)
-        ?: if (config.dev) FakeBggApi() else UnavailableBggApi.also { LoggerFactory.getLogger("gorefest").warn("No BGG_TOKEN: BGG features are off") }
+        ?: if (config.dev) FakeBggApi(DevCatalog.games + DevCatalog.covers) else UnavailableBggApi.also { LoggerFactory.getLogger("gorefest").warn("No BGG_TOKEN: BGG features are off") }
     val app = App(db, Clock.systemUTC(), config = config, mailer = mailer, bggApi = bggApi)
     runBlocking { app.start() }
     app.startBackgroundJobs()

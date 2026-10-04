@@ -5,3 +5,6 @@ build/
 *.iml
 .DS_Store
 .env
+
+# Box art downloaded by hand for the dev catalog (see DevCatalog.covers); not ours to commit.
+src/main/resources/static/tmp/
