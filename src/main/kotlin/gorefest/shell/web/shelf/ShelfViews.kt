@@ -39,11 +39,19 @@ fun HTML.bringPage(gameDay: GameDaySummary, rows: List<BringRow>, linked: Boolea
         }
         consumer.searchResults(gameDay, emptyList(), bggUnavailable = false)
     }
-    ul("gf-list") {
-        id = "bring-list"
-        rows.forEach { consumer.bringItem(gameDay, it, readOnly = gameDay.ended) }
-    }
+    consumer.bringList(gameDay, rows)
     if (rows.isEmpty() && linked) emptyState("Your collection is empty", "Mark games as owned on BGG, or search for them.")
+}
+
+/** Sent by the server (HX-Trigger) when a game was brought from a search result, so the list picks it up. */
+const val BRING_LIST_CHANGED = "bring-list-changed"
+
+fun TagConsumer<*>.bringList(gameDay: GameDaySummary, rows: List<BringRow>) = ul("gf-list") {
+    id = "bring-list"
+    hx("get", "/gamedays/${gameDay.id}/bring/list")
+    hx("trigger", "$BRING_LIST_CHANGED from:body")
+    hx("swap", "outerHTML")
+    rows.forEach { bringItem(gameDay, it, readOnly = gameDay.ended) }
 }
 
 fun TagConsumer<*>.searchResults(gameDay: GameDaySummary, rows: List<BringRow>, bggUnavailable: Boolean) = div {

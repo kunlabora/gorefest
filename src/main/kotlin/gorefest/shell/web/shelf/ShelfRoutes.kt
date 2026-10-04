@@ -19,6 +19,7 @@ import gorefest.shell.web.respondFragment
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.html.respondHtml
 import io.ktor.server.request.receiveParameters
+import io.ktor.server.response.header
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.RoutingContext
@@ -31,13 +32,18 @@ fun Route.shelfRoutes(app: App) {
         authenticated {
             val me = contextOf<CurrentPlayer>()
             val gameDay = memberGameDay(app, me) ?: return@authenticated call.respond(HttpStatusCode.NotFound)
-            val linked = app.bggAccounts.isLinked(me.id)
-            val owned = if (linked) app.collectionSync.collection(me.id) else emptySet()
-            val shelf = app.shelves.of(gameDay.id)
-            // My collection, plus anything I brought that isn't in it (found by search).
-            val ids = owned + shelf.filter { me.id in it.owners }.map { it.game }
-            val rows = ids.mapNotNull(app.catalog::get).sortedBy { it.name.lowercase() }.map { bringRow(it, shelf, me) }
-            call.respondHtml { bringPage(gameDay, rows, linked) }
+            val rows = bringList(app, gameDay, me)
+            call.respondHtml { bringPage(gameDay, rows, app.bggAccounts.isLinked(me.id)) }
+        }
+    }
+
+    /** The list under the search box, fetched again when a game was brought from a search result. */
+    get("/gamedays/{id}/bring/list") {
+        authenticated {
+            val me = contextOf<CurrentPlayer>()
+            val gameDay = memberGameDay(app, me) ?: return@authenticated call.respond(HttpStatusCode.NotFound)
+            val rows = bringList(app, gameDay, me)
+            respondFragment { bringList(gameDay, rows) }
         }
     }
 
@@ -74,6 +80,14 @@ fun Route.shelfRoutes(app: App) {
     }
 }
 
+/** My collection (if linked), plus anything I brought that isn't in it (found by search). */
+private suspend fun bringList(app: App, gameDay: GameDaySummary, me: CurrentPlayer): List<BringRow> {
+    val owned = if (app.bggAccounts.isLinked(me.id)) app.collectionSync.collection(me.id) else emptySet()
+    val shelf = app.shelves.of(gameDay.id)
+    val ids = owned + shelf.filter { me.id in it.owners }.map { it.game }
+    return ids.mapNotNull(app.catalog::get).sortedBy { it.name.lowercase() }.map { bringRow(it, shelf, me) }
+}
+
 private fun RoutingContext.shelfTarget(app: App, me: CurrentPlayer): Pair<GameDaySummary, Game>? {
     val gameDay = memberGameDay(app, me) ?: return null
     val game = call.parameters["game"]?.toIntOrNull()?.let { app.catalog[BggId(it)] } ?: return null
@@ -85,6 +99,8 @@ private suspend fun RoutingContext.respondBringDecision(
 ) {
     val row = bringRow(game, app.shelves.of(gameDay.id), me)
     val prefix = if (rowPrefix == "search") "search" else "bring"
+    // A search row isn't in the list below it, so tell the list to look again.
+    if (prefix == "search") call.response.header("HX-Trigger", BRING_LIST_CHANGED)
     respondFragment(if (decision is Decision.Rejected) HttpStatusCode.Conflict else HttpStatusCode.OK) {
         bringItem(gameDay, row, readOnly = gameDay.ended, error = (decision as? Decision.Rejected)?.reason, prefix = prefix)
     }

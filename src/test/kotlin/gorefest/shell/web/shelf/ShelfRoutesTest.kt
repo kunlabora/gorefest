@@ -126,6 +126,36 @@ class ShelfRoutesTest {
     }
 
     @Test
+    fun `a game brought from a search result shows up in the list below`() {
+        val catan = BggId(13)
+        val bram = kotlinx.coroutines.runBlocking {
+            val id = PlayerId(Uuid.random())
+            test.loggedIn("Bram", id = id).also { given(PlayerJoined(gorefest7, id)) }
+        }
+        test.webTest(session = bram) { client ->
+            client.get(bringPage).page().one("#bring-list").attr("hx-trigger") shouldBe "bring-list-changed from:body"
+
+            val fromSearch = client.htmxPost("/gamedays/$gorefest7/shelf/$catan", parameters { append("bringing", "true"); append("row", "search") })
+            fromSearch.headers["HX-Trigger"] shouldBe "bring-list-changed"
+            fromSearch.fragment() shouldReplace "search-$catan"
+
+            val list = client.get("$bringPage/list").fragment()
+            list shouldReplace "bring-list"
+            list.select(".gf-game__name").map { it.text() } shouldContainExactly listOf("CATAN")
+
+            client.htmxPost("/gamedays/$gorefest7/shelf/$catan", parameters { append("row", "search") })
+            client.get("$bringPage/list").fragment().select("li").shouldBeEmpty()
+        }
+    }
+
+    @Test
+    fun `ticking a game in the list itself doesn't ask the list to reload`() = test.webTest(session = kim) { client ->
+        val response = client.htmxPost("/gamedays/$gorefest7/shelf/$brass", parameters { append("bringing", "true") })
+
+        response.headers["HX-Trigger"] shouldBe null
+    }
+
+    @Test
     fun `without BGG, the page says how to get the collection`() {
         val bram = kotlinx.coroutines.runBlocking {
             val id = PlayerId(Uuid.random())
