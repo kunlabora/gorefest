@@ -21,12 +21,15 @@ private val devGames = DevCatalog.games + DevCatalog.coverGames
 fun main() {
     fun env(name: String, default: String) = AppConfig.setting(name) ?: default
 
+    val config = AppConfig.fromEnv()
+    val host = env("HOST", "127.0.0.1")
+    AppConfig.devModeConflict(config, host, realMailConfigured = HttpMailer.fromEnv() != null)?.let { error(it) }
+
     val db = Database.connect(
         url = env("DATABASE_URL", "jdbc:postgresql://localhost:5432/gorefest"),
         user = env("DATABASE_USER", "gorefest"),
         password = env("DATABASE_PASSWORD", "gorefest"),
     )
-    val config = AppConfig.fromEnv()
     // Outside dev mode, mail and BGG must be real: fail at startup rather than on the first login.
     val mailer = HttpMailer.fromEnv() ?: if (config.dev) DevMailbox() else error("Set MAIL_PROVIDER, MAIL_API_KEY and MAIL_FROM")
     // BGG's XML API needs a registered application's token. Without one, dev mode uses a fake BGG
@@ -41,7 +44,13 @@ fun main() {
     }
     app.startBackgroundJobs()
 
-    embeddedServer(Netty, port = env("PORT", "8080").toInt(), host = env("HOST", "127.0.0.1")) {
+    // systemd stops us with SIGTERM: stop the background jobs and release the pool.
+    Runtime.getRuntime().addShutdownHook(Thread {
+        app.stop()
+        db.close()
+    })
+
+    embeddedServer(Netty, port = env("PORT", "8080").toInt(), host = host) {
         web(app)
     }.start(wait = true)
 }

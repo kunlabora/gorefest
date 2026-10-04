@@ -14,7 +14,12 @@ import javax.sql.DataSource
  */
 class Tx internal constructor(val connection: Connection)
 
-class Database(private val dataSource: DataSource) {
+class Database(private val dataSource: DataSource) : AutoCloseable {
+
+    /** Closes the connection pool (a no-op for data sources that aren't closeable). */
+    override fun close() {
+        (dataSource as? AutoCloseable)?.close()
+    }
 
     suspend fun <T> transaction(block: suspend context(Tx) () -> T): T = withContext(Dispatchers.IO) {
         dataSource.connection.use { connection ->
@@ -22,7 +27,11 @@ class Database(private val dataSource: DataSource) {
             try {
                 block(Tx(connection)).also { connection.commit() }
             } catch (e: Throwable) {
-                connection.rollback()
+                try {
+                    connection.rollback()
+                } catch (rollbackFailure: Throwable) {
+                    e.addSuppressed(rollbackFailure)
+                }
                 throw e
             }
         }
@@ -38,7 +47,10 @@ class Database(private val dataSource: DataSource) {
                 jdbcUrl = url
                 username = user
                 this.password = password
-                maximumPoolSize = 5
+                // Request handling, the BGG worker and the projectors all hold connections at once:
+                // 5 starved under load. Fail after 10 s instead of Hikari's 30 s so a stuck pool shows up quickly.
+                maximumPoolSize = 10
+                connectionTimeout = 10_000
             }),
         )
     }
