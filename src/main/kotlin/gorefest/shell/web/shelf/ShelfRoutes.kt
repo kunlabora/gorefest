@@ -12,6 +12,7 @@ import gorefest.core.gameday.ShelfGame
 import gorefest.shell.App
 import gorefest.shell.auth.Login
 import gorefest.shell.web.CurrentPlayer
+import gorefest.shell.web.message
 import gorefest.shell.web.authenticated
 import gorefest.shell.web.bgg.collection
 import gorefest.shell.web.memberGameDay
@@ -102,7 +103,7 @@ private suspend fun RoutingContext.respondBringDecision(
     // A search row isn't in the list below it, so tell the list to look again.
     if (prefix == "search") call.response.header("HX-Trigger", BRING_LIST_CHANGED)
     respondFragment(if (decision is Decision.Rejected) HttpStatusCode.Conflict else HttpStatusCode.OK) {
-        bringItem(gameDay, row, readOnly = gameDay.ended, error = (decision as? Decision.Rejected)?.reason, prefix = prefix)
+        bringItem(gameDay, row, readOnly = gameDay.ended, error = (decision as? Decision.Rejected)?.reason?.message(), prefix = prefix)
     }
 }
 

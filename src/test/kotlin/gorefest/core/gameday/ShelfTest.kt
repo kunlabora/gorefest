@@ -1,5 +1,6 @@
 package gorefest.core.gameday
 
+import gorefest.core.Rejection
 import gorefest.core.BggId
 import gorefest.core.Event
 import gorefest.core.GameBrought
@@ -41,13 +42,13 @@ class ShelfTest {
 
     @Test
     fun `only joined players, only while it's on`() {
-        BringGameDecider.given(gameDayCreated()).whenever(BringGame(gorefest7, bram, brass, true)).thenRejects("Join the game day first")
-        BringGameDecider.given(*joined, GameDayEnded(gorefest7)).whenever(BringGame(gorefest7, bram, brass, true)).thenRejects("This game day has ended")
+        BringGameDecider.given(gameDayCreated()).whenever(BringGame(gorefest7, bram, brass, true)).thenRejects(Rejection.NotJoined)
+        BringGameDecider.given(*joined, GameDayEnded(gorefest7)).whenever(BringGame(gorefest7, bram, brass, true)).thenRejects(Rejection.GameDayOver)
     }
 
     @Test
     fun `wanting to play needs the game brought`() {
-        SetPlayWishDecider.given(*joined).whenever(SetPlayWish(gorefest7, bram, brass, true)).thenRejects("Bring the game first")
+        SetPlayWishDecider.given(*joined).whenever(SetPlayWish(gorefest7, bram, brass, true)).thenRejects(Rejection.NotBringing)
         SetPlayWishDecider
             .given(*joined, GameBrought(gorefest7, bram, brass))
             .whenever(SetPlayWish(gorefest7, bram, brass, true))

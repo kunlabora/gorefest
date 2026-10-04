@@ -1,5 +1,6 @@
 package gorefest.core.gameday
 
+import gorefest.core.Rejection
 import gorefest.core.BggId
 import gorefest.core.Event
 import gorefest.core.GameDayCreated
@@ -37,12 +38,12 @@ object LogPlayDecider : Decider<PlayLogged, LogPlayDecider.State, PlayLogged> {
     }
 
     override fun decide(command: PlayLogged, state: State): Decision<PlayLogged> = when {
-        !state.open -> Rejected("No such game day")
-        state.ended -> Rejected("This game day has ended")
-        command.loggedBy !in state.joined -> Rejected("Join the game day first")
-        command.players.isEmpty() -> Rejected("Tick who played")
-        !state.joined.containsAll(command.players) -> Rejected("Only players at this game day can be in a log")
-        command.minutes !in 5..720 -> Rejected("That doesn't look like a real duration")
+        !state.open -> Rejected(Rejection.NoSuchGameDay)
+        state.ended -> Rejected(Rejection.GameDayOver)
+        command.loggedBy !in state.joined -> Rejected(Rejection.NotJoined)
+        command.players.isEmpty() -> Rejected(Rejection.NobodyPlayed)
+        !state.joined.containsAll(command.players) -> Rejected(Rejection.PlayersNotAtGameDay)
+        command.minutes !in 5..720 -> Rejected(Rejection.ImplausibleDuration)
         else -> Accepted(command.copy(players = command.players.distinct()))
     }
 }

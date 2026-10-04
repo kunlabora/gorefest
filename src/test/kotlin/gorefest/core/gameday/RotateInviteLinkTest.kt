@@ -1,5 +1,6 @@
 package gorefest.core.gameday
 
+import gorefest.core.Rejection
 import gorefest.core.GameDayEnded
 import gorefest.core.InviteLinkRotated
 import gorefest.core.eventsourcing.given
@@ -17,7 +18,7 @@ class RotateInviteLinkTest {
 
     @Test
     fun `only the host, and only while the game day is on`() {
-        RotateInviteLinkDecider.given(gameDayCreated()).whenever(RotateInviteLink(gorefest7, bram)).thenRejects("Only the host can make a new invite link")
-        RotateInviteLinkDecider.given(gameDayCreated(), GameDayEnded(gorefest7)).whenever(RotateInviteLink(gorefest7, anna)).thenRejects("This game day has ended")
+        RotateInviteLinkDecider.given(gameDayCreated()).whenever(RotateInviteLink(gorefest7, bram)).thenRejects(Rejection.OnlyHostCanRotateInvite)
+        RotateInviteLinkDecider.given(gameDayCreated(), GameDayEnded(gorefest7)).whenever(RotateInviteLink(gorefest7, anna)).thenRejects(Rejection.GameDayOver)
     }
 }

@@ -8,6 +8,7 @@ import gorefest.shell.App
 import gorefest.shell.AppConfig
 import gorefest.shell.auth.Login
 import gorefest.shell.gameday.InviteLinks
+import gorefest.shell.web.message
 import gorefest.shell.web.components.full
 import gorefest.shell.web.gameday.invite
 import gorefest.shell.web.redirect
@@ -78,7 +79,7 @@ fun Route.inviteRoutes(app: App, invites: InviteLinks) {
         if (me.name == null) return@post redirect("/welcome?returnTo=${"/i/$token".urlEncoded()}")
         when (val decision = app.commands.handle(JoinGameDayDecider, JoinGameDay(gameDay.id, me.id))) {
             is Decision.Accepted -> redirect("/gamedays/${gameDay.id}")
-            is Decision.Rejected -> call.respondHtml(HttpStatusCode.Conflict) { deadInvitePage(decision.reason) }
+            is Decision.Rejected -> call.respondHtml(HttpStatusCode.Conflict) { deadInvitePage(decision.reason.message()) }
         }
     }
 

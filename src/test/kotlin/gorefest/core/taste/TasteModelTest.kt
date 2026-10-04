@@ -1,5 +1,6 @@
 package gorefest.core.taste
 
+import gorefest.core.Rejection
 import gorefest.core.Basis
 import gorefest.core.BggId
 import gorefest.core.ComparisonRecorded
@@ -118,6 +119,6 @@ class TasteModelTest {
 
     @Test
     fun `comparing a game with itself is refused`() {
-        RecordComparisonDecider.given().whenever(c(brass, brass, A)).thenRejects("Compare two different games")
+        RecordComparisonDecider.given().whenever(c(brass, brass, A)).thenRejects(Rejection.SameGameTwice)
     }
 }

@@ -1,5 +1,6 @@
 package gorefest.core.gameday
 
+import gorefest.core.Rejection
 import gorefest.core.GameDayEnded
 import gorefest.core.PlayerJoined
 import gorefest.core.eventsourcing.given
@@ -25,7 +26,7 @@ class JoinGameDayTest {
 
     @Test
     fun `cannot join an unknown game day`() {
-        JoinGameDayDecider.given().whenever(JoinGameDay(gorefest7, bram)).thenRejects("No such game day")
+        JoinGameDayDecider.given().whenever(JoinGameDay(gorefest7, bram)).thenRejects(Rejection.NoSuchGameDay)
     }
 
     @Test
@@ -33,7 +34,7 @@ class JoinGameDayTest {
         JoinGameDayDecider
             .given(gameDayCreated(), GameDayEnded(gorefest7))
             .whenever(JoinGameDay(gorefest7, bram))
-            .thenRejects("This game day has ended")
+            .thenRejects(Rejection.GameDayOver)
     }
 
     @Test

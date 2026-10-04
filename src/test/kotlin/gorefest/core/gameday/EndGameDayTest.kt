@@ -1,5 +1,6 @@
 package gorefest.core.gameday
 
+import gorefest.core.Rejection
 import gorefest.core.GameDayEnded
 import gorefest.core.GameDayId
 import gorefest.core.eventsourcing.given
@@ -13,7 +14,7 @@ class EndGameDayTest {
     fun `ending is idempotent`() {
         EndGameDayDecider.given(gameDayCreated()).whenever(EndGameDay(gorefest7)).thenEmits(GameDayEnded(gorefest7))
         EndGameDayDecider.given(gameDayCreated(), GameDayEnded(gorefest7)).whenever(EndGameDay(gorefest7)).thenEmitsNothing()
-        EndGameDayDecider.given().whenever(EndGameDay(gorefest7)).thenRejects("No such game day")
+        EndGameDayDecider.given().whenever(EndGameDay(gorefest7)).thenRejects(Rejection.NoSuchGameDay)
     }
 
     @Test

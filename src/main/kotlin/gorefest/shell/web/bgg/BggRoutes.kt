@@ -9,6 +9,7 @@ import gorefest.shell.bgg.BggPriority
 import gorefest.shell.bgg.BggUnavailable
 import gorefest.shell.bgg.FakeBggApi
 import gorefest.shell.web.CurrentPlayer
+import gorefest.shell.web.message
 import gorefest.shell.web.authenticated
 import gorefest.shell.web.redirect
 import gorefest.shell.web.respondFragment
@@ -66,7 +67,7 @@ fun Route.bggRoutes(app: App) {
                     app.collectionSync.request(me.id, user.name, BggPriority.LINK)
                     redirect("/collection")
                 }
-                is Decision.Rejected -> respondFragment { codeStep(returnTo, username, code, dev, decision.reason) }
+                is Decision.Rejected -> respondFragment { codeStep(returnTo, username, code, dev, decision.reason.message()) }
             }
         }
     }

@@ -1,5 +1,6 @@
 package gorefest.core.gameday
 
+import gorefest.core.Rejection
 import gorefest.core.Event
 import gorefest.core.GameDayCreated
 import gorefest.core.GameDayId
@@ -37,10 +38,10 @@ object CreateGameDayDecider : Decider<CreateGameDay, Boolean, Event> {
     override fun evolve(state: Boolean, event: Event) = state || event is GameDayCreated
 
     override fun decide(command: CreateGameDay, state: Boolean): Decision<Event> = when {
-        state -> Rejected("Game day already exists")
-        command.title.isBlank() -> Rejected("Give the game day a title")
-        command.date < command.today -> Rejected("That date is in the past")
-        runCatching { ZoneId.of(command.timeZone) }.isFailure -> Rejected("Unknown time zone")
+        state -> Rejected(Rejection.GameDayAlreadyExists)
+        command.title.isBlank() -> Rejected(Rejection.TitleMissing)
+        command.date < command.today -> Rejected(Rejection.DateInPast)
+        runCatching { ZoneId.of(command.timeZone) }.isFailure -> Rejected(Rejection.UnknownTimeZone)
         else -> with(command) {
             Accepted(
                 GameDayCreated(gameDay, host, title.trim(), date, place.trim(), timeZone),

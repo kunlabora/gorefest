@@ -1,5 +1,6 @@
 package gorefest.core.player
 
+import gorefest.core.Rejection
 import gorefest.core.BggAccountLinked
 import gorefest.core.eventsourcing.given
 import gorefest.core.gameday.anna
@@ -17,13 +18,13 @@ class LinkBggAccountTest {
         LinkBggAccountDecider
             .given(BggAccountLinked(bram, "annaplays"))
             .whenever(LinkBggAccount(anna, "AnnaPlays"))
-            .thenRejects("That BGG account is already linked to another player")
+            .thenRejects(Rejection.BggAccountTaken)
     }
 
     @Test
     fun `linking the same account again is a no-op, another one is refused`() {
         LinkBggAccountDecider.given(BggAccountLinked(anna, "AnnaPlays")).whenever(LinkBggAccount(anna, "annaplays")).thenEmitsNothing()
-        LinkBggAccountDecider.given(BggAccountLinked(anna, "AnnaPlays")).whenever(LinkBggAccount(anna, "Other")).thenRejects("You've already linked AnnaPlays")
+        LinkBggAccountDecider.given(BggAccountLinked(anna, "AnnaPlays")).whenever(LinkBggAccount(anna, "Other")).thenRejects(Rejection.AlreadyLinked("AnnaPlays"))
     }
 
     @Test

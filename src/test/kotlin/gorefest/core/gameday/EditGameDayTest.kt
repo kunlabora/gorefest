@@ -1,5 +1,6 @@
 package gorefest.core.gameday
 
+import gorefest.core.Rejection
 import gorefest.core.GameDayDetailsChanged
 import gorefest.core.GameDayEnded
 import gorefest.core.eventsourcing.given
@@ -18,7 +19,7 @@ class EditGameDayTest {
 
     @Test
     fun `only the host can edit`() {
-        EditGameDayDecider.given(gameDayCreated()).whenever(edit.copy(editor = bram)).thenRejects("Only the host can change this game day")
+        EditGameDayDecider.given(gameDayCreated()).whenever(edit.copy(editor = bram)).thenRejects(Rejection.OnlyHostCanEdit)
     }
 
     @Test
@@ -38,13 +39,13 @@ class EditGameDayTest {
 
     @Test
     fun `same rules as creating`() {
-        EditGameDayDecider.given(gameDayCreated()).whenever(edit.copy(title = "")).thenRejects("Give the game day a title")
-        EditGameDayDecider.given(gameDayCreated()).whenever(edit.copy(date = today.minusDays(1))).thenRejects("That date is in the past")
+        EditGameDayDecider.given(gameDayCreated()).whenever(edit.copy(title = "")).thenRejects(Rejection.TitleMissing)
+        EditGameDayDecider.given(gameDayCreated()).whenever(edit.copy(date = today.minusDays(1))).thenRejects(Rejection.DateInPast)
     }
 
     @Test
     fun `ended or unknown game days can't be edited`() {
-        EditGameDayDecider.given(gameDayCreated(), GameDayEnded(gorefest7)).whenever(edit).thenRejects("This game day has ended")
-        EditGameDayDecider.given().whenever(edit).thenRejects("No such game day")
+        EditGameDayDecider.given(gameDayCreated(), GameDayEnded(gorefest7)).whenever(edit).thenRejects(Rejection.GameDayOver)
+        EditGameDayDecider.given().whenever(edit).thenRejects(Rejection.NoSuchGameDay)
     }
 }

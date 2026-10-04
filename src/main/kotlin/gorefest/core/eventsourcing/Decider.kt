@@ -1,6 +1,7 @@
 package gorefest.core.eventsourcing
 
 import gorefest.core.Event
+import gorefest.core.Rejection
 
 /**
  * A pure decision function with its own consistency boundary.
@@ -21,5 +22,5 @@ sealed interface Decision<out E : Event> {
         constructor(vararg events: E) : this(events.toList())
     }
 
-    data class Rejected(val reason: String) : Decision<Nothing>
+    data class Rejected(val reason: Rejection) : Decision<Nothing>
 }

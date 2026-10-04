@@ -1,5 +1,6 @@
 package gorefest.core.taste
 
+import gorefest.core.Rejection
 import gorefest.core.Basis
 import gorefest.core.BggId
 import gorefest.core.ComparisonRecorded
@@ -55,7 +56,7 @@ object RecordComparisonDecider : Decider<ComparisonRecorded, Unit, ComparisonRec
     override fun query(command: ComparisonRecorded) = Query(emptyList())
     override fun evolve(state: Unit, event: Event) = state
     override fun decide(command: ComparisonRecorded, state: Unit): Decision<ComparisonRecorded> =
-        if (command.a == command.b) Rejected("Compare two different games") else Accepted(command)
+        if (command.a == command.b) Rejected(Rejection.SameGameTwice) else Accepted(command)
 }
 
 object DeclarePlayStatusDecider : Decider<GamePlayStatusDeclared, Unit, GamePlayStatusDeclared> {

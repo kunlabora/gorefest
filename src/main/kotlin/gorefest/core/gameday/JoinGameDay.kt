@@ -1,5 +1,6 @@
 package gorefest.core.gameday
 
+import gorefest.core.Rejection
 import gorefest.core.Event
 import gorefest.core.GameDayCreated
 import gorefest.core.GameDayEnded
@@ -48,8 +49,8 @@ object JoinGameDayDecider : Decider<JoinGameDay, JoinGameDayDecider.State, Playe
     }
 
     override fun decide(command: JoinGameDay, state: State): Decision<PlayerJoined> = when (state) {
-        State.Unknown -> Rejected("No such game day")
-        State.Ended -> Rejected("This game day has ended")
+        State.Unknown -> Rejected(Rejection.NoSuchGameDay)
+        State.Ended -> Rejected(Rejection.GameDayOver)
         is State.Open ->
             if (state.joined) Accepted()
             else Accepted(PlayerJoined(command.gameDay, command.player))

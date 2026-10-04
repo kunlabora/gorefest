@@ -1,6 +1,7 @@
 package gorefest.core.eventsourcing
 
 import gorefest.core.Event
+import gorefest.core.Rejection
 import gorefest.core.type
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
@@ -33,7 +34,7 @@ class Then<E : Event>(val decision: Decision<E>) {
 
     fun thenEmitsNothing() = thenEmits()
 
-    fun thenRejects(reason: String? = null) {
+    fun thenRejects(reason: Rejection? = null) {
         decision.shouldBeInstanceOf<Decision.Rejected>()
         if (reason != null) decision.reason shouldBe reason
     }

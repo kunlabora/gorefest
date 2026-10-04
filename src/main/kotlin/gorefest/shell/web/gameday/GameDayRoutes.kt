@@ -16,6 +16,7 @@ import gorefest.shell.AppConfig
 import gorefest.shell.IdGenerator
 import gorefest.shell.auth.Login
 import gorefest.shell.web.CurrentPlayer
+import gorefest.shell.web.message
 import gorefest.shell.web.authenticated
 import gorefest.shell.web.bgg.collection
 import gorefest.shell.web.checkpoint.checkpointLabel
@@ -70,7 +71,7 @@ fun Route.gameDayRoutes(app: App) {
             )
             when (val decision = app.commands.handle(CreateGameDayDecider, command)) {
                 is Decision.Accepted -> redirect("/gamedays/${command.gameDay}")
-                is Decision.Rejected -> respondFragment { gameDayForm(createForm, decision.reason, form) }
+                is Decision.Rejected -> respondFragment { gameDayForm(createForm, decision.reason.message(), form) }
             }
         }
     }
@@ -102,7 +103,7 @@ fun Route.gameDayRoutes(app: App) {
             )
             when (val decision = app.commands.handle(EditGameDayDecider, command)) {
                 is Decision.Accepted -> redirect("/gamedays/${gameDay.id}")
-                is Decision.Rejected -> respondFragment { gameDayForm(editForm(gameDay), decision.reason, form) }
+                is Decision.Rejected -> respondFragment { gameDayForm(editForm(gameDay), decision.reason.message(), form) }
             }
         }
     }
@@ -132,7 +133,7 @@ fun Route.gameDayRoutes(app: App) {
                     val rotated = app.gameDaysById.getValue(gameDay.id)
                     respondFragment { invite(rotated, inviteLink(app, rotated)) }
                 }
-                is Decision.Rejected -> respondFragment(HttpStatusCode.Forbidden) { errorNotice(decision.reason, id = "invite") }
+                is Decision.Rejected -> respondFragment(HttpStatusCode.Forbidden) { errorNotice(decision.reason.message(), id = "invite") }
             }
         }
     }

@@ -1,5 +1,6 @@
 package gorefest.core.player
 
+import gorefest.core.Rejection
 import gorefest.core.BggAccountLinked
 import gorefest.core.Event
 import gorefest.core.PlayerId
@@ -34,8 +35,8 @@ object LinkBggAccountDecider : Decider<LinkBggAccount, List<BggAccountLinked>, B
         val taken = state.any { it.player != command.player && it.username.equals(command.username, ignoreCase = true) }
         return when {
             mine != null && mine.username.equals(command.username, ignoreCase = true) -> Accepted()
-            mine != null -> Rejected("You've already linked ${mine.username}")
-            taken -> Rejected("That BGG account is already linked to another player")
+            mine != null -> Rejected(Rejection.AlreadyLinked(mine.username))
+            taken -> Rejected(Rejection.BggAccountTaken)
             else -> Accepted(BggAccountLinked(command.player, command.username))
         }
     }

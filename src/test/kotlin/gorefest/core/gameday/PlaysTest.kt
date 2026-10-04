@@ -1,5 +1,6 @@
 package gorefest.core.gameday
 
+import gorefest.core.Rejection
 import gorefest.core.BggId
 import gorefest.core.GameDayEnded
 import gorefest.core.PlayLogged
@@ -28,11 +29,11 @@ class PlaysTest {
     @Test
     fun `logs need joined players, a real duration and a running game day`() {
         val stranger = gorefest.core.PlayerId(kotlin.uuid.Uuid.random())
-        LogPlayDecider.given(*joined).whenever(log(45, listOf(anna, stranger))).thenRejects("Only players at this game day can be in a log")
-        LogPlayDecider.given(*joined).whenever(log(45, emptyList())).thenRejects("Tick who played")
-        LogPlayDecider.given(*joined).whenever(log(0)).thenRejects("That doesn't look like a real duration")
-        LogPlayDecider.given(*joined, GameDayEnded(gorefest7)).whenever(log(45)).thenRejects("This game day has ended")
-        LogPlayDecider.given(gameDayCreated()).whenever(log(45)).thenRejects("Join the game day first")
+        LogPlayDecider.given(*joined).whenever(log(45, listOf(anna, stranger))).thenRejects(Rejection.PlayersNotAtGameDay)
+        LogPlayDecider.given(*joined).whenever(log(45, emptyList())).thenRejects(Rejection.NobodyPlayed)
+        LogPlayDecider.given(*joined).whenever(log(0)).thenRejects(Rejection.ImplausibleDuration)
+        LogPlayDecider.given(*joined, GameDayEnded(gorefest7)).whenever(log(45)).thenRejects(Rejection.GameDayOver)
+        LogPlayDecider.given(gameDayCreated()).whenever(log(45)).thenRejects(Rejection.NotJoined)
     }
 
     @Test

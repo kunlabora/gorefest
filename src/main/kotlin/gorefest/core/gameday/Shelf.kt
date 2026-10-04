@@ -1,5 +1,6 @@
 package gorefest.core.gameday
 
+import gorefest.core.Rejection
 import gorefest.core.BggId
 import gorefest.core.Event
 import gorefest.core.GameBrought
@@ -45,10 +46,10 @@ private fun evolveBring(state: BringState, event: Event) = when (event) {
     else -> state
 }
 
-private fun BringState.cantChange(): String? = when {
-    !open -> "No such game day"
-    ended -> "This game day has ended"
-    !joined -> "Join the game day first"
+private fun BringState.cantChange(): Rejection? = when {
+    !open -> Rejection.NoSuchGameDay
+    ended -> Rejection.GameDayOver
+    !joined -> Rejection.NotJoined
     else -> null
 }
 
@@ -78,7 +79,7 @@ object SetPlayWishDecider : Decider<SetPlayWish, BringState, PlayWishChanged> {
     override fun decide(command: SetPlayWish, state: BringState): Decision<PlayWishChanged> {
         state.cantChange()?.let { return Rejected(it) }
         return when {
-            !state.bringing -> Rejected("Bring the game first")
+            !state.bringing -> Rejected(Rejection.NotBringing)
             state.wants == command.wantsToPlay -> Accepted()
             else -> with(command) { Accepted(PlayWishChanged(gameDay, player, game, wantsToPlay)) }
         }

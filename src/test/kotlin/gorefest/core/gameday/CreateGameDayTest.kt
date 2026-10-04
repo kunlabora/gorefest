@@ -1,5 +1,6 @@
 package gorefest.core.gameday
 
+import gorefest.core.Rejection
 import gorefest.core.PlayerJoined
 import gorefest.core.eventsourcing.given
 import org.junit.jupiter.api.Test
@@ -25,7 +26,7 @@ class CreateGameDayTest {
 
     @Test
     fun `cannot create the same game day twice`() {
-        CreateGameDayDecider.given(gameDayCreated()).whenever(create).thenRejects("Game day already exists")
+        CreateGameDayDecider.given(gameDayCreated()).whenever(create).thenRejects(Rejection.GameDayAlreadyExists)
     }
 
     @Test
@@ -38,16 +39,16 @@ class CreateGameDayTest {
 
     @Test
     fun `title is required`() {
-        CreateGameDayDecider.given().whenever(create.copy(title = " ")).thenRejects("Give the game day a title")
+        CreateGameDayDecider.given().whenever(create.copy(title = " ")).thenRejects(Rejection.TitleMissing)
     }
 
     @Test
     fun `date cannot be in the past`() {
-        CreateGameDayDecider.given().whenever(create.copy(date = today.minusDays(1))).thenRejects("That date is in the past")
+        CreateGameDayDecider.given().whenever(create.copy(date = today.minusDays(1))).thenRejects(Rejection.DateInPast)
     }
 
     @Test
     fun `time zone must exist`() {
-        CreateGameDayDecider.given().whenever(create.copy(timeZone = "Mars/Olympus")).thenRejects("Unknown time zone")
+        CreateGameDayDecider.given().whenever(create.copy(timeZone = "Mars/Olympus")).thenRejects(Rejection.UnknownTimeZone)
     }
 }

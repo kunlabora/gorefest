@@ -1,5 +1,6 @@
 package gorefest.core.gameday
 
+import gorefest.core.Rejection
 import gorefest.core.Event
 import gorefest.core.GameDayCreated
 import gorefest.core.GameDayEnded
@@ -40,10 +41,10 @@ object RotateInviteLinkDecider : Decider<RotateInviteLink, RotateInviteLinkDecid
     }
 
     override fun decide(command: RotateInviteLink, state: State): Decision<InviteLinkRotated> = when (state) {
-        State.Unknown -> Rejected("No such game day")
-        State.Ended -> Rejected("This game day has ended")
+        State.Unknown -> Rejected(Rejection.NoSuchGameDay)
+        State.Ended -> Rejected(Rejection.GameDayOver)
         is State.Open ->
-            if (command.by != state.host) Rejected("Only the host can make a new invite link")
+            if (command.by != state.host) Rejected(Rejection.OnlyHostCanRotateInvite)
             else Accepted(InviteLinkRotated(command.gameDay, state.version + 1))
     }
 }

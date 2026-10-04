@@ -17,6 +17,7 @@ import gorefest.core.taste.RecordComparisonDecider
 import gorefest.shell.App
 import gorefest.shell.auth.Login
 import gorefest.shell.web.CurrentPlayer
+import gorefest.shell.web.message
 import gorefest.shell.web.authenticated
 import gorefest.shell.web.bgg.collection
 import gorefest.shell.web.components.of
@@ -68,7 +69,7 @@ fun Route.checkpointRoutes(app: App) {
             val log = PlayLogged(gameDay.id, game.id, players, minutes, me.id, app.clock.instant())
             when (val decision = app.commands.handle(LogPlayDecider, log)) {
                 is Decision.Accepted -> redirect("/gamedays/${gameDay.id}/log/compare?game=${game.id}&minutes=$minutes&${players.joinToString("&") { "players=$it" }}")
-                is Decision.Rejected -> respondFragment { logForm(view, me, form, decision.reason) }
+                is Decision.Rejected -> respondFragment { logForm(view, me, form, decision.reason.message()) }
             }
         }
     }

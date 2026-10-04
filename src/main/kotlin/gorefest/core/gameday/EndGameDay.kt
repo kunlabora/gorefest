@@ -1,5 +1,6 @@
 package gorefest.core.gameday
 
+import gorefest.core.Rejection
 import gorefest.core.Event
 import gorefest.core.GameDayCreated
 import gorefest.core.GameDayEnded
@@ -33,7 +34,7 @@ object EndGameDayDecider : Decider<EndGameDay, EndGameDayDecider.State, GameDayE
     }
 
     override fun decide(command: EndGameDay, state: State): Decision<GameDayEnded> = when (state) {
-        State.UNKNOWN -> Rejected("No such game day")
+        State.UNKNOWN -> Rejected(Rejection.NoSuchGameDay)
         State.OPEN -> Accepted(GameDayEnded(command.gameDay))
         State.ENDED -> Accepted()
     }
