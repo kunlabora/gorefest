@@ -33,7 +33,8 @@ import org.slf4j.LoggerFactory
 private val log = LoggerFactory.getLogger("gorefest.web")
 
 private val NoIndex = createApplicationPlugin("NoIndex") {
-    onCall { call -> call.response.header("X-Robots-Tag", "noindex, nofollow, noarchive, noimageindex, nosnippet") }
+    // Not onCall: Webjars answers (and completes) a call, e.g. a conditional 304, before that hook would run.
+    onCallRespond { call, _ -> call.response.header("X-Robots-Tag", "noindex, nofollow, noarchive, noimageindex, nosnippet") }
 }
 
 fun Application.web(app: App) {
