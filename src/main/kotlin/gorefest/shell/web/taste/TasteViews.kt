@@ -27,6 +27,7 @@ fun HTML.wizardPage(step: WizardStep) = page(
 fun TagConsumer<*>.wizardFragment(step: WizardStep) = main("gf-body gf-wizard") {
     id = "wizard"
     wizardContent(step)
+    bggCredit()
 }
 
 private fun FlowContent.wizardContent(step: WizardStep) {
@@ -46,7 +47,7 @@ private fun FlowContent.wizardContent(step: WizardStep) {
         hx("target", "#wizard")
         hx("swap", "outerHTML")
         // A and B on the keyboard, as the key hints promise.
-        hyperscript("on keydown from window if event.key is 'a' or event.key is 'A' then call #pick-a.click() else if event.key is 'b' or event.key is 'B' then call #pick-b.click() end")
+        hyperscript("on keydown from window if event.repeat or event.metaKey or event.ctrlKey or event.altKey or event.target.matches('input, textarea, select, [contenteditable]') then exit end if event.key is 'a' or event.key is 'A' then call #pick-a.click() else if event.key is 'b' or event.key is 'B' then call #pick-b.click() end")
         // The round travels in hidden fields: see Parameters.round() in TasteRoutes.
         hiddenInput("a", pair.a.id.toString())
         hiddenInput("b", pair.b.id.toString())

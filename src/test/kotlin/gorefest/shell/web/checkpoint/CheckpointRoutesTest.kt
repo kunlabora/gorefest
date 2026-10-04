@@ -125,4 +125,21 @@ class CheckpointRoutesTest {
         rows shouldHaveSize 1
         rows.single().one(".gf-game__meta").text() shouldBe "Kim, Anna · 40 min"
     }
+
+    @Test
+    fun `the compare link ignores strangers, junk and out-of-range minutes`() = test.webTest(session = kim) { client ->
+        val stranger = PlayerId(Uuid.random())
+        client.htmxPost(log, parameters { append("game", azul.toString()); append("players", kimId.toString()); append("duration", "30m") })
+
+        client.get("/gamedays/$gorefest7/log/compare?game=$azul&minutes=x&players=$kimId&players=$stranger&players=%22%3E%3Cscript%3E").headers["Location"] shouldBe
+            "/gamedays/$gorefest7/table?players=$kimId"
+    }
+
+    @Test
+    fun `minutes out of range show as zero`() = test.webTest(session = kim) { client ->
+        given(GamePlayStatusDeclared(kimId, cascadia, played = true))
+
+        val page = client.get("/gamedays/$gorefest7/log/compare?game=$azul&minutes=999999&players=$kimId").page()
+        page.one(".gf-notice--good").text() shouldBe "Logged Azul: 1 player, 0 min."
+    }
 }

@@ -23,8 +23,10 @@ import gorefest.shell.web.bgg.collection
 import gorefest.shell.web.components.of
 import gorefest.shell.web.memberGameDay
 import gorefest.shell.web.redirect
+import gorefest.shell.web.zone
 import gorefest.shell.web.respondFragment
 import gorefest.shell.web.safeReturnTo
+import gorefest.shell.web.urlEncoded
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.html.respondHtml
 import io.ktor.server.request.receiveParameters
@@ -32,12 +34,13 @@ import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
-import java.time.ZoneId
 import kotlin.uuid.Uuid
+
+private const val MAX_MINUTES = 24 * 60
 
 /** Morning, lunch or evening, by the clock where the game day is. */
 fun checkpointLabel(gameDay: GameDaySummary, clock: java.time.Clock): String {
-    val hour = clock.instant().atZone(runCatching { ZoneId.of(gameDay.timeZone) }.getOrDefault(ZoneId.of("UTC"))).hour
+    val hour = clock.instant().atZone(zone(gameDay)).hour
     return when {
         hour < 11 -> "Morning checkpoint"
         hour < 16 -> "Lunch checkpoint"
@@ -80,11 +83,13 @@ fun Route.checkpointRoutes(app: App) {
             val gameDay = memberGameDay(app, me) ?: return@authenticated call.respond(HttpStatusCode.NotFound)
             val game = call.parameters["game"]?.toIntOrNull()?.let(::BggId)?.let(app.catalog::get) ?: return@authenticated redirect("/gamedays/${gameDay.id}")
             val players = call.parameters.getAll("players").orEmpty()
-            val tableLink = "/gamedays/${gameDay.id}/table?" + players.joinToString("&") { "players=$it" }
+                .mapNotNull { runCatching { PlayerId(Uuid.parse(it)) }.getOrNull() }.filter { it in gameDay.players }.distinct()
+            val minutes = call.parameters["minutes"]?.toIntOrNull()?.takeIf { it in 0..MAX_MINUTES } ?: 0
+            val tableLink = "/gamedays/${gameDay.id}/table?" + players.joinToString("&") { "players=${it.toString().urlEncoded()}" }
             val player = PlayerGames(app.tastes.of(me.id), app.collectionSync.collection(me.id))
             val candidates = (player.history.played.filterValues { it }.keys + player.owned + player.history.comparedGames).mapNotNull(app.catalog::get)
             val other = app.wizard.partner(player, game.id, candidates, app.clock.instant()) ?: return@authenticated redirect(tableLink)
-            call.respondHtml { logComparePage(LogCompareView(gameDay, game, other, players.size, call.parameters["minutes"].orEmpty(), tableLink)) }
+            call.respondHtml { logComparePage(LogCompareView(gameDay, game, other, players.size, minutes.toString(), tableLink)) }
         }
     }
 

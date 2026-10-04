@@ -2,7 +2,6 @@ package gorefest.shell.web.components
 
 import gorefest.core.PlayerId
 import gorefest.core.game.Game
-import gorefest.shell.web.suggestions.suggestions
 import kotlinx.html.ButtonType
 import kotlinx.html.FlowContent
 import kotlinx.html.HtmlBlockTag
@@ -49,9 +48,24 @@ fun FlowContent.bggNameLink(game: Game) = a(game.bggUrl, target = "_blank", clas
     +game.name
 }
 
+/**
+ * An image URL that is safe in `src` and inside a CSS `url('...')`: http(s) from BGG, or our own `/static/` files.
+ * Quotes, parentheses, backslashes, whitespace and the like are percent-encoded.
+ */
+fun safeImageUrl(url: String): String? {
+    val trimmed = url.trim()
+    val ok = trimmed.startsWith("https://") || trimmed.startsWith("http://") || trimmed.startsWith("/static/")
+    if (!ok) return null
+    return buildString {
+        for (c in trimmed) {
+            if (c.code <= 0x20 || c in "'\"()\\<>;{}") append('%').append("%02X".format(c.code)) else append(c)
+        }
+    }
+}
+
 /** Box art in its frame: the image letterboxed on a blurred copy, or a monogram when BGG has none. */
 fun FlowContent.art(game: Game, extraClasses: String = "", extraStyle: String = "") {
-    val image = game.thumbnail ?: game.image
+    val image = (game.thumbnail ?: game.image)?.let(::safeImageUrl)
     if (image != null) {
         span("gf-art $extraClasses".trim()) {
             style = "--art:url('$image');$extraStyle"

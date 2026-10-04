@@ -6,6 +6,8 @@ import gorefest.core.game.Game
 import gorefest.core.gameday.GameDaySummary
 import gorefest.core.gameday.ShelfGame
 import gorefest.shell.web.CurrentPlayer
+import gorefest.shell.web.DEFAULT_TIME_ZONE
+import gorefest.shell.web.zone
 import gorefest.shell.web.bgg.collection
 import gorefest.shell.web.components.ButtonSize
 import gorefest.shell.web.components.ButtonStyle
@@ -58,7 +60,6 @@ import kotlinx.html.ul
 import java.time.LocalDate
 import java.time.ZoneId
 
-const val DEFAULT_TIME_ZONE = "Europe/Brussels"
 
 fun HTML.homePage(gameDays: List<GameDaySummary>, today: LocalDate, bggLinked: Boolean) = page(
     "Game days",
@@ -256,7 +257,3 @@ private fun FlowContent.dayCard(gameDay: GameDaySummary, today: LocalDate) = a("
         icon("back")
     }
 }
-
-fun zone(gameDay: GameDaySummary): ZoneId = zoneOrDefault(gameDay.timeZone)
-
-fun zoneOrDefault(id: String?): ZoneId = id?.let { runCatching { ZoneId.of(it) }.getOrNull() } ?: ZoneId.of(DEFAULT_TIME_ZONE)

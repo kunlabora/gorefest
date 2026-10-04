@@ -23,7 +23,9 @@ import kotlin.uuid.Uuid
 context(login: Login)
 fun Route.suggestionsRoutes(app: App) {
     suspend fun suggestionsFor(gameDay: GameDaySummary, params: Parameters, me: CurrentPlayer): Pair<Suggestions, Int> {
-        val chosen = params.getAll("players")?.mapNotNull { runCatching { PlayerId(Uuid.parse(it)) }.getOrNull() }
+        // The form always sends TABLE_SET, so "no players" means nobody; without it (first page load) it means everyone.
+        val picked = params.getAll("players").orEmpty().takeIf { params.contains(TABLE_SET) || it.isNotEmpty() }
+        val chosen = picked?.mapNotNull { runCatching { PlayerId(Uuid.parse(it)) }.getOrNull() }
             ?.filter { it in gameDay.players } ?: gameDay.players
         val budget = TIMES.firstOrNull { it.first == params["time"] }?.second
         val names = login.names(chosen)
@@ -40,7 +42,7 @@ fun Route.suggestionsRoutes(app: App) {
             val gameDay = memberGameDay(app, me) ?: return@authenticated call.respond(HttpStatusCode.NotFound)
             val names = login.names(gameDay.players)
             val (suggestions, size) = suggestionsFor(gameDay, call.parameters, me)
-            val view = TableView(gameDay, names, call.parameters.getAll("players")?.toSet(), call.parameters["time"] ?: "Any", suggestions, size, me.id)
+            val view = TableView(gameDay, names, call.parameters.getAll("players")?.toSet() ?: emptySet<String>().takeIf { call.parameters.contains(TABLE_SET) }, call.parameters["time"] ?: "Any", suggestions, size, me.id)
             call.respondHtml { tablePage(view) }
         }
     }

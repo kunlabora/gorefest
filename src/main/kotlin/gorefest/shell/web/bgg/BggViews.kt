@@ -2,6 +2,8 @@ package gorefest.shell.web.bgg
 
 import gorefest.shell.web.components.*
 import kotlinx.html.*
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
 fun HTML.bggPage(returnTo: String, linked: String?) = page("Link BGG", appBar = { backLink(returnTo, "Back"); appBarTitle("BoardGameGeek") }) {
     if (linked != null) {
@@ -47,7 +49,7 @@ fun TagConsumer<*>.codeStep(returnTo: String, username: String, code: String, de
         +"Dev mode uses a fake BGG. "
         button(type = ButtonType.button, classes = "gf-link") {
             hx("post", "/dev/bgg/profile")
-            hx("vals", """{"username": "$username", "code": "$code"}""")
+            hx("vals", Json.encodeToString(mapOf("username" to username, "code" to code)))
             hx("target", "#dev-bgg")
             hx("swap", "outerHTML")
             +"Put the code in the fake profile"

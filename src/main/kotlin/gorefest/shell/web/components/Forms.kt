@@ -40,6 +40,9 @@ fun FlowContent.playerChips(
     }
 }
 
+/** Safe in an id and in a CSS selector: "3h+" becomes "3h-plus". */
+fun String.idSlug(): String = lowercase().replace("+", "-plus").replace(Regex("[^a-z0-9]+"), "-").trim('-')
+
 /** A segmented control: radios named [name] with [options] as labels and values. With [idPrefix], each gets id `prefix-option`. */
 fun FlowContent.segmented(name: String, legend: String, options: List<String>, checked: String, idPrefix: String? = null) = fieldSet("gf-seg") {
     attributes["style"] = "border: 1px solid var(--line); margin: 0"
@@ -47,7 +50,7 @@ fun FlowContent.segmented(name: String, legend: String, options: List<String>, c
     options.forEach { option ->
         label {
             input(InputType.radio, name = name) {
-                if (idPrefix != null) id = "$idPrefix-$option"
+                if (idPrefix != null) id = "$idPrefix-${option.idSlug()}"
                 value = option
                 this.checked = option == checked
             }
