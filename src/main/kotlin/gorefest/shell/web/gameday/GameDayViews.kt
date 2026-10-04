@@ -169,7 +169,7 @@ fun HTML.gameDayPage(hub: GameDayHub) {
         }
         section("gf-section") {
             sectionHead("Players", "/gamedays/${gameDay.id}/ready".takeIf { isHost && open }, "How ready are we?")
-            consumer.players(gameDay, hub.names)
+            consumer.players(gameDay, hub.names, broughtBy = hub.shelf.flatMap { (_, entry) -> entry.owners }.groupingBy { it }.eachCount())
         }
         if (open) section("gf-section") {
             h2("gf-h2") { +"Invite friends" }
@@ -201,18 +201,22 @@ private fun FlowContent.nextStepCard(gameDay: GameDaySummary, next: NextStep) {
 }
 
 context(me: CurrentPlayer)
-private fun TagConsumer<*>.players(gameDay: GameDaySummary, names: Map<PlayerId, String>) = div("gf-stack") {
+private fun TagConsumer<*>.players(gameDay: GameDaySummary, names: Map<PlayerId, String>, broughtBy: Map<PlayerId, Int>) = div("gf-stack") {
     id = "players"
     if (gameDay.players.isNotEmpty()) ul("gf-list") {
         gameDay.players.forEach { player ->
-            li("gf-row") {
+            li(if (player == me.id) "gf-row gf-row--me" else "gf-row") {
                 // No name: the player never finished signing up, or was erased.
                 val name = names[player]
                 avatar(player, name)
                 span("gf-row__main") {
                     span("gf-row__title") { +(name ?: "Unknown player") }
-                    if (player == me.id) span("gf-row__sub") { +"You" }
+                    span("gf-row__sub") {
+                        val count = broughtBy[player] ?: 0
+                        +when (count) { 0 -> "Bringing nothing yet"; 1 -> "Bringing 1 game"; else -> "Bringing $count games" }
+                    }
                 }
+                if (player == me.id) span("gf-tag gf-tag--solid") { +"You" }
                 if (player == gameDay.host) span("gf-tag gf-tag--brand") { +"Host" }
             }
         }

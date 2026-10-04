@@ -136,6 +136,7 @@ button.gf-link { background: none; border: 0; padding: 0; font: inherit; font-we
 .gf-tag .gf-icon { width: 14px; height: 14px; }
 .gf-tag--brand { background: var(--brand-soft); color: var(--brand-ink); }
 .gf-tag--accent { background: var(--accent-soft); }
+.gf-tag--solid { background: var(--ink); color: var(--surface); }
 .gf-tag--olive { background: var(--olive-soft); color: var(--olive); }
 .gf-tag--accent .gf-icon { color: var(--ink); }
 
@@ -172,6 +173,7 @@ button.gf-link { background: none; border: 0; padding: 0; font: inherit; font-we
 .gf-list { list-style: none; margin: 0; padding: 0; background: var(--surface-raised); border: 1px solid var(--line); border-radius: var(--radius-lg); overflow: hidden; }
 .gf-row { display: flex; align-items: center; gap: var(--space-3); min-height: 60px; padding: var(--space-2) var(--space-3) var(--space-2) var(--space-4); }
 .gf-list > li + li { border-top: 1px solid var(--line); }
+.gf-row--me { background: var(--accent-soft); }
 .gf-row__main { flex: 1; min-width: 0; }
 .gf-row__title { display: block; font: 700 16px/22px var(--font-sans); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .gf-row__sub { display: block; font-size: 14px; line-height: 20px; color: var(--ink-muted); }

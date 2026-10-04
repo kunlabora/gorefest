@@ -82,7 +82,7 @@ class GameDayRoutesTest {
 
         page.one("h1").text() shouldBe "Gorefest #7"
         page.one("main > .gf-stack > .gf-kicker").text() shouldBe "Sun 27 Sep 2026 · Anna's place"
-        page.players() shouldContainExactly listOf("Tim You Host")
+        page.players() shouldContainExactly listOf("Tim Bringing nothing yet You Host")
         page.select("#players button").shouldBeEmpty()
     }
 
@@ -189,7 +189,7 @@ class GameDayRoutesTest {
 
         val page = client.get("/gamedays/$gorefest7").page()
 
-        page.players() shouldContainExactly listOf("Unknown player Host", "Tim You")
+        page.players() shouldContainExactly listOf("Unknown player Bringing nothing yet Host", "Tim Bringing nothing yet You")
         page.select("#players .gf-avatar").first()!!.text() shouldBe "?"
     }
 
@@ -252,7 +252,7 @@ class GameDayRoutesTest {
             "Only the host can change this game day"
     }
 
-    /** One line per player row: name, "You" for the viewer, "Host" tag. */
+    /** One line per player row: name, how many games they bring, "You" for the viewer, "Host" tag. */
     private fun org.jsoup.nodes.Element.players() =
         select("#players li").map { row -> row.select(".gf-row__title, .gf-row__sub, .gf-tag").joinToString(" ") { it.text() } }
 }

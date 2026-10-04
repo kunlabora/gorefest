@@ -104,13 +104,15 @@ class ShelfRoutesTest {
 
     @Test
     fun `the game day shows the shelf with who brings what`() = test.webTest(session = kim) { client ->
-        given(GameBrought(gorefest7, kimId, brass), GameBrought(gorefest7, anna, azul))
+        given(GameBrought(gorefest7, kimId, brass), GameBrought(gorefest7, anna, azul), GameBrought(gorefest7, anna, BggId(13)))
 
         val page = client.get("/gamedays/$gorefest7").page()
+        page.select("#players li").map { it.one(".gf-row__title").text() to it.one(".gf-row__sub").text() } shouldContainExactly
+            listOf("Anna" to "Bringing 2 games", "Kim" to "Bringing 1 game")
 
-        page.select(".gf-sechead h2").first()!!.text() shouldBe "The shelf · 2"
+        page.select(".gf-sechead h2").first()!!.text() shouldBe "The shelf · 3"
         page.select(".gf-tile").map { it.one(".gf-tile__name").text() to it.one(".gf-tile__owner").text() } shouldContainExactly
-            listOf("Brass: Birmingham" to "K", "Azul" to "A")
+            listOf("Brass: Birmingham" to "K", "Azul" to "A", "CATAN" to "A")
         page.one(".gf-sechead a").attr("href") shouldBe bringPage
     }
 
