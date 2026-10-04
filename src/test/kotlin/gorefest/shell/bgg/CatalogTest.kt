@@ -26,4 +26,17 @@ class CatalogTest {
         }
         json shouldContain "\"rank\""
     }
+
+    @Test
+    suspend fun `refreshing replaces the games we hold and adds none`() {
+        val catalog = Catalog(TestDatabase.db)
+        val other = DevCatalog.games.first { it.name == "Azul" }
+        catalog.put(listOf(brass), Instant.EPOCH)
+
+        catalog.refreshCached(listOf(brass.copy(thumbnail = "/new.webp"), other), Instant.EPOCH)
+
+        catalog[brass.id]?.thumbnail shouldBe "/new.webp"
+        catalog[other.id] shouldBe null
+        Catalog(TestDatabase.db).also { it.load() }[brass.id]?.thumbnail shouldBe "/new.webp"
+    }
 }

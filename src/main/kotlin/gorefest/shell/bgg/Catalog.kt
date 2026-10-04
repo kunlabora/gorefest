@@ -36,6 +36,9 @@ class Catalog(private val db: Database) {
 
     fun missing(ids: Collection<BggId>): List<BggId> = ids.filterNot(games::containsKey)
 
+    /** Overwrites the games we already hold with [source]'s version, for a fake BGG whose data changes between runs. */
+    suspend fun refreshCached(source: Collection<Game>, at: Instant) = put(source.filter { games.containsKey(it.id) }, at)
+
     suspend fun put(fetched: Collection<Game>, at: Instant) {
         if (fetched.isEmpty()) return
         db.transaction {

@@ -58,9 +58,9 @@ class FakeBggApi(private val catalog: List<Game> = DevCatalog.games) : BggApi {
     /** 15 games, the same ones every time for the same username, plus every cover game in the catalog so dev mode shows them all. */
     private fun defaultCollection(username: String): Set<BggId> {
         val seed = username.lowercase().hashCode()
-        val covers = DevCatalog.covers.map { it.id }.toSet()
-        val picks = catalog.filter { it.id !in covers }.sortedBy { (it.id.value * 31 + seed).hashCode() }.take(15).map { it.id }
-        return picks.toSet() + catalog.map { it.id }.filter { it in covers }
+        val coverIds = DevCatalog.coverGames.map { it.id }.toSet()
+        val picks = catalog.filter { it.id !in coverIds }.sortedBy { (it.id.value * 31 + seed).hashCode() }.take(15).map { it.id }
+        return picks.toSet() + catalog.map { it.id }.filter { it in coverIds }
     }
 }
 
@@ -142,28 +142,28 @@ object DevCatalog {
     /**
      * Real BGG box art for judging how covers look, with placeholder stats: BGG blocks scripted
      * access, so only the images (in `static/covers`) are the real thing. Dev mode only
-     * (`DevCatalog.games + covers`); tests keep to [games] so the models see a stable catalog.
+     * (`DevCatalog.games + coverGames`); tests keep to [games] so the models see a stable catalog.
      */
-    val covers: List<Game> = listOf(
-        cover(193483, "Dwar7s Fall", "dwar7sfall"),
-        cover(409693, "Flatiron", "flatiron"),
-        cover(246192, "Gizmos", "gizmos", year = 2018, time = 40..70, weight = 2.2, mechanics = setOf("Engine Building", "Card Drafting")),
-        cover(379633, "Humanity", "humanity"),
-        cover(73316, "Magnum Sal", "magnumsal"),
-        cover(256623, "Realm of Sand", "realmofsand"),
-        cover(368058, "The Wolves", "thewolves"),
-        cover(242639, "Treasure Island", "treasureisland"),
-        cover(446493, "Recall", "recall"),
-        cover(343433, "Tír na nÓg", "tirnanog"),
-        cover(315043, "Scape Goat", "scapegoat"),
-        cover(417323, "Panda Spin", "pandaspin"),
-        cover(327778, "ito", "ito", year = 2019, players = 2..14, best = setOf(5, 6, 7), time = 15..30, weight = 1.1, mechanics = setOf("Cooperative Game", "Communication Limits"), categories = party),
-        cover(422041, "Aquatica: Duellum", "aquatica-duellum", players = 2..2, best = setOf(2)),
-        cover(283393, "Aquatica", "aquatica"),
-        cover(378476, "Mycelia", "mycelia"),
+    val coverGames: List<Game> = listOf(
+        coverGame(193483, "Dwar7s Fall", "dwar7sfall"),
+        coverGame(409693, "Flatiron", "flatiron"),
+        coverGame(246192, "Gizmos", "gizmos", year = 2018, time = 40..70, weight = 2.2, mechanics = setOf("Engine Building", "Card Drafting")),
+        coverGame(379633, "Humanity", "humanity"),
+        coverGame(73316, "Magnum Sal", "magnumsal"),
+        coverGame(256623, "Realm of Sand", "realmofsand"),
+        coverGame(368058, "The Wolves", "thewolves"),
+        coverGame(242639, "Treasure Island", "treasureisland"),
+        coverGame(446493, "Recall", "recall"),
+        coverGame(343433, "Tír na nÓg", "tirnanog"),
+        coverGame(315043, "Scape Goat", "scapegoat"),
+        coverGame(417323, "Panda Spin", "pandaspin"),
+        coverGame(327778, "ito", "ito", year = 2019, players = 2..14, best = setOf(5, 6, 7), time = 15..30, weight = 1.1, mechanics = setOf("Cooperative Game", "Communication Limits"), categories = party),
+        coverGame(422041, "Aquatica: Duellum", "aquatica-duellum", players = 2..2, best = setOf(2)),
+        coverGame(283393, "Aquatica", "aquatica"),
+        coverGame(378476, "Mycelia", "mycelia"),
     )
 
-    private fun cover(
+    private fun coverGame(
         id: Int, name: String, file: String, large: String = file, year: Int? = null, players: IntRange = 2..4, best: Set<Int> = setOf(3),
         time: IntRange = 30..60, weight: Double = 2.5, mechanics: Set<String> = emptySet(), categories: Set<String> = emptySet(),
     ) = Game(

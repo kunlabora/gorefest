@@ -7,12 +7,12 @@ import org.junit.jupiter.api.Test
 class FakeBggApiTest {
     @Test
     suspend fun `a dev collection always includes every cover game`() {
-        val api = FakeBggApi(DevCatalog.games + DevCatalog.covers)
+        val api = FakeBggApi(DevCatalog.games + DevCatalog.coverGames)
 
         val ready = api.collection("anyone") as CollectionResult.Ready
 
-        ready.games shouldContainAll DevCatalog.covers.map { it.id }
-        ready.games.size shouldBe DevCatalog.covers.size + 15
+        ready.games shouldContainAll DevCatalog.coverGames.map { it.id }
+        ready.games.size shouldBe DevCatalog.coverGames.size + 15
     }
 
     @Test

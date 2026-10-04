@@ -16,6 +16,8 @@ import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
 import java.time.Clock
 
+private val devGames = DevCatalog.games + DevCatalog.coverGames
+
 fun main() {
     fun env(name: String, default: String) = AppConfig.setting(name) ?: default
 
@@ -30,9 +32,13 @@ fun main() {
     // BGG's XML API needs a registered application's token. Without one, dev mode uses a fake BGG
     // and production runs with BGG switched off until the token arrives.
     val bggApi = AppConfig.setting("BGG_TOKEN")?.let(::XmlBggApi)
-        ?: if (config.dev) FakeBggApi(DevCatalog.games + DevCatalog.covers) else UnavailableBggApi.also { LoggerFactory.getLogger("gorefest").warn("No BGG_TOKEN: BGG features are off") }
+        ?: if (config.dev) FakeBggApi(devGames) else UnavailableBggApi.also { LoggerFactory.getLogger("gorefest").warn("No BGG_TOKEN: BGG features are off") }
     val app = App(db, Clock.systemUTC(), config = config, mailer = mailer, bggApi = bggApi)
-    runBlocking { app.start() }
+    runBlocking {
+        app.start()
+        // The fake catalog is code, but the metadata cache outlives runs: don't let it serve last week's art.
+        if (bggApi is FakeBggApi) app.catalog.refreshCached(devGames, app.clock.instant())
+    }
     app.startBackgroundJobs()
 
     embeddedServer(Netty, port = env("PORT", "8080").toInt(), host = env("HOST", "127.0.0.1")) {
