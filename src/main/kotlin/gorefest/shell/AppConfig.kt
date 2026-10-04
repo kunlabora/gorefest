@@ -20,6 +20,25 @@ data class AppConfig(val baseUrl: String, val secretKey: String, val dev: Boolea
         }
 
         /**
+         * Dev mode uses a public secret and exposes every login code at `/dev/mailbox`, so it must
+         * never run on a real deployment. Returns what gives the deployment away, or null when fine.
+         */
+        fun devModeConflict(config: AppConfig, host: String, realMailConfigured: Boolean): String? {
+            if (!config.dev) return null
+            val signs = buildList {
+                val baseHost = runCatching { java.net.URI(config.baseUrl).host }.getOrNull()
+                if (config.secureCookies || baseHost !in LOOPBACK) add("BASE_URL is ${config.baseUrl}")
+                if (host !in LOOPBACK) add("HOST is $host")
+                if (realMailConfigured) add("a mail provider is configured")
+            }
+            return if (signs.isEmpty()) null
+            else "Refusing to start in dev mode (GOREFEST_ENV is unset or 'dev') on what looks like a real deployment: " +
+                signs.joinToString("; ") + ". Set GOREFEST_ENV=prod."
+        }
+
+        private val LOOPBACK = setOf("localhost", "127.0.0.1", "[::1]", "::1")
+
+        /**
          * An environment variable, with empty meaning unset: the env file has lines like
          * `BGG_TOKEN=` that systemd passes on as empty strings.
          */
