@@ -79,6 +79,14 @@ object DevCatalog {
     private val euro = setOf("Economic")
     private val party = setOf("Party Game")
 
+    /** Box art for the older dev games, by name: files in `static/covers`. The rest show the monogram fallback. */
+    private val coverFiles = mapOf(
+        "7 Wonders" to "7wonders", "Agricola" to "agricola", "Carcassonne" to "carcassonne", "CATAN" to "catan", "Concordia" to "concordia",
+        "Dixit" to "dixit", "Dominion" to "dominion", "King of Tokyo" to "kingoftokyo", "Pandemic" to "pandemic", "Power Grid" to "powergrid",
+        "Puerto Rico" to "puertorico", "The Resistance: Avalon" to "resistance-avalon", "Terra Mystica" to "terramystica",
+        "Ticket to Ride" to "tickettoride", "Twilight Struggle" to "twilightstruggle",
+    )
+
     val games: List<Game> = listOf(
         game(224517, "Brass: Birmingham", 2018, 2..4, setOf(3, 4), 60..120, 3.9, 1, setOf("Hand Management", "Network and Route Building", "Loans"), euro + "Industry / Manufacturing"),
         game(342942, "Ark Nova", 2021, 1..4, setOf(2), 90..150, 3.8, 2, setOf("Hand Management", "Tags", "Tableau Building"), setOf("Animals", "Economic")),
@@ -126,11 +134,14 @@ object DevCatalog {
         game(39856, "Dixit", 2008, 3..6, setOf(5, 6), 30..30, 1.2, 330, setOf("Storytelling", "Voting"), party + "Card Game"),
         game(128882, "The Resistance: Avalon", 2012, 5..10, setOf(7, 8), 30..30, 1.8, 290, setOf("Hidden Roles", "Voting", "Team-Based Game"), party + "Bluffing" + "Deduction"),
         game(131357, "Coup", 2012, 2..6, setOf(5, 6), 15..15, 1.4, 410, setOf("Hidden Roles", "Player Elimination"), setOf("Bluffing", "Card Game", "Political")),
-    )
+   
+    ).map { game ->
+        coverFiles[game.name]?.let { game.copy(thumbnail = "/static/covers/$it.webp", image = "/static/covers/$it.webp") } ?: game
+    }
 
     /**
      * Real BGG box art for judging how covers look, with placeholder stats: BGG blocks scripted
-     * access, so only the images (in `static/tmp`, not in git) are the real thing. Dev mode only
+     * access, so only the images (in `static/covers`) are the real thing. Dev mode only
      * (`DevCatalog.games + covers`); tests keep to [games] so the models see a stable catalog.
      */
     val covers: List<Game> = listOf(
@@ -149,14 +160,14 @@ object DevCatalog {
         cover(327778, "ito", "ito", year = 2019, players = 2..14, best = setOf(5, 6, 7), time = 15..30, weight = 1.1, mechanics = setOf("Cooperative Game", "Communication Limits"), categories = party),
         cover(422041, "Aquatica: Duellum", "aquatica-duellum", players = 2..2, best = setOf(2)),
         cover(283393, "Aquatica", "aquatica"),
-        cover(378476, "Mycelia", "mycelia", large = "pic7431245"),
+        cover(378476, "Mycelia", "mycelia"),
     )
 
     private fun cover(
         id: Int, name: String, file: String, large: String = file, year: Int? = null, players: IntRange = 2..4, best: Set<Int> = setOf(3),
         time: IntRange = 30..60, weight: Double = 2.5, mechanics: Set<String> = emptySet(), categories: Set<String> = emptySet(),
     ) = Game(
-        id = BggId(id), name = name, year = year, thumbnail = "/static/tmp/$file.webp", image = "/static/tmp/$large.webp",
+        id = BggId(id), name = name, year = year, thumbnail = "/static/covers/$file.webp", image = "/static/covers/$large.webp",
         minPlayers = players.first, maxPlayers = players.last, bestPlayers = best, recommendedPlayers = players.toSet() - best,
         minPlaytime = time.first, maxPlaytime = time.last, weight = weight, mechanics = mechanics, categories = categories,
     )
