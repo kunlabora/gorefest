@@ -80,4 +80,25 @@ class SuggestionsRoutesTest {
         relax.text() shouldBe "Try 90 minutes: 1 game fits"
         relax.attr("_") shouldContain "#time-90m"
     }
+
+    @Test
+    fun `without anyone's taste, the page says what the picks go by and offers the taste round`() = test.webTest(session = kim) { client ->
+        val fragment = client.get("/gamedays/$gorefest7/suggestions").fragment()
+
+        fragment.one(".gf-notice").text() shouldContain "Nobody at this table has done a taste round yet"
+        fragment.one(".gf-notice").text() shouldContain "player count, playing time"
+        fragment.one("a[href=/gamedays/$gorefest7/taste]").text() shouldBe "Take the 2-minute taste round"
+    }
+
+    @Test
+    fun `when only others are unknown, it names them and leaves the viewer's own round out`() = test.webTest(session = kim) { client ->
+        val answers = List(5) { gorefest.core.ComparisonRecorded(kimId, id("Azul"), id("Brass: Birmingham"), gorefest.core.ComparisonResult.A, gorefest.core.Basis.VIBE, test.clock.instant()) }
+        app.db.transaction { app.store.append(answers) }
+        app.catchUp()
+
+        val fragment = client.get("/gamedays/$gorefest7/suggestions").fragment()
+
+        fragment.one(".gf-notice").text() shouldBe "Picks for Anna go by player count and playing time: we haven't learned their taste yet."
+        fragment.select("a[href=/gamedays/$gorefest7/taste]") shouldHaveSize 0
+    }
 }

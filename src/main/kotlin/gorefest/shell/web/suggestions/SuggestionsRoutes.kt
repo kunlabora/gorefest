@@ -40,7 +40,7 @@ fun Route.suggestionsRoutes(app: App) {
             val gameDay = memberGameDay(app, me) ?: return@authenticated call.respond(HttpStatusCode.NotFound)
             val names = login.names(gameDay.players)
             val (suggestions, size) = suggestionsFor(gameDay, call.parameters, me)
-            val view = TableView(gameDay, names, call.parameters.getAll("players")?.toSet(), call.parameters["time"] ?: "Any", suggestions, size)
+            val view = TableView(gameDay, names, call.parameters.getAll("players")?.toSet(), call.parameters["time"] ?: "Any", suggestions, size, me.id)
             call.respondHtml { tablePage(view) }
         }
     }
@@ -50,7 +50,8 @@ fun Route.suggestionsRoutes(app: App) {
             val me = contextOf<CurrentPlayer>()
             val gameDay = memberGameDay(app, me) ?: return@authenticated call.respond(HttpStatusCode.NotFound)
             val (suggestions, size) = suggestionsFor(gameDay, call.parameters, me)
-            respondFragment { suggestions(suggestions, size) }
+            val names = login.names(gameDay.players)
+            respondFragment { suggestions(suggestions, size, gameDay, names, me.id) }
         }
     }
 }

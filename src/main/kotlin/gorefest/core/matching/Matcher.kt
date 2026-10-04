@@ -14,7 +14,8 @@ data class TablePlayer(val id: PlayerId, val name: String, val games: PlayerGame
 data class Suggestion(val game: Game, val minutes: Int, val reason: String, val score: Double)
 
 sealed interface Suggestions {
-    data class Found(val top: List<Suggestion>) : Suggestions
+    /** [unknown]: table players with too few answers for their taste to count much; the picks lean on fit for them. */
+    data class Found(val top: List<Suggestion>, val unknown: List<PlayerId> = emptyList()) : Suggestions
 
     /** Nothing passes the filters. [relaxTo] is a time budget at which [fitsThen] games would fit, if any. */
     data class NothingFits(val title: String, val text: String, val relaxTo: Int? = null, val fitsThen: Int = 0) : Suggestions
@@ -50,6 +51,8 @@ class Matcher(
 
         val predictions = table.associate { p -> p.id to predictor.enjoyment(p.games, fitting.map { it.first }, now) }
         val names = table.associate { it.id to it.name }
+        val unknown = table.filter { it.games.history.comparisons.size < KNOWN_AFTER }.map { it.id }
+        val nobodyKnown = unknown.size == n
         return Suggestions.Found(
             fitting.map { (game, entry) ->
                 val means = table.map { p -> predictions.getValue(p.id).getValue(game.id).mean }
@@ -60,9 +63,10 @@ class Matcher(
                 val eager = entry.eager.firstOrNull { it in names }
                 val score = mean - spreadPenalty * spread + (if (novel) noveltyBonus else 0.0) + (if (eager != null) wishBonus else 0.0)
                 val minutes = estimatedMinutes(game, n, speed)
-                val reason = reason(game, table, means, spread, novel, eager?.let(names::get), minutes, timeBudget)
+                val reason = reason(game, table, means, spread, novel, eager?.let(names::get), minutes, timeBudget, nobodyKnown)
                 Suggestion(game, minutes, reason, score)
             }.sortedByDescending { it.score }.take(count),
+            unknown,
         )
     }
 
@@ -77,12 +81,19 @@ class Matcher(
 
     private fun reason(
         game: Game, table: List<TablePlayer>, means: List<Double>, spread: Double, novel: Boolean,
-        eagerOwner: String?, minutes: Int, budget: Int?,
+        eagerOwner: String?, minutes: Int, budget: Int?, nobodyKnown: Boolean,
     ): String {
         val n = table.size
         val everyoneRated = table.all { game.id in it.games.history.comparedGames }
         return when {
             eagerOwner != null -> "$eagerOwner brought it and has been itching to play."
+            // Without anyone's taste there is nothing to say about enjoyment: only about fit.
+            nobodyKnown -> when {
+                n in game.bestPlayers && game.bestPlayers.size <= 2 -> "Best at exactly ${words(n)}, which is you."
+                novel -> "Nobody's played it yet: something new for the table."
+                budget != null && minutes <= budget - 20 -> "Fits your ${duration(budget)} with room for snacks."
+                else -> "Plays well with ${words(n)}."
+            }
             novel && means.all { it >= 0 } -> "Nobody's played it and everyone's likely to enjoy it."
             everyoneRated && means.all { it > 0.3 } && spread < 0.5 -> "Safe bet: ${if (n == 2) "both" else "all ${words(n)}"} of you rated it highly."
             n in game.bestPlayers && game.bestPlayers.size <= 2 -> "Best at exactly ${words(n)}, which is you."
@@ -93,6 +104,9 @@ class Matcher(
     }
 
     companion object {
+        /** Answers after which a player's taste counts for something; below it we say the picks are a fit-only guess for them. */
+        const val KNOWN_AFTER = 5
+
         /** Time budgets offered when nothing fits, in minutes. */
         val BUDGETS = listOf(45, 90, 120, 180, 240)
 
