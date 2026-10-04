@@ -266,4 +266,7 @@ div.gf-tile { cursor: default; }
 .gf-credit { margin: var(--space-4) 0 0; font-size: 13px; line-height: 18px; color: var(--ink-muted); text-align: center; }
 .gf-credit a, .gf-bgglink { color: inherit; text-decoration: none; }
 .gf-credit a { text-decoration: underline; }
+/* The logo is dark ink on transparent: keep it on a light pill so it reads in the dark theme too. */
+.gf-credit .gf-credit__logo { display: block; width: max-content; margin: var(--space-2) auto 0; padding: 4px 8px; border-radius: var(--radius-sm); background: var(--light-yellow); text-decoration: none; }
+.gf-credit__logo img { display: block; }
 .gf-bgglink:hover, .gf-bgglink:focus-visible { text-decoration: underline; }

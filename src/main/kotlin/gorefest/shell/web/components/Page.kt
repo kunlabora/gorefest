@@ -16,6 +16,7 @@ import kotlinx.html.form
 import kotlinx.html.head
 import kotlinx.html.header
 import kotlinx.html.id
+import kotlinx.html.img
 import kotlinx.html.lang
 import kotlinx.html.link
 import kotlinx.html.main
@@ -75,11 +76,15 @@ fun HTML.page(
     }
 }
 
-/** BoardGameGeek's data and box art are on every screen, so every screen credits it. */
+/** BoardGameGeek's data and box art are on every screen, so every screen credits it, in words and with its "Powered by BGG" logo. */
 fun FlowContent.bggCredit() = p("gf-credit") {
     +"Game data and images from "
     a("https://boardgamegeek.com", target = "_blank") { attributes["rel"] = "noopener noreferrer"; +"BoardGameGeek" }
     +"."
+    a("https://boardgamegeek.com", target = "_blank", classes = "gf-credit__logo") {
+        attributes["rel"] = "noopener noreferrer"
+        img(src = "/static/poweredbybgg.webp", alt = "Powered by BGG") { width = "120"; height = "35"; attributes["loading"] = "lazy" }
+    }
 }
 
 fun FlowContent.appBarTitle(text: String) = span("gf-appbar__title") { +text }
