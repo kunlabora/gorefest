@@ -42,8 +42,8 @@ fun HTML.invitePage(view: InviteLanding) {
             if (!view.loggedIn) p("gf-hint") { style = "text-align: center"; +"Just your email. No password, no app to install." }
         },
     ) {
-        div {
-            style = "display: flex; align-items: center; gap: var(--space-3); padding-top: var(--space-3)"
+        div("gf-media") {
+            style = "padding-top: var(--space-3)"
             avatar(gameDay.host, view.names[gameDay.host], size = "gf-avatar--lg")
             p("gf-muted") {
                 style = "margin: 0"
@@ -63,8 +63,8 @@ fun HTML.invitePage(view: InviteLanding) {
         }
         if (view.shelf.isNotEmpty()) div("gf-section") {
             h2("gf-h2") { +"On the shelf" }
-            div {
-                style = "display: flex; align-items: center; gap: var(--space-4)"
+            div("gf-media") {
+                style = "--gap: var(--space-4)"
                 div("gf-fan") {
                     // Each box tilts a little differently, like a hand of cards.
                     view.shelf.take(4).zip(listOf(-6, 3, -2, 5)).forEach { (game, tilt) -> art(game, extraStyle = "--r:${tilt}deg") }

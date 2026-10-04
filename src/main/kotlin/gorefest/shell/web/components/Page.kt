@@ -96,10 +96,7 @@ fun FlowContent.backLink(href: String, label: String) = a(href, classes = "gf-ic
 }
 
 /** A small ghost action at the right end of the app bar ("Edit", "Done for now", "Skip"). */
-fun FlowContent.appBarAction(href: String, label: String) = a(href, classes = "gf-btn gf-btn--ghost gf-btn--sm") {
-    style = "margin-left: auto"
-    +label
-}
+fun FlowContent.appBarAction(href: String, label: String) = a(href, classes = "gf-btn gf-btn--ghost gf-btn--sm gf-appbar__end") { +label }
 
 /** An icon from docs/design/icons, inlined so it takes the text colour. */
 fun HTMLTag.icon(name: String) = unsafe { +Icons.svg(name) }
@@ -116,8 +113,7 @@ object Icons {
     }
 }
 
-fun FlowContent.logoutButton() = form(action = "/logout", method = FormMethod.post) {
-    style = "margin-left: auto"
+fun FlowContent.logoutButton() = form(action = "/logout", method = FormMethod.post, classes = "gf-appbar__end") {
     button(type = ButtonType.submit, classes = "gf-btn gf-btn--ghost gf-btn--sm") { +"Log out" }
 }
 

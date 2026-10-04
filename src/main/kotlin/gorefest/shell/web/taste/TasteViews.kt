@@ -35,10 +35,10 @@ private fun FlowContent.wizardContent(step: WizardStep) {
     progress(round.step, total)
     div("gf-stack") {
         if (pair.basis == Basis.PLAYED) {
-            span("gf-tag gf-tag--olive") { style = "align-self: flex-start"; icon("check"); +"You've played both" }
+            span("gf-tag gf-tag--olive gf-tag--start") { icon("check"); +"You've played both" }
             h1("gf-h1") { +"Which did you enjoy more?" }
         } else {
-            span("gf-tag gf-tag--accent") { style = "align-self: flex-start"; icon("unplayed"); +"Unplayed pair" }
+            span("gf-tag gf-tag--accent gf-tag--start") { icon("unplayed"); +"Unplayed pair" }
             h1("gf-h1") { +"Which would you rather try?" }
         }
     }
