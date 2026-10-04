@@ -18,7 +18,10 @@ sealed interface CollectionResult {
 }
 
 /** BGG said "slow down" (429) or is unavailable (5xx). */
-class BggUnavailable(message: String) : RuntimeException(message)
+open class BggUnavailable(message: String) : RuntimeException(message)
+
+/** BGG rejected our application token (401). Retrying won't help until BGG_TOKEN is fixed. */
+class BggUnauthorized(message: String) : BggUnavailable(message)
 
 /** The BGG XML API2 calls we use. Implementations don't rate-limit; [BggGateway] does. */
 interface BggApi {
