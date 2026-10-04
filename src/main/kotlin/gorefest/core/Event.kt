@@ -20,6 +20,7 @@ object Tags {
     fun player(id: PlayerId) = Tag("player:$id")
     fun gameDay(id: GameDayId) = Tag("gameday:$id")
     fun game(id: BggId) = Tag("game:$id")
+    fun datePoll(id: DatePollId) = Tag("datepoll:$id")
 
     /** A BGG username, case-insensitive like BGG itself. */
     fun bggUser(username: String) = Tag("bgg:${username.lowercase()}")
@@ -153,4 +154,47 @@ data class PlayLogged(
 @SerialName("GameDayEnded")
 data class GameDayEnded(val gameDay: GameDayId) : Event {
     override val tags get() = setOf(Tags.gameDay(gameDay))
+}
+
+/** A host asks a group which of these [dates] suits them. [timeZone] is the zone the dates are in, for the game day made from the winner. */
+@Serializable
+@SerialName("DatePollCreated")
+data class DatePollCreated(
+    val poll: DatePollId,
+    val host: PlayerId,
+    val title: String,
+    val place: String,
+    val dates: List<@Serializable(with = LocalDateSerializer::class) LocalDate>,
+    val timeZone: String,
+) : Event {
+    override val tags get() = setOf(Tags.datePoll(poll), Tags.player(host))
+}
+
+/** A player came in through the poll's invite link. */
+@Serializable
+@SerialName("DatePollJoined")
+data class DatePollJoined(val poll: DatePollId, val player: PlayerId) : Event {
+    override val tags get() = setOf(Tags.datePoll(poll), Tags.player(player))
+}
+
+/** The dates this player can make; it replaces their earlier answer. Dates left out mean "can't". */
+@Serializable
+@SerialName("DatePollAnswered")
+data class DatePollAnswered(
+    val poll: DatePollId,
+    val player: PlayerId,
+    val available: List<@Serializable(with = LocalDateSerializer::class) LocalDate>,
+) : Event {
+    override val tags get() = setOf(Tags.datePoll(poll), Tags.player(player))
+}
+
+/** The host picked [date]; the poll is over and [gameDay] was created for it. */
+@Serializable
+@SerialName("DatePollClosed")
+data class DatePollClosed(
+    val poll: DatePollId,
+    @Serializable(with = LocalDateSerializer::class) val date: LocalDate,
+    val gameDay: GameDayId,
+) : Event {
+    override val tags get() = setOf(Tags.datePoll(poll), Tags.gameDay(gameDay))
 }

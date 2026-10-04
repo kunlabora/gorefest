@@ -22,6 +22,7 @@ A story is done when every criterion is ticked and covered by a test (decider gi
 | S14 | [Returning-player top-up](#s14-returning-player-top-up) | ✅ | S10      |
 | S15 | [Taste model v1: features, appeal vs enjoyment](#s15-taste-model-v1-features-appeal-vs-enjoyment) | ✅ | S12 |
 | S16 | [Auto-close and summary](#s16-auto-close-and-summary) | ✅   | S12        |
+| S17 | [Find a date with a date poll](#s17-find-a-date-with-a-date-poll) | ✅ | S2, S5 |
 
 S1–S13 is the MVP. S14–S16 make it good.
 
@@ -211,3 +212,16 @@ Follow-ups, not blocking:
 - [x] `GameDayEnded` at midnight in the game day's time zone (checked every 5 minutes; idempotent)
 - [x] Everyone who joined gets a summary email: what was played, by whom, how long (once: only the run that ends it mails)
 - [x] No more bringing, joining or play logging after close
+
+## S17 Find a date with a date poll
+
+*As a host I want to know which date suits the group best before I set up a game day.*
+
+- [x] A host starts a poll with a title, a place and two to fourteen dates in the future (`DatePollCreated`); the host is in it from the start
+- [x] People come in through a signed invite link (`/p/{token}`), like game days: no email invites, everyone has a profile (`DatePollJoined`)
+- [x] Each participant ticks the dates they can make, yes or no, and can change their answer until the pick (`DatePollAnswered`; saves as you tick)
+- [x] Everyone in the poll sees who can make which date, who has yet to answer, and the best date so far (most people; ties go to the earliest)
+- [x] Only the host picks. The poll closes and the game day is created with the picked date, the title, the place and the time zone, and the host plus everyone who ticked that date already in it (`DatePollClosed`, `GameDayCreated`, `PlayerJoined`)
+- [x] A closed poll's invite says the date is picked; people who weren't available aren't on the game day and are told how to ask for the link
+- [x] Open polls show on the home page; "Find a date" is offered next to "Host a game day"
+- [ ] Nudge people who haven't answered (needs a way to reach them: only in-app so far)

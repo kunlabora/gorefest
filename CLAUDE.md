@@ -5,6 +5,7 @@ Helps a group of boardgamers pick the games they'll enjoy most at a game day, us
 ## Vocabulary (use these terms in code)
 
 - **Game day**: an event hosted by one player. Has a free-text title (e.g. "Gorefest #7").
+- **Date poll**: a host asks a group which of a few dates suits them, before there is a game day. People answer yes/no per date; the host picks, and the game day is created from the pick.
 - **Collection**: games a player owns (synced from BGG).
 - **Shelf**: games brought to a specific game day.
 - **Candidates**: shelf games that fit a table (player count, time budget).
@@ -34,9 +35,9 @@ Helps a group of boardgamers pick the games they'll enjoy most at a game day, us
 
 ### Events (initial)
 
-`PlayerRegistered`, `LoggedIn`, `BggAccountLinked`, `GameDayCreated`, `GameDayDetailsChanged`, `InviteLinkRotated`, `PlayerJoined`, `GameBrought`, `GameUnbrought`, `PlayWishChanged`, `ComparisonRecorded(player, a, b, result, basis, at)`, `GamePlayStatusDeclared`, `PlayLogged(gameday, game, players, minutes)`, `GameDayEnded`. `core/Event.kt` is the authoritative list.
+`PlayerRegistered`, `LoggedIn`, `BggAccountLinked`, `GameDayCreated`, `GameDayDetailsChanged`, `InviteLinkRotated`, `PlayerJoined`, `GameBrought`, `GameUnbrought`, `PlayWishChanged`, `ComparisonRecorded(player, a, b, result, basis, at)`, `GamePlayStatusDeclared`, `PlayLogged(gameday, game, players, minutes)`, `GameDayEnded`, and for date polls `DatePollCreated`, `DatePollJoined`, `DatePollAnswered`, `DatePollClosed`. `core/Event.kt` is the authoritative list.
 
-Tag convention: `player:{id}`, `gameday:{id}`, `game:{bggId}`.
+Tag convention: `player:{id}`, `gameday:{id}`, `game:{bggId}`, `datepoll:{id}`.
 
 ## Code layout and conventions
 
@@ -56,7 +57,7 @@ Tag convention: `player:{id}`, `gameday:{id}`, `game:{bggId}`.
   - Rolling back to an older jar after a newer one wrote a new event type fails replay. Deploy forward, or restore.
 - **Deciders** are `object`s implementing `Decider`. Keep the query as narrow as the invariant allows, because anything outside it can't conflict (see `JoinGameDayDecider`).
 - Deciders and projections end their `when` with `else -> state`, so adding an event doesn't touch unrelated code.
-- **Web packages by feature**, named after the vocabulary: `web.auth`, `web.bgg` (linking, collection), `web.gameday` (hub, create/edit, readiness), `web.invite`, `web.shelf` (bringing games), `web.taste` (wizard, favourites), `web.suggestions`, `web.checkpoint`, `web.dev`. Shared plumbing (`Server`, `Responses`, `CurrentPlayer`, `memberGameDay`) sits in `web` itself, components in `web.components`. Tests mirror this.
+- **Web packages by feature**, named after the vocabulary: `web.auth`, `web.bgg` (linking, collection), `web.gameday` (hub, create/edit, readiness), `web.invite`, `web.datepoll` (find a date), `web.shelf` (bringing games), `web.taste` (wizard, favourites), `web.suggestions`, `web.checkpoint`, `web.dev`. Shared plumbing (`Server`, `Responses`, `CurrentPlayer`, `memberGameDay`) sits in `web` itself, components in `web.components`. Tests mirror this.
 - **Web layer, three levels.**
   - `XRoutes.kt`: HTTP only. Parse the request, run the decider, gather data into a small view model, and pick the view to respond with.
   - `XViews.kt`: the pages and fragments for that feature, as `HTML.xPage(view)` and `TagConsumer<*>.fragment(...)` functions, built from components.

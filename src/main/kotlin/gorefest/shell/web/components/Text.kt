@@ -6,6 +6,7 @@ import java.util.Locale
 
 private val longDate = DateTimeFormatter.ofPattern("EEE d MMM yyyy", Locale.ENGLISH)
 private val fullDate = DateTimeFormatter.ofPattern("EEEE d MMMM", Locale.ENGLISH)
+private val shortDate = DateTimeFormatter.ofPattern("EEE d MMM", Locale.ENGLISH)
 private val shortMonth = DateTimeFormatter.ofPattern("MMM", Locale.ENGLISH)
 
 /** "Sun 27 Sep 2026" */
@@ -13,6 +14,9 @@ fun LocalDate.long(): String = format(longDate)
 
 /** "Sunday 27 September" */
 fun LocalDate.full(): String = format(fullDate)
+
+/** "Sun 27 Sep" */
+fun LocalDate.short(): String = format(shortDate)
 
 /** "Sep" */
 fun LocalDate.monthShort(): String = format(shortMonth)

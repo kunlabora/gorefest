@@ -1,6 +1,7 @@
 package gorefest.shell.web
 
 import gorefest.core.Rejection
+import gorefest.core.datepoll.MAX_POLL_DATES
 
 /** The sentence a person sees for a decider's rejection: one place for all of them. */
 fun Rejection.message(): String = when (this) {
@@ -20,4 +21,12 @@ fun Rejection.message(): String = when (this) {
     Rejection.SameGameTwice -> "Compare two different games"
     is Rejection.AlreadyLinked -> "You've already linked $username"
     Rejection.BggAccountTaken -> "That BGG account is already linked to another player"
+    Rejection.NoSuchDatePoll -> "No such date poll"
+    Rejection.DatePollAlreadyExists -> "That date poll already exists"
+    Rejection.DatePollClosed -> "The date is already picked"
+    Rejection.NotInDatePoll -> "Join the poll first"
+    Rejection.OnlyHostCanPickDate -> "Only the host can pick the date"
+    Rejection.NotAnOption -> "That date isn't one of the options"
+    Rejection.TooFewDates -> "Give at least two dates to choose from"
+    Rejection.TooManyDates -> "That's a lot of dates: keep it to ${MAX_POLL_DATES}"
 }

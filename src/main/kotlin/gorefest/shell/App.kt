@@ -2,6 +2,8 @@ package gorefest.shell
 
 import gorefest.core.GameDayId
 import gorefest.core.gameday.GameDaySummary
+import gorefest.core.datepoll.DatePollBoard
+import gorefest.core.datepoll.DatePolls
 import gorefest.core.gameday.GameDays
 import gorefest.core.gameday.Plays
 import gorefest.core.gameday.GameDayPlays
@@ -63,7 +65,8 @@ class App(
     private val shelfProjector = Projector(Shelves, db, store)
     private val tasteProjector = Projector(Tastes, db, store)
     private val playProjector = Projector(Plays, db, store)
-    private val projectors = listOf(gameDayProjector, bggAccountProjector, shelfProjector, tasteProjector, playProjector)
+    private val datePollProjector = Projector(DatePolls, db, store)
+    private val projectors = listOf(gameDayProjector, bggAccountProjector, shelfProjector, tasteProjector, playProjector, datePollProjector)
 
     /** Read models: the latest snapshot of each projection, kept current by [commands] and [start]. */
     val gameDaysById: Map<GameDayId, GameDaySummary> get() = gameDayProjector.state
@@ -71,6 +74,7 @@ class App(
     val shelves: GameDayShelves get() = shelfProjector.state
     val tastes: PlayerTastes get() = tasteProjector.state
     val plays: GameDayPlays get() = playProjector.state
+    val datePolls: DatePollBoard get() = datePollProjector.state
 
     val commands = CommandHandler(db, store, afterAppend = { catchUp() })
 

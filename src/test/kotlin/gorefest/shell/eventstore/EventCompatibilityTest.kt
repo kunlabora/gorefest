@@ -8,6 +8,11 @@ import gorefest.core.ComparisonResult
 import gorefest.core.Event
 import gorefest.core.GameBrought
 import gorefest.core.GameDayCreated
+import gorefest.core.DatePollAnswered
+import gorefest.core.DatePollClosed
+import gorefest.core.DatePollCreated
+import gorefest.core.DatePollId
+import gorefest.core.DatePollJoined
 import gorefest.core.GameDayDetailsChanged
 import gorefest.core.GameDayEnded
 import gorefest.core.GameDayId
@@ -42,6 +47,7 @@ class EventCompatibilityTest {
     private val d1 = "00000000-0000-0000-0000-0000000000d1"
     private fun player(s: String) = PlayerId(Uuid.parse(s))
     private val gameDay = GameDayId.parse(d1)
+    private val poll = DatePollId.parse(d1)
 
     private val stored: List<Pair<String, Event>> = listOf(
         """{"type":"PlayerRegistered","player":"$p1"}""" to
@@ -58,6 +64,14 @@ class EventCompatibilityTest {
             InviteLinkRotated(gameDay, 2),
         """{"type":"PlayerJoined","gameDay":"$d1","player":"$p2"}""" to
             PlayerJoined(gameDay, player(p2)),
+        """{"type":"DatePollCreated","poll":"$d1","host":"$p1","title":"Gorefest #9","place":"Tim's","dates":["2026-10-09","2026-10-10"],"timeZone":"Europe/Brussels"}""" to
+            DatePollCreated(poll, player(p1), "Gorefest #9", "Tim's", listOf(LocalDate.parse("2026-10-09"), LocalDate.parse("2026-10-10")), "Europe/Brussels"),
+        """{"type":"DatePollJoined","poll":"$d1","player":"$p2"}""" to
+            DatePollJoined(poll, player(p2)),
+        """{"type":"DatePollAnswered","poll":"$d1","player":"$p2","available":["2026-10-10"]}""" to
+            DatePollAnswered(poll, player(p2), listOf(LocalDate.parse("2026-10-10"))),
+        """{"type":"DatePollClosed","poll":"$d1","date":"2026-10-10","gameDay":"$d1"}""" to
+            DatePollClosed(poll, LocalDate.parse("2026-10-10"), gameDay),
         """{"type":"GameBrought","gameDay":"$d1","player":"$p1","game":13}""" to
             GameBrought(gameDay, player(p1), BggId(13)),
         """{"type":"GameUnbrought","gameDay":"$d1","player":"$p1","game":13}""" to

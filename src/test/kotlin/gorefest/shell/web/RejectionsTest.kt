@@ -24,6 +24,14 @@ class RejectionsTest {
             Rejection.SameGameTwice to "Compare two different games",
             Rejection.AlreadyLinked("AnnaPlays") to "You've already linked AnnaPlays",
             Rejection.BggAccountTaken to "That BGG account is already linked to another player",
+            Rejection.NoSuchDatePoll to "No such date poll",
+            Rejection.DatePollAlreadyExists to "That date poll already exists",
+            Rejection.DatePollClosed to "The date is already picked",
+            Rejection.NotInDatePoll to "Join the poll first",
+            Rejection.OnlyHostCanPickDate to "Only the host can pick the date",
+            Rejection.NotAnOption to "That date isn't one of the options",
+            Rejection.TooFewDates to "Give at least two dates to choose from",
+            Rejection.TooManyDates to "That's a lot of dates: keep it to 14",
         ).forEach { (rejection, text) -> rejection.message() shouldBe text }
     }
 }

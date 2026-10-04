@@ -19,6 +19,17 @@ value class GameDayId(val value: Uuid) {
     }
 }
 
+/** A date poll: asking a group which of a few dates suits them, before there is a game day. */
+@Serializable
+@JvmInline
+value class DatePollId(val value: Uuid) {
+    override fun toString() = value.toString()
+
+    companion object {
+        fun parse(s: String) = DatePollId(Uuid.parse(s))
+    }
+}
+
 /** BoardGameGeek's id for a game. */
 @Serializable
 @JvmInline

@@ -51,7 +51,8 @@ fun Route.gameDayRoutes(app: App) {
         authenticated {
             val me = contextOf<CurrentPlayer>()
             val gameDays = with(GameDays) { app.gameDaysById.forPlayer(me.id) { zone -> clock.todayIn(zone) } }
-            call.respondHtml { homePage(gameDays, clock.todayIn(DEFAULT_TIME_ZONE), bggLinked = app.bggAccounts.isLinked(me.id)) }
+            val polls = app.datePolls.forPlayer(me.id).filter { it.open }
+            call.respondHtml { homePage(gameDays, polls, clock.todayIn(DEFAULT_TIME_ZONE), bggLinked = app.bggAccounts.isLinked(me.id)) }
         }
     }
 

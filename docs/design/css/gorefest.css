@@ -131,6 +131,7 @@ button.gf-link { display: inline-flex; align-items: center; min-height: 44px; pa
 .gf-chip input { position: absolute; inset: 0; opacity: 0; pointer-events: none; }
 .gf-chip__check { display: none; width: 32px; height: 32px; border-radius: 50%; background: var(--accent); color: var(--on-accent); place-items: center; }
 .gf-chip__check .gf-icon { width: 18px; height: 18px; stroke-width: 3; }
+.gf-chip:has(input:disabled) { opacity: .45; cursor: not-allowed; }
 .gf-chip:has(input:checked) { background: var(--ink); border-color: var(--ink); color: var(--surface); }
 .gf-chip:has(input:checked) .gf-chip__check { display: grid; }
 .gf-chip:has(input:checked) .gf-avatar { display: none; }

@@ -1,6 +1,8 @@
 package gorefest.shell.web.components
 
 import gorefest.core.PlayerId
+import gorefest.shell.web.DEFAULT_TIME_ZONE
+import java.time.LocalDate
 import kotlinx.html.DIV
 import kotlinx.html.FlowContent
 import kotlinx.html.INPUT
@@ -72,5 +74,25 @@ fun FlowContent.searchField(placeholder: String, label: String, url: String, tar
         hx("target", target)
         hx("swap", "outerHTML")
         extra()
+    }
+}
+
+/** The browser's time zone, sent along with a form that creates something dated (the server falls back to its default). */
+fun FlowContent.browserTimeZone() = input(InputType.hidden, name = "timeZone") {
+    value = DEFAULT_TIME_ZONE
+    hyperscript("init set my value to Intl.DateTimeFormat().resolvedOptions().timeZone")
+}
+
+/** Dates as checkbox chips, submitted as [name] in ISO form. [disabled] dates can't be ticked (already past). */
+fun FlowContent.dateChips(
+    dates: List<LocalDate>, checked: (LocalDate) -> Boolean, disabled: (LocalDate) -> Boolean = { false }, name: String = "dates", legend: String = "Dates",
+) = fieldSet("gf-chips") {
+    attributes["style"] = "border: 0; padding: 0; margin: 0"
+    legend("gf-vh") { +legend }
+    dates.forEach { date ->
+        label("gf-chip gf-chip--text") {
+            input(InputType.checkBox, name = name) { value = date.toString(); this.checked = checked(date); this.disabled = disabled(date) }
+            +date.short()
+        }
     }
 }

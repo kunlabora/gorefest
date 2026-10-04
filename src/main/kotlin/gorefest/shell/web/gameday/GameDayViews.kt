@@ -3,6 +3,7 @@ package gorefest.shell.web.gameday
 import gorefest.core.PlayLogged
 import gorefest.core.PlayerId
 import gorefest.core.game.Game
+import gorefest.core.datepoll.DatePollSummary
 import gorefest.core.gameday.GameDaySummary
 import gorefest.core.gameday.ShelfGame
 import gorefest.shell.web.CurrentPlayer
@@ -15,8 +16,10 @@ import gorefest.shell.web.components.appBarAction
 import gorefest.shell.web.components.appBarTitle
 import gorefest.shell.web.components.avatar
 import gorefest.shell.web.components.backLink
+import gorefest.shell.web.components.browserTimeZone
 import gorefest.shell.web.components.buttonClasses
 import gorefest.shell.web.components.copyBox
+import gorefest.shell.web.components.dayCard
 import gorefest.shell.web.components.emptyState
 import gorefest.shell.web.components.errorNotice
 import gorefest.shell.web.components.field
@@ -36,6 +39,7 @@ import gorefest.shell.web.components.page
 import gorefest.shell.web.components.primaryButton
 import gorefest.shell.web.components.primaryLink
 import gorefest.shell.web.components.sectionHead
+import gorefest.shell.web.datepoll.pollCard
 import gorefest.shell.web.suggestions.suggestions
 import io.ktor.http.Parameters
 import kotlinx.html.FlowContent
@@ -61,10 +65,13 @@ import java.time.LocalDate
 import java.time.ZoneId
 
 
-fun HTML.homePage(gameDays: List<GameDaySummary>, today: LocalDate, bggLinked: Boolean) = page(
+fun HTML.homePage(gameDays: List<GameDaySummary>, polls: List<DatePollSummary>, today: LocalDate, bggLinked: Boolean) = page(
     "Game days",
     appBar = { appBarTitle("Gorefest"); logoutButton() },
-    dock = { primaryLink("/gamedays/new", "Host a game day", icon = "plus") },
+    dock = {
+        primaryLink("/gamedays/new", "Host a game day", icon = "plus")
+        linkButton("/polls/new", "Not sure when? Find a date", ButtonStyle.GHOST)
+    },
 ) {
     h1("gf-h1") { +"Your game days" }
     if (!bggLinked) {
@@ -74,10 +81,17 @@ fun HTML.homePage(gameDays: List<GameDaySummary>, today: LocalDate, bggLinked: B
             "/bgg?returnTo=%2F", "Link BGG", ButtonStyle.SECONDARY,
         )
     } else p("gf-small") { a("/collection", classes = "gf-link") { +"Your collection" } }
+    if (polls.isNotEmpty()) div("gf-stack") {
+        h2("gf-h2") { +"Finding a date" }
+        polls.forEach { pollCard(it) }
+    }
     if (gameDays.isEmpty()) {
-        emptyState("No game days yet", "Got an invite? Tap the link in your group chat. Or host one yourself.")
+        if (polls.isEmpty()) emptyState("No game days yet", "Got an invite? Tap the link in your group chat. Or host one yourself, or ask your group which date works.")
     } else {
-        div("gf-stack") { gameDays.forEach { dayCard(it, today) } }
+        div("gf-stack") {
+            if (polls.isNotEmpty()) h2("gf-h2") { +"Game days" }
+            gameDays.forEach { dayCard(it, today) }
+        }
     }
 }
 
@@ -105,10 +119,7 @@ fun TagConsumer<*>.gameDayForm(view: GameDayFormView, error: String? = null, val
         field("place", "Where", hint = "Shown on the invite. Leave out the house number if you like.") {
             input(InputType.text, name = "place", classes = "gf-input") { id = "place"; value = values["place"].orEmpty() }
         }
-        if (!view.editing) input(InputType.hidden, name = "timeZone") {
-            value = DEFAULT_TIME_ZONE
-            hyperscript("init set my value to Intl.DateTimeFormat().resolvedOptions().timeZone")
-        }
+        if (!view.editing) browserTimeZone()
         primaryButton(view.submitLabel)
     }
 
@@ -240,20 +251,11 @@ fun TagConsumer<*>.invite(gameDay: GameDaySummary, link: String) = div("gf-stack
     }
 }
 
-private fun FlowContent.dayCard(gameDay: GameDaySummary, today: LocalDate) = a("/gamedays/${gameDay.id}", classes = "gf-daycard") {
-    span("gf-date") {
-        span("gf-date__month") { +if (gameDay.date == today) "Today" else gameDay.date.monthShort() }
-        +" " // flex ignores it; screen readers and text extraction need it
-        span("gf-date__day") { +gameDay.date.dayOfMonth.toString() }
-    }
-    span {
-        style = "min-width: 0"
-        span("gf-daycard__title") { +gameDay.title }
-        span("gf-daycard__meta") { +listOf(gameDay.place, "${gameDay.players.size} going").filter { it.isNotBlank() }.joinToString(" · ") }
-        if (gameDay.ended) span("gf-tag") { style = "margin-top: 6px"; +"Ended" }
-    }
-    span {
-        style = "display: flex; transform: rotate(180deg); color: var(--ink-muted)"
-        icon("back")
-    }
-}
+private fun FlowContent.dayCard(gameDay: GameDaySummary, today: LocalDate) = dayCard(
+    href = "/gamedays/${gameDay.id}",
+    month = if (gameDay.date == today) "Today" else gameDay.date.monthShort(),
+    day = gameDay.date.dayOfMonth.toString(),
+    title = gameDay.title,
+    meta = listOf(gameDay.place, "${gameDay.players.size} going").filter { it.isNotBlank() }.joinToString(" · "),
+    tag = if (gameDay.ended) "Ended" else null,
+)

@@ -103,7 +103,8 @@ class GameDayRoutesTest {
         val page = client.get("/").page()
 
         page.one(".gf-empty__title").text() shouldBe "No game days yet"
-        page.one(".gf-dock a").attr("href") shouldBe "/gamedays/new"
+        page.one(".gf-dock a.gf-btn--primary").attr("href") shouldBe "/gamedays/new"
+        page.one(".gf-dock a[href=/polls/new]").text() shouldBe "Not sure when? Find a date"
     }
 
     @Test

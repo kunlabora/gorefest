@@ -1,5 +1,6 @@
 package gorefest.shell.gameday
 
+import gorefest.core.DatePollId
 import gorefest.core.GameDayId
 import gorefest.core.gameday.GameDaySummary
 import java.security.MessageDigest
@@ -31,6 +32,23 @@ class InviteLinks(secretKey: String) {
         if (!MessageDigest.isEqual(sign("$hex.$version").toByteArray(), signature.toByteArray())) return null
         val id = runCatching { Uuid.parseHex(hex) }.getOrNull() ?: return null
         return GameDayId(id) to (version.toIntOrNull() ?: return null)
+    }
+
+    /**
+     * A date poll's invite token: `{poll id as hex}.{signature}`. Signed under its own prefix, so a game day
+     * token can never pass for a poll token (or the other way round). A poll link works until the date is picked.
+     */
+    fun token(poll: DatePollId): String {
+        val hex = poll.value.toHexString()
+        return "$hex.${sign("poll:$hex")}"
+    }
+
+    fun parsePoll(token: String): DatePollId? {
+        val parts = token.split('.')
+        if (parts.size != 2) return null
+        val (hex, signature) = parts
+        if (!MessageDigest.isEqual(sign("poll:$hex").toByteArray(), signature.toByteArray())) return null
+        return runCatching { Uuid.parseHex(hex) }.getOrNull()?.let(::DatePollId)
     }
 
     private fun sign(payload: String): String =
