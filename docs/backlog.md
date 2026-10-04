@@ -225,3 +225,4 @@ Follow-ups, not blocking:
 - [x] A closed poll's invite says the date is picked; people who weren't available aren't on the game day and are told how to ask for the link
 - [x] Open polls show on the home page; "Find a date" is offered next to "Host a game day"
 - [ ] Nudge people who haven't answered (needs a way to reach them: only in-app so far)
+- [ ] The host can replace a poll's invite link, like a game day's (`InviteLinkRotated` has no poll counterpart yet): until the date is picked, anyone with the link can join, and a leaked one can't be revoked
