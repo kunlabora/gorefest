@@ -120,9 +120,10 @@ fun Route.datePollRoutes(app: App) {
 
     get("/p/{token}") {
         val poll = resolve(call.parameters["token"]) ?: return@get call.respondHtml(HttpStatusCode.NotFound) { deadInvitePage() }
-        if (!poll.open) return@get call.respondHtml(HttpStatusCode.Gone) { deadInvitePage("The host already picked a date") }
         val me = sessionPlayer()
+        // Someone already in the poll goes to it, picked or not: that's where the result (and the game day) is.
         if (me != null && me.id in poll.participants) return@get redirect("/polls/${poll.id}")
+        if (!poll.open) return@get call.respondHtml(HttpStatusCode.Gone) { deadInvitePage("The host already picked a date") }
         val path = "/p/${call.parameters["token"]}"
         val landing = PollInviteView(poll, login.names(poll.participants), loggedIn = me != null, path = path)
         call.respondHtml { pollInvitePage(landing) }

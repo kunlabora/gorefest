@@ -132,3 +132,9 @@ fun HTMLTag.hx(name: String, value: String) {
 fun HTMLTag.hyperscript(script: String) {
     attributes["_"] = script
 }
+
+/** An Open Graph `<meta>` for the link preview of a page that is shared (an invite). */
+fun HEAD.openGraph(property: String, value: String) = meta {
+    attributes["property"] = property
+    content = value
+}

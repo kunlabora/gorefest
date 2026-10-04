@@ -4,7 +4,12 @@ import gorefest.core.PlayerId
 import gorefest.shell.web.DEFAULT_TIME_ZONE
 import java.time.LocalDate
 import kotlinx.html.DIV
+import kotlinx.html.FIELDSET
 import kotlinx.html.FlowContent
+import kotlinx.html.strong
+import kotlinx.html.FormMethod
+import kotlinx.html.form
+import kotlinx.html.p
 import kotlinx.html.INPUT
 import kotlinx.html.InputType
 import kotlinx.html.div
@@ -30,9 +35,7 @@ fun FlowContent.hiddenInput(name: String, value: String) = input(InputType.hidde
 /** Players as checkbox chips (avatar, tick when checked, name), submitted as [name]. */
 fun FlowContent.playerChips(
     players: List<PlayerId>, names: Map<PlayerId, String>, checked: (PlayerId) -> Boolean, name: String = "players", legend: String = "Players",
-) = fieldSet("gf-chips") {
-    attributes["style"] = "border: 0; padding: 0; margin: 0"
-    legend("gf-vh") { +legend }
+) = chipGroup(legend) {
     players.forEach { player ->
         label("gf-chip") {
             input(InputType.checkBox, name = name) { value = player.toString(); this.checked = checked(player) }
@@ -41,6 +44,13 @@ fun FlowContent.playerChips(
             +(names[player] ?: "Unknown player")
         }
     }
+}
+
+/** The fieldset every group of chips sits in: no border, a visually hidden [legend] for screen readers. */
+private fun FlowContent.chipGroup(legend: String, chips: FIELDSET.() -> Unit) = fieldSet("gf-chips") {
+    attributes["style"] = "border: 0; padding: 0; margin: 0"
+    legend("gf-vh") { +legend }
+    chips()
 }
 
 /** Safe in an id and in a CSS selector: "3h+" becomes "3h-plus". */
@@ -83,16 +93,35 @@ fun FlowContent.browserTimeZone() = input(InputType.hidden, name = "timeZone") {
     hyperscript("init set my value to Intl.DateTimeFormat().resolvedOptions().timeZone")
 }
 
-/** Dates as checkbox chips, submitted as [name] in ISO form. [disabled] dates can't be ticked (already past). */
+/**
+ * Dates as checkbox chips, submitted as [name] in ISO form. A [disabled] date can't be changed (already past);
+ * one that was ticked is still sent along, because a disabled checkbox wouldn't be and the answer would lose it.
+ */
 fun FlowContent.dateChips(
     dates: List<LocalDate>, checked: (LocalDate) -> Boolean, disabled: (LocalDate) -> Boolean = { false }, name: String = "dates", legend: String = "Dates",
-) = fieldSet("gf-chips") {
-    attributes["style"] = "border: 0; padding: 0; margin: 0"
-    legend("gf-vh") { +legend }
+) = chipGroup(legend) {
     dates.forEach { date ->
         label("gf-chip gf-chip--text") {
             input(InputType.checkBox, name = name) { value = date.toString(); this.checked = checked(date); this.disabled = disabled(date) }
             +date.short()
         }
+        if (disabled(date) && checked(date)) hiddenInput(name, date.toString())
+    }
+}
+
+/** The button that joins through an invite, and what to tell someone who isn't logged in yet. */
+fun FlowContent.joinForm(path: String, label: String, loggedIn: Boolean) {
+    form(action = "$path/join", method = FormMethod.post) { primaryButton(label) }
+    if (!loggedIn) p("gf-hint") { attributes["style"] = "text-align: center"; +"Just your email. No password, no app to install." }
+}
+
+/** Who is inviting you, with their avatar: the first line of an invite landing. */
+fun FlowContent.inviterLine(host: PlayerId, hostName: String?, text: String) = div("gf-media") {
+    attributes["style"] = "padding-top: var(--space-3)"
+    avatar(host, hostName, size = "gf-avatar--lg")
+    p("gf-muted") {
+        attributes["style"] = "margin: 0"
+        strong { attributes["style"] = "color: var(--ink)"; +(hostName ?: "Someone") }
+        +" $text"
     }
 }

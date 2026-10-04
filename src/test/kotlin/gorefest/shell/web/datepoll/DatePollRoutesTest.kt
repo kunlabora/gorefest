@@ -236,6 +236,51 @@ class DatePollRoutesTest {
     }
 
     @Test
+    fun `someone in the poll who follows its link after the pick lands on the poll, not on a dead end`() {
+        kotlinx.coroutines.runBlocking {
+            annasPoll()
+            given(DatePollAnswered(poll, bramId, listOf(fri)))
+        }
+        test.webTest(session = anna) { host -> host.htmxPost("$pollPage/pick", parameters { append("date", fri.toString()) }) }
+        test.webTest(session = bram) { client -> client.get("/p/${token()}").headers["Location"] shouldBe pollPage }
+    }
+
+    @Test
+    fun `a date that has passed can't be changed, but an answer already given for it is kept`() {
+        kotlinx.coroutines.runBlocking {
+            annasPoll()
+            given(DatePollAnswered(poll, bramId, listOf(fri, sat)))
+            test.clock.advance(java.time.Duration.ofDays(16)) // 9 October is behind us, 10 October is today
+        }
+        test.webTest(session = bram) { client ->
+            val form = client.get(pollPage).page().one("#answer-form")
+
+            form.select("input[type=checkbox][disabled]").map { it.`val`() } shouldContainExactly listOf("2026-10-09")
+            // A disabled checkbox isn't sent, so the ticked past date rides along as a hidden value.
+            form.select("input[type=hidden][name=dates]").map { it.`val`() } shouldContainExactly listOf("2026-10-09")
+            form.select("input[type=checkbox]:not([disabled])[checked]").map { it.`val`() } shouldContainExactly listOf("2026-10-10")
+
+            // Untick Saturday the way the browser would: the form sends only what's enabled and ticked, plus the hidden one.
+            client.htmxPost("$pollPage/answer", parameters { append("dates", fri.toString()) })
+            app.datePolls.of(poll)!!.answers[bramId] shouldBe setOf(fri)
+        }
+    }
+
+    @Test
+    fun `a closed poll marks the picked date, and drops off the home page`() {
+        kotlinx.coroutines.runBlocking { annasPoll() }
+        test.webTest(session = anna) { client -> client.htmxPost("$pollPage/pick", parameters { append("date", sun.toString()) }) }
+        test.webTest(session = bram) { client ->
+            val results = client.get(pollPage).page().one("#poll-results")
+
+            results.one(".gf-tag--olive").text() shouldBe "Picked"
+            results.select(".gf-row").first { it.select(".gf-tag--olive").isNotEmpty() }.one(".gf-row__title").text() shouldBe "Sun 11 Oct"
+            results.select("button[hx-post]") shouldHaveSize 0
+            client.get("/").page().select("a.gf-daycard[href=$pollPage]") shouldHaveSize 0
+        }
+    }
+
+    @Test
     fun `the home page lists my open polls and offers to start one`() = test.webTest(session = bram) { client ->
         annasPoll()
 

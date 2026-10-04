@@ -149,24 +149,12 @@ fun HTML.pollInvitePage(view: PollInviteView) {
         "Find a date: ${poll.title}",
         appBar = { appBarTitle("Gorefest") },
         head = {
-            meta(name = "description", content = "$host is finding a date for ${poll.title}")
-            meta { attributes["property"] = "og:title"; content = "$host is finding a date: ${poll.title}" }
-            meta { attributes["property"] = "og:description"; content = poll.dates.joinToString(" · ") { it.short() } }
+            openGraph("og:title", "$host is finding a date: ${poll.title}")
+            openGraph("og:description", poll.dates.joinToString(" · ") { it.short() })
         },
-        dock = {
-            form(action = "${view.path}/join", method = FormMethod.post) { primaryButton("Join and answer") }
-            if (!view.loggedIn) p("gf-hint") { style = "text-align: center"; +"Just your email. No password, no app to install." }
-        },
+        dock = { joinForm(view.path, "Join and answer", view.loggedIn) },
     ) {
-        div("gf-media") {
-            style = "padding-top: var(--space-3)"
-            avatar(poll.host, view.names[poll.host], size = "gf-avatar--lg")
-            p("gf-muted") {
-                style = "margin: 0"
-                strong { style = "color: var(--ink)"; +host }
-                +" wants to find a date for a game day"
-            }
-        }
+        inviterLine(poll.host, view.names[poll.host], "wants to find a date for a game day")
         h1("gf-hero") { +poll.title }
         ul("gf-facts") {
             if (poll.place.isNotBlank()) li { icon("pin"); +poll.place }

@@ -35,22 +35,9 @@ fun HTML.invitePage(view: InviteLanding) {
             openGraph("og:type", "website")
             meta(name = "twitter:card", content = "summary_large_image")
         },
-        dock = {
-            form(action = "${view.path}/join", method = FormMethod.post) {
-                primaryButton("Join ${gameDay.title}")
-            }
-            if (!view.loggedIn) p("gf-hint") { style = "text-align: center"; +"Just your email. No password, no app to install." }
-        },
+        dock = { joinForm(view.path, "Join ${gameDay.title}", view.loggedIn) },
     ) {
-        div("gf-media") {
-            style = "padding-top: var(--space-3)"
-            avatar(gameDay.host, view.names[gameDay.host], size = "gf-avatar--lg")
-            p("gf-muted") {
-                style = "margin: 0"
-                strong { style = "color: var(--ink)"; +host }
-                +" invites you to a game day"
-            }
-        }
+        inviterLine(gameDay.host, view.names[gameDay.host], "invites you to a game day")
         h1("gf-hero") { +gameDay.title }
         ul("gf-facts") {
             li { icon("calendar"); +gameDay.date.full() }
@@ -99,7 +86,3 @@ fun HTML.endedPage(gameDay: GameDaySummary) = page(gameDay.title, appBar = { app
     }
 }
 
-private fun HEAD.openGraph(property: String, value: String) = meta {
-    attributes["property"] = property
-    content = value
-}
