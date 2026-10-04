@@ -1,6 +1,8 @@
 package gorefest.shell.gameday
 
 import gorefest.core.GameBrought
+import gorefest.core.GameDayId
+import gorefest.core.Tags
 import gorefest.core.PlayLogged
 import gorefest.core.PlayerId
 import gorefest.core.PlayerJoined
@@ -68,6 +70,39 @@ class GameDayCloserTest {
         mail.text shouldContain "Hi Kim,"
         mail.text shouldContain "- Cascadia: Anna, Kim · 40 min"
         mail.text shouldContain "1 game, 40 minutes at the table."
+    }
+
+    @Test
+    suspend fun `one recipient failing does not stop the others getting their recap`() {
+        val delivered = mutableListOf<String>()
+        val flaky = gorefest.shell.auth.Mailer { mail ->
+            if (mail.to == "anna@example.com") error("mailbox full")
+            delivered += mail.to
+        }
+        val recaps = RecapMailer(app.db, app.login.players, { app.plays }, app.catalog, flaky, app.config, test.clock)
+
+        recaps.send(app.gameDaysById.getValue(gorefest7))
+
+        delivered shouldBe listOf("kim@example.com")
+    }
+
+    @Test
+    suspend fun `one game day failing to close does not block the others`() {
+        val broken = GameDayId(Uuid.random())
+        app.db.transaction {
+            contextOf<gorefest.shell.db.Tx>().connection.prepareStatement("insert into events(type, tags, data, at) values ('GameDayCreated', ?, '{}'::jsonb, now())").use {
+                it.setArray(1, contextOf<gorefest.shell.db.Tx>().connection.createArrayOf("text", arrayOf(Tags.gameDay(broken))))
+                it.executeUpdate()
+            }
+        }
+        val real = app.gameDaysById.getValue(gorefest7)
+        val closer = GameDayCloser(app.commands, { linkedMapOf(broken to real.copy(id = broken), gorefest7 to real) }, RecapMailer(app.db, app.login.players, { app.plays }, app.catalog, test.mailbox, app.config, test.clock), test.clock, app.scope)
+        test.clock.now = Instant.parse("2026-09-28T08:00:00Z")
+
+        closer.closeDue()
+
+        // The recap only goes out once gorefest7 was ended (the broken row also stalls the read model's replay).
+        test.mailbox.all shouldHaveSize 2
     }
 
     @Test

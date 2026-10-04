@@ -7,6 +7,7 @@ import gorefest.core.gameday.EndGameDayDecider
 import gorefest.core.gameday.GameDaySummary
 import gorefest.core.gameday.dueToEnd
 import gorefest.shell.eventstore.CommandHandler
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -28,9 +29,15 @@ class GameDayCloser(
     /** Ends every due game day. Recaps go out only for the ones this run actually ended. */
     suspend fun closeDue() {
         for (id in gameDays().dueToEnd(clock.instant())) {
-            val decision = commands.handle(EndGameDayDecider, EndGameDay(id))
-            if (decision is Decision.Accepted && decision.events.isNotEmpty()) {
-                runCatching { recaps.send(gameDays().getValue(id)) }.onFailure { log.error("Recap for {} failed", id, it) }
+            try {
+                val decision = commands.handle(EndGameDayDecider, EndGameDay(id))
+                if (decision is Decision.Accepted && decision.events.isNotEmpty()) {
+                    runCatching { recaps.send(gameDays().getValue(id)) }.onFailure { log.error("Recap for {} failed", id, it) }
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                log.error("Closing game day {} failed", id, e)
             }
         }
     }
