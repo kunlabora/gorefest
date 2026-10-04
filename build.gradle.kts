@@ -77,4 +77,6 @@ tasks.processResources {
 tasks.test {
     useJUnitPlatform()
     jvmArgs(jvmWarningFlags)
+    // Tests share one database (TestDatabase), so test classes must not run in parallel forks.
+    maxParallelForks = 1
 }

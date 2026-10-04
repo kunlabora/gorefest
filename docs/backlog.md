@@ -43,14 +43,14 @@ S1–S13 is the MVP. S14–S16 make it good.
 
 *As the host I want the app on a real URL so that friends can use it.*
 
-- [x] GitHub Action on push to `main`: build, test, `scp` fat jar, restart the systemd unit. **Written** (`ci.yml` deploy job, `deploy/deploy.sh`); runs once the `DEPLOY_*` secrets exist
-- [x] Hosting on Scaleway: `deploy/provision.sh` sets up a fresh Ubuntu instance, `deploy/scaleway.md` walks through the console. **Written**, not yet run
+- [ ] GitHub Action on push to `main`: build, test, `scp` fat jar, restart the systemd unit. **Written** (`ci.yml` deploy job, `deploy/deploy.sh`); runs once the `DEPLOY_*` secrets exist
+- [ ] Hosting on Scaleway: `deploy/provision.sh` sets up a fresh Ubuntu instance, `deploy/scaleway.md` walks through the console. **Written**, not yet run
 - [x] Caddy terminates TLS and proxies to the app on localhost. **Written** (`deploy/Caddyfile`); the app trusts `X-Forwarded-For` because it listens on localhost only
-- [x] App config (DB URL, mail API key, signing secret) comes from an env file that isn't in the repo (`deploy/env.example`); outside dev mode the app refuses to start without mail, `SECRET_KEY` and `BGG_TOKEN`
-- [x] Nightly `pg_dump` uploaded to object storage; restoring it into a fresh database is tested once and written down. **Written** (`backup.sh`, systemd timer, restore steps in `deploy/README.md`); the restore test needs the server
+- [x] App config (DB URL, mail API key, signing secret) comes from an env file that isn't in the repo (`deploy/env.example`); outside dev mode the app refuses to start without mail and `SECRET_KEY`; without `BGG_TOKEN` it starts with BGG switched off (`UnavailableBggApi`, logged as a warning)
+- [ ] Nightly `pg_dump` uploaded to object storage; restoring it into a fresh database is tested once and written down. **Written** (`backup.sh`, systemd timer, restore steps in `deploy/README.md`); the restore test needs the server
 - [x] `/health` checks DB connectivity; a failed deploy leaves the previous jar running (`deploy.sh` waits for health and switches back)
-- [x] A real mail provider sends login mail; logging in from WhatsApp's and Signal's in-app browsers works on a real phone, and invite links show their preview there. **Scaleway TEM, Postmark and Resend clients written** (`MAIL_PROVIDER`); the phone check needs the live site
-- [ ] The server has fontconfig and a font installed, for the invite preview image (in the setup steps)
+- [ ] A real mail provider sends login mail; logging in from WhatsApp's and Signal's in-app browsers works on a real phone, and invite links show their preview there. **Scaleway TEM, Postmark and Resend clients written** (`MAIL_PROVIDER`); the phone check needs the live site
+- [x] The server has fontconfig and a font installed, for the invite preview image (in the setup steps)
 - [x] BGG is credited on every page and game names link to BGG; the site tells search engines to stay away (`robots.txt`, `X-Robots-Tag`, meta tag)
 - [ ] BGG application registered, `BGG_TOKEN` set, and the XML parsing checked against live responses (fixtures were written from the docs)
 - [x] Login mails are rate-limited: 5 per email and 20 per IP per hour
