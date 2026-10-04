@@ -58,9 +58,6 @@ echo "== Database"
 install -d -m 750 -o root -g gorefest /etc/gorefest
 if [ ! -f /etc/gorefest/env ]; then
   db_password="$(openssl rand -hex 24)"
-  sudo -u postgres psql -qc "create role gorefest login password '$db_password'" 2>/dev/null \
-    || sudo -u postgres psql -qc "alter role gorefest password '$db_password'"
-  sudo -u postgres createdb --owner gorefest gorefest 2>/dev/null || true
   sed -e "s|^BASE_URL=.*|BASE_URL=https://$domain|" \
       -e "s|^SECRET_KEY=.*|SECRET_KEY=$(openssl rand -base64 48 | tr -d '\n')|" \
       -e "s|^DATABASE_PASSWORD=.*|DATABASE_PASSWORD=$db_password|" \
@@ -71,7 +68,14 @@ if [ ! -f /etc/gorefest/env ]; then
   echo "Wrote /etc/gorefest/env. Fill in the mail, BGG and backup keys before the first deploy."
 else
   echo "Keeping the existing /etc/gorefest/env"
+  db_password="$(grep -m1 '^DATABASE_PASSWORD=' /etc/gorefest/env | cut -d= -f2-)"
+  [ -n "$db_password" ] || { echo "No DATABASE_PASSWORD in /etc/gorefest/env" >&2; exit 1; }
 fi
+# Always make sure the role and database exist with the password the env file has: on a fresh cluster
+# (after a Postgres upgrade or a wipe) they are missing even though the env file is kept.
+sudo -u postgres psql -qc "create role gorefest login password '$db_password'" 2>/dev/null \
+  || sudo -u postgres psql -qc "alter role gorefest password '$db_password'"
+sudo -u postgres createdb --owner gorefest gorefest 2>/dev/null || true
 
 echo "== Services"
 install -m 644 "$here/gorefest.service" "$here/gorefest-backup.service" "$here/gorefest-backup.timer" /etc/systemd/system/

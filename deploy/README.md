@@ -4,6 +4,19 @@ One cheap VPS: the fat jar under systemd, Postgres, Caddy in front for TLS, and 
 
 **On Scaleway: follow [scaleway.md](scaleway.md).** `provision.sh` does the one-time setup below in one go on Ubuntu 24.04; the manual steps are here for other hosts.
 
+## Moving an existing server from Postgres 16 to 18
+
+If the data doesn't matter (a test server): stop the app, drop the old cluster, remove the old packages and run `provision.sh` again. It keeps `/etc/gorefest/env` (and so the mail, BGG and backup keys), installs Postgres 18 and recreates the database role and database from the env file's password; the app's migrations then run on the next start.
+
+```bash
+sudo systemctl stop gorefest
+sudo pg_dropcluster --stop 16 main
+sudo apt purge -y 'postgresql-16*' postgresql postgresql-client-16
+cd deploy && sudo bash provision.sh <domain> "<deploy public key>"   # from a copy of deploy/ on the server
+```
+
+If the data matters, install `postgresql-18` from the PostgreSQL repository next to 16 and run `pg_upgradecluster 16 main` instead; take a `pg_dump` first.
+
 ## One-time server setup (Debian/Ubuntu)
 
 1. **Packages**
