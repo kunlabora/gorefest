@@ -14,6 +14,7 @@ private fun FlowContent.intro(heading: String, text: P.() -> Unit) = div("gf-sta
 }
 
 fun HTML.emailPage(returnTo: String) = authPage("Log in", dock = { primaryButton("Send me a code", form = "email-form") }) {
+    p("gf-lede") { +"Gorefest helps your group pick the board games you'll enjoy most on a game day. Answer a few \"which would you rather play?\" questions and it suggests what to put on the table." }
     intro("What's your email?") { +"We'll send a link and a 6-digit code. No password to remember." }
     consumer.emailForm(returnTo)
 }

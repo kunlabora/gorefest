@@ -24,6 +24,7 @@ body { margin: 0; background: var(--surface); }
 .gf-h1 { margin: 0; font: 800 30px/32px var(--font-display); letter-spacing: -.02em; text-wrap: balance; }
 .gf-h2 { margin: 0; font: 700 20px/24px var(--font-display); }
 .gf-muted { color: var(--ink-muted); }
+.gf-lede { margin: 0; font: 400 17px/24px var(--font-sans); color: var(--ink); }
 .gf-small { font-size: 14px; line-height: 20px; }
 .gf-link { color: var(--brand-ink); font-weight: 700; text-underline-offset: 3px; }
 button.gf-link { background: none; border: 0; padding: 0; font: inherit; font-weight: 700; text-decoration: underline; cursor: pointer; }
