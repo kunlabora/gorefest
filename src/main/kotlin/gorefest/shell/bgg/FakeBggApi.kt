@@ -55,12 +55,15 @@ class FakeBggApi(private val catalog: List<Game> = DevCatalog.games) : BggApi {
     override suspend fun search(query: String): List<SearchHit> =
         also { searchCalls += query }.catalog.filter { it.name.contains(query.trim(), ignoreCase = true) }.map { SearchHit(it.id, it.name, it.year) }
 
-    /** 15 games, the same ones every time for the same username. */
+    /** 15 games, the same ones every time for the same username, plus every cover game in the catalog so dev mode shows them all. */
     private fun defaultCollection(username: String): Set<BggId> {
         val seed = username.lowercase().hashCode()
-        return catalog.sortedBy { (it.id.value * 31 + seed).hashCode() }.take(15).map { it.id }.toSet()
+        val covers = DevCatalog.covers.map { it.id }.toSet()
+        val picks = catalog.filter { it.id !in covers }.sortedBy { (it.id.value * 31 + seed).hashCode() }.take(15).map { it.id }
+        return picks.toSet() + catalog.map { it.id }.filter { it in covers }
     }
 }
+
 
 /** Well-known games with approximate BGG data, for dev mode and tests. Not a substitute for the API. */
 object DevCatalog {
