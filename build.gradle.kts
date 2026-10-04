@@ -71,7 +71,7 @@ dependencies {
 // The design system in docs/design is the single source for the app's CSS and icons.
 tasks.processResources {
     from("docs/design/css") { into("static/css") }
-    from("docs/design/icons") { include("*.svg"); into("static/icons") }
+    from("docs/design/icons") { include("*.svg", "favicon.ico", "apple-touch-icon.png"); into("static/icons") }
 }
 
 tasks.test {

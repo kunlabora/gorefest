@@ -50,6 +50,9 @@ fun HTML.page(
         meta(name = "robots", content = "noindex, nofollow, noarchive, noimageindex")
         // First, and blocking: it sets the saved theme before anything paints.
         script(src = "/static/js/theme.js") {}
+        link(rel = "icon", href = "/static/icons/favicon.svg", type = "image/svg+xml")
+        link(rel = "icon", href = "/static/icons/favicon.ico") { attributes["sizes"] = "any" }
+        link(rel = "apple-touch-icon", href = "/static/icons/apple-touch-icon.png")
         link(rel = "stylesheet", href = "/static/css/tokens.css")
         link(rel = "stylesheet", href = "/static/css/gorefest.css")
         script(src = "/webjars/htmx.org/dist/htmx.min.js") {}

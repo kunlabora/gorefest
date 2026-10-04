@@ -24,6 +24,7 @@ import io.ktor.server.http.content.staticResources
 import io.ktor.server.plugins.calllogging.CallLogging
 import io.ktor.server.plugins.forwardedheaders.XForwardedHeaders
 import io.ktor.server.plugins.statuspages.StatusPages
+import io.ktor.server.response.respondRedirect
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
@@ -57,6 +58,8 @@ fun Application.web(app: App) {
             if (dbUp) call.respondText("ok") else call.respondText("database unavailable", status = HttpStatusCode.ServiceUnavailable)
         }
         get("/robots.txt") { call.respondText("User-agent: *\nDisallow: /\n") }
+        // Browsers ask for this by default, whatever the page's <link rel=icon> says.
+        get("/favicon.ico") { call.respondRedirect("/static/icons/favicon.ico", permanent = false) }
         staticResources("/static", "static")
         context(app.login, app.config) { authRoutes() }
         context(app.ids, app.clock, app.login, app.config) { gameDayRoutes(app) }

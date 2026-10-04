@@ -36,5 +36,16 @@ class PrivacyTest {
         page.one(".gf-credit a").attr("href") shouldBe "https://boardgamegeek.com"
     }
 
+    @Test
+    fun `pages link a favicon and the default favicon path leads to one`() = test.webTest { client ->
+        val page = client.get("/login").page()
+        page.select("link[rel=icon]").map { it.attr("href") } shouldBe listOf("/static/icons/favicon.svg", "/static/icons/favicon.ico")
+        page.one("link[rel=apple-touch-icon]").attr("href") shouldBe "/static/icons/apple-touch-icon.png"
+        client.get("/favicon.ico").headers[HttpHeaders.Location] shouldBe "/static/icons/favicon.ico"
+        client.get("/static/icons/favicon.ico").status shouldBe HttpStatusCode.OK
+        client.get("/static/icons/favicon.svg").status shouldBe HttpStatusCode.OK
+        client.get("/static/icons/apple-touch-icon.png").status shouldBe HttpStatusCode.OK
+    }
+
     private fun String?.shouldContainAll(vararg parts: String) = parts.forEach { this.orEmpty() shouldContain it }
 }
