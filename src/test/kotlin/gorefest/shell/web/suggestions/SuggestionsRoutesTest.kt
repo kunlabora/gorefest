@@ -6,6 +6,7 @@ import gorefest.core.PlayerJoined
 import gorefest.core.gameday.anna
 import gorefest.core.gameday.gameDayCreated
 import gorefest.core.gameday.gorefest7
+import gorefest.core.matching.Matcher
 import gorefest.shell.bgg.DevCatalog
 import gorefest.shell.web.TestApp
 import gorefest.shell.web.components.of
@@ -92,7 +93,7 @@ class SuggestionsRoutesTest {
 
     @Test
     fun `when only others are unknown, it names them and leaves the viewer's own round out`() = test.webTest(session = kim) { client ->
-        val answers = List(5) { gorefest.core.ComparisonRecorded(kimId, id("Azul"), id("Brass: Birmingham"), gorefest.core.ComparisonResult.A, gorefest.core.Basis.VIBE, test.clock.instant()) }
+        val answers = List(Matcher.KNOWN_AFTER) { gorefest.core.ComparisonRecorded(kimId, id("Azul"), id("Brass: Birmingham"), gorefest.core.ComparisonResult.A, gorefest.core.Basis.VIBE, test.clock.instant()) }
         app.db.transaction { app.store.append(answers) }
         app.catchUp()
 

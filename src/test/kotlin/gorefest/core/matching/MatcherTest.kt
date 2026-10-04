@@ -69,7 +69,7 @@ class MatcherTest {
 
     @Test
     fun `games nobody played get a novelty bonus and say so`() {
-        val table = listOf(player("Anna", azul, brass, times = 6, played = true), player("Bram"))
+        val table = listOf(player("Anna", azul, brass, times = Matcher.KNOWN_AFTER, played = true), player("Bram"))
 
         val result = matcher.suggest(table, shelf(azul, codenames), null, now) as Suggestions.Found
 
@@ -86,13 +86,13 @@ class MatcherTest {
         strangers.top.single { it.game == azul }.reason shouldBe "Best at exactly two, which is you."
         strangers.top.single { it.game == brass }.reason shouldBe "Nobody's played it yet: something new for the table."
 
-        val mixed = matcher.suggest(listOf(player("Anna", azul, brass, times = 6), bram), shelf(azul), null, now) as Suggestions.Found
+        val mixed = matcher.suggest(listOf(player("Anna", azul, brass, times = Matcher.KNOWN_AFTER), bram), shelf(azul), null, now) as Suggestions.Found
         mixed.unknown shouldBe listOf(bram.id)
     }
 
     @Test
     fun `when everyone who played it rated it highly, it's a safe bet`() {
-        val table = List(4) { player("P$it", azul, brass, codenames, played = true) }
+        val table = List(4) { player("P$it", azul, brass, codenames, times = Matcher.KNOWN_AFTER, played = true) }
 
         val result = matcher.suggest(table, shelf(azul), null, now) as Suggestions.Found
 

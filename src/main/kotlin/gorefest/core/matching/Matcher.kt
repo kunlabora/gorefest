@@ -105,7 +105,7 @@ class Matcher(
 
     companion object {
         /** Answers after which a player's taste counts for something; below it we say the picks are a fit-only guess for them. */
-        const val KNOWN_AFTER = 5
+        const val KNOWN_AFTER = 10
 
         /** Time budgets offered when nothing fits, in minutes. */
         val BUDGETS = listOf(45, 90, 120, 180, 240)
