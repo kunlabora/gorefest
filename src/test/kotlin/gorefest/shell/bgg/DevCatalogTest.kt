@@ -13,4 +13,15 @@ class DevCatalogTest {
 
         missing shouldBe emptyList()
     }
+
+    @Test
+    fun `every dev game has cover art, and every cover file belongs to a game`() {
+        val games = DevCatalog.games + DevCatalog.coverGames
+
+        games.filter { it.thumbnail == null }.map { it.name } shouldBe emptyList()
+
+        val used = games.mapNotNull { it.thumbnail }.map { it.substringAfterLast('/') }.toSet()
+        val shipped = java.io.File("src/main/resources/static/covers").list().orEmpty().toSet()
+        (shipped - used) shouldBe emptySet()
+    }
 }

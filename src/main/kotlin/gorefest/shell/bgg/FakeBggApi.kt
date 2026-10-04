@@ -79,12 +79,22 @@ object DevCatalog {
     private val euro = setOf("Economic")
     private val party = setOf("Party Game")
 
-    /** Box art for the older dev games, by name: files in `static/covers`. The rest show the monogram fallback. */
+    /** Box art for the older dev games, by name: files in `static/covers`. */
     private val coverFiles = mapOf(
         "7 Wonders" to "7wonders", "Agricola" to "agricola", "Carcassonne" to "carcassonne", "CATAN" to "catan", "Concordia" to "concordia",
         "Dixit" to "dixit", "Dominion" to "dominion", "King of Tokyo" to "kingoftokyo", "Pandemic" to "pandemic", "Power Grid" to "powergrid",
         "Puerto Rico" to "puertorico", "The Resistance: Avalon" to "resistance-avalon", "Terra Mystica" to "terramystica",
         "Ticket to Ride" to "tickettoride", "Twilight Struggle" to "twilightstruggle",
+        "Brass: Birmingham" to "brassbirmingham", "Ark Nova" to "arknova", "Gloomhaven" to "gloomhaven",
+        "Twilight Imperium: Fourth Edition" to "twilightimperium4e", "Spirit Island" to "spiritisland", "Dune: Imperium" to "duneimperium",
+        "Terraforming Mars" to "terraformingmars", "Star Wars: Rebellion" to "starwarsrebellion", "Gaia Project" to "gaiaproject",
+        "Great Western Trail" to "greatwesterntrail", "Scythe" to "scythe", "Through the Ages: A New Story of Civilization" to "throughtheages",
+        "Root" to "root", "Wingspan" to "wingspan", "Lost Ruins of Arnak" to "lostruinsofarnak", "Everdell" to "everdell",
+        "7 Wonders Duel" to "7wondersduel", "Cascadia" to "cascadia", "Heat: Pedal to the Metal" to "heat", "Azul" to "azul",
+        "Splendor" to "splendor", "PARKS" to "parks", "The Quacks of Quedlinburg" to "quacksofquedlinburg",
+        "Pandemic Legacy: Season 1" to "pandemiclegacys1", "Calico" to "calico", "Kingdomino" to "kingdomino",
+        "The Crew: The Quest for Planet Nine" to "thecrew", "The Crew: Mission Deep Sea" to "thecrewdeepsea",
+        "Codenames" to "codenames", "Just One" to "justone", "Coup" to "coup",
     )
 
     val games: List<Game> = listOf(
