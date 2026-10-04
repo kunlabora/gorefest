@@ -65,7 +65,11 @@ fun HTML.welcomePage(returnTo: String, name: String) = authPage("Welcome", dock 
 
 /** "Send it again" posts the same email; "Change email" starts over. Both keep where the player was going. */
 private fun FlowContent.resendLinks(email: String, returnTo: String) = form(action = "/login", method = FormMethod.post, classes = "gf-small") {
+    id = "resend"
     hx("post", "/login")
+    hx("target", "this")
+    hx("swap", "outerHTML")
+    hiddenInput("resend", "1")
     hiddenInput("email", email)
     hiddenInput("returnTo", returnTo)
     +"No mail after a minute? "

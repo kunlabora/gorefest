@@ -8,6 +8,9 @@ import gorefest.shell.web.components.*
 import kotlinx.html.*
 
 /** Time options: label to budget in minutes (null: any). */
+/** Hidden marker in the table form: present-but-empty `players` means nobody is ticked, not everybody. */
+const val TABLE_SET = "tableSet"
+
 val TIMES = listOf("Any" to null, "45m" to 45, "90m" to 90, "2h" to 120, "3h+" to 240)
 
 /** The table picker: who's playing, how long, and the suggestions for that. [chosen] is null for "everyone". */
@@ -31,6 +34,7 @@ fun HTML.tablePage(view: TableView) = page(
         hx("trigger", "change")
         hx("target", "#suggestions")
         hx("swap", "outerHTML")
+        hiddenInput(TABLE_SET, "1")
         h2("gf-h2") { +"Who's at the table?" }
         playerChips(view.gameDay.players, view.names, checked = { view.chosen == null || it.toString() in view.chosen })
         segmented("time", "Time", TIMES.map { it.first }, checked = view.time, idPrefix = "time")
@@ -62,7 +66,7 @@ fun TagConsumer<*>.suggestions(suggestions: Suggestions, tableSize: Int, gameDay
 
 /** Picks that time option in the form above, which re-asks for suggestions. */
 private fun FlowContent.relaxButton(timeLabel: String, text: String) = button(type = ButtonType.button, classes = buttonClasses(ButtonStyle.PRIMARY, block = true)) {
-    hyperscript("on click set #time-$timeLabel.checked to true then send change to #table-form")
+    hyperscript("on click set #time-${timeLabel.idSlug()}.checked to true then send change to #table-form")
     +text
 }
 

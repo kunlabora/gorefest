@@ -308,4 +308,20 @@ class AuthRoutesTest {
             client.get("/dev/mailbox").status shouldBe HttpStatusCode.NotFound
         }
     }
+
+    @Test
+    fun `the resend form replaces itself, so a refusal doesn't nest a form inside it`() = test.webTest { client ->
+        client.askForCode()
+        val resend = client.get(firstAttempt).page().one("form#resend")
+        resend.attr("hx-target") shouldBe "this"
+        resend.attr("hx-swap") shouldBe "outerHTML"
+
+        repeat(4) { client.askForCode() }
+        val refused = client.htmxPost("/login", parameters {
+            append("email", "kim@example.com"); append("returnTo", "/"); append("resend", "1")
+        }).fragment()
+        refused shouldReplace "resend"
+        refused.hasClass("gf-notice--error") shouldBe true
+        refused.select("form") shouldHaveSize 0
+    }
 }

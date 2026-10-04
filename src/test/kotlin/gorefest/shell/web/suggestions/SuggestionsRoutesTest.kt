@@ -1,5 +1,6 @@
 package gorefest.shell.web.suggestions
 
+import gorefest.shell.web.components.idSlug
 import gorefest.core.GameBrought
 import gorefest.core.PlayerId
 import gorefest.core.PlayerJoined
@@ -101,5 +102,27 @@ class SuggestionsRoutesTest {
 
         fragment.one(".gf-notice").text() shouldBe "Picks for Anna go by player count and playing time: we haven't learned their taste yet."
         fragment.select("a[href=/gamedays/$gorefest7/taste]") shouldHaveSize 0
+    }
+
+    @Test
+    fun `unticking everybody means nobody, not everybody`() = test.webTest(session = kim) { client ->
+        val page = client.get(table).page()
+        page.one("#table-form input[type=hidden][name=tableSet]").`val`() shouldBe "1"
+
+        val nobody = client.get("/gamedays/$gorefest7/suggestions?tableSet=1&time=Any").fragment()
+        nobody.one(".gf-empty__title").text() shouldBe "Who's playing?"
+        nobody.select("article") shouldHaveSize 0
+
+        client.get("/gamedays/$gorefest7/suggestions?time=Any").fragment().select("article") shouldHaveSize 3
+    }
+
+    @Test
+    fun `every time option has an id a selector can use, and the relax button targets it`() = test.webTest(session = kim) { client ->
+        val page = client.get(table).page()
+        val ids = page.select("input[name=time]").map { it.id() }
+
+        ids shouldBe TIMES.map { "time-" + it.first.idSlug() }
+        ids.forEach { page.select("#$it") shouldHaveSize 1 }
+        "time-3h-plus" shouldBe ids.last()
     }
 }

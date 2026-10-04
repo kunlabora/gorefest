@@ -1,5 +1,6 @@
 package gorefest.shell.web.taste
 
+import io.kotest.matchers.string.shouldContain
 import gorefest.core.BggId
 import gorefest.core.ComparisonRecorded
 import gorefest.core.ComparisonResult
@@ -186,5 +187,22 @@ class TasteRoutesTest {
         val round = client.get(taste).page().one("#wizard")
 
         (round.one("input[name=a]").`val`() to round.one("input[name=b]").`val`()) shouldBe (shelf[4].toString() to shelf[5].toString())
+    }
+
+    @Test
+    fun `the A and B keys ignore shortcuts, key repeat and typing in fields`() = test.webTest(session = kim) { client ->
+        val script = client.get(taste).page().one("main#wizard form").attr("_")
+
+        listOf("event.repeat", "event.metaKey", "event.ctrlKey", "event.altKey", "matches('input, textarea").forEach { script shouldContain it }
+        script shouldContain "#pick-a.click()"
+    }
+
+    @Test
+    fun `the BGG credit survives an answer`() = test.webTest(session = kim) { client ->
+        val first = client.get(taste).page().one("#wizard")
+        first.select(".gf-credit .gf-credit__logo img") shouldHaveSize 1
+
+        val next = client.answer(first, "A").fragment()
+        next.select(".gf-credit .gf-credit__logo img") shouldHaveSize 1
     }
 }

@@ -5,6 +5,7 @@ import gorefest.shell.AppConfig
 import gorefest.shell.auth.Login
 import gorefest.shell.auth.LoginResult
 import gorefest.shell.web.SESSION_COOKIE
+import gorefest.shell.web.components.errorNotice
 import gorefest.shell.web.components.inWords
 import gorefest.shell.web.components.long
 import gorefest.shell.web.components.of
@@ -44,7 +45,8 @@ fun Route.authRoutes() {
         when (val requested = login.request(email, returnTo, address = call.request.origin.remoteAddress)) {
             is Login.Requested.Sent -> redirect("/login/code?attempt=${requested.attempt}")
             Login.Requested.TooMany ->
-                respondFragment { emailForm(returnTo, form["email"].orEmpty(), "That's a lot of codes. Wait a bit, then try again.") }
+                if (form["resend"] == "1") respondFragment { errorNotice("That's a lot of codes. Wait a bit, then try again.", id = "resend") }
+                else respondFragment { emailForm(returnTo, form["email"].orEmpty(), "That's a lot of codes. Wait a bit, then try again.") }
         }
     }
 

@@ -255,4 +255,21 @@ class GameDayRoutesTest {
     /** One line per player row: name, how many games they bring, "You" for the viewer, "Host" tag. */
     private fun org.jsoup.nodes.Element.players() =
         select("#players li").map { row -> row.select(".gf-row__title, .gf-row__sub, .gf-tag").joinToString(" ") { it.text() } }
+
+    @Test
+    fun `every page configures htmx right after loading it, so rejections get swapped in`() = webTest { client ->
+        val scripts = client.get("/").page().head().select("script[src]").map { it.attr("src") }
+        scripts.indexOf("/static/js/htmx-config.js") shouldBe scripts.indexOfFirst { it.contains("htmx") } + 1
+        val js = client.get("/static/js/htmx-config.js").bodyAsText()
+        js shouldContain "responseHandling"
+        js shouldContain "40[39]"
+    }
+
+    @Test
+    fun `strangers get a 404 for editing or inviting, not a rejection that confirms the game day exists`() = webTest { client ->
+        given(gameDayCreated(host = anna), PlayerJoined(gorefest7, anna))
+
+        client.htmxPost("/gamedays/$gorefest7/edit", validForm).status shouldBe HttpStatusCode.NotFound
+        client.htmxPost("/gamedays/$gorefest7/invite").status shouldBe HttpStatusCode.NotFound
+    }
 }

@@ -16,6 +16,8 @@ import gorefest.shell.AppConfig
 import gorefest.shell.IdGenerator
 import gorefest.shell.auth.Login
 import gorefest.shell.web.CurrentPlayer
+import gorefest.shell.web.DEFAULT_TIME_ZONE
+import gorefest.shell.web.todayIn
 import gorefest.shell.web.authenticated
 import gorefest.shell.web.bgg.collection
 import gorefest.shell.web.checkpoint.checkpointLabel
@@ -47,8 +49,8 @@ fun Route.gameDayRoutes(app: App) {
     get("/") {
         authenticated {
             val me = contextOf<CurrentPlayer>()
-            val gameDays = with(GameDays) { app.gameDaysById.forPlayer(me.id) { zone -> todayIn(zone) } }
-            call.respondHtml { homePage(gameDays, todayIn(DEFAULT_TIME_ZONE), bggLinked = app.bggAccounts.isLinked(me.id)) }
+            val gameDays = with(GameDays) { app.gameDaysById.forPlayer(me.id) { zone -> clock.todayIn(zone) } }
+            call.respondHtml { homePage(gameDays, clock.todayIn(DEFAULT_TIME_ZONE), bggLinked = app.bggAccounts.isLinked(me.id)) }
         }
     }
 
@@ -66,7 +68,7 @@ fun Route.gameDayRoutes(app: App) {
                 date = form.date(),
                 place = form["place"].orEmpty(),
                 timeZone = form["timeZone"] ?: DEFAULT_TIME_ZONE,
-                today = todayIn(form["timeZone"]),
+                today = clock.todayIn(form["timeZone"]),
             )
             when (val decision = app.commands.handle(CreateGameDayDecider, command)) {
                 is Decision.Accepted -> redirect("/gamedays/${command.gameDay}")
@@ -90,7 +92,7 @@ fun Route.gameDayRoutes(app: App) {
 
     post("/gamedays/{id}/edit") {
         authenticated {
-            val gameDay = gameDayFromPath(app) ?: return@authenticated call.respond(HttpStatusCode.NotFound)
+            val gameDay = memberGameDay(app, contextOf<CurrentPlayer>()) ?: return@authenticated call.respond(HttpStatusCode.NotFound)
             val form = call.receiveParameters()
             val command = EditGameDay(
                 gameDay = gameDay.id,
@@ -98,7 +100,7 @@ fun Route.gameDayRoutes(app: App) {
                 title = form["title"].orEmpty(),
                 date = form.date(),
                 place = form["place"].orEmpty(),
-                today = todayIn(gameDay.timeZone),
+                today = clock.todayIn(gameDay.timeZone),
             )
             when (val decision = app.commands.handle(EditGameDayDecider, command)) {
                 is Decision.Accepted -> redirect("/gamedays/${gameDay.id}")
@@ -126,7 +128,7 @@ fun Route.gameDayRoutes(app: App) {
 
     post("/gamedays/{id}/invite") {
         authenticated {
-            val gameDay = gameDayFromPath(app) ?: return@authenticated call.respond(HttpStatusCode.NotFound)
+            val gameDay = memberGameDay(app, contextOf<CurrentPlayer>()) ?: return@authenticated call.respond(HttpStatusCode.NotFound)
             when (val decision = app.commands.handle(RotateInviteLinkDecider, RotateInviteLink(gameDay.id, contextOf<CurrentPlayer>().id))) {
                 is Decision.Accepted -> {
                     val rotated = app.gameDaysById.getValue(gameDay.id)
@@ -142,7 +144,7 @@ fun Route.gameDayRoutes(app: App) {
 context(clock: Clock)
 private suspend fun nextStep(app: App, gameDay: GameDaySummary, me: CurrentPlayer, shelf: List<gorefest.core.game.Game>): NextStep? {
     if (gameDay.ended) return null
-    if (gameDay.date == todayIn(gameDay.timeZone)) return NextStep.Checkpoint(checkpointLabel(gameDay, clock))
+    if (gameDay.date == clock.todayIn(gameDay.timeZone)) return NextStep.Checkpoint(checkpointLabel(gameDay, clock))
     val history = app.tastes.of(me.id)
     val answers = history.comparisons.size
     if (answers < TOP_UP_AFTER) return NextStep.TasteRound
@@ -157,6 +159,3 @@ private fun RoutingContext.gameDayFromPath(app: App): GameDaySummary? =
     call.parameters["id"]?.let { runCatching { GameDayId.parse(it) }.getOrNull() }?.let(app.gameDaysById::get)
 
 private fun Parameters.date(): LocalDate = this["date"]?.let { runCatching { LocalDate.parse(it) }.getOrNull() } ?: LocalDate.MIN
-
-context(clock: Clock)
-private fun todayIn(timeZone: String?): LocalDate = LocalDate.now(clock.withZone(zoneOrDefault(timeZone)))
