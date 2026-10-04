@@ -65,6 +65,12 @@ class AuthRoutesTest {
     }
 
     @Test
+    fun `the login page explains the flow, unless you came through an invite`() = test.webTest { client ->
+        client.get("/login?returnTo=%2F").page().select(".gf-steps > li") shouldHaveSize 3
+        client.get("/login?returnTo=%2Fgamedays%2Fnew").page().select(".gf-steps > li") shouldHaveSize 0
+    }
+
+    @Test
     fun `htmx requests go to login from the page they were made on`() = test.webTest { client ->
         val response = client.htmxPost("/gamedays/abc/invite", currentUrl = "http://localhost/gamedays/abc")
 

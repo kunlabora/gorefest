@@ -13,8 +13,24 @@ private fun FlowContent.intro(heading: String, text: P.() -> Unit) = div("gf-sta
     p("gf-muted") { text() }
 }
 
+private val steps = listOf(
+    "Say what you'd rather play" to "A quick round of A-or-B picks teaches it your taste.",
+    "Join a game day" to "Your host shares an invite link, and everyone brings their games.",
+    "Get three suggestions" to "Tick who's at the table and it picks what suits them all.",
+)
+
+/** What the app is for, shown to people who arrive without an invite. */
+private fun FlowContent.howItWorks() = section("gf-section") {
+    p("gf-lede") { +"Gorefest helps your group pick the board games you'll enjoy most on a game day." }
+    ol("gf-steps") {
+        steps.forEach { (title, text) ->
+            li { strong { +title }; br; span("gf-muted") { +text } }
+        }
+    }
+}
+
 fun HTML.emailPage(returnTo: String) = authPage("Log in", dock = { primaryButton("Send me a code", form = "email-form") }) {
-    p("gf-lede") { +"Gorefest helps your group pick the board games you'll enjoy most on a game day. Answer a few \"which would you rather play?\" questions and it suggests what to put on the table." }
+    if (returnTo == "/") howItWorks()
     intro("What's your email?") { +"We'll send a link and a 6-digit code. No password to remember." }
     consumer.emailForm(returnTo)
 }
