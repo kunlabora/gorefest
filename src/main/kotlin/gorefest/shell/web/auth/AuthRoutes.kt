@@ -1,7 +1,9 @@
 package gorefest.shell.web.auth
 
 import gorefest.core.auth.LoginCheck
+import gorefest.core.PlayerId
 import gorefest.shell.AppConfig
+import gorefest.shell.gameday.InviteLinks
 import gorefest.shell.auth.Login
 import gorefest.shell.auth.LoginResult
 import gorefest.shell.web.SESSION_COOKIE
@@ -96,7 +98,7 @@ fun Route.authRoutes() {
         }
         if (error != null) return@post respondFragment { nameForm(returnTo, name, error) }
         login.rename(player.id, name)
-        redirect(returnTo)
+        redirect(joinConsent(returnTo, player.id))
     }
 
     post("/logout") {
@@ -109,8 +111,18 @@ fun Route.authRoutes() {
 context(config: AppConfig)
 private suspend fun RoutingContext.startSession(result: LoginResult.LoggedIn) {
     call.response.cookies.append(sessionCookie(result.sessionToken, Login.SESSION_TTL.seconds.toInt()))
-    redirect(if (result.needsName) "/welcome?returnTo=${result.returnTo.urlEncoded()}" else result.returnTo)
+    redirect(if (result.needsName) "/welcome?returnTo=${result.returnTo.urlEncoded()}" else joinConsent(result.returnTo, result.player))
 }
+
+private val JOIN_INTENT = Regex("""^(/[ip]/[^?]+)\?join=1$""")
+
+/**
+ * The player asked to join an invite and has now logged in (and named themselves) for it: swap the intent
+ * for a marker only the server can mint, so the invite page joins them. Any other `join` value means nothing.
+ */
+context(config: AppConfig)
+private fun joinConsent(returnTo: String, player: PlayerId): String =
+    JOIN_INTENT.matchEntire(returnTo)?.let { match -> match.groupValues[1].let { path -> "$path?join=${InviteLinks(config.secretKey).joinMarker(player, path)}" } } ?: returnTo
 
 context(config: AppConfig)
 private fun sessionCookie(value: String, maxAgeSeconds: Int) = Cookie(

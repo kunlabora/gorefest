@@ -297,12 +297,35 @@ class DatePollRoutesTest {
         val returnTo = "/p/${token()}?join=1"
 
         client.submitForm("/p/${token()}/join", Parameters.Empty).headers["Location"] shouldBe "/login?returnTo=${java.net.URLEncoder.encode(returnTo, Charsets.UTF_8)}"
-        client.submitForm("/login", parameters { append("email", "kim@example.com"); append("returnTo", returnTo) })
-        val code = test.mailbox.latestTo("kim@example.com")!!.subject.takeLast(6)
+        client.submitForm("/login", parameters { append("email", "nina@example.com"); append("returnTo", returnTo) })
+        val code = test.mailbox.latestTo("nina@example.com")!!.subject.takeLast(6)
         client.submitForm("/login/code", parameters { append("attempt", "00000000-0000-0000-0000-000000000001"); append("code", code) })
-        client.submitForm("/welcome", parameters { append("name", "Kim"); append("returnTo", returnTo) }).headers["Location"] shouldBe returnTo
+        val consent = client.submitForm("/welcome", parameters { append("name", "Nina"); append("returnTo", returnTo) }).headers["Location"]!!
+        consent shouldStartWith "/p/${token()}?join="
 
-        client.get(returnTo).headers["Location"] shouldBe pollPage
-        ("Kim" in app.login.names(app.datePolls.of(poll)!!.participants).values) shouldBe true
+        client.get(consent).headers["Location"] shouldBe pollPage
+        ("Nina" in app.login.names(app.datePolls.of(poll)!!.participants).values) shouldBe true
+    }
+
+    @Test
+    fun `a crafted poll link can't join anyone`() = test.webTest(session = kim) { client ->
+        annasPoll()
+
+        client.get("/p/${token()}?join=1").status shouldBe HttpStatusCode.OK
+        app.datePolls.of(poll)!!.participants shouldBe listOf(annaId, bramId)
+    }
+
+    @Test
+    fun `if the picked game day was cancelled, the poll says so`() {
+        kotlinx.coroutines.runBlocking { annasPoll() }
+        test.webTest(session = anna) { client -> client.htmxPost("$pollPage/pick", parameters { append("date", sun.toString()) }) }
+        val gameDay = app.datePolls.of(poll)!!.picked!!.gameDay
+        kotlinx.coroutines.runBlocking { given(gorefest.core.GameDayCancelled(gameDay)) }
+
+        test.webTest(session = anna) { client ->
+            val page = client.get(pollPage).page()
+            page.select("a.gf-btn--primary") shouldHaveSize 0
+            page.select(".gf-notice--good ~ p").text() shouldBe "Gorefest #8 was cancelled by the host."
+        }
     }
 }

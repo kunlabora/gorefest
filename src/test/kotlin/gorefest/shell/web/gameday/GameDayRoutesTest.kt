@@ -21,6 +21,7 @@ import io.kotest.matchers.shouldNotBe
 import gorefest.shell.web.page
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
+import io.kotest.assertions.withClue
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.ktor.client.HttpClient
@@ -302,9 +303,7 @@ class GameDayRoutesTest {
 
         client.get("/gamedays/$gorefest7").page().select("a[href=/gamedays/$gorefest7/cancel]").shouldBeEmpty()
         client.get("/gamedays/$gorefest7/cancel").status shouldBe HttpStatusCode.NotFound
-        val response = client.submitForm("/gamedays/$gorefest7/cancel", parameters {})
-        response.status shouldBe HttpStatusCode.Conflict
-        response.page().one(".gf-notice").text() shouldContain "Only the host can cancel"
+        client.submitForm("/gamedays/$gorefest7/cancel", parameters {}).status shouldBe HttpStatusCode.NotFound
         app.gameDaysById.getValue(gorefest7).cancelled shouldBe false
     }
 
@@ -332,5 +331,34 @@ class GameDayRoutesTest {
 
         page.one("#title").`val`() shouldBe "Gorefest #7"
         page.select("#title-field button").shouldBeEmpty()
+    }
+
+    @Test
+    fun `a non-host answers a cancel like a stranger, with no form leaked`() = webTest { client ->
+        given(gameDayCreated(host = anna), PlayerJoined(gorefest7, anna), PlayerJoined(gorefest7, timId))
+
+        client.submitForm("/gamedays/$gorefest7/cancel", parameters {}).status shouldBe HttpStatusCode.NotFound
+        app.gameDaysById.getValue(gorefest7).cancelled shouldBe false
+    }
+
+    @Test
+    fun `someone who didn't join can't cancel`() = webTest { client ->
+        given(gameDayCreated(host = anna), PlayerJoined(gorefest7, anna))
+
+        client.get("/gamedays/$gorefest7/cancel").status shouldBe HttpStatusCode.NotFound
+        client.submitForm("/gamedays/$gorefest7/cancel", parameters {}).status shouldBe HttpStatusCode.NotFound
+        app.gameDaysById.getValue(gorefest7).cancelled shouldBe false
+    }
+
+    @Test
+    fun `a cancelled game day is read-only, only the hub is reachable`() = webTest { client ->
+        given(gameDayCreated(host = timId), PlayerJoined(gorefest7, timId), gorefest.core.GameDayCancelled(gorefest7))
+
+        client.get("/gamedays/$gorefest7").status shouldBe HttpStatusCode.OK
+        for (path in listOf("edit", "cancel", "log", "log/compare", "table", "bring", "ready", "taste", "favourites")) {
+            withClue("GET $path") { client.get("/gamedays/$gorefest7/$path").status shouldBe HttpStatusCode.NotFound }
+        }
+        client.submitForm("/gamedays/$gorefest7/log", parameters {}).status shouldBe HttpStatusCode.NotFound
+        client.submitForm("/gamedays/$gorefest7/edit", parameters {}).status shouldBe HttpStatusCode.NotFound
     }
 }

@@ -48,8 +48,8 @@ object LogPlayDecider : Decider<PlayLogged, LogPlayDecider.State, PlayLogged> {
 
     override fun decide(command: PlayLogged, state: State): Decision<PlayLogged> = when {
         !state.open -> Rejected(Rejection.NoSuchGameDay)
-        state.ended -> Rejected(Rejection.GameDayOver)
         state.cancelled -> Rejected(Rejection.GameDayCancelled)
+        state.ended -> Rejected(Rejection.GameDayOver)
         state.date != null && command.at.atZone(state.zone).toLocalDate() < state.date -> Rejected(Rejection.GameDayNotStarted)
         command.loggedBy !in state.joined -> Rejected(Rejection.NotJoined)
         command.players.isEmpty() -> Rejected(Rejection.NobodyPlayed)

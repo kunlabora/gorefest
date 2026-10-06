@@ -50,8 +50,8 @@ private fun evolveBring(state: BringState, event: Event) = when (event) {
 
 private fun BringState.cantChange(): Rejection? = when {
     !open -> Rejection.NoSuchGameDay
-    ended -> Rejection.GameDayOver
     cancelled -> Rejection.GameDayCancelled
+    ended -> Rejection.GameDayOver
     !joined -> Rejection.NotJoined
     else -> null
 }

@@ -1,6 +1,9 @@
 package gorefest.core.gameday
 
 import gorefest.core.BggId
+import gorefest.core.Event
+import gorefest.core.GameDayId
+import kotlin.uuid.Uuid
 import gorefest.core.GameBrought
 import gorefest.core.GameDayCancelled
 import gorefest.core.GameDayEnded
@@ -38,6 +41,35 @@ class CancelGameDayTest {
         SetPlayWishDecider.given(*given, GameBrought(gorefest7, anna, BggId(13))).whenever(SetPlayWish(gorefest7, anna, BggId(13), true))
             .thenRejects(Rejection.GameDayCancelled)
         LogPlayDecider.given(*given).whenever(PlayLogged(gorefest7, BggId(13), listOf(anna), 45, anna, Instant.parse("2026-09-27T12:00:00Z")))
+            .thenRejects(Rejection.GameDayCancelled)
+    }
+
+    @Test
+    fun `unbringing is refused on a cancelled game day too`() {
+        BringGameDecider.given(gameDayCreated(), PlayerJoined(gorefest7, anna), GameBrought(gorefest7, anna, BggId(13)), cancelled)
+            .whenever(BringGame(gorefest7, anna, BggId(13), false)).thenRejects(Rejection.GameDayCancelled)
+    }
+
+    @Test
+    fun `a cancelled game day lists with the past ones, even with a date ahead`() {
+        fun day(offset: Long): Pair<GameDayId, List<Event>> {
+            val id = GameDayId(Uuid.random())
+            return id to listOf(gameDayCreated(gameDay = id).copy(date = today.plusDays(offset)), PlayerJoined(id, anna))
+        }
+        val (upcoming, a) = day(7)
+        val (calledOff, b) = day(1)
+        val (past, c) = day(-7)
+        val state = (a + b + c + GameDayCancelled(calledOff)).fold(GameDays.initialState, GameDays::evolve)
+
+        with(GameDays) { state.forPlayer(anna) { today }.map { it.id } } shouldBe listOf(upcoming, calledOff, past)
+    }
+
+    @Test
+    fun `a stray end after the cancel changes nothing`() {
+        val state = listOf(gameDayCreated(), cancelled, GameDayEnded(gorefest7)).fold(GameDays.initialState, GameDays::evolve)
+        state.getValue(gorefest7).cancelled shouldBe true
+        // Cancelling again still says it was cancelled, not that it ended.
+        CancelGameDayDecider.given(gameDayCreated(), cancelled, GameDayEnded(gorefest7)).whenever(CancelGameDay(gorefest7, anna))
             .thenRejects(Rejection.GameDayCancelled)
     }
 

@@ -47,7 +47,7 @@ object EditGameDayDecider : Decider<EditGameDay, EditGameDayDecider.State, GameD
     override fun evolve(state: State, event: Event): State = when (event) {
         is GameDayCreated -> State.Open(event.host, event.title, event.date, event.place)
         is GameDayDetailsChanged -> if (state is State.Open) state.copy(title = event.title, date = event.date, place = event.place) else state
-        is GameDayEnded -> State.Ended
+        is GameDayEnded -> if (state == State.Cancelled) state else State.Ended
         is GameDayCancelled -> State.Cancelled
         else -> state
     }

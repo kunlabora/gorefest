@@ -24,7 +24,7 @@ import kotlin.uuid.Uuid
 
 sealed interface LoginResult {
     /** [sessionToken] goes in the cookie; [needsName] sends a new player to the welcome step first. */
-    data class LoggedIn(val sessionToken: String, val returnTo: String, val needsName: Boolean) : LoginResult
+    data class LoggedIn(val player: PlayerId, val sessionToken: String, val returnTo: String, val needsName: Boolean) : LoginResult
     data class Failed(val check: LoginCheck, val email: String, val returnTo: String) : LoginResult
     data object UnknownAttempt : LoginResult
 }
@@ -153,7 +153,7 @@ class Login(
             val player = players.findOrCreate(stored.email, PlayerId(ids.next()))
             val token = secrets.token()
             sessions.create(secrets.hash(token), player.id, clock.instant() + SESSION_TTL)
-            player.id to LoginResult.LoggedIn(token, stored.returnTo, needsName = player.name == null)
+            player.id to LoginResult.LoggedIn(player.id, token, stored.returnTo, needsName = player.name == null)
         }
         // After the commit: if this fails, the player's next login registers them instead.
         if (player != null) commands.handle(LogInDecider, LogIn(player))

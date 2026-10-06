@@ -12,4 +12,4 @@ Source: user testing, 2026-10-06. Status: ✅
 - [x] Host UI with a confirm step; members see "Cancelled"
 - [x] Event added to the list in `CLAUDE.md`
 
-**Done:** `GameDayCancelled` event, `CancelGameDayDecider`; join/edit/rotate/bring/wish/log reject a cancelled day (`Rejection.GameDayCancelled`); `GameDaySummary.cancelled`/`closed`; auto-close skips it; host confirm page `/gamedays/{id}/cancel`; hub/list show "Cancelled"; invite says it was cancelled (410).
+**Done:** `GameDayCancelled` event, `CancelGameDayDecider`; join/edit/rotate/bring/wish/log reject a cancelled day (`Rejection.GameDayCancelled`, which wins over a stray end); `GameDaySummary.cancelled`/`closed`; auto-close skips it. `memberGameDay` returns nothing (404) for a cancelled day unless `allowCancelled` (only the hub), so log, table, bring, readiness, taste and edit routes are closed. Host confirm page `/gamedays/{id}/cancel` (non-hosts get 404). Hub/list show "Cancelled". A member opening the invite lands on the hub, everyone else gets a 410 saying it was cancelled. The poll page says the picked game day was cancelled.

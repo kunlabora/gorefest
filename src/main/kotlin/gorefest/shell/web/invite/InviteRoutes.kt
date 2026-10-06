@@ -60,13 +60,16 @@ fun Route.inviteRoutes(app: App, invites: InviteLinks) {
         val gameDay = when (val invite = resolve(token)) {
             is Invite.Valid -> invite.gameDay
             is Invite.Ended -> return@get call.respondHtml(HttpStatusCode.Gone) { endedPage(invite.gameDay) }
-            is Invite.Cancelled -> return@get call.respondHtml(HttpStatusCode.Gone) { cancelledPage(invite.gameDay) }
+            // Members land on the hub, which says Cancelled; everyone else is told it's off.
+            is Invite.Cancelled ->
+                return@get if (sessionPlayer()?.id in invite.gameDay.players) redirect("/gamedays/${invite.gameDay.id}")
+                else call.respondHtml(HttpStatusCode.Gone) { cancelledPage(invite.gameDay) }
             Invite.Dead -> return@get call.respondHtml(HttpStatusCode.NotFound) { deadInvitePage() }
         }
         val me = sessionPlayer()
         if (me != null && me.id in gameDay.players) return@get redirect("/gamedays/${gameDay.id}")
         // Back from signing up or logging in for this invite: the player already said yes, so join without asking again.
-        if (me?.name != null && call.parameters["join"] == "1") return@get join(gameDay, me)
+        if (me?.name != null && invites.isJoinMarker(call.parameters["join"], me.id, "/i/$token")) return@get join(gameDay, me)
 
         val names = login.names(gameDay.players)
         val shelf = app.shelves.of(gameDay.id).mapNotNull { app.catalog[it.game] }

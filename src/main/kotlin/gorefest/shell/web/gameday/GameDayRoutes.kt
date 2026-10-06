@@ -90,7 +90,7 @@ fun Route.gameDayRoutes(app: App) {
 
     get("/gamedays/{id}/edit") {
         authenticated {
-            val gameDay = gameDayFromPath(app)?.takeIf { it.host == contextOf<CurrentPlayer>().id }
+            val gameDay = gameDayFromPath(app)?.takeIf { it.host == contextOf<CurrentPlayer>().id && !it.cancelled }
                 ?: return@authenticated call.respond(HttpStatusCode.NotFound)
             val values = Parameters.build {
                 append("title", gameDay.title)
@@ -123,7 +123,7 @@ fun Route.gameDayRoutes(app: App) {
     get("/gamedays/{id}") {
         authenticated {
             val me = contextOf<CurrentPlayer>()
-            val gameDay = memberGameDay(app, me) ?: return@authenticated call.respond(HttpStatusCode.NotFound)
+            val gameDay = memberGameDay(app, me, allowCancelled = true) ?: return@authenticated call.respond(HttpStatusCode.NotFound)
             val shelf = app.shelves.of(gameDay.id).mapNotNull { entry -> app.catalog[entry.game]?.let { it to entry } }
             val hub = GameDayHub(
                 gameDay = gameDay,
@@ -147,7 +147,8 @@ fun Route.gameDayRoutes(app: App) {
 
     post("/gamedays/{id}/cancel") {
         authenticated {
-            val gameDay = memberGameDay(app, contextOf<CurrentPlayer>()) ?: return@authenticated call.respond(HttpStatusCode.NotFound)
+            val gameDay = memberGameDay(app, contextOf<CurrentPlayer>())?.takeIf { it.host == contextOf<CurrentPlayer>().id }
+                ?: return@authenticated call.respond(HttpStatusCode.NotFound)
             when (val decision = app.commands.handle(CancelGameDayDecider, CancelGameDay(gameDay.id, contextOf<CurrentPlayer>().id))) {
                 is Decision.Accepted -> redirect("/gamedays/${gameDay.id}")
                 is Decision.Rejected -> call.respondHtml(HttpStatusCode.Conflict) { cancelGameDayPage(gameDay, decision.reason.message()) }

@@ -20,6 +20,8 @@ import gorefest.shell.web.shouldReplace
 import gorefest.shell.web.urlEncoded
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
+import io.kotest.matchers.string.shouldStartWith
 import io.ktor.client.request.forms.submitForm
 import io.ktor.client.request.get
 import io.ktor.client.statement.readRawBytes
@@ -194,9 +196,11 @@ class InviteRoutesTest {
         val loggedIn = client.submitForm("/login/code", parameters { append("attempt", "00000000-0000-0000-0000-000000000001"); append("code", code()) })
         loggedIn.headers[HttpHeaders.Location] shouldBe "/welcome?returnTo=${returnTo.urlEncoded()}"
         val named = client.submitForm("/welcome", parameters { append("name", "Nina"); append("returnTo", returnTo) })
-        named.headers[HttpHeaders.Location] shouldBe returnTo
+        val consent = named.headers[HttpHeaders.Location]!!
+        consent shouldStartWith "$link?join="
+        consent shouldNotBe returnTo   // the intent became a marker the server minted
 
-        client.get(returnTo).headers[HttpHeaders.Location] shouldBe "/gamedays/$gorefest7"
+        client.get(consent).headers[HttpHeaders.Location] shouldBe "/gamedays/$gorefest7"
         joined() shouldBe true
         client.get("/gamedays/$gorefest7").status shouldBe HttpStatusCode.OK
     }
@@ -207,9 +211,11 @@ class InviteRoutesTest {
         val returnTo = client.askForCodeFromInvite()
 
         val loggedIn = client.submitForm("/login/code", parameters { append("attempt", "00000000-0000-0000-0000-000000000001"); append("code", code()) })
-        loggedIn.headers[HttpHeaders.Location] shouldBe returnTo
+        val consent = loggedIn.headers[HttpHeaders.Location]!!
+        consent shouldStartWith "$link?join="
+        consent shouldNotBe returnTo
 
-        client.get(returnTo).headers[HttpHeaders.Location] shouldBe "/gamedays/$gorefest7"
+        client.get(consent).headers[HttpHeaders.Location] shouldBe "/gamedays/$gorefest7"
         joined("Kim") shouldBe true
     }
 
@@ -225,10 +231,31 @@ class InviteRoutesTest {
         val token = mailedLink().substringAfter("token=")
         val loggedIn = otherBrowser.submitForm("/login/link", parameters { append("token", token) })
         loggedIn.headers[HttpHeaders.Location] shouldBe "/welcome?returnTo=${returnTo.urlEncoded()}"
-        otherBrowser.submitForm("/welcome", parameters { append("name", "Nina"); append("returnTo", returnTo) })
+        val consent = otherBrowser.submitForm("/welcome", parameters { append("name", "Nina"); append("returnTo", returnTo) }).headers[HttpHeaders.Location]!!
 
-        otherBrowser.get(returnTo).headers[HttpHeaders.Location] shouldBe "/gamedays/$gorefest7"
+        otherBrowser.get(consent).headers[HttpHeaders.Location] shouldBe "/gamedays/$gorefest7"
         joined() shouldBe true
+    }
+
+    @Test
+    fun `a crafted link can't join anyone, it only shows the landing page`() = test.webTest(session = kim) { client ->
+        client.get("$link?join=1").status shouldBe HttpStatusCode.OK
+        client.get("$link?join=garbage").status shouldBe HttpStatusCode.OK
+        app.gameDaysById.getValue(gorefest7).players shouldBe listOf(anna)
+
+        // A marker minted for someone else, or for another invite, doesn't work either.
+        val others = app.invites.joinMarker(anna, link)
+        client.get("$link?join=$others").status shouldBe HttpStatusCode.OK
+        app.gameDaysById.getValue(gorefest7).players shouldBe listOf(anna)
+    }
+
+    @Test
+    fun `members opening a cancelled game day's link land on the hub`() = test.webTest(session = annaSession) { client ->
+        val link = link
+        given(gorefest.core.GameDayCancelled(gorefest7))
+
+        client.get(link).headers[HttpHeaders.Location] shouldBe "/gamedays/$gorefest7"
+        client.get("/gamedays/$gorefest7").page().one("h1 ~ span.gf-tag").text() shouldBe "Cancelled"
     }
 
     @Test

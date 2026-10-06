@@ -2,6 +2,7 @@ package gorefest.shell.gameday
 
 import gorefest.core.DatePollId
 import gorefest.core.GameDayId
+import gorefest.core.PlayerId
 import gorefest.core.gameday.GameDaySummary
 import java.security.MessageDigest
 import java.util.Base64
@@ -50,6 +51,15 @@ class InviteLinks(secretKey: String) {
         if (!MessageDigest.isEqual(sign("poll:$hex").toByteArray(), signature.toByteArray())) return null
         return runCatching { Uuid.parseHex(hex) }.getOrNull()?.let(::DatePollId)
     }
+
+    /**
+     * The consent to join through [path] (`/i/…` or `/p/…`) as [player]. The server mints it when that player finishes
+     * logging in for the invite, so a crafted link can't carry one: it only works for the same player and the same path.
+     */
+    fun joinMarker(player: PlayerId, path: String): String = sign("join:${player.value.toHexString()}:$path")
+
+    fun isJoinMarker(marker: String?, player: PlayerId, path: String): Boolean =
+        marker != null && MessageDigest.isEqual(joinMarker(player, path).toByteArray(), marker.toByteArray())
 
     private fun sign(payload: String): String =
         base64.encodeToString(Mac.getInstance("HmacSHA256").apply { init(key) }.doFinal(payload.toByteArray()).copyOf(16))

@@ -38,7 +38,7 @@ object RotateInviteLinkDecider : Decider<RotateInviteLink, RotateInviteLinkDecid
     override fun evolve(state: State, event: Event): State = when (event) {
         is GameDayCreated -> State.Open(event.host, version = 0)
         is InviteLinkRotated -> if (state is State.Open) state.copy(version = event.version) else state
-        is GameDayEnded -> State.Ended
+        is GameDayEnded -> if (state == State.Cancelled) state else State.Ended
         is GameDayCancelled -> State.Cancelled
         else -> state
     }

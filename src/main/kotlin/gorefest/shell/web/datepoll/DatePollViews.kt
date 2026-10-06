@@ -79,7 +79,8 @@ fun HTML.datePollPage(view: DatePollView) {
         }
         poll.picked?.let { picked ->
             notice("check", NoticeKind.GOOD) { +"The host picked "; strong { +picked.date.full() }; +"." }
-            if (view.gameDay != null && view.me in view.gameDay.players) linkButton("/gamedays/${view.gameDay.id}", "Open ${view.gameDay.title}", ButtonStyle.PRIMARY)
+            if (view.gameDay?.cancelled == true) p("gf-muted") { +"${view.gameDay.title} was cancelled by the host." }
+            else if (view.gameDay != null && view.me in view.gameDay.players) linkButton("/gamedays/${view.gameDay.id}", "Open ${view.gameDay.title}", ButtonStyle.PRIMARY)
             else p("gf-muted") { +"You weren't down as available that day, so you're not on the list. Ask ${view.names[poll.host] ?: "the host"} for the game day link if you can make it after all." }
         }
         if (poll.open) div("gf-section") {

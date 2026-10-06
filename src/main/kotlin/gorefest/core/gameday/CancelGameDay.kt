@@ -37,7 +37,7 @@ object CancelGameDayDecider : Decider<CancelGameDay, CancelGameDayDecider.State,
 
     override fun evolve(state: State, event: Event): State = when (event) {
         is GameDayCreated -> State.Open(event.host)
-        is GameDayEnded -> State.Ended
+        is GameDayEnded -> if (state == State.Cancelled) state else State.Ended
         is GameDayCancelled -> State.Cancelled
         else -> state
     }

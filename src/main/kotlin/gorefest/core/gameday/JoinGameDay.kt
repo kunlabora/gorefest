@@ -46,7 +46,7 @@ object JoinGameDayDecider : Decider<JoinGameDay, JoinGameDayDecider.State, Playe
     override fun evolve(state: State, event: Event): State = when (event) {
         is GameDayCreated -> State.Open(joined = false)
         is PlayerJoined -> if (state is State.Open) State.Open(joined = true) else state
-        is GameDayEnded -> State.Ended
+        is GameDayEnded -> if (state == State.Cancelled) state else State.Ended
         is GameDayCancelled -> State.Cancelled
         else -> state
     }
