@@ -51,6 +51,13 @@ class ComponentsTest {
     }
 
     @Test
+    fun `facts show a range, or the typical time when the range is wild`() {
+        game(null).facts shouldBe "30–45 min · 2–4"
+        game(null).copy(minPlaytime = 5, maxPlaytime = 1000, playingTime = 120).facts shouldBe "~120 min · 2–4"
+        game(null).copy(minPlaytime = 60, maxPlaytime = 1200, playingTime = 0).facts shouldBe "~268 min · 2–4"
+    }
+
+    @Test
     fun `one zone fallback everywhere`() {
         zoneOrDefault(null).id shouldBe DEFAULT_TIME_ZONE
         zoneOrDefault("Not/AZone").id shouldBe DEFAULT_TIME_ZONE

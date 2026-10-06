@@ -31,10 +31,18 @@ val Game.weightLabel: String
         else -> "heavy"
     }
 
+/** "60–90 min", or "~120 min" when BGG's range is too wide to mean anything (campaign games). */
+val Game.playtimeText: String
+    get() = when {
+        hasWildPlaytimeRange -> "~$typicalMinutes min"
+        minPlaytime == maxPlaytime -> "$minPlaytime min"
+        else -> "$minPlaytime–$maxPlaytime min"
+    }
+
 /** "60–90 min · medium · 1–4" */
 val Game.facts: String
     get() = listOf(
-        if (minPlaytime == maxPlaytime) "$minPlaytime min" else "$minPlaytime–$maxPlaytime min",
+        playtimeText,
         weightLabel,
         if (minPlayers == maxPlayers) "$minPlayers" else "$minPlayers–$maxPlayers",
     ).filter { it.isNotBlank() }.joinToString(" · ")

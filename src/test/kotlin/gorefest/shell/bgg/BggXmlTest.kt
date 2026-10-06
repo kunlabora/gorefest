@@ -79,6 +79,7 @@ class BggXmlTest {
         game.bestPlayers shouldBe setOf(3, 4)
         game.recommendedPlayers shouldBe setOf(2)
         (game.minPlaytime to game.maxPlaytime) shouldBe (60 to 120)
+        game.playingTime shouldBe 120
         game.weight shouldBe 3.8871
         game.mechanics shouldBe setOf("Hand Management", "Network and Route Building")
         game.categories shouldBe setOf("Economic")

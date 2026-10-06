@@ -155,4 +155,24 @@ class MatcherTest {
         declared.top.single().score shouldBe 0.3
         declared.top.single().reason shouldBe SuggestionReason.NewToSome(listOf("Kim"))
     }
+
+    @Test
+    fun `a campaign game with a wild playtime range counts as its typical time, for any table size`() {
+        val seventhContinent = codenames.copy(id = BggId(999_003), name = "The 7th Continent", minPlayers = 1, maxPlayers = 4, minPlaytime = 5, maxPlaytime = 1000, playingTime = 120)
+        val brassLike = brass.copy(id = BggId(999_004), name = "Fat Euro", minPlaytime = 60, maxPlaytime = 300) // wide, but not wild
+
+        seventhContinent.hasWildPlaytimeRange shouldBe true
+        brassLike.hasWildPlaytimeRange shouldBe false
+        Matcher.estimatedMinutes(seventhContinent, 1) shouldBe 120
+        Matcher.estimatedMinutes(seventhContinent, 4) shouldBe 120
+        Matcher.estimatedMinutes(seventhContinent, 3, speed = 1.5) shouldBe 180
+        val table = List(3) { player("P$it") }
+        matcher.suggest(table, shelf(seventhContinent), timeBudget = 120, now).names() shouldBe listOf("The 7th Continent")
+        matcher.suggest(table, shelf(seventhContinent), timeBudget = 90, now).shouldBeInstanceOf<Suggestions.NothingFits.NoGameInTime>()
+    }
+
+    @Test
+    fun `without BGG's typical time, a wild range falls back to the geometric mean`() {
+        codenames.copy(minPlaytime = 5, maxPlaytime = 1000).typicalMinutes shouldBe 71
+    }
 }

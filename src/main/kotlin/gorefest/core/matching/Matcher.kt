@@ -164,12 +164,15 @@ class Matcher(
 
         /**
          * BGG's playtime, interpolated from min to max over the player range, times the group's speed.
-         * Rounded to 5 min. A game without a playtime counts as [UNKNOWN_MINUTES], not as quick.
+         * Rounded to 5 min. A game without a playtime counts as [UNKNOWN_MINUTES], not as quick; a game
+         * with a wild range (campaigns) counts as its typical playing time, whatever the player count.
          */
         fun estimatedMinutes(game: Game, players: Int, speed: Double = 1.0): Int {
             val span = game.maxPlayers - game.minPlayers
             val t = if (span <= 0) 0.5 else ((players - game.minPlayers).toDouble() / span).coerceIn(0.0, 1.0)
-            val base = if (hasPlaytime(game)) game.minPlaytime + (game.maxPlaytime - game.minPlaytime) * t else UNKNOWN_MINUTES.toDouble()
+            val base = if (!hasPlaytime(game)) UNKNOWN_MINUTES.toDouble()
+            else if (game.hasWildPlaytimeRange) game.typicalMinutes.toDouble()
+            else game.minPlaytime + (game.maxPlaytime - game.minPlaytime) * t
             return ((base * speed / 5).roundToInt() * 5).coerceAtLeast(5)
         }
     }
