@@ -16,6 +16,7 @@ import gorefest.shell.bgg.Collections
 import gorefest.shell.bgg.DevCatalog
 import gorefest.shell.web.TestApp
 import gorefest.shell.web.components.duel
+import gorefest.shell.web.components.typeText
 import gorefest.shell.web.components.long
 import gorefest.shell.web.components.page
 import gorefest.shell.web.fragment
@@ -85,6 +86,17 @@ class TasteRoutesTest {
         wizard.one("form").attr("hx-target") shouldBe "#wizard"
         wizard.one(".gf-progress__count").text() shouldBe "1 / 15"
         page.one(".gf-appbar a").attr("href") shouldBe "/gamedays/$gorefest7/favourites"
+    }
+
+    @Test
+    fun `each game in the duel says what kind of game it is`() = test.webTest(session = kim) { client ->
+        val wizard = client.get(taste).page().one("main#wizard")
+
+        wizard.select(".gf-pick").forEach { pick ->
+            val game = DevCatalog.games.first { it.name == pick.one(".gf-pick__name").text() }
+            pick.one(".gf-pick__type").text() shouldBe game.typeText
+            game.typeText.isNotEmpty() shouldBe true
+        }
     }
 
     @Test

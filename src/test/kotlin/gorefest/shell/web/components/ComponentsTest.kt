@@ -58,6 +58,18 @@ class ComponentsTest {
     }
 
     @Test
+    fun `a game's type is one or two telling words from its categories and mechanics`() {
+        fun typeOf(name: String) = gorefest.shell.bgg.DevCatalog.games.first { it.name == name }.typeWords
+        typeOf("Pandemic") shouldBe listOf("Cooperative")
+        typeOf("Wingspan") shouldBe listOf("Engine building", "Dice")
+        typeOf("Codenames") shouldBe listOf("Party")
+        typeOf("Azul") shouldBe listOf("Abstract", "Tile placing")
+        game(null).typeWords shouldBe emptyList()
+        game(null).typeText shouldBe ""
+        game(null).copy(categories = setOf("Card Game"), mechanics = setOf("Deck, Bag, and Pool Building")).typeText shouldBe "Deck building · Card game"
+    }
+
+    @Test
     fun `one zone fallback everywhere`() {
         zoneOrDefault(null).id shouldBe DEFAULT_TIME_ZONE
         zoneOrDefault("Not/AZone").id shouldBe DEFAULT_TIME_ZONE

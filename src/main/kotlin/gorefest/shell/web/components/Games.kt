@@ -47,6 +47,41 @@ val Game.facts: String
         if (minPlayers == maxPlayers) "$minPlayers" else "$minPlayers–$maxPlayers",
     ).filter { it.isNotBlank() }.joinToString(" · ")
 
+/** BGG category / mechanic name fragments, most telling first, and the short word each one gives. */
+private val TYPE_WORDS = listOf(
+    "cooperative" to "Cooperative",
+    "party game" to "Party",
+    "abstract strategy" to "Abstract",
+    "wargame" to "Wargame",
+    "legacy" to "Legacy",
+    "hidden roles" to "Hidden roles",
+    "deck" to "Deck building",
+    "worker placement" to "Worker placement",
+    "engine building" to "Engine building",
+    "area majority" to "Area control",
+    "tile placement" to "Tile placing",
+    "drafting" to "Drafting",
+    "set collection" to "Set collection",
+    "push your luck" to "Push your luck",
+    "network and route" to "Route building",
+    "trick-taking" to "Trick-taking",
+    "dice" to "Dice",
+    "card game" to "Card game",
+)
+
+/**
+ * One or two words saying what kind of game this is ("Card game", "Cooperative"), from BGG's categories and
+ * mechanics, to help people choose. Empty when none of them says anything useful.
+ */
+val Game.typeWords: List<String>
+    get() {
+        val names = (categories + mechanics).map { it.lowercase() }
+        return TYPE_WORDS.filter { (fragment, _) -> names.any { fragment in it } }.map { it.second }.distinct().take(2)
+    }
+
+/** "Card game · Cooperative", or "" when [typeWords] has nothing. */
+val Game.typeText: String get() = typeWords.joinToString(" · ")
+
 /** The game's page on BoardGameGeek, which we credit wherever its data is shown. */
 val Game.bggUrl: String get() = "https://boardgamegeek.com/boardgame/${id.value}"
 
@@ -123,6 +158,7 @@ fun FlowContent.rankedGame(rank: Int, game: Game, reason: String, meta: P.() -> 
         art(game, if (rank == 1) "gf-art--wide" else "")
         div("gf-game__body") {
             h3("gf-game__name") { bggNameLink(game) }
+            if (game.typeText.isNotEmpty()) p("gf-game__type") { +game.typeText }
             p("gf-game__meta") { meta() }
             p("gf-game__reason") { icon("spark"); +reason }
         }
@@ -164,6 +200,7 @@ private fun FlowContent.pick(game: Game, key: String, keyId: Boolean) = button(t
     span("gf-pick__key") { attributes["aria-hidden"] = "true"; +key }
     art(game)
     span("gf-pick__name") { +game.name }
+    if (game.typeText.isNotEmpty()) span("gf-pick__type") { +game.typeText }
     span("gf-pick__facts") { +game.facts }
     spinner()
 }
