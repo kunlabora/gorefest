@@ -131,6 +131,8 @@ class TasteRoutesTest {
         val payoff = client.get(redirect!!).page()
         payoff.one("h1").text() shouldBe "Your likely favourites today"
         payoff.select(".gf-podium li") shouldHaveSize 3
+        // The rank pills sit inside their cards (the cards are positioned and isolated), so the dock can't be overlapped by them.
+        payoff.select(".gf-podium li > .gf-game > .gf-game__rank") shouldHaveSize 3
         payoff.select(".gf-game__reason").forEach { (it.text().startsWith("You picked it over") || it.text() == "Just a guess so far: it hasn't won a pair yet.") shouldBe true }
         payoff.one(".gf-kicker").text() shouldStartWith "Round done ·"
     }
