@@ -279,8 +279,9 @@ div.gf-tile { cursor: default; }
 
 /* BoardGameGeek credit: the footer line and links to each game's BGG page */
 .gf-credit { margin: var(--space-4) 0 0; font-size: 13px; line-height: 18px; color: var(--ink-muted); text-align: center; }
-.gf-footer { margin-top: auto; padding-top: var(--space-4); }
-.gf-credit--version { margin-top: var(--space-2); font-size: 12px; }
+.gf-footer { padding: var(--space-4) var(--space-4) calc(var(--space-5) + env(safe-area-inset-bottom)); }
+.gf-footer .gf-credit { margin-top: 0; }
+.gf-footer .gf-credit--version { margin-top: var(--space-2); font-size: 12px; }
 .gf-credit a, .gf-bgglink { color: inherit; text-decoration: none; }
 .gf-credit a { text-decoration: underline; }
 /* The logo is dark ink on transparent: keep it on a light pill so it reads in the dark theme too. */

@@ -198,11 +198,9 @@ class TasteRoutesTest {
     }
 
     @Test
-    fun `the BGG credit survives an answer`() = test.webTest(session = kim) { client ->
-        val first = client.get(taste).page().one("#wizard")
-        first.select(".gf-credit .gf-credit__logo img") shouldHaveSize 1
-
-        val next = client.answer(first, "A").fragment()
-        next.select(".gf-credit .gf-credit__logo img") shouldHaveSize 1
+    fun `the BGG credit is in the page footer, outside the swapped wizard`() = test.webTest(session = kim) { client ->
+        val page = client.get(taste).page()
+        page.select("footer.gf-footer .gf-credit .gf-credit__logo img") shouldHaveSize 1
+        page.select("#wizard .gf-credit") shouldHaveSize 0
     }
 }

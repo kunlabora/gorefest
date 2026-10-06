@@ -75,12 +75,12 @@ fun HTML.page(
             main("gf-body $mainClasses".trim()) {
                 if (mainId != null) id = mainId
                 content()
-                footer("gf-footer") {
-                    bggCredit()
-                    p("gf-credit gf-credit--version") { +"Gorefest v$APP_VERSION" }
-                }
             }
             if (dock != null) div("gf-dock") { dock() }
+            footer("gf-footer") {
+                bggCredit()
+                p("gf-credit gf-credit--version") { +"Gorefest v$APP_VERSION" }
+            }
         }
     }
 }

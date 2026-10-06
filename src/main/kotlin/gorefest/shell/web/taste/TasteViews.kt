@@ -27,7 +27,6 @@ fun HTML.wizardPage(step: WizardStep) = page(
 fun TagConsumer<*>.wizardFragment(step: WizardStep) = main("gf-body gf-wizard") {
     id = "wizard"
     wizardContent(step)
-    bggCredit()
 }
 
 private fun FlowContent.wizardContent(step: WizardStep) {
