@@ -42,6 +42,7 @@ import gorefest.shell.web.components.sectionHead
 import gorefest.shell.web.datepoll.pollCard
 import gorefest.shell.web.suggestions.suggestions
 import io.ktor.http.Parameters
+import kotlinx.html.ButtonType
 import kotlinx.html.FlowContent
 import kotlinx.html.FormMethod
 import kotlinx.html.HTML
@@ -145,7 +146,7 @@ context(me: CurrentPlayer)
 fun HTML.gameDayPage(hub: GameDayHub) {
     val gameDay = hub.gameDay
     val isHost = gameDay.host == me.id
-    val open = !gameDay.ended
+    val open = !gameDay.closed
     page(gameDay.title, appBar = {
         backLink("/", "All game days")
         appBarTitle("Game days")
@@ -154,14 +155,15 @@ fun HTML.gameDayPage(hub: GameDayHub) {
         div("gf-stack") {
             p("gf-kicker") { +listOf(gameDay.date.long(), gameDay.place).filter { it.isNotBlank() }.joinToString(" · ") }
             h1("gf-h1") { +gameDay.title }
-            if (gameDay.ended) span("gf-tag") { +"Ended" }
+            if (gameDay.cancelled) span("gf-tag") { +"Cancelled" } else if (gameDay.ended) span("gf-tag") { +"Ended" }
         }
         hub.next?.let { nextStepCard(gameDay, it) }
         if (open && hub.shelf.isNotEmpty()) div("gf-stack") {
             linkButton("/gamedays/${gameDay.id}/table", "Pick a game for my table", ButtonStyle.SECONDARY, ButtonSize.LARGE, block = true, icon = "dice")
         }
         if (hub.played.isNotEmpty()) section("gf-section") {
-            h2("gf-h2") { +"Played today" }
+            // The log stays one tap away all day, not only through the checkpoint card.
+            sectionHead("Played today", "/gamedays/${gameDay.id}/log".takeIf { hub.next is NextStep.Checkpoint }, "Log a game")
             ul("gf-list") {
                 hub.played.forEach { (game, log) ->
                     li {
@@ -187,8 +189,23 @@ fun HTML.gameDayPage(hub: GameDayHub) {
             h2("gf-h2") { +"Invite friends" }
             consumer.invite(gameDay, hub.inviteLink)
         }
+        if (isHost && open) p("gf-small") { a("/gamedays/${gameDay.id}/cancel", classes = "gf-link") { +"Cancel this game day" } }
     }
 }
+
+/** The host's confirm step: cancelling is final, and nobody is mailed. */
+fun HTML.cancelGameDayPage(gameDay: GameDaySummary, error: String? = null) =
+    page("Cancel ${gameDay.title}", appBar = { backLink("/gamedays/${gameDay.id}", gameDay.title); appBarTitle("Cancel game day") }) {
+        div("gf-stack") {
+            h1("gf-h1") { +"Cancel ${gameDay.title}?" }
+            if (error != null) errorNotice(error)
+            p("gf-muted") { +"The game day stays visible to everyone who joined, marked as cancelled, and can't be changed anymore. The invite link stops working. Nobody gets an email, so tell your group yourself." }
+            form(action = "/gamedays/${gameDay.id}/cancel", method = FormMethod.post, classes = "gf-stack") {
+                button(type = ButtonType.submit, classes = buttonClasses(ButtonStyle.PRIMARY, ButtonSize.LARGE, block = true)) { +"Yes, cancel the game day" }
+                linkButton("/gamedays/${gameDay.id}", "Keep it", ButtonStyle.GHOST, block = true)
+            }
+        }
+    }
 
 private fun FlowContent.nextStepCard(gameDay: GameDaySummary, next: NextStep) {
     val base = "/gamedays/${gameDay.id}"
@@ -257,5 +274,5 @@ private fun FlowContent.dayCard(gameDay: GameDaySummary, today: LocalDate) = day
     day = gameDay.date.dayOfMonth.toString(),
     title = gameDay.title,
     meta = listOf(gameDay.place, "${gameDay.players.size} going").filter { it.isNotBlank() }.joinToString(" · "),
-    tag = if (gameDay.ended) "Ended" else null,
+    tag = if (gameDay.cancelled) "Cancelled" else if (gameDay.ended) "Ended" else null,
 )

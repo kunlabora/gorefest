@@ -150,6 +150,13 @@ data class PlayLogged(
     override val tags get() = setOf(Tags.gameDay(gameDay), Tags.game(game)) + players.map(Tags::player)
 }
 
+/** The host called the game day off. It stays visible but read-only, and its invite stops working. */
+@Serializable
+@SerialName("GameDayCancelled")
+data class GameDayCancelled(val gameDay: GameDayId) : Event {
+    override val tags get() = setOf(Tags.gameDay(gameDay))
+}
+
 @Serializable
 @SerialName("GameDayEnded")
 data class GameDayEnded(val gameDay: GameDayId) : Event {

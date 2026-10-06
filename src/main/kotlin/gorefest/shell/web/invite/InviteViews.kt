@@ -77,6 +77,15 @@ fun HTML.deadInvitePage(reason: String = "This invite link doesn't work anymore"
     }
 }
 
+fun HTML.cancelledPage(gameDay: GameDaySummary) = page(gameDay.title, appBar = { appBarTitle("Gorefest") }) {
+    div("gf-stack") {
+        p("gf-kicker") { +gameDay.date.long() }
+        h1("gf-h1") { +"${gameDay.title} was cancelled" }
+        p("gf-muted") { +"The host called this game day off. Ask them what's next." }
+        a("/", classes = "gf-link") { +"Your game days" }
+    }
+}
+
 fun HTML.endedPage(gameDay: GameDaySummary) = page(gameDay.title, appBar = { appBarTitle("Gorefest") }) {
     div("gf-stack") {
         p("gf-kicker") { +gameDay.date.long() }

@@ -29,6 +29,7 @@ import io.ktor.server.routing.post
 private sealed interface Invite {
     data class Valid(val gameDay: GameDaySummary) : Invite
     data class Ended(val gameDay: GameDaySummary) : Invite
+    data class Cancelled(val gameDay: GameDaySummary) : Invite
     data object Dead : Invite
 }
 
@@ -38,6 +39,7 @@ fun Route.inviteRoutes(app: App, invites: InviteLinks) {
         val (id, version) = token?.let(invites::parse) ?: return Invite.Dead
         val gameDay = app.gameDaysById[id] ?: return Invite.Dead
         return when {
+            gameDay.cancelled -> Invite.Cancelled(gameDay)
             gameDay.ended -> Invite.Ended(gameDay)
             gameDay.inviteVersion != version -> Invite.Dead
             else -> Invite.Valid(gameDay)
@@ -49,6 +51,7 @@ fun Route.inviteRoutes(app: App, invites: InviteLinks) {
         val gameDay = when (val invite = resolve(token)) {
             is Invite.Valid -> invite.gameDay
             is Invite.Ended -> return@get call.respondHtml(HttpStatusCode.Gone) { endedPage(invite.gameDay) }
+            is Invite.Cancelled -> return@get call.respondHtml(HttpStatusCode.Gone) { cancelledPage(invite.gameDay) }
             Invite.Dead -> return@get call.respondHtml(HttpStatusCode.NotFound) { deadInvitePage() }
         }
         val me = sessionPlayer()
@@ -73,6 +76,7 @@ fun Route.inviteRoutes(app: App, invites: InviteLinks) {
         val gameDay = when (val invite = resolve(token)) {
             is Invite.Valid -> invite.gameDay
             is Invite.Ended -> return@post call.respondHtml(HttpStatusCode.Gone) { endedPage(invite.gameDay) }
+            is Invite.Cancelled -> return@post call.respondHtml(HttpStatusCode.Gone) { cancelledPage(invite.gameDay) }
             Invite.Dead -> return@post call.respondHtml(HttpStatusCode.NotFound) { deadInvitePage() }
         }
         val me = sessionPlayer() ?: return@post redirect("/login?returnTo=${"/i/$token".urlEncoded()}")

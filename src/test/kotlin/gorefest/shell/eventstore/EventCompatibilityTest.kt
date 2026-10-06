@@ -14,6 +14,7 @@ import gorefest.core.DatePollCreated
 import gorefest.core.DatePollId
 import gorefest.core.DatePollJoined
 import gorefest.core.GameDayDetailsChanged
+import gorefest.core.GameDayCancelled
 import gorefest.core.GameDayEnded
 import gorefest.core.GameDayId
 import gorefest.core.GamePlayStatusDeclared
@@ -84,6 +85,8 @@ class EventCompatibilityTest {
             GamePlayStatusDeclared(player(p1), BggId(13), false),
         """{"type":"PlayLogged","gameDay":"$d1","game":13,"players":["$p1","$p2"],"minutes":90,"loggedBy":"$p1","at":"2026-10-03T14:00:00Z"}""" to
             PlayLogged(gameDay, BggId(13), listOf(player(p1), player(p2)), 90, player(p1), Instant.parse("2026-10-03T14:00:00Z")),
+        """{"type":"GameDayCancelled","gameDay":"$d1"}""" to
+            GameDayCancelled(gameDay),
         """{"type":"GameDayEnded","gameDay":"$d1"}""" to
             GameDayEnded(gameDay),
     )

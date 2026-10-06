@@ -2,6 +2,7 @@ package gorefest.core.gameday
 
 import gorefest.core.Rejection
 import gorefest.core.BggId
+import gorefest.core.GameDayDetailsChanged
 import gorefest.core.GameDayEnded
 import gorefest.core.PlayLogged
 import gorefest.core.PlayerJoined
@@ -34,6 +35,21 @@ class PlaysTest {
         LogPlayDecider.given(*joined).whenever(log(0)).thenRejects(Rejection.ImplausibleDuration)
         LogPlayDecider.given(*joined, GameDayEnded(gorefest7)).whenever(log(45)).thenRejects(Rejection.GameDayOver)
         LogPlayDecider.given(gameDayCreated()).whenever(log(45)).thenRejects(Rejection.NotJoined)
+    }
+
+    @Test
+    fun `plays can be logged during the game day, from its date in its own time zone`() {
+        fun at(instant: String) = log(45).copy(at = Instant.parse(instant))
+        // 27 Sep, Europe/Brussels (UTC+2): the day starts at 26 Sep 22:00 UTC.
+        LogPlayDecider.given(*joined).whenever(at("2026-09-27T09:00:00Z")).thenEmits(at("2026-09-27T09:00:00Z"))
+        LogPlayDecider.given(*joined).whenever(at("2026-09-26T22:00:00Z")).thenEmits(at("2026-09-26T22:00:00Z"))
+        LogPlayDecider.given(*joined).whenever(at("2026-09-26T21:59:00Z")).thenRejects(Rejection.GameDayNotStarted)
+    }
+
+    @Test
+    fun `moving the game day moves when logging opens`() {
+        val moved = GameDayDetailsChanged(gorefest7, "Gorefest #7", today.plusDays(10), "Anna's place")
+        LogPlayDecider.given(*joined, moved).whenever(log(45)).thenRejects(Rejection.GameDayNotStarted)
     }
 
     @Test

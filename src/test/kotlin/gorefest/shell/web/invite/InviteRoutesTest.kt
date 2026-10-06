@@ -152,4 +152,17 @@ class InviteRoutesTest {
             client.htmxPost("/gamedays/$gorefest7/invite").status shouldBe HttpStatusCode.Forbidden
         }
     }
+
+
+    @Test
+    fun `a cancelled game day's link says so, and joining is refused`() = test.webTest(session = kim) { client ->
+        val link = link
+        given(gorefest.core.GameDayCancelled(gorefest7))
+
+        val response = client.get(link)
+        response.status shouldBe HttpStatusCode.Gone
+        response.page().one("h1").text() shouldBe "Gorefest #7 was cancelled"
+        client.submitForm("$link/join", parameters {}).status shouldBe HttpStatusCode.Gone
+        app.gameDaysById.getValue(gorefest7).players.contains(kimId) shouldBe false
+    }
 }

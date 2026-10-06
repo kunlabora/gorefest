@@ -3,6 +3,7 @@ package gorefest.core.gameday
 import gorefest.core.Rejection
 import gorefest.core.Event
 import gorefest.core.GameDayCreated
+import gorefest.core.GameDayCancelled
 import gorefest.core.GameDayEnded
 import gorefest.core.GameDayId
 import gorefest.core.InviteLinkRotated
@@ -22,13 +23,14 @@ object RotateInviteLinkDecider : Decider<RotateInviteLink, RotateInviteLinkDecid
         data object Unknown : State
         data class Open(val host: PlayerId, val version: Int) : State
         data object Ended : State
+        data object Cancelled : State
     }
 
     override val initialState: State = State.Unknown
 
     override fun query(command: RotateInviteLink) = Query.of(
         Query.Item(
-            setOf(typeName<GameDayCreated>(), typeName<InviteLinkRotated>(), typeName<GameDayEnded>()),
+            setOf(typeName<GameDayCreated>(), typeName<InviteLinkRotated>(), typeName<GameDayEnded>(), typeName<GameDayCancelled>()),
             setOf(Tags.gameDay(command.gameDay)),
         ),
     )
@@ -37,12 +39,14 @@ object RotateInviteLinkDecider : Decider<RotateInviteLink, RotateInviteLinkDecid
         is GameDayCreated -> State.Open(event.host, version = 0)
         is InviteLinkRotated -> if (state is State.Open) state.copy(version = event.version) else state
         is GameDayEnded -> State.Ended
+        is GameDayCancelled -> State.Cancelled
         else -> state
     }
 
     override fun decide(command: RotateInviteLink, state: State): Decision<InviteLinkRotated> = when (state) {
         State.Unknown -> Rejected(Rejection.NoSuchGameDay)
         State.Ended -> Rejected(Rejection.GameDayOver)
+        State.Cancelled -> Rejected(Rejection.GameDayCancelled)
         is State.Open ->
             if (command.by != state.host) Rejected(Rejection.OnlyHostCanRotateInvite)
             else Accepted(InviteLinkRotated(command.gameDay, state.version + 1))

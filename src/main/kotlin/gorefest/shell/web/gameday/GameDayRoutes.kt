@@ -2,6 +2,8 @@ package gorefest.shell.web.gameday
 
 import gorefest.core.GameDayId
 import gorefest.core.eventsourcing.Decision
+import gorefest.core.gameday.CancelGameDay
+import gorefest.core.gameday.CancelGameDayDecider
 import gorefest.core.gameday.CreateGameDay
 import gorefest.core.gameday.CreateGameDayDecider
 import gorefest.core.gameday.EditGameDay
@@ -128,6 +130,24 @@ fun Route.gameDayRoutes(app: App) {
         }
     }
 
+    get("/gamedays/{id}/cancel") {
+        authenticated {
+            val gameDay = memberGameDay(app, contextOf<CurrentPlayer>())?.takeIf { it.host == contextOf<CurrentPlayer>().id && !it.closed }
+                ?: return@authenticated call.respond(HttpStatusCode.NotFound)
+            call.respondHtml { cancelGameDayPage(gameDay) }
+        }
+    }
+
+    post("/gamedays/{id}/cancel") {
+        authenticated {
+            val gameDay = memberGameDay(app, contextOf<CurrentPlayer>()) ?: return@authenticated call.respond(HttpStatusCode.NotFound)
+            when (val decision = app.commands.handle(CancelGameDayDecider, CancelGameDay(gameDay.id, contextOf<CurrentPlayer>().id))) {
+                is Decision.Accepted -> redirect("/gamedays/${gameDay.id}")
+                is Decision.Rejected -> call.respondHtml(HttpStatusCode.Conflict) { cancelGameDayPage(gameDay, decision.reason.message()) }
+            }
+        }
+    }
+
     post("/gamedays/{id}/invite") {
         authenticated {
             val gameDay = memberGameDay(app, contextOf<CurrentPlayer>()) ?: return@authenticated call.respond(HttpStatusCode.NotFound)
@@ -145,8 +165,8 @@ fun Route.gameDayRoutes(app: App) {
 /** Before the day: taste round, then top-up or favourites. On the day: the checkpoint. After: nothing. */
 context(clock: Clock)
 private suspend fun nextStep(app: App, gameDay: GameDaySummary, me: CurrentPlayer, shelf: List<gorefest.core.game.Game>): NextStep? {
-    if (gameDay.ended) return null
-    if (gameDay.date == clock.todayIn(gameDay.timeZone)) return NextStep.Checkpoint(checkpointLabel(gameDay, clock))
+    if (gameDay.closed) return null
+    if (gameDay.date <= clock.todayIn(gameDay.timeZone)) return NextStep.Checkpoint(checkpointLabel(gameDay, clock))
     val history = app.tastes.of(me.id)
     val answers = history.comparisons.size
     if (answers < TOP_UP_AFTER) return NextStep.TasteRound

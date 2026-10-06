@@ -172,4 +172,25 @@ class CheckpointRoutesTest {
         val page = client.get("/gamedays/$gorefest7/log/compare?game=$azul&minutes=999999&players=$kimId").page()
         page.one(".gf-notice--good").text() shouldBe "Logged Azul: 1 player, 0 min."
     }
+
+    @Test
+    fun `during the game day a play can be logged, and the hub keeps the log one tap away`() = test.webTest(session = kim) { client ->
+        val response = client.htmxPost(log, parameters { append("game", azul.toString()); append("players", kimId.toString()); append("duration", "30m") })
+        response.status shouldBe io.ktor.http.HttpStatusCode.NoContent
+        app.plays.on(gorefest7) shouldHaveSize 1
+
+        val section = client.get("/gamedays/$gorefest7").page().one("section:has(h2:containsOwn(Played today))")
+        section.one("a.gf-link").attr("href") shouldBe log
+    }
+
+    @Test
+    fun `before the game day nothing can be logged`() = test.webTest(session = kim) { client ->
+        test.clock.advance(Duration.ofDays(-3))
+
+        val response = client.htmxPost(log, parameters { append("game", azul.toString()); append("players", kimId.toString()); append("duration", "30m") })
+
+        response.fragment().one(".gf-notice").text() shouldBe "The game day hasn't started yet"
+        app.plays.on(gorefest7) shouldHaveSize 0
+        client.get("/gamedays/$gorefest7").page().select(".gf-next a[href=$log]").size shouldBe 0
+    }
 }

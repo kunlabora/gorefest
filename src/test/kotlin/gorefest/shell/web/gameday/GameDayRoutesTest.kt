@@ -273,4 +273,34 @@ class GameDayRoutesTest {
         client.htmxPost("/gamedays/$gorefest7/edit", validForm).status shouldBe HttpStatusCode.NotFound
         client.htmxPost("/gamedays/$gorefest7/invite").status shouldBe HttpStatusCode.NotFound
     }
+
+
+    @Test
+    fun `the host cancels after a confirm step, and members see Cancelled`() = webTest { client ->
+        given(gameDayCreated(host = timId), PlayerJoined(gorefest7, timId), PlayerJoined(gorefest7, anna))
+
+        client.get("/gamedays/$gorefest7").page().one("a[href=/gamedays/$gorefest7/cancel]")
+        val confirm = client.get("/gamedays/$gorefest7/cancel").page()
+        confirm.one("form[action=/gamedays/$gorefest7/cancel] button").text() shouldBe "Yes, cancel the game day"
+        app.gameDaysById.getValue(gorefest7).cancelled shouldBe false
+
+        client.submitForm("/gamedays/$gorefest7/cancel", parameters {}).headers["Location"] shouldBe "/gamedays/$gorefest7"
+
+        val hub = client.get("/gamedays/$gorefest7").page()
+        hub.one("h1 ~ span.gf-tag").text() shouldBe "Cancelled"
+        hub.select("a[href=/gamedays/$gorefest7/cancel], a[href=/gamedays/$gorefest7/edit], a[href=/gamedays/$gorefest7/bring]").shouldBeEmpty()
+        client.get("/").page().one("a[href=/gamedays/$gorefest7]").text() shouldContain "Cancelled"
+    }
+
+    @Test
+    fun `only the host can cancel`() = webTest { client ->
+        given(gameDayCreated(host = anna), PlayerJoined(gorefest7, anna), PlayerJoined(gorefest7, timId))
+
+        client.get("/gamedays/$gorefest7").page().select("a[href=/gamedays/$gorefest7/cancel]").shouldBeEmpty()
+        client.get("/gamedays/$gorefest7/cancel").status shouldBe HttpStatusCode.NotFound
+        val response = client.submitForm("/gamedays/$gorefest7/cancel", parameters {})
+        response.status shouldBe HttpStatusCode.Conflict
+        response.page().one(".gf-notice").text() shouldContain "Only the host can cancel"
+        app.gameDaysById.getValue(gorefest7).cancelled shouldBe false
+    }
 }

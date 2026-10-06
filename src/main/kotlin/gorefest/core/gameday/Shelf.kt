@@ -5,6 +5,7 @@ import gorefest.core.BggId
 import gorefest.core.Event
 import gorefest.core.GameBrought
 import gorefest.core.GameDayCreated
+import gorefest.core.GameDayCancelled
 import gorefest.core.GameDayEnded
 import gorefest.core.GameDayId
 import gorefest.core.GameUnbrought
@@ -25,10 +26,10 @@ data class BringGame(val gameDay: GameDayId, val player: PlayerId, val game: Bgg
 data class SetPlayWish(val gameDay: GameDayId, val player: PlayerId, val game: BggId, val wantsToPlay: Boolean)
 
 /** What a bring decision needs to know: is the game day on, did I join, am I bringing this game, do I want to play it. */
-data class BringState(val open: Boolean = false, val ended: Boolean = false, val joined: Boolean = false, val bringing: Boolean = false, val wants: Boolean = false)
+data class BringState(val open: Boolean = false, val ended: Boolean = false, val cancelled: Boolean = false, val joined: Boolean = false, val bringing: Boolean = false, val wants: Boolean = false)
 
 private fun bringQuery(gameDay: GameDayId, player: PlayerId, game: BggId) = Query.of(
-    Query.Item(setOf(typeName<GameDayCreated>(), typeName<GameDayEnded>()), setOf(Tags.gameDay(gameDay))),
+    Query.Item(setOf(typeName<GameDayCreated>(), typeName<GameDayEnded>(), typeName<GameDayCancelled>()), setOf(Tags.gameDay(gameDay))),
     Query.Item(setOf(typeName<PlayerJoined>()), setOf(Tags.gameDay(gameDay), Tags.player(player))),
     Query.Item(
         setOf(typeName<GameBrought>(), typeName<GameUnbrought>(), typeName<PlayWishChanged>()),
@@ -39,6 +40,7 @@ private fun bringQuery(gameDay: GameDayId, player: PlayerId, game: BggId) = Quer
 private fun evolveBring(state: BringState, event: Event) = when (event) {
     is GameDayCreated -> state.copy(open = true)
     is GameDayEnded -> state.copy(ended = true)
+    is GameDayCancelled -> state.copy(cancelled = true)
     is PlayerJoined -> state.copy(joined = true)
     is GameBrought -> state.copy(bringing = true)
     is GameUnbrought -> state.copy(bringing = false, wants = false)
@@ -49,6 +51,7 @@ private fun evolveBring(state: BringState, event: Event) = when (event) {
 private fun BringState.cantChange(): Rejection? = when {
     !open -> Rejection.NoSuchGameDay
     ended -> Rejection.GameDayOver
+    cancelled -> Rejection.GameDayCancelled
     !joined -> Rejection.NotJoined
     else -> null
 }

@@ -23,7 +23,7 @@ fun HTML.bringPage(gameDay: GameDaySummary, rows: List<BringRow>, linked: Boolea
         +"Link your BGG account to pick from your collection. "
         a("/bgg?returnTo=${"/gamedays/${gameDay.id}/bring".urlEncoded()}", classes = "gf-link") { +"Link BGG" }
     }
-    if (gameDay.ended) p("gf-muted") { +"This game day has ended, so the shelf is final." }
+    if (gameDay.closed) p("gf-muted") { +if (gameDay.cancelled) "This game day was cancelled, so the shelf is final." else "This game day has ended, so the shelf is final." }
     else {
         searchField(
             placeholder = if (linked) "Search your collection or BGG" else "Search BGG",
@@ -43,7 +43,7 @@ fun TagConsumer<*>.bringList(gameDay: GameDaySummary, rows: List<BringRow>) = ul
     hx("get", "/gamedays/${gameDay.id}/bring/list")
     hx("trigger", "$BRING_LIST_CHANGED from:body")
     hx("swap", "outerHTML")
-    rows.forEach { bringItem(gameDay, it, readOnly = gameDay.ended) }
+    rows.forEach { bringItem(gameDay, it, readOnly = gameDay.closed) }
 }
 
 fun TagConsumer<*>.searchResults(gameDay: GameDaySummary, rows: List<BringRow>, bggUnavailable: Boolean) = div {

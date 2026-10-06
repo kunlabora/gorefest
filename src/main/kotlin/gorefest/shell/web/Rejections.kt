@@ -7,6 +7,9 @@ import gorefest.core.datepoll.MAX_POLL_DATES
 fun Rejection.message(): String = when (this) {
     Rejection.NoSuchGameDay -> "No such game day"
     Rejection.GameDayOver -> "This game day has ended"
+    Rejection.GameDayCancelled -> "This game day was cancelled"
+    Rejection.OnlyHostCanCancel -> "Only the host can cancel the game day"
+    Rejection.GameDayNotStarted -> "The game day hasn't started yet"
     Rejection.GameDayAlreadyExists -> "Game day already exists"
     Rejection.TitleMissing -> "Give the game day a title"
     Rejection.DateInPast -> "That date is in the past"

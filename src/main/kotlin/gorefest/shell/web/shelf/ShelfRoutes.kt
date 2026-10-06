@@ -103,7 +103,7 @@ private suspend fun RoutingContext.respondBringDecision(
     // A search row isn't in the list below it, so tell the list to look again.
     if (prefix == "search") call.response.header("HX-Trigger", BRING_LIST_CHANGED)
     respondFragment(if (decision is Decision.Rejected) HttpStatusCode.Conflict else HttpStatusCode.OK) {
-        bringItem(gameDay, row, readOnly = gameDay.ended, error = (decision as? Decision.Rejected)?.reason?.message(), prefix = prefix)
+        bringItem(gameDay, row, readOnly = gameDay.closed, error = (decision as? Decision.Rejected)?.reason?.message(), prefix = prefix)
     }
 }
 

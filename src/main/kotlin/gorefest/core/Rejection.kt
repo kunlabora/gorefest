@@ -9,6 +9,12 @@ sealed interface Rejection {
 
     /** The game day has ended: its shelf, plays and invite are final. */
     data object GameDayOver : Rejection
+
+    /** The host cancelled the game day: it is read-only. */
+    data object GameDayCancelled : Rejection
+    data object OnlyHostCanCancel : Rejection
+    /** Plays can only be logged from the game day's date. */
+    data object GameDayNotStarted : Rejection
     data object GameDayAlreadyExists : Rejection
     data object TitleMissing : Rejection
     data object DateInPast : Rejection

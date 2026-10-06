@@ -3,6 +3,7 @@ package gorefest.core.gameday
 import gorefest.core.Rejection
 import gorefest.core.Event
 import gorefest.core.GameDayCreated
+import gorefest.core.GameDayCancelled
 import gorefest.core.GameDayEnded
 import gorefest.core.GameDayId
 import gorefest.core.PlayerId
@@ -26,13 +27,14 @@ object JoinGameDayDecider : Decider<JoinGameDay, JoinGameDayDecider.State, Playe
         data object Unknown : State
         data class Open(val joined: Boolean) : State
         data object Ended : State
+        data object Cancelled : State
     }
 
     override val initialState: State = State.Unknown
 
     override fun query(command: JoinGameDay) = Query.of(
         Query.Item(
-            types = setOf(typeName<GameDayCreated>(), typeName<GameDayEnded>()),
+            types = setOf(typeName<GameDayCreated>(), typeName<GameDayEnded>(), typeName<GameDayCancelled>()),
             tags = setOf(Tags.gameDay(command.gameDay)),
         ),
         Query.Item(
@@ -45,12 +47,14 @@ object JoinGameDayDecider : Decider<JoinGameDay, JoinGameDayDecider.State, Playe
         is GameDayCreated -> State.Open(joined = false)
         is PlayerJoined -> if (state is State.Open) State.Open(joined = true) else state
         is GameDayEnded -> State.Ended
+        is GameDayCancelled -> State.Cancelled
         else -> state
     }
 
     override fun decide(command: JoinGameDay, state: State): Decision<PlayerJoined> = when (state) {
         State.Unknown -> Rejected(Rejection.NoSuchGameDay)
         State.Ended -> Rejected(Rejection.GameDayOver)
+        State.Cancelled -> Rejected(Rejection.GameDayCancelled)
         is State.Open ->
             if (state.joined) Accepted()
             else Accepted(PlayerJoined(command.gameDay, command.player))

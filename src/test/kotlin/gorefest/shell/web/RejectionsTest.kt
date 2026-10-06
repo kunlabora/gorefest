@@ -10,6 +10,9 @@ class RejectionsTest {
         mapOf(
             Rejection.NoSuchGameDay to "No such game day",
             Rejection.GameDayOver to "This game day has ended",
+            Rejection.GameDayCancelled to "This game day was cancelled",
+            Rejection.OnlyHostCanCancel to "Only the host can cancel the game day",
+            Rejection.GameDayNotStarted to "The game day hasn't started yet",
             Rejection.GameDayAlreadyExists to "Game day already exists",
             Rejection.TitleMissing to "Give the game day a title",
             Rejection.DateInPast to "That date is in the past",

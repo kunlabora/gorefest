@@ -4,6 +4,7 @@ import gorefest.core.Rejection
 import gorefest.core.Event
 import gorefest.core.GameDayCreated
 import gorefest.core.GameDayDetailsChanged
+import gorefest.core.GameDayCancelled
 import gorefest.core.GameDayEnded
 import gorefest.core.GameDayId
 import gorefest.core.PlayerId
@@ -31,13 +32,14 @@ object EditGameDayDecider : Decider<EditGameDay, EditGameDayDecider.State, GameD
         data object Unknown : State
         data class Open(val host: PlayerId, val title: String, val date: LocalDate, val place: String) : State
         data object Ended : State
+        data object Cancelled : State
     }
 
     override val initialState: State = State.Unknown
 
     override fun query(command: EditGameDay) = Query.of(
         Query.Item(
-            setOf(typeName<GameDayCreated>(), typeName<GameDayDetailsChanged>(), typeName<GameDayEnded>()),
+            setOf(typeName<GameDayCreated>(), typeName<GameDayDetailsChanged>(), typeName<GameDayEnded>(), typeName<GameDayCancelled>()),
             setOf(Tags.gameDay(command.gameDay)),
         ),
     )
@@ -46,12 +48,14 @@ object EditGameDayDecider : Decider<EditGameDay, EditGameDayDecider.State, GameD
         is GameDayCreated -> State.Open(event.host, event.title, event.date, event.place)
         is GameDayDetailsChanged -> if (state is State.Open) state.copy(title = event.title, date = event.date, place = event.place) else state
         is GameDayEnded -> State.Ended
+        is GameDayCancelled -> State.Cancelled
         else -> state
     }
 
     override fun decide(command: EditGameDay, state: State): Decision<GameDayDetailsChanged> = when (state) {
         State.Unknown -> Rejected(Rejection.NoSuchGameDay)
         State.Ended -> Rejected(Rejection.GameDayOver)
+        State.Cancelled -> Rejected(Rejection.GameDayCancelled)
         is State.Open -> when {
             command.editor != state.host -> Rejected(Rejection.OnlyHostCanEdit)
             command.title.isBlank() -> Rejected(Rejection.TitleMissing)
