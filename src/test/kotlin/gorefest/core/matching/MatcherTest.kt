@@ -12,6 +12,7 @@ import gorefest.core.taste.PlayerGames
 import gorefest.core.taste.Predictor
 import gorefest.core.taste.TasteHistory
 import gorefest.shell.bgg.DevCatalog
+import io.kotest.matchers.doubles.plusOrMinus
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldNotContain
 import io.kotest.matchers.types.shouldBeInstanceOf
@@ -29,8 +30,8 @@ class MatcherTest {
     private val ti4 = g("Twilight Imperium: Fourth Edition") // 3–6, 240–480
 
     private val owner = PlayerId(Uuid.random())
-    private fun shelf(vararg games: Game, eager: Map<Game, PlayerId> = emptyMap()) =
-        games.map { it to ShelfGame(it.id, listOf(owner), eager[it]?.let(::setOf).orEmpty()) }
+    private fun shelf(vararg games: Game, eager: Map<Game, PlayerId> = emptyMap(), wanted: Map<Game, Set<PlayerId>> = emptyMap()) =
+        games.map { it to ShelfGame(it.id, listOf(owner) + listOfNotNull(eager[it]), (eager[it]?.let(::setOf).orEmpty()) + wanted[it].orEmpty()) }
 
     /** A player who prefers games earlier in [likes] over later ones, answered [times] times. */
     private fun player(name: String, vararg likes: Game, times: Int = 3, played: Boolean = false, id: PlayerId = PlayerId(Uuid.random())): TablePlayer {
@@ -174,5 +175,42 @@ class MatcherTest {
     @Test
     fun `without BGG's typical time, a wild range falls back to the geometric mean`() {
         codenames.copy(minPlaytime = 5, maxPlaytime = 1000).typicalMinutes shouldBe 71
+    }
+
+    @Test
+    fun `a game the table wants to play gets a bonus per person, and says who wants it`() {
+        val kim = player("Kim")
+        val bram = player("Bram")
+        val anna = player("Anna")
+        val table = listOf(kim, bram, anna)
+        val none = matcher.suggest(table, shelf(azul, codenames), null, now) as Suggestions.Found
+        val one = matcher.suggest(table, shelf(azul, codenames, wanted = mapOf(azul to setOf(kim.id))), null, now) as Suggestions.Found
+        val two = matcher.suggest(table, shelf(azul, codenames, wanted = mapOf(azul to setOf(kim.id, bram.id))), null, now) as Suggestions.Found
+
+        fun Suggestions.Found.score(game: Game) = top.single { it.game == game }.score
+        (one.score(azul) - none.score(azul)) shouldBe (0.3 plusOrMinus 1e-9)
+        (two.score(azul) - none.score(azul)) shouldBe (0.6 plusOrMinus 1e-9)
+        one.top.single { it.game == azul }.reason shouldBe SuggestionReason.WantedBy(listOf("Kim"))
+        two.top.single { it.game == azul }.reason shouldBe SuggestionReason.WantedBy(listOf("Kim", "Bram"))
+    }
+
+    @Test
+    fun `wishes of people who aren't at the table don't count`() {
+        val away = PlayerId(Uuid.random())
+        val table = List(2) { player("P$it") }
+        val plain = matcher.suggest(table, shelf(azul), null, now) as Suggestions.Found
+        val wished = matcher.suggest(table, shelf(azul, wanted = mapOf(azul to setOf(away))), null, now) as Suggestions.Found
+
+        wished.top.single().score shouldBe plain.top.single().score
+        wished.top.single().reason shouldBe plain.top.single().reason
+    }
+
+    @Test
+    fun `the wish bonus counts three people at most`() {
+        val table = List(5) { player("P$it") }
+        val three = matcher.suggest(table, shelf(codenames, wanted = mapOf(codenames to table.take(3).map { it.id }.toSet())), null, now) as Suggestions.Found
+        val five = matcher.suggest(table, shelf(codenames, wanted = mapOf(codenames to table.map { it.id }.toSet())), null, now) as Suggestions.Found
+
+        five.top.single().score shouldBe three.top.single().score
     }
 }

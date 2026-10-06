@@ -18,6 +18,9 @@ sealed interface SuggestionReason {
     /** An owner at the table brought it and really wants to play it. */
     data class EagerOwner(val name: String) : SuggestionReason
 
+    /** Several people at the table (or one who didn't bring it) really want to play it. */
+    data class WantedBy(val names: List<String>) : SuggestionReason
+
     /** Nobody has played it and everyone's predicted to enjoy it. */
     data object NewAndLiked : SuggestionReason
 
@@ -65,7 +68,7 @@ sealed interface Suggestions {
  * - Hard filters: the table size is a good player count for the game (BGG poll, else the box), and
  *   the estimated duration fits the budget.
  * - Score: the table's mean predicted enjoyment minus λ·spread, so one miserable player costs a lot;
- *   players with few answers weigh less. Bonuses for novelty (nobody played it) and an eager owner.
+ *   players with few answers weigh less. Bonuses for novelty (nobody played it) and for each player at the table who really wants to play it (up to three).
  * - A game a player declared unplayed (and never compared) counts as neutral for them, not as a guess
  *   from its features; it can only win on novelty, and the reason says it's new to them.
  */
@@ -90,7 +93,6 @@ class Matcher(
         if (fitting.isEmpty()) return nothingFits(n, timeBudget, playable, speed)
 
         val predictions = table.associate { p -> p.id to predictor.enjoyment(p.games, fitting.map { it.first }, now) }
-        val names = table.associate { it.id to it.name }
         val unknown = table.filter { it.games.history.comparisons.size < KNOWN_AFTER }.map { it.id }
         val nobodyKnown = unknown.size == n
         return Suggestions.Found(
@@ -102,10 +104,11 @@ class Matcher(
                 val mean = means.zip(weights).sumOf { (m, w) -> m * w } / weights.sum()
                 val spread = sqrt(means.zip(weights).sumOf { (m, w) -> w * (m - mean) * (m - mean) } / weights.sum())
                 val novel = table.none { it.games.hasPlayed(game.id) }
-                val eager = entry.eager.firstOrNull { it in names }
-                val score = mean - spreadPenalty * spread + (if (novel) noveltyBonus else 0.0) + (if (eager != null) wishBonus else 0.0)
+                val wishers = table.filter { it.id in entry.eager }
+                val owner = wishers.singleOrNull()?.takeIf { it.id in entry.owners }
+                val score = mean - spreadPenalty * spread + (if (novel) noveltyBonus else 0.0) + wishBonus * wishers.size.coerceAtMost(MAX_WISH_BONUS_PEOPLE)
                 val minutes = estimatedMinutes(game, n, speed)
-                val reason = reason(game, table, means, spread, novel, eager?.let(names::get), minutes, timeBudget, nobodyKnown, strangers.map { it.name })
+                val reason = reason(game, table, means, spread, novel, owner?.name, wishers.map { it.name }, minutes, timeBudget, nobodyKnown, strangers.map { it.name })
                 Suggestion(game, minutes, reason, score)
             }.sortedByDescending { it.score }.take(count),
             unknown,
@@ -123,7 +126,7 @@ class Matcher(
 
     private fun reason(
         game: Game, table: List<TablePlayer>, means: List<Double>, spread: Double, novel: Boolean,
-        eagerOwner: String?, minutes: Int, budget: Int?, nobodyKnown: Boolean, strangers: List<String>,
+        eagerOwner: String?, wishers: List<String>, minutes: Int, budget: Int?, nobodyKnown: Boolean, strangers: List<String>,
     ): SuggestionReason {
         val n = table.size
         val everyoneRated = table.all { game.id in it.games.history.comparedGames }
@@ -131,6 +134,7 @@ class Matcher(
         val roomFor = budget?.takeIf { minutes <= it - 20 }
         return when {
             eagerOwner != null -> SuggestionReason.EagerOwner(eagerOwner)
+            wishers.isNotEmpty() -> SuggestionReason.WantedBy(wishers)
             // Never claim enjoyment for someone who said they haven't played it.
             strangers.isNotEmpty() -> SuggestionReason.NewToSome(strangers)
             // Without anyone's taste there is nothing to say about enjoyment: only about fit.
@@ -150,6 +154,9 @@ class Matcher(
     }
 
     companion object {
+        /** The wish bonus counts this many people at most, so a loud group can't drown out taste. */
+        const val MAX_WISH_BONUS_PEOPLE = 3
+
         /** Answers after which a player's taste counts for something; below it we say the picks are a fit-only guess for them. */
         const val KNOWN_AFTER = 10
 

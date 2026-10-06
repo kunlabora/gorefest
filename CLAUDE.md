@@ -121,8 +121,11 @@ Tag convention: `player:{id}`, `gameday:{id}`, `game:{bggId}`, `datepoll:{id}`.
 
 - Hard filter: player count within BGG best/recommended; fits time budget.
 - Score: mean predicted enjoyment − λ·spread (or least misery), blending appeal and enjoyment for unplayed games.
-- Bonuses: novelty (nobody has played), owner's desire to play it.
-- Duration: BGG playtime adjusted by player count, plus learned group speed from `PlayLogged`.
+- Bonuses: novelty (nobody has played), and a wish bonus per player at the table who really wants to play it (`PlayWishChanged`, up to 3 people).
+- Wishes: any joined player can heart up to `MAX_WISHES` (3) games on the shelf per game day, whoever brought them (`SetPlayWishDecider`, set on the bring page). The reason says who wants it (`SuggestionReason.WantedBy`; `EagerOwner` when the one wisher is an owner). A game leaving the shelf drops its wishes.
+- Declared unplayed: a game a player marked "Haven't played" and never compared is neutral for them (no guess from its features); it can only win on novelty and the reason is `SuggestionReason.NewToSome`. The wizard's only "don't know" answers are "Haven't played either / this" (U2, U5).
+- Duration: BGG playtime adjusted by player count, plus learned group speed from `PlayLogged`. A wild min-max range (max > 5x min: campaign games) counts as BGG's typical `playingtime` (`Game.hasWildPlaytimeRange`, `Game.typicalMinutes`), also in the facts line and the time-budget filter. Playing a game also marks it played for those players and ends its novelty bonus; it doesn't otherwise exclude it (see `docs/requests/u8-...`).
+- A round's progress counts only answers that record a comparison; "haven't played" answers retire the pair without advancing it, so a finished round always leaves enough comparisons to count as a known taste (`KNOWN_AFTER`).
 
 ## User journeys
 

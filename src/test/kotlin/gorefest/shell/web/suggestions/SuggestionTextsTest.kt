@@ -10,6 +10,9 @@ class SuggestionTextsTest {
     fun `every reason has its sentence`() {
         mapOf(
             SuggestionReason.EagerOwner("Kim") to "Kim brought it and has been itching to play.",
+            SuggestionReason.WantedBy(listOf("Anna")) to "Anna really wants to play this.",
+            SuggestionReason.WantedBy(listOf("Anna", "Bram")) to "Anna and Bram both want to play this.",
+            SuggestionReason.WantedBy(listOf("Anna", "Bram", "Kim")) to "Three of you really want to play this.",
             SuggestionReason.NewAndLiked to "Nobody's played it and everyone's likely to enjoy it.",
             SuggestionReason.SafeBet(2) to "Safe bet: both of you rated it highly.",
             SuggestionReason.SafeBet(4) to "Safe bet: all four of you rated it highly.",

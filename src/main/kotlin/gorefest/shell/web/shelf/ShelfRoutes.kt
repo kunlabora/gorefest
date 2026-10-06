@@ -34,7 +34,7 @@ fun Route.shelfRoutes(app: App) {
             val me = contextOf<CurrentPlayer>()
             val gameDay = memberGameDay(app, me) ?: return@authenticated call.respond(HttpStatusCode.NotFound)
             val rows = bringList(app, gameDay, me)
-            call.respondHtml { bringPage(gameDay, rows, app.bggAccounts.isLinked(me.id)) }
+            call.respondHtml { bringPage(gameDay, rows, wishList(app, gameDay, me), app.bggAccounts.isLinked(me.id)) }
         }
     }
 
@@ -45,6 +45,16 @@ fun Route.shelfRoutes(app: App) {
             val gameDay = memberGameDay(app, me) ?: return@authenticated call.respond(HttpStatusCode.NotFound)
             val rows = bringList(app, gameDay, me)
             respondFragment { bringList(gameDay, rows) }
+        }
+    }
+
+    /** The shelf with my hearts, fetched again when the shelf changed. */
+    get("/gamedays/{id}/bring/wishes") {
+        authenticated {
+            val me = contextOf<CurrentPlayer>()
+            val gameDay = memberGameDay(app, me) ?: return@authenticated call.respond(HttpStatusCode.NotFound)
+            val rows = wishList(app, gameDay, me)
+            respondFragment { wishList(gameDay, rows) }
         }
     }
 
@@ -76,7 +86,10 @@ fun Route.shelfRoutes(app: App) {
             val form = call.receiveParameters()
             val wants = form["wants"] == "true"
             val decision = app.commands.handle(SetPlayWishDecider, SetPlayWish(gameDay.id, me.id, game.id, wants))
-            respondBringDecision(app, gameDay, game, me, decision, rowPrefix = form["row"] ?: "bring")
+            val row = wishRow(game, app.shelves.of(gameDay.id), me)
+            respondFragment(if (decision is Decision.Rejected) HttpStatusCode.Conflict else HttpStatusCode.OK) {
+                wishItem(gameDay, row, error = (decision as? Decision.Rejected)?.reason?.message())
+            }
         }
     }
 }
@@ -87,6 +100,17 @@ private suspend fun bringList(app: App, gameDay: GameDaySummary, me: CurrentPlay
     val shelf = app.shelves.of(gameDay.id)
     val ids = owned + shelf.filter { me.id in it.owners }.map { it.game }
     return ids.mapNotNull(app.catalog::get).sortedBy { it.name.lowercase() }.map { bringRow(it, shelf, me) }
+}
+
+/** Everything on the shelf, in the order it was brought, with my hearts. */
+private fun wishList(app: App, gameDay: GameDaySummary, me: CurrentPlayer): List<WishRow> {
+    val shelf = app.shelves.of(gameDay.id)
+    return shelf.mapNotNull { entry -> app.catalog[entry.game]?.let { wishRow(it, shelf, me) } }
+}
+
+private fun wishRow(game: Game, shelf: List<ShelfGame>, me: CurrentPlayer): WishRow {
+    val eager = shelf.firstOrNull { it.game == game.id }?.eager.orEmpty()
+    return WishRow(game, wants = me.id in eager, wishers = eager.size)
 }
 
 private fun RoutingContext.shelfTarget(app: App, me: CurrentPlayer): Pair<GameDaySummary, Game>? {
@@ -101,7 +125,7 @@ private suspend fun RoutingContext.respondBringDecision(
     val row = bringRow(game, app.shelves.of(gameDay.id), me)
     val prefix = if (rowPrefix == "search") "search" else "bring"
     // A search row isn't in the list below it, so tell the list to look again.
-    if (prefix == "search") call.response.header("HX-Trigger", BRING_LIST_CHANGED)
+    call.response.header("HX-Trigger", if (prefix == "search") BRING_LIST_CHANGED else SHELF_CHANGED)
     respondFragment(if (decision is Decision.Rejected) HttpStatusCode.Conflict else HttpStatusCode.OK) {
         bringItem(gameDay, row, readOnly = gameDay.ended, error = (decision as? Decision.Rejected)?.reason?.message(), prefix = prefix)
     }
@@ -109,5 +133,5 @@ private suspend fun RoutingContext.respondBringDecision(
 
 private fun bringRow(game: Game, shelf: List<ShelfGame>, me: CurrentPlayer): BringRow {
     val entry = shelf.firstOrNull { it.game == game.id }
-    return BringRow(game, bringing = entry != null && me.id in entry.owners, wants = entry != null && me.id in entry.eager)
+    return BringRow(game, bringing = entry != null && me.id in entry.owners)
 }
