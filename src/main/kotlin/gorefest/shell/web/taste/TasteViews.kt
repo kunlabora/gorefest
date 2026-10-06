@@ -31,7 +31,7 @@ fun TagConsumer<*>.wizardFragment(step: WizardStep) = main("gf-body gf-wizard") 
 
 private fun FlowContent.wizardContent(step: WizardStep) {
     val (gameDay, pair, round, total) = step
-    progress(round.step, total)
+    progress(round.progress.coerceAtMost(total - 1), total)
     div("gf-stack") {
         if (pair.basis == Basis.PLAYED) {
             span("gf-tag gf-tag--olive gf-tag--start") { icon("check"); +"You've played both" }

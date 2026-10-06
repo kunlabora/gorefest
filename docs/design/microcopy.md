@@ -61,7 +61,7 @@ One line, about 60 characters, naming people where it helps:
 
 - Section on the bring page: **What do you want to play?** · "Heart up to 3 games on the shelf you're really keen on. Each heart nudges a game up the suggestions."
 - Toggle: **I want to play this** / **I really want to play this** · count: "2 people want this"
-- Fourth heart: "That's your 3: untick one first"
+- Fourth heart: "You can pick 3 favourites: take one off first"
 - Empty: "Nothing on the shelf yet. Tick what you're bringing above."
 
 ## Game type and time

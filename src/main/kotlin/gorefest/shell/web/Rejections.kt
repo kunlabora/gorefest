@@ -16,7 +16,7 @@ fun Rejection.message(): String = when (this) {
     Rejection.OnlyHostCanRotateInvite -> "Only the host can make a new invite link"
     Rejection.NotJoined -> "Join the game day first"
     Rejection.NotOnShelf -> "Nobody's bringing that game"
-    Rejection.TooManyWishes -> "That's your $MAX_WISHES: untick one first"
+    Rejection.TooManyWishes -> "You can pick $MAX_WISHES favourites: take one off first"
     Rejection.NobodyPlayed -> "Tick who played"
     Rejection.PlayersNotAtGameDay -> "Only players at this game day can be in a log"
     Rejection.ImplausibleDuration -> "That doesn't look like a real duration"

@@ -18,7 +18,7 @@ class RejectionsTest {
             Rejection.OnlyHostCanRotateInvite to "Only the host can make a new invite link",
             Rejection.NotJoined to "Join the game day first",
             Rejection.NotOnShelf to "Nobody's bringing that game",
-            Rejection.TooManyWishes to "That's your 3: untick one first",
+            Rejection.TooManyWishes to "You can pick 3 favourites: take one off first",
             Rejection.NobodyPlayed to "Tick who played",
             Rejection.PlayersNotAtGameDay to "Only players at this game day can be in a log",
             Rejection.ImplausibleDuration to "That doesn't look like a real duration",

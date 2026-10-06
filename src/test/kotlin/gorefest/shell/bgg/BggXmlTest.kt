@@ -87,6 +87,17 @@ class BggXmlTest {
     }
 
     @Test
+    fun `a campaign game keeps BGG's playing time even when it repeats the max`() {
+        val game = BggXml.things(BggXml.parse("""
+            <items><item type="boardgame" id="1"><name type="primary" value="Seventh Continent"/><minplayers value="1"/><maxplayers value="4"/>
+            <playingtime value="1000"/><minplaytime value="5"/><maxplaytime value="1000"/></item></items>""".trimIndent())).single()
+
+        game.playingTime shouldBe 1000
+        game.hasWildPlaytimeRange shouldBe true
+        game.typicalMinutes shouldBe 71
+    }
+
+    @Test
     fun `unranked games have no rank`() {
         BggXml.things(BggXml.parse("""
             <items><item type="boardgame" id="1"><name type="primary" value="Homebrew"/><minplayers value="2"/><maxplayers value="2"/>

@@ -115,7 +115,9 @@ class ShelfRoutesTest {
     fun `any member can heart a game somebody else brought, and take it back`() = test.webTest(session = kim) { client ->
         given(GameBrought(gorefest7, anna, azul))
 
-        val on = client.htmxPost("/gamedays/$gorefest7/shelf/$azul/wish", parameters { append("wants", "true") }).fragment()
+        val onResponse = client.htmxPost("/gamedays/$gorefest7/shelf/$azul/wish", parameters { append("wants", "true") })
+        onResponse.headers["HX-Trigger"] shouldBe "shelf-changed"
+        val on = onResponse.fragment()
 
         on shouldReplace "wish-$azul"
         on.one("button").attr("aria-pressed") shouldBe "true"
@@ -136,7 +138,7 @@ class ShelfRoutesTest {
         val refused = client.htmxPost("/gamedays/$gorefest7/shelf/${games[3]}/wish", parameters { append("wants", "true") })
 
         refused.status shouldBe HttpStatusCode.Conflict
-        refused.fragment().one(".gf-error").text() shouldBe "That's your 3: untick one first"
+        refused.fragment().one(".gf-error").text() shouldBe "You can pick 3 favourites: take one off first"
         app.shelves.of(gorefest7).first { it.game == games[3] }.eager shouldBe emptySet()
     }
 

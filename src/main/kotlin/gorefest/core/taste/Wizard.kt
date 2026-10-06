@@ -11,7 +11,10 @@ import java.time.Instant
 data class WizardPair(val a: Game, val b: Game, val basis: Basis)
 
 /** Where the round stands; the shell carries it between requests in the form. */
-data class RoundState(val step: Int = 0, val stableSteps: Int = 0, val asked: Set<Set<BggId>> = emptySet(), val top: List<BggId> = emptyList())
+data class RoundState(val step: Int = 0, val stableSteps: Int = 0, val asked: Set<Set<BggId>> = emptySet(), val top: List<BggId> = emptyList()) {
+    /** How far along the bar is: learned steps, but also moving (at half pace) on "haven't played" answers, which end the round at [Wizard.shouldStop]'s hard stop. */
+    val progress get() = maxOf(step, (asked.size + 1) / 2)
+}
 
 /** What the player knows about games, as far as we can tell. */
 data class PlayerGames(val history: TasteHistory, val owned: Set<BggId>) {
@@ -49,16 +52,17 @@ class Wizard(
     ): WizardPair? {
         val games = pool.distinctBy { it.id }.take(poolSize)
         val extra = anchors.filter { a -> games.none { it.id == a.id } }.take(poolSize)
-        val anchorTurn = (round.step % anchorEvery == anchorEvery - 1 && extra.isNotEmpty()) || games.size < 2
-        val candidates = if (anchorTurn) games + extra else games
+        // Spaced by pairs asked, not steps: "haven't played" answers don't advance the step but must not pin the round on an anchor turn.
+        val anchorTurn = (round.asked.size % anchorEvery == anchorEvery - 1 && extra.isNotEmpty()) || games.size < 2
+        val candidates = games + extra
         val anchorIds = extra.map { it.id }.toSet()
 
         val vibe = player.history.scores(model, Basis.VIBE, now)
         val played = player.history.scores(model, Basis.PLAYED, now)
-        return pairs(candidates)
+        fun pick(preferred: Boolean?) = pairs(candidates)
             .filter { (a, b) -> setOf(a.id, b.id) !in round.asked }
             .filter { (a, b) -> mustInclude == null || a.id in mustInclude || b.id in mustInclude }
-            .filter { (a, b) -> !anchorTurn || games.size < 2 || a.id in anchorIds || b.id in anchorIds }
+            .filter { (a, b) -> preferred == null || (a.id in anchorIds || b.id in anchorIds) == preferred }
             .map { (a, b) ->
                 val basis = if (player.hasPlayed(a.id) && player.hasPlayed(b.id)) Basis.PLAYED else Basis.VIBE
                 val scores = if (basis == Basis.PLAYED) played else vibe
@@ -66,6 +70,8 @@ class Wizard(
                 WizardPair(a, b, basis) to p * (1 - p) * (scores[a.id].variance + scores[b.id].variance)
             }
             .maxByOrNull { it.second }?.first
+        // The turn's kind (anchor or shelf pair) is a preference: when it's used up, ask anything left rather than ending the round early.
+        return pick(preferred = anchorTurn.takeIf { games.size >= 2 }) ?: pick(preferred = null)
     }
 
     /**
@@ -104,11 +110,13 @@ class Wizard(
             }
     }
 
-    fun shouldStop(round: RoundState) = round.step >= maxPairs || (round.step >= minPairs && round.stableSteps >= 3)
+    /** Also a hard stop at twice the round length in pairs asked, so a player who answers "haven't played" every time still finishes. */
+    fun shouldStop(round: RoundState) =
+        round.step >= maxPairs || (round.step >= minPairs && round.stableSteps >= 3) || round.asked.size >= 2 * maxPairs
 
     /**
      * After an answer: one step further, and whether the player's top 3 stayed put. Only an answer
-     * that taught us something ([learned]) is a step; "haven't played" and "skip" just retire the pair,
+     * that taught us something ([learned]) is a step; "haven't played" just retires the pair,
      * so a finished round always holds as many comparisons as it has steps.
      */
     fun advance(round: RoundState, pair: WizardPair, newTop: List<BggId>, learned: Boolean = true) = round.copy(

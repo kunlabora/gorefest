@@ -77,6 +77,8 @@ data class WishState(
     val open: Boolean = false,
     val ended: Boolean = false,
     val joined: Boolean = false,
+    /** The player the decision is about: the query only lets their own join through. */
+    val me: PlayerId? = null,
     val owners: Map<BggId, Set<PlayerId>> = emptyMap(),
     val wished: Set<BggId> = emptySet(),
 )
@@ -98,12 +100,13 @@ object SetPlayWishDecider : Decider<SetPlayWish, WishState, PlayWishChanged> {
     override fun evolve(state: WishState, event: Event) = when (event) {
         is GameDayCreated -> state.copy(open = true)
         is GameDayEnded -> state.copy(ended = true)
-        is PlayerJoined -> state.copy(joined = true)
+        is PlayerJoined -> state.copy(joined = true, me = event.player)
         is GameBrought -> state.copy(owners = state.owners + (event.game to (state.owners[event.game].orEmpty() + event.player)))
         is GameUnbrought -> {
             val left = state.owners[event.game].orEmpty() - event.player
-            if (left.isEmpty()) state.copy(owners = state.owners - event.game, wished = state.wished - event.game)
-            else state.copy(owners = state.owners + (event.game to left))
+            // Stepping back as an owner drops your own wish for the game, as it always did; the game leaving drops everyone's.
+            val wished = if (left.isEmpty() || event.player == state.me) state.wished - event.game else state.wished
+            state.copy(owners = if (left.isEmpty()) state.owners - event.game else state.owners + (event.game to left), wished = wished)
         }
         is PlayWishChanged -> state.copy(wished = if (event.wantsToPlay) state.wished + event.game else state.wished - event.game)
         else -> state
@@ -151,8 +154,8 @@ object Shelves : Projection<GameDayShelves> {
             else shelf.map { if (it.game == event.game && event.player !in it.owners) it.copy(owners = it.owners + event.player) else it }
         }
         is GameUnbrought -> state.changed(event.gameDay) { shelf ->
-            shelf.map { if (it.game == event.game) it.copy(owners = it.owners - event.player) else it }
-                .filter { it.owners.isNotEmpty() } // gone from the shelf: its wishes go with it
+            shelf.map { if (it.game == event.game) it.copy(owners = it.owners - event.player, eager = it.eager - event.player) else it }
+                .filter { it.owners.isNotEmpty() } // gone from the shelf: the rest of its wishes go with it
         }
         is PlayWishChanged -> state.changed(event.gameDay) { shelf ->
             shelf.map {

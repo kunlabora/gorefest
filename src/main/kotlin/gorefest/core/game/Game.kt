@@ -38,20 +38,24 @@ data class Game(
 
     /**
      * Whether BGG's min-max playtime is too wide to mean anything: campaign games (The 7th Continent: 5–1000 min)
-     * list a single session or the whole campaign at the extremes. Past [WILD_RANGE_RATIO] times the minimum.
+     * list a single session or the whole campaign at the extremes. Needs both a max over [WILD_RANGE_RATIO] times
+     * the min and a max over [WILD_RANGE_MIN_MAX] minutes, so honest wide ranges (20–120, 30–180) stay ranges.
      */
     val hasWildPlaytimeRange: Boolean
-        get() = minPlaytime > 0 && maxPlaytime > WILD_RANGE_RATIO * minPlaytime
+        get() = minPlaytime > 0 && maxPlaytime > WILD_RANGE_MIN_MAX && maxPlaytime > WILD_RANGE_RATIO * minPlaytime
 
     /**
-     * BGG's typical playing time; without one (a game cached before we kept it) the geometric mean of min and max.
-     * Meant for wild ranges, where min and max themselves are no use.
+     * A single time for a game with a wild range. BGG's `playingtime` when it lies inside the range; it usually just
+     * repeats the max (the very number that's wrong), and some games have none, so then the geometric mean of min and max.
      */
     val typicalMinutes: Int
-        get() = if (playingTime > 0) playingTime else kotlin.math.sqrt(minPlaytime.toDouble() * maxPlaytime).roundToInt()
+        get() = if (playingTime in 1 until maxPlaytime) playingTime else kotlin.math.sqrt(minPlaytime.toDouble() * maxPlaytime).roundToInt()
 
     companion object {
-        /** A max playtime beyond this many times the min is not a range anyone plays to. */
-        const val WILD_RANGE_RATIO = 5
+        /** A max playtime beyond this many times the min is not a range anyone plays to ... */
+        const val WILD_RANGE_RATIO = 8
+
+        /** ... when it is also beyond this many minutes. */
+        const val WILD_RANGE_MIN_MAX = 240
     }
 }

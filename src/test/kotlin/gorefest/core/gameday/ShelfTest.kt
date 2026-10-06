@@ -113,8 +113,21 @@ class ShelfTest {
     }
 
     @Test
-    fun `a wish outlives its owner stepping back while someone else still brings the game, but not the game leaving`() {
-        val events = listOf(GameBrought(gorefest7, anna, brass), GameBrought(gorefest7, bram, brass), PlayWishChanged(gorefest7, bram, brass, true), GameUnbrought(gorefest7, bram, brass))
+    fun `an owner stepping back drops their own wish but not other people's`() {
+        val events = listOf(
+            GameBrought(gorefest7, anna, brass), GameBrought(gorefest7, bram, brass),
+            PlayWishChanged(gorefest7, anna, brass, true), PlayWishChanged(gorefest7, bram, brass, true), GameUnbrought(gorefest7, anna, brass),
+        )
+        events.fold(Shelves.initialState, Shelves::evolve).of(gorefest7) shouldBe listOf(ShelfGame(brass, owners = listOf(bram), eager = setOf(bram)))
+
+        // The decider agrees: Anna's wish is gone (wanting again is news), Bram's stays (wanting again changes nothing).
+        SetPlayWishDecider.given(*joined, *events.toTypedArray()).whenever(SetPlayWish(gorefest7, anna, brass, true)).thenEmits(PlayWishChanged(gorefest7, anna, brass, true))
+        SetPlayWishDecider.given(*joined, *events.toTypedArray()).whenever(SetPlayWish(gorefest7, bram, brass, true)).thenEmitsNothing()
+    }
+
+    @Test
+    fun `a non-owner's wish survives the owners changing, but not the game leaving`() {
+        val events = listOf(GameBrought(gorefest7, anna, brass), PlayWishChanged(gorefest7, bram, brass, true), GameBrought(gorefest7, anna, azul), GameUnbrought(gorefest7, anna, azul))
         events.fold(Shelves.initialState, Shelves::evolve).of(gorefest7) shouldBe listOf(ShelfGame(brass, owners = listOf(anna), eager = setOf(bram)))
 
         (events + GameUnbrought(gorefest7, anna, brass) + GameBrought(gorefest7, anna, brass)).fold(Shelves.initialState, Shelves::evolve).of(gorefest7) shouldBe

@@ -143,7 +143,7 @@ class TasteRoutesTest {
         next shouldReplace "wizard"
         app.tastes.of(kimId).comparisons shouldHaveSize 0
         app.tastes.of(kimId).played shouldBe mapOf(a to false)
-        next.one(".gf-progress__count").text() shouldBe "1 / 15" // not a step: nothing was learned
+        next.one(".gf-progress__count").text() shouldBe "2 / 15" // nothing learned, but the bar moves
         setOf(next.one("input[name=a]").`val`(), next.one("input[name=b]").`val`()) shouldBe
             setOf(next.one("input[name=a]").`val`(), next.one("input[name=b]").`val`()).also {
                 (it == setOf(first.one("input[name=a]").`val`(), first.one("input[name=b]").`val`())) shouldBe false
@@ -181,13 +181,18 @@ class TasteRoutesTest {
     }
 
     @Test
-    fun `a finished round that included skipped pairs still counts as a taste we learned`() = test.webTest(session = kim) { client ->
-        client.finishRound("A", "SKIP")
+    fun `a finished round that included 'haven't played' pairs still counts as a taste we learned`() = test.webTest(session = kim) { client ->
+        client.finishRound("A", "UNPLAYED_A")
 
         app.tastes.of(kimId).comparisons.size shouldBeGreaterThanOrEqual gorefest.core.matching.Matcher.KNOWN_AFTER
         val picks = client.get("/gamedays/$gorefest7/suggestions?players=$kimId").fragment()
         picks.select(".gf-notice") shouldHaveSize 0
         picks.select("a[href=/gamedays/$gorefest7/taste]") shouldHaveSize 0
+    }
+
+    @Test
+    fun `answering 'haven't played' every time still ends the round`() = test.webTest(session = kim) { client ->
+        client.finishRound("UNPLAYED") shouldStartWith "/gamedays/$gorefest7/favourites"
     }
 
     @Test

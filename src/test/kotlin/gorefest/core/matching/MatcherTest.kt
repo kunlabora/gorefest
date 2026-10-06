@@ -213,4 +213,53 @@ class MatcherTest {
 
         five.top.single().score shouldBe three.top.single().score
     }
+
+    @Test
+    fun `BGG's playing time that just repeats the max is not trusted for a wild range`() {
+        val repeated = codenames.copy(minPlaytime = 5, maxPlaytime = 1000, playingTime = 1000)
+        repeated.hasWildPlaytimeRange shouldBe true
+        repeated.typicalMinutes shouldBe 71
+        Matcher.estimatedMinutes(repeated, 3) shouldBe 70
+        codenames.copy(minPlaytime = 5, maxPlaytime = 1000, playingTime = 0).typicalMinutes shouldBe 71
+    }
+
+    @Test
+    fun `honest wide ranges aren't wild, and keep interpolating by player count`() {
+        listOf(20 to 120, 30 to 180, 60 to 240, 60 to 480, 30 to 240).forEach { (min, max) ->
+            codenames.copy(minPlaytime = min, maxPlaytime = max).hasWildPlaytimeRange shouldBe false
+        }
+        codenames.copy(minPlaytime = 30, maxPlaytime = 300).hasWildPlaytimeRange shouldBe true
+        val wide = brass.copy(minPlaytime = 20, maxPlaytime = 120, playingTime = 60) // 2-4 players
+        Matcher.estimatedMinutes(wide, 2) shouldBe 20
+        Matcher.estimatedMinutes(wide, 4) shouldBe 120
+    }
+
+    /** Kim, who has [declared] games unplayed, next to two enthusiasts who played and loved Azul. */
+    private fun mixedTable(declared: Boolean): List<TablePlayer> {
+        val anna = player("Anna", azul, brass, codenames, times = Matcher.KNOWN_AFTER, played = true)
+        val bram = player("Bram", azul, brass, codenames, times = Matcher.KNOWN_AFTER, played = true)
+        val id = PlayerId(Uuid.random())
+        val likes = List(Matcher.KNOWN_AFTER) { ComparisonRecorded(id, brass.id, codenames.id, ComparisonResult.A, Basis.VIBE, now) }
+        val kim = TablePlayer(id, "Kim", PlayerGames(TasteHistory(likes, if (declared) mapOf(azul.id to false) else emptyMap()), emptySet()))
+        return listOf(anna, bram, kim)
+    }
+
+    @Test
+    fun `one player new to a game among enthusiasts is neutral for them, scored on the others, and named`() {
+        val withDeclared = matcher.suggest(mixedTable(declared = true), shelf(azul), null, now) as Suggestions.Found
+        val reason = withDeclared.top.single().reason
+
+        reason shouldBe SuggestionReason.NewToSome(listOf("Kim"))
+        // Kim's 0 is an average game: below what the two who loved it predict, so the game scores lower than if Kim just guessed.
+        val enthusiasts = matcher.suggest(mixedTable(declared = true).take(2), shelf(azul), null, now) as Suggestions.Found
+        (withDeclared.top.single().score < enthusiasts.top.single().score) shouldBe true
+    }
+
+    @Test
+    fun `new to someone and wanted by someone else says who wants it`() {
+        val table = mixedTable(declared = true)
+        val result = matcher.suggest(table, shelf(azul, wanted = mapOf(azul to setOf(table[0].id))), null, now) as Suggestions.Found
+
+        result.top.single().reason shouldBe SuggestionReason.WantedBy(listOf("Anna"))
+    }
 }

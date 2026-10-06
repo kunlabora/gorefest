@@ -87,6 +87,8 @@ fun Route.shelfRoutes(app: App) {
             val wants = form["wants"] == "true"
             val decision = app.commands.handle(SetPlayWishDecider, SetPlayWish(gameDay.id, me.id, game.id, wants))
             val row = wishRow(game, app.shelves.of(gameDay.id), me)
+            // The wish list is the one that changed, but other rows' counts may be stale: ask for it again.
+            call.response.header("HX-Trigger", SHELF_CHANGED)
             respondFragment(if (decision is Decision.Rejected) HttpStatusCode.Conflict else HttpStatusCode.OK) {
                 wishItem(gameDay, row, error = (decision as? Decision.Rejected)?.reason?.message())
             }
