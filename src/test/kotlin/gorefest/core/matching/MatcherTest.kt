@@ -7,7 +7,9 @@ import gorefest.core.ComparisonResult
 import gorefest.core.PlayerId
 import gorefest.core.game.Game
 import gorefest.core.gameday.ShelfGame
+import gorefest.core.taste.FeatureModel
 import gorefest.core.taste.PlayerGames
+import gorefest.core.taste.Predictor
 import gorefest.core.taste.TasteHistory
 import gorefest.shell.bgg.DevCatalog
 import io.kotest.matchers.shouldBe
@@ -134,5 +136,23 @@ class MatcherTest {
         Matcher.estimatedMinutes(mystery, 3, speed = 1.5) shouldBe 90
         matcher.suggest(table, shelf(mystery, azul), timeBudget = 45, now).names() shouldBe listOf("Azul")
         matcher.suggest(table, shelf(mystery), timeBudget = 90, now).names() shouldBe listOf("Mystery")
+    }
+
+    @Test
+    fun `a game a player said they haven't played is no more than a novelty, whatever its features say`() {
+        val featureMatcher = Matcher(Predictor(FeatureModel(games = { id -> DevCatalog.games.firstOrNull { it.id == id } })))
+        val cascadia = g("Cascadia") // shares its mechanics with Azul
+        val id = PlayerId(Uuid.random())
+        val likesCascadia = List(Matcher.KNOWN_AFTER) { ComparisonRecorded(id, cascadia.id, brass.id, ComparisonResult.A, Basis.VIBE, now) }
+        fun kim(declared: Map<BggId, Boolean>) = TablePlayer(id, "Kim", PlayerGames(TasteHistory(likesCascadia, declared), emptySet()))
+
+        val guessed = featureMatcher.suggest(listOf(kim(emptyMap())), shelf(azul.copy(minPlayers = 1, bestPlayers = setOf(1, 2, 3))), null, now) as Suggestions.Found
+        val declared = featureMatcher.suggest(listOf(kim(mapOf(azul.id to false))), shelf(azul.copy(minPlayers = 1, bestPlayers = setOf(1, 2, 3))), null, now) as Suggestions.Found
+
+        // Without a declaration the features lift Azul well above an average game ...
+        (guessed.top.single().score > 0.3 + 0.1) shouldBe true
+        // ... but once Kim says they haven't played it, all it gets is the novelty bonus, and the reason says so.
+        declared.top.single().score shouldBe 0.3
+        declared.top.single().reason shouldBe SuggestionReason.NewToSome(listOf("Kim"))
     }
 }

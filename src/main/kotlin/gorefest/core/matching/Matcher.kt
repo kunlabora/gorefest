@@ -37,6 +37,9 @@ sealed interface SuggestionReason {
     data class PlaysWellWith(val tableSize: Int) : SuggestionReason
 
     data object GoodMiddleGround : SuggestionReason
+
+    /** These players at the table said they haven't played it; nothing is claimed about their enjoyment. */
+    data class NewToSome(val names: List<String>) : SuggestionReason
 }
 
 sealed interface Suggestions {
@@ -63,6 +66,8 @@ sealed interface Suggestions {
  *   the estimated duration fits the budget.
  * - Score: the table's mean predicted enjoyment minus λ·spread, so one miserable player costs a lot;
  *   players with few answers weigh less. Bonuses for novelty (nobody played it) and an eager owner.
+ * - A game a player declared unplayed (and never compared) counts as neutral for them, not as a guess
+ *   from its features; it can only win on novelty, and the reason says it's new to them.
  */
 class Matcher(
     private val predictor: Predictor = Predictor(),
@@ -90,7 +95,9 @@ class Matcher(
         val nobodyKnown = unknown.size == n
         return Suggestions.Found(
             fitting.map { (game, entry) ->
-                val means = table.map { p -> predictions.getValue(p.id).getValue(game.id).mean }
+                // A game someone declared unplayed is a stranger to them: no opinion, not a guess from its features.
+                val strangers = table.filter { it.games.isUnknownToThem(game.id) }
+                val means = table.map { p -> if (p in strangers) 0.0 else predictions.getValue(p.id).getValue(game.id).mean }
                 val weights = table.map { p -> (p.games.history.comparisons.size.toDouble() / KNOWN_AFTER).coerceIn(0.2, 1.0) }
                 val mean = means.zip(weights).sumOf { (m, w) -> m * w } / weights.sum()
                 val spread = sqrt(means.zip(weights).sumOf { (m, w) -> w * (m - mean) * (m - mean) } / weights.sum())
@@ -98,7 +105,7 @@ class Matcher(
                 val eager = entry.eager.firstOrNull { it in names }
                 val score = mean - spreadPenalty * spread + (if (novel) noveltyBonus else 0.0) + (if (eager != null) wishBonus else 0.0)
                 val minutes = estimatedMinutes(game, n, speed)
-                val reason = reason(game, table, means, spread, novel, eager?.let(names::get), minutes, timeBudget, nobodyKnown)
+                val reason = reason(game, table, means, spread, novel, eager?.let(names::get), minutes, timeBudget, nobodyKnown, strangers.map { it.name })
                 Suggestion(game, minutes, reason, score)
             }.sortedByDescending { it.score }.take(count),
             unknown,
@@ -116,7 +123,7 @@ class Matcher(
 
     private fun reason(
         game: Game, table: List<TablePlayer>, means: List<Double>, spread: Double, novel: Boolean,
-        eagerOwner: String?, minutes: Int, budget: Int?, nobodyKnown: Boolean,
+        eagerOwner: String?, minutes: Int, budget: Int?, nobodyKnown: Boolean, strangers: List<String>,
     ): SuggestionReason {
         val n = table.size
         val everyoneRated = table.all { game.id in it.games.history.comparedGames }
@@ -124,6 +131,8 @@ class Matcher(
         val roomFor = budget?.takeIf { minutes <= it - 20 }
         return when {
             eagerOwner != null -> SuggestionReason.EagerOwner(eagerOwner)
+            // Never claim enjoyment for someone who said they haven't played it.
+            strangers.isNotEmpty() -> SuggestionReason.NewToSome(strangers)
             // Without anyone's taste there is nothing to say about enjoyment: only about fit.
             nobodyKnown -> when {
                 bestAtN -> SuggestionReason.BestAtTableSize(n)

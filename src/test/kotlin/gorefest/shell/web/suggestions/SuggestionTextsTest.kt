@@ -18,6 +18,8 @@ class SuggestionTextsTest {
             SuggestionReason.FitsWithRoomToSpare(90) to "Fits your 90 minutes with room for snacks.",
             SuggestionReason.PlaysWellWith(2) to "Plays well with two.",
             SuggestionReason.GoodMiddleGround to "A good middle ground for this table.",
+            SuggestionReason.NewToSome(listOf("Kim")) to "New to Kim: a chance to try it.",
+            SuggestionReason.NewToSome(listOf("Kim", "Anna", "Bram")) to "New to Kim, Anna and Bram: a chance to try it.",
         ).forEach { (reason, text) -> reason.text() shouldBe text }
     }
 

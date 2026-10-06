@@ -17,6 +17,7 @@ fun SuggestionReason.text(): String = when (this) {
     is SuggestionReason.FitsWithRoomToSpare -> "Fits your ${budget.asDuration()} with room for snacks."
     is SuggestionReason.PlaysWellWith -> "Plays well with ${tableSize.inWordsLower()}."
     SuggestionReason.GoodMiddleGround -> "A good middle ground for this table."
+    is SuggestionReason.NewToSome -> "New to ${names.joinAnd()}: a chance to try it."
 }
 
 /** What to say when nothing fits: a title and an explanation. */
@@ -31,3 +32,5 @@ fun Suggestions.NothingFits.text(): String = when (this) {
     is Suggestions.NothingFits.NoGameForTableSize -> "The shelf's short on games for $tableSize players. Try splitting into two tables."
     is Suggestions.NothingFits.NoGameInTime -> "Everything on the shelf takes longer. Loosen the time:"
 }
+
+private fun List<String>.joinAnd(): String = if (size < 2) joinToString() else dropLast(1).joinToString(", ") + " and " + last()

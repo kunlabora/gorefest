@@ -17,6 +17,12 @@ data class RoundState(val step: Int = 0, val stableSteps: Int = 0, val asked: Se
 data class PlayerGames(val history: TasteHistory, val owned: Set<BggId>) {
     /** Declared status wins; otherwise we assume people have played what they own. */
     fun hasPlayed(game: BggId) = history.played[game] ?: (game in owned)
+
+    /**
+     * The player said they haven't played [game] and never told us what they'd rather try it against:
+     * all we'd have is a guess from its features, so the matcher treats it as unknown to them.
+     */
+    fun isUnknownToThem(game: BggId) = history.played[game] == false && game !in history.comparedGames
 }
 
 /**
