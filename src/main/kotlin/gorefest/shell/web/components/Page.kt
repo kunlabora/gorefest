@@ -3,6 +3,7 @@ package gorefest.shell.web.components
 import kotlinx.html.ButtonType
 import kotlinx.html.DIV
 import kotlinx.html.FlowContent
+import kotlinx.html.footer
 import kotlinx.html.FormMethod
 import kotlinx.html.HEAD
 import kotlinx.html.HTML
@@ -74,8 +75,10 @@ fun HTML.page(
             main("gf-body $mainClasses".trim()) {
                 if (mainId != null) id = mainId
                 content()
-                bggCredit()
-                p("gf-credit") { +"Gorefest v$APP_VERSION" }
+                footer("gf-footer") {
+                    bggCredit()
+                    p("gf-credit gf-credit--version") { +"Gorefest v$APP_VERSION" }
+                }
             }
             if (dock != null) div("gf-dock") { dock() }
         }
