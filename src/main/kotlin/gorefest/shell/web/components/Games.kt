@@ -138,9 +138,21 @@ fun FlowContent.duel(a: Game, b: Game, keyIds: Boolean = false) = div("gf-duel g
     pick(b, "B", keyIds)
 }
 
-/** The three answers under a duel. The first is "haven't played" on played pairs, or [firstValue] / [firstLabel]. */
-fun FlowContent.duelAnswers(firstValue: String = "UNPLAYED", firstLabel: String = "Haven't played") = div("gf-answers") {
-    answer(firstValue, firstLabel, "unplayed")
+/** One "Haven't played this" button under each game of a duel (answers `UNPLAYED_A` and `UNPLAYED_B`), for when only one of the two is new to you. */
+fun FlowContent.duelUnplayed() = div("gf-unplayed") {
+    listOf("A", "B").forEach { key ->
+        button(type = ButtonType.submit, classes = "gf-unplayed__button") {
+            name = "answer"
+            value = "UNPLAYED_$key"
+            icon("unplayed")
+            +"Haven't played this"
+        }
+    }
+}
+
+/** The three answers under a duel: [firstLabel] says "haven't played" (it covers both games), then both meh and both great. */
+fun FlowContent.duelAnswers(firstLabel: String = "Haven't played") = div("gf-answers") {
+    answer("UNPLAYED", firstLabel, "unplayed")
     answer("BOTH_MEH", "Both meh", "meh")
     answer("BOTH_GREAT", "Both great", "star", great = true)
 }

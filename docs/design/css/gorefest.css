@@ -289,3 +289,10 @@ div.gf-tile { cursor: default; }
 .gf-credit .gf-credit__logo { display: block; width: max-content; margin: var(--space-2) auto 0; padding: 4px 8px; border-radius: var(--radius-sm); background: var(--light-yellow); text-decoration: none; }
 .gf-credit__logo img { display: block; }
 .gf-bgglink:hover, .gf-bgglink:focus-visible { text-decoration: underline; }
+
+/* ---------- Additions: user-testing requests U4, U5, U10 (kept apart from the base components) ---------- */
+/* U5: "Haven't played this", one under each game of a duel, aligned with its card. */
+.gf-unplayed { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); margin-top: calc(var(--space-2) * -1); }
+.gf-unplayed__button { appearance: none; display: inline-flex; align-items: center; justify-content: center; gap: var(--space-1); min-height: 40px; padding: var(--space-1) var(--space-2); border: 0; background: transparent; color: var(--ink-muted); font: 600 13px/16px var(--font-sans); text-decoration: underline; cursor: pointer; }
+.gf-unplayed__button .gf-icon { width: 16px; height: 16px; }
+.gf-unplayed__button:active { color: var(--ink); }

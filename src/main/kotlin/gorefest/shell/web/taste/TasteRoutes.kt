@@ -34,7 +34,7 @@ import io.ktor.server.routing.post
 /** Players with this many answers get a top-up round (a few pairs on what's still uncertain) instead of the full one. */
 const val TOP_UP_AFTER = 10
 
-/** The answers that record a comparison; anything else ("haven't played", "skip") doesn't count as a step of the round. */
+/** The answers that record a comparison; anything else ("haven't played ...") doesn't count as a step of the round. */
 private val COMPARISON_ANSWERS = ComparisonResult.entries.map { it.name }.toSet()
 
 private fun App.wizardFor(topUpRound: Boolean) = if (topUpRound) topUpWizard else wizard
@@ -89,8 +89,11 @@ fun Route.tasteRoutes(app: App) {
             when (answer) {
                 in COMPARISON_ANSWERS ->
                     app.commands.handle(RecordComparisonDecider, ComparisonRecorded(me.id, a.id, b.id, ComparisonResult.valueOf(answer!!), basis, now))
+                // "Haven't played": remembered, so the pair isn't asked again and the matcher knows these are new to them.
                 "UNPLAYED" -> listOf(a, b).forEach { app.commands.handle(DeclarePlayStatusDecider, GamePlayStatusDeclared(me.id, it.id, played = false)) }
-                else -> Unit // "Skip": nothing learned, but don't ask this pair again
+                "UNPLAYED_A" -> app.commands.handle(DeclarePlayStatusDecider, GamePlayStatusDeclared(me.id, a.id, played = false))
+                "UNPLAYED_B" -> app.commands.handle(DeclarePlayStatusDecider, GamePlayStatusDeclared(me.id, b.id, played = false))
+                else -> Unit
             }
 
             val inputs = inputs(gameDay, me)

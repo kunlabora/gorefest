@@ -1,6 +1,7 @@
 package gorefest.shell.web.taste
 
 import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.string.shouldNotContain
 import gorefest.core.BggId
 import gorefest.core.ComparisonRecorded
 import gorefest.core.ComparisonResult
@@ -71,13 +72,16 @@ class TasteRoutesTest {
     }
 
     @Test
-    fun `the round shows two games and five ways to answer`() = test.webTest(session = kim) { client ->
+    fun `the round shows two games and the ways to answer`() = test.webTest(session = kim) { client ->
         val page = client.get(taste).page()
         val wizard = page.one("main#wizard")
 
         wizard.one("h1").text() shouldBe "Which would you rather try?"
         wizard.select(".gf-pick").map { it.attr("value") } shouldBe listOf("A", "B")
-        wizard.select(".gf-answer").map { it.attr("value") } shouldBe listOf("SKIP", "BOTH_MEH", "BOTH_GREAT")
+        wizard.select(".gf-answer").map { it.attr("value") } shouldBe listOf("UNPLAYED", "BOTH_MEH", "BOTH_GREAT")
+        wizard.select(".gf-answer").map { it.text() } shouldBe listOf("Haven't played either", "Both meh", "Both great")
+        wizard.select(".gf-unplayed button").map { it.attr("value") to it.text() } shouldBe listOf("UNPLAYED_A" to "Haven't played this", "UNPLAYED_B" to "Haven't played this")
+        wizard.text() shouldNotContain "Don't know"
         wizard.one("form").attr("hx-target") shouldBe "#wizard"
         wizard.one(".gf-progress__count").text() shouldBe "1 / 15"
         page.one(".gf-appbar a").attr("href") shouldBe "/gamedays/$gorefest7/favourites"
@@ -115,6 +119,23 @@ class TasteRoutesTest {
             history.played.values.toSet() shouldBe setOf(false)
             history.played.keys shouldBe setOf(first.one("input[name=a]").`val`(), first.one("input[name=b]").`val`()).map { BggId(it.toInt()) }.toSet()
         }
+    }
+
+    @Test
+    fun `'haven't played this' on one card remembers only that game, and the round moves on`() = test.webTest(session = kim) { client ->
+        val first = client.get(taste).page().one("#wizard")
+        val a = BggId(first.one("input[name=a]").`val`().toInt())
+
+        val next = client.answer(first, "UNPLAYED_A").fragment()
+
+        next shouldReplace "wizard"
+        app.tastes.of(kimId).comparisons shouldHaveSize 0
+        app.tastes.of(kimId).played shouldBe mapOf(a to false)
+        next.one(".gf-progress__count").text() shouldBe "1 / 15" // not a step: nothing was learned
+        setOf(next.one("input[name=a]").`val`(), next.one("input[name=b]").`val`()) shouldBe
+            setOf(next.one("input[name=a]").`val`(), next.one("input[name=b]").`val`()).also {
+                (it == setOf(first.one("input[name=a]").`val`(), first.one("input[name=b]").`val`())) shouldBe false
+            }
     }
 
     @Test

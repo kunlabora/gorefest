@@ -16,7 +16,7 @@ Sample copy in the house voice. Keep the structure; change the words freely.
 
 - Question, unplayed pair: **Which would you rather try?** (tag: "Unplayed pair")
 - Question, played pair: **Which did you enjoy more?** (tag: "You've played both")
-- Answers: tap a game · **Haven't played** · **Both meh** · **Both great**
+- Answers: tap a game · **Haven't played either** · **Both meh** · **Both great**, plus **Haven't played this** under each game. "Haven't played" only ever means that: never "Don't know", which could also mean "I can't choose".
 - Stop early: **Done for now**
 - Returning top-up: "Two new games on the shelf. Four quick pairs will sharpen your picks."
 
@@ -34,6 +34,7 @@ Sample copy in the house voice. Keep the structure; change the words freely.
 One line, about 60 characters, naming people where it helps:
 
 - Novelty: "Nobody's played it and everyone's likely to enjoy it."
+- New to someone (they said they haven't played it): "New to Kim and Anna: a chance to try it." Never claims they'll enjoy it.
 - Owner's wish: "Kim brought it and has been itching to play."
 - Consensus: "Safe bet: all four of you rated it highly."
 - Time: "Fits your 90 minutes with room for snacks."
