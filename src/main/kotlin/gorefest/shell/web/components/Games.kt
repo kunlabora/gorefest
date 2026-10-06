@@ -58,7 +58,7 @@ fun safeImageUrl(url: String): String? {
     if (!ok) return null
     return buildString {
         for (c in trimmed) {
-            if (c.code <= 0x20 || c in "'\"()\\<>;{}") append('%').append("%02X".format(c.code)) else append(c)
+            if (c.code <= 0x20 || c in "'\"\\<>;{}") append('%').append("%02X".format(c.code)) else append(c)
         }
     }
 }

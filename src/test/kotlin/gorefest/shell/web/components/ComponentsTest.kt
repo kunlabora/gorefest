@@ -26,7 +26,10 @@ class ComponentsTest {
         safeImageUrl("javascript:alert(1)") shouldBe null
         safeImageUrl("data:image/png;base64,AAAA") shouldBe null
         safeImageUrl("//evil.example/a.jpg") shouldBe null
-        safeImageUrl("https://x.example/a'b\"c(d)e\\f g.jpg") shouldBe "https://x.example/a%27b%22c%28d%29e%5Cf%20g.jpg"
+        safeImageUrl("https://x.example/a'b\"c(d)e\\f g.jpg") shouldBe "https://x.example/a%27b%22c(d)e%5Cf%20g.jpg"
+        // BGG signs the path, parentheses included: encoding them makes its CDN answer 400.
+        safeImageUrl("https://cf.geekdo-images.com/x__small/img/h=/fit-in/200x150/filters:strip_icc()/pic1.jpg") shouldBe
+            "https://cf.geekdo-images.com/x__small/img/h=/fit-in/200x150/filters:strip_icc()/pic1.jpg"
     }
 
     @Test
