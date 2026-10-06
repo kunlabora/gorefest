@@ -290,4 +290,19 @@ class DatePollRoutesTest {
         page.one("a.gf-daycard[href=$pollPage] .gf-daycard__meta").text() shouldBe "0 of 2 answered"
         page.one(".gf-dock a[href=/polls/new]").text() shouldBe "Not sure when? Find a date"
     }
+
+    @Test
+    fun `a new player signing up from a poll invite lands joined on the poll`() = test.webTest { client ->
+        annasPoll()
+        val returnTo = "/p/${token()}?join=1"
+
+        client.submitForm("/p/${token()}/join", Parameters.Empty).headers["Location"] shouldBe "/login?returnTo=${java.net.URLEncoder.encode(returnTo, Charsets.UTF_8)}"
+        client.submitForm("/login", parameters { append("email", "kim@example.com"); append("returnTo", returnTo) })
+        val code = test.mailbox.latestTo("kim@example.com")!!.subject.takeLast(6)
+        client.submitForm("/login/code", parameters { append("attempt", "00000000-0000-0000-0000-000000000001"); append("code", code) })
+        client.submitForm("/welcome", parameters { append("name", "Kim"); append("returnTo", returnTo) }).headers["Location"] shouldBe returnTo
+
+        client.get(returnTo).headers["Location"] shouldBe pollPage
+        ("Kim" in app.login.names(app.datePolls.of(poll)!!.participants).values) shouldBe true
+    }
 }

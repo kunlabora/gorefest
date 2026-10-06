@@ -7,6 +7,7 @@ import gorefest.core.gameday.JoinGameDayDecider
 import gorefest.shell.App
 import gorefest.shell.AppConfig
 import gorefest.shell.auth.Login
+import gorefest.shell.auth.Player
 import gorefest.shell.gameday.InviteLinks
 import gorefest.shell.web.message
 import gorefest.shell.web.components.full
@@ -22,6 +23,7 @@ import io.ktor.server.response.header
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondBytes
 import io.ktor.server.routing.Route
+import io.ktor.server.routing.RoutingContext
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 
@@ -46,6 +48,13 @@ fun Route.inviteRoutes(app: App, invites: InviteLinks) {
         }
     }
 
+    suspend fun RoutingContext.join(gameDay: GameDaySummary, me: Player) {
+        when (val decision = app.commands.handle(JoinGameDayDecider, JoinGameDay(gameDay.id, me.id))) {
+            is Decision.Accepted -> redirect("/gamedays/${gameDay.id}")
+            is Decision.Rejected -> call.respondHtml(HttpStatusCode.Conflict) { deadInvitePage(decision.reason.message()) }
+        }
+    }
+
     get("/i/{token}") {
         val token = call.parameters["token"]!!
         val gameDay = when (val invite = resolve(token)) {
@@ -56,6 +65,8 @@ fun Route.inviteRoutes(app: App, invites: InviteLinks) {
         }
         val me = sessionPlayer()
         if (me != null && me.id in gameDay.players) return@get redirect("/gamedays/${gameDay.id}")
+        // Back from signing up or logging in for this invite: the player already said yes, so join without asking again.
+        if (me?.name != null && call.parameters["join"] == "1") return@get join(gameDay, me)
 
         val names = login.names(gameDay.players)
         val shelf = app.shelves.of(gameDay.id).mapNotNull { app.catalog[it.game] }
@@ -79,12 +90,11 @@ fun Route.inviteRoutes(app: App, invites: InviteLinks) {
             is Invite.Cancelled -> return@post call.respondHtml(HttpStatusCode.Gone) { cancelledPage(invite.gameDay) }
             Invite.Dead -> return@post call.respondHtml(HttpStatusCode.NotFound) { deadInvitePage() }
         }
-        val me = sessionPlayer() ?: return@post redirect("/login?returnTo=${"/i/$token".urlEncoded()}")
-        if (me.name == null) return@post redirect("/welcome?returnTo=${"/i/$token".urlEncoded()}")
-        when (val decision = app.commands.handle(JoinGameDayDecider, JoinGameDay(gameDay.id, me.id))) {
-            is Decision.Accepted -> redirect("/gamedays/${gameDay.id}")
-            is Decision.Rejected -> call.respondHtml(HttpStatusCode.Conflict) { deadInvitePage(decision.reason.message()) }
-        }
+        // The login (and the welcome step) carry this path along, so the invite survives them and joins on the way back.
+        val comeBack = "/i/$token?join=1".urlEncoded()
+        val me = sessionPlayer() ?: return@post redirect("/login?returnTo=$comeBack")
+        if (me.name == null) return@post redirect("/welcome?returnTo=$comeBack")
+        join(gameDay, me)
     }
 
     get("/i/{token}/og.png") {

@@ -82,7 +82,7 @@ class InviteRoutesTest {
 
     @Test
     fun `joining needs a login, which comes back to the invite`() = test.webTest { client ->
-        client.submitForm("$link/join", parameters {}).headers[HttpHeaders.Location] shouldBe "/login?returnTo=${link.urlEncoded()}"
+        client.submitForm("$link/join", parameters {}).headers[HttpHeaders.Location] shouldBe "/login?returnTo=${"$link?join=1".urlEncoded()}"
     }
 
     @Test
@@ -164,5 +164,79 @@ class InviteRoutesTest {
         response.page().one("h1").text() shouldBe "Gorefest #7 was cancelled"
         client.submitForm("$link/join", parameters {}).status shouldBe HttpStatusCode.Gone
         app.gameDaysById.getValue(gorefest7).players.contains(kimId) shouldBe false
+    }
+
+
+    // Signing up from an invite (U1): the invite rides along in the login attempt, so it survives the mail round trip.
+
+    // Kim exists from setup (named, so a returning player); Nina is brand new.
+    private var mail = "nina@example.com"
+    private fun code() = test.mailbox.latestTo(mail)!!.subject.takeLast(6)
+    private fun mailedLink() = Regex("""http://localhost:8080(/login/link\?token=\S+)""").find(test.mailbox.latestTo(mail)!!.text)!!.groupValues[1]
+
+    private suspend fun io.ktor.client.HttpClient.askForCodeFromInvite(): String {
+        val toLogin = submitForm("$link/join", parameters {}).headers[HttpHeaders.Location]!!
+        toLogin shouldBe "/login?returnTo=${"$link?join=1".urlEncoded()}"
+        val returnTo = toLogin.substringAfter("returnTo=").let { java.net.URLDecoder.decode(it, Charsets.UTF_8) }
+        get(toLogin).page()
+        submitForm("/login", parameters { append("email", mail); append("returnTo", returnTo) })
+        return returnTo
+    }
+
+    private fun joined(name: String = "Nina") = kotlinx.coroutines.runBlocking {
+        app.login.names(app.gameDaysById.getValue(gorefest7).players).values.toList()
+    } == listOf("Anna", name)
+
+    @Test
+    fun `a new player goes invite, email, code, name and lands joined on the game day`() = test.webTest { client ->
+        val returnTo = client.askForCodeFromInvite()
+
+        val loggedIn = client.submitForm("/login/code", parameters { append("attempt", "00000000-0000-0000-0000-000000000001"); append("code", code()) })
+        loggedIn.headers[HttpHeaders.Location] shouldBe "/welcome?returnTo=${returnTo.urlEncoded()}"
+        val named = client.submitForm("/welcome", parameters { append("name", "Nina"); append("returnTo", returnTo) })
+        named.headers[HttpHeaders.Location] shouldBe returnTo
+
+        client.get(returnTo).headers[HttpHeaders.Location] shouldBe "/gamedays/$gorefest7"
+        joined() shouldBe true
+        client.get("/gamedays/$gorefest7").status shouldBe HttpStatusCode.OK
+    }
+
+    @Test
+    fun `a returning player who isn't logged in joins straight after the code`() = test.webTest { client ->
+        mail = "kim@example.com"
+        val returnTo = client.askForCodeFromInvite()
+
+        val loggedIn = client.submitForm("/login/code", parameters { append("attempt", "00000000-0000-0000-0000-000000000001"); append("code", code()) })
+        loggedIn.headers[HttpHeaders.Location] shouldBe returnTo
+
+        client.get(returnTo).headers[HttpHeaders.Location] shouldBe "/gamedays/$gorefest7"
+        joined("Kim") shouldBe true
+    }
+
+    @Test
+    fun `the magic link can open in another browser than the invite`() = test.webTest { client ->
+        val returnTo = client.askForCodeFromInvite()
+
+        val otherBrowser = createClient {
+            followRedirects = false
+            install(io.ktor.client.plugins.cookies.HttpCookies)
+        }
+        otherBrowser.get(mailedLink()).page()
+        val token = mailedLink().substringAfter("token=")
+        val loggedIn = otherBrowser.submitForm("/login/link", parameters { append("token", token) })
+        loggedIn.headers[HttpHeaders.Location] shouldBe "/welcome?returnTo=${returnTo.urlEncoded()}"
+        otherBrowser.submitForm("/welcome", parameters { append("name", "Nina"); append("returnTo", returnTo) })
+
+        otherBrowser.get(returnTo).headers[HttpHeaders.Location] shouldBe "/gamedays/$gorefest7"
+        joined() shouldBe true
+    }
+
+    @Test
+    fun `an invite that died while signing up says so instead of joining`() = test.webTest(session = kim) { client ->
+        val returnTo = "$link?join=1"
+        given(GameDayEnded(gorefest7))
+
+        client.get(returnTo).status shouldBe HttpStatusCode.Gone
+        app.gameDaysById.getValue(gorefest7).players shouldBe listOf(anna)
     }
 }

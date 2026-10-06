@@ -13,6 +13,7 @@ import gorefest.core.datepoll.PickDate
 import gorefest.core.datepoll.PickDateDecider
 import gorefest.core.eventsourcing.Decision
 import gorefest.shell.App
+import gorefest.shell.auth.Player
 import gorefest.shell.AppConfig
 import gorefest.shell.IdGenerator
 import gorefest.shell.auth.Login
@@ -118,12 +119,21 @@ fun Route.datePollRoutes(app: App) {
     // The way in: a signed link, like a game day's. Joining only happens through it.
     fun resolve(token: String?): DatePollSummary? = token?.let(app.invites::parsePoll)?.let(app.datePolls::of)
 
+    suspend fun RoutingContext.join(poll: DatePollSummary, me: Player) {
+        when (val decision = app.commands.handle(JoinDatePollDecider, JoinDatePoll(poll.id, me.id))) {
+            is Decision.Accepted -> redirect("/polls/${poll.id}")
+            is Decision.Rejected -> call.respondHtml(HttpStatusCode.Conflict) { deadInvitePage(decision.reason.message()) }
+        }
+    }
+
     get("/p/{token}") {
         val poll = resolve(call.parameters["token"]) ?: return@get call.respondHtml(HttpStatusCode.NotFound) { deadInvitePage() }
         val me = sessionPlayer()
         // Someone already in the poll goes to it, picked or not: that's where the result (and the game day) is.
         if (me != null && me.id in poll.participants) return@get redirect("/polls/${poll.id}")
         if (!poll.open) return@get call.respondHtml(HttpStatusCode.Gone) { deadInvitePage("The host already picked a date") }
+        // Back from signing up or logging in for this invite: join without asking again.
+        if (me?.name != null && call.parameters["join"] == "1") return@get join(poll, me)
         val path = "/p/${call.parameters["token"]}"
         val landing = PollInviteView(poll, login.names(poll.participants), loggedIn = me != null, path = path)
         call.respondHtml { pollInvitePage(landing) }
@@ -132,12 +142,11 @@ fun Route.datePollRoutes(app: App) {
     post("/p/{token}/join") {
         val token = call.parameters["token"]
         val poll = resolve(token) ?: return@post call.respondHtml(HttpStatusCode.NotFound) { deadInvitePage() }
-        val me = sessionPlayer() ?: return@post redirect("/login?returnTo=${"/p/$token".urlEncoded()}")
-        if (me.name == null) return@post redirect("/welcome?returnTo=${"/p/$token".urlEncoded()}")
-        when (val decision = app.commands.handle(JoinDatePollDecider, JoinDatePoll(poll.id, me.id))) {
-            is Decision.Accepted -> redirect("/polls/${poll.id}")
-            is Decision.Rejected -> call.respondHtml(HttpStatusCode.Conflict) { deadInvitePage(decision.reason.message()) }
-        }
+        // The login (and the welcome step) carry this path along, so the invite survives them and joins on the way back.
+        val comeBack = "/p/$token?join=1".urlEncoded()
+        val me = sessionPlayer() ?: return@post redirect("/login?returnTo=$comeBack")
+        if (me.name == null) return@post redirect("/welcome?returnTo=$comeBack")
+        join(poll, me)
     }
 }
 
