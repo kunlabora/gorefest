@@ -24,6 +24,7 @@ import gorefest.shell.web.page
 import gorefest.shell.web.redirect
 import gorefest.shell.web.shouldReplace
 import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.matchers.comparables.shouldBeGreaterThanOrEqualTo as shouldBeGreaterThanOrEqual
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldStartWith
 import io.ktor.client.HttpClient
@@ -133,6 +134,43 @@ class TasteRoutesTest {
         payoff.select(".gf-podium li") shouldHaveSize 3
         payoff.select(".gf-game__reason").forEach { (it.text().startsWith("You picked it over") || it.text() == "Just a guess so far: it hasn't won a pair yet.") shouldBe true }
         payoff.one(".gf-kicker").text() shouldStartWith "Round done ·"
+    }
+
+    /** Answers each pair in turn with the next of [answers] (cycling) until the round redirects; returns where. */
+    private suspend fun HttpClient.finishRound(vararg answers: String): String {
+        var wizard = get(taste).page().one("#wizard")
+        repeat(60) { i ->
+            val response = answer(wizard, answers[i % answers.size])
+            response.headers["HX-Redirect"]?.let { return it }
+            wizard = response.fragment()
+        }
+        error("the round never ended")
+    }
+
+    @Test
+    fun `a finished round that included skipped pairs still counts as a taste we learned`() = test.webTest(session = kim) { client ->
+        client.finishRound("A", "SKIP")
+
+        app.tastes.of(kimId).comparisons.size shouldBeGreaterThanOrEqual gorefest.core.matching.Matcher.KNOWN_AFTER
+        val picks = client.get("/gamedays/$gorefest7/suggestions?players=$kimId").fragment()
+        picks.select(".gf-notice") shouldHaveSize 0
+        picks.select("a[href=/gamedays/$gorefest7/taste]") shouldHaveSize 0
+    }
+
+    @Test
+    fun `going back mid-round and answering a stale pair again doesn't derail the round`() = test.webTest(session = kim) { client ->
+        val first = client.get(taste).page().one("#wizard")
+        val second = client.answer(first, "A").fragment()
+        client.answer(second, "B")
+        client.answer(first, "B") // back button twice, then the first pair's old form is posted again
+
+        var wizard = client.get(taste).page().one("#wizard")
+        var redirect: String? = null
+        repeat(60) { if (redirect == null) client.answer(wizard, "A").let { r -> redirect = r.headers["HX-Redirect"]; if (redirect == null) wizard = r.fragment() } }
+
+        redirect!! shouldStartWith "/gamedays/$gorefest7/favourites"
+        val picks = client.get("/gamedays/$gorefest7/suggestions?players=$kimId").fragment()
+        picks.select(".gf-notice") shouldHaveSize 0
     }
 
     @Test

@@ -100,10 +100,14 @@ class Wizard(
 
     fun shouldStop(round: RoundState) = round.step >= maxPairs || (round.step >= minPairs && round.stableSteps >= 3)
 
-    /** After an answer: one step further, and whether the player's top 3 stayed put. */
-    fun advance(round: RoundState, pair: WizardPair, newTop: List<BggId>) = round.copy(
-        step = round.step + 1,
-        stableSteps = if (newTop == round.top) round.stableSteps + 1 else 0,
+    /**
+     * After an answer: one step further, and whether the player's top 3 stayed put. Only an answer
+     * that taught us something ([learned]) is a step; "haven't played" and "skip" just retire the pair,
+     * so a finished round always holds as many comparisons as it has steps.
+     */
+    fun advance(round: RoundState, pair: WizardPair, newTop: List<BggId>, learned: Boolean = true) = round.copy(
+        step = if (learned) round.step + 1 else round.step,
+        stableSteps = if (!learned) round.stableSteps else if (newTop == round.top) round.stableSteps + 1 else 0,
         asked = round.asked + setOf(setOf(pair.a.id, pair.b.id)),
         top = newTop,
     )
