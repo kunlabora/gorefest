@@ -91,11 +91,8 @@ private val APP_VERSION: String = object {}.javaClass.getResourceAsStream("/vers
 
 private val PRELOADED_FONTS = listOf("atkinson-hyperlegible-next-latin.woff2", "bricolage-grotesque-latin.woff2")
 
-/** BoardGameGeek's data and box art are on every screen, so every screen credits it, in words and with its "Powered by BGG" logo. */
+/** BoardGameGeek's data and box art are on every screen, so every screen carries its "Powered by BGG" logo, linked to the site. */
 fun FlowContent.bggCredit() = p("gf-credit") {
-    +"Game data and images from "
-    a("https://boardgamegeek.com", target = "_blank") { attributes["rel"] = "noopener noreferrer"; +"BoardGameGeek" }
-    +"."
     a("https://boardgamegeek.com", target = "_blank", classes = "gf-credit__logo") {
         attributes["rel"] = "noopener noreferrer"
         img(src = "/static/poweredbybgg.webp", alt = "Powered by BGG") { width = "120"; height = "35"; attributes["loading"] = "lazy" }

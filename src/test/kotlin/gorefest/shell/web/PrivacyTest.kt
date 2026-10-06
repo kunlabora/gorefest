@@ -33,7 +33,6 @@ class PrivacyTest {
     fun `pages carry a robots meta tag and credit BoardGameGeek`() = test.webTest { client ->
         val page = client.get("/login").page()
         page.one("meta[name=robots]").attr("content") shouldContain "noindex"
-        page.one(".gf-credit a:not(.gf-credit__logo)").attr("href") shouldBe "https://boardgamegeek.com"
         page.one(".gf-credit__logo").attr("href") shouldBe "https://boardgamegeek.com"
         page.one(".gf-credit__logo img").attr("alt") shouldBe "Powered by BGG"
     }
