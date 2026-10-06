@@ -59,7 +59,14 @@ fun Route.gameDayRoutes(app: App) {
     }
 
     get("/gamedays/new") {
-        authenticated { call.respondHtml { gameDayFormPage(createForm) } }
+        authenticated {
+            val values = Parameters.build { append("title", app.titles.next()) }
+            call.respondHtml { gameDayFormPage(createForm, values) }
+        }
+    }
+
+    get("/gamedays/title") {
+        authenticated { respondFragment { titleField(app.titles.next(not = call.parameters["title"]), reroll = true) } }
     }
 
     post("/gamedays") {

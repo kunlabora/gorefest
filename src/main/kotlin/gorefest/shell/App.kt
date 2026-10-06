@@ -32,6 +32,7 @@ import gorefest.shell.eventstore.EventStore
 import gorefest.shell.eventstore.Projector
 import gorefest.shell.gameday.GameDayCloser
 import gorefest.shell.gameday.InviteLinks
+import gorefest.shell.gameday.TitleGenerator
 import gorefest.shell.gameday.RecapMailer
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
@@ -41,6 +42,7 @@ import kotlinx.coroutines.cancel
 import org.slf4j.LoggerFactory
 import java.time.Clock
 import java.time.Duration
+import kotlin.random.Random
 
 /** Everything the web layer needs, wired once at startup. */
 class App(
@@ -52,6 +54,7 @@ class App(
     val bggApi: BggApi,
     bggInterval: Duration = Duration.ofSeconds(5),
     bggRetry: Duration = Duration.ofSeconds(5),
+    random: Random = Random.Default,
 ) {
     /** Background work (the BGG worker); cancelled by [stop]. */
     val scope = CoroutineScope(
@@ -80,6 +83,7 @@ class App(
 
     val login = Login(db, commands, mailer, config, clock, ids)
     val invites = InviteLinks(config.secretKey)
+    val titles = TitleGenerator(random)
     val bgg = BggGateway(bggApi, bggInterval)
     val bggVerification = BggVerification(config.secretKey)
     val catalog = Catalog(db)

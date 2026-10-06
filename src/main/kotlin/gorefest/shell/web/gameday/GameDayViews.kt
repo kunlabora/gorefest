@@ -111,9 +111,7 @@ fun TagConsumer<*>.gameDayForm(view: GameDayFormView, error: String? = null, val
         hx("post", view.action)
         hx("swap", "outerHTML")
         if (error != null) errorNotice(error)
-        field("title", "Title", hint = "Whatever your group calls it.") {
-            input(InputType.text, name = "title", classes = "gf-input") { id = "title"; placeholder = "Gorefest #7"; required = true; value = values["title"].orEmpty() }
-        }
+        titleField(values["title"].orEmpty(), reroll = !view.editing)
         field("date", "Date") {
             input(InputType.date, name = "date", classes = "gf-input") { id = "date"; required = true; value = values["date"].orEmpty() }
         }
@@ -123,6 +121,25 @@ fun TagConsumer<*>.gameDayForm(view: GameDayFormView, error: String? = null, val
         if (!view.editing) browserTimeZone()
         primaryButton(view.submitLabel)
     }
+
+/** The title input; when creating, a button swaps in another generated title. */
+fun FlowContent.titleField(value: String, reroll: Boolean) = div { id = "title-field"; titleFieldContent(value, reroll) }
+
+fun TagConsumer<*>.titleField(value: String, reroll: Boolean) = div { id = "title-field"; titleFieldContent(value, reroll) }
+
+private fun FlowContent.titleFieldContent(value: String, reroll: Boolean) {
+    field("title", "Title", hint = "Whatever your group calls it.") {
+        input(InputType.text, name = "title", classes = "gf-input") { id = "title"; placeholder = "Gorefest #7"; required = true; this.value = value }
+        if (reroll) button(type = ButtonType.button, classes = buttonClasses(ButtonStyle.GHOST, ButtonSize.SMALL)) {
+            hx("get", "/gamedays/title")
+            hx("include", "#title")
+            hx("target", "#title-field")
+            hx("swap", "outerHTML")
+            icon("refresh")
+            +"Another one"
+        }
+    }
+}
 
 /** What the next-step card on the hub should push. */
 sealed interface NextStep {

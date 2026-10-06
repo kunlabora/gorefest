@@ -14,6 +14,10 @@ import gorefest.shell.web.components.page
 import gorefest.shell.web.fragment
 import gorefest.shell.web.htmxPost
 import gorefest.shell.web.one
+import gorefest.shell.web.shouldReplace
+import gorefest.shell.gameday.TitleGenerator
+import io.kotest.matchers.collections.shouldContain
+import io.kotest.matchers.shouldNotBe
 import gorefest.shell.web.page
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
@@ -302,5 +306,31 @@ class GameDayRoutesTest {
         response.status shouldBe HttpStatusCode.Conflict
         response.page().one(".gf-notice").text() shouldContain "Only the host can cancel"
         app.gameDaysById.getValue(gorefest7).cancelled shouldBe false
+    }
+
+    @Test
+    fun `the create form is prefilled with a fun title the host can re-roll`() = webTest { client ->
+        val page = client.get("/gamedays/new").page()
+        val title = page.one("#title").`val`()
+        TitleGenerator.ENDS shouldContain title.split(" ").last()
+        val reroll = page.one("#title-field button")
+        reroll.attr("hx-get") shouldBe "/gamedays/title"
+        reroll.attr("hx-include") shouldBe "#title"
+        reroll.attr("hx-target") shouldBe "#title-field"
+
+        val fragment = client.get("/gamedays/title?title=${title.replace(" ", "+")}").fragment()
+        fragment shouldReplace "title-field"
+        fragment.one("#title").`val`() shouldNotBe title
+        fragment.one("button").text() shouldBe "Another one"
+    }
+
+    @Test
+    fun `editing keeps the host's own title and has no re-roll`() = webTest { client ->
+        given(gameDayCreated(host = timId), PlayerJoined(gorefest7, timId))
+
+        val page = client.get("/gamedays/$gorefest7/edit").page()
+
+        page.one("#title").`val`() shouldBe "Gorefest #7"
+        page.select("#title-field button").shouldBeEmpty()
     }
 }
