@@ -23,30 +23,14 @@ import gorefest.core.typeName
 
 data class BringGame(val gameDay: GameDayId, val player: PlayerId, val game: BggId, val bringing: Boolean)
 
+/** [player] says they really want (or no longer want) to play [game], whoever brought it. */
 data class SetPlayWish(val gameDay: GameDayId, val player: PlayerId, val game: BggId, val wantsToPlay: Boolean)
 
-/** What a bring decision needs to know: is the game day on, did I join, am I bringing this game, do I want to play it. */
-data class BringState(val open: Boolean = false, val ended: Boolean = false, val cancelled: Boolean = false, val joined: Boolean = false, val bringing: Boolean = false, val wants: Boolean = false)
+/** How many shelf games one player can mark as "I really want to play this" per game day: a wish only means something when it's scarce. */
+const val MAX_WISHES = 3
 
-private fun bringQuery(gameDay: GameDayId, player: PlayerId, game: BggId) = Query.of(
-    Query.Item(setOf(typeName<GameDayCreated>(), typeName<GameDayEnded>(), typeName<GameDayCancelled>()), setOf(Tags.gameDay(gameDay))),
-    Query.Item(setOf(typeName<PlayerJoined>()), setOf(Tags.gameDay(gameDay), Tags.player(player))),
-    Query.Item(
-        setOf(typeName<GameBrought>(), typeName<GameUnbrought>(), typeName<PlayWishChanged>()),
-        setOf(Tags.gameDay(gameDay), Tags.player(player), Tags.game(game)),
-    ),
-)
-
-private fun evolveBring(state: BringState, event: Event) = when (event) {
-    is GameDayCreated -> state.copy(open = true)
-    is GameDayEnded -> state.copy(ended = true)
-    is GameDayCancelled -> state.copy(cancelled = true)
-    is PlayerJoined -> state.copy(joined = true)
-    is GameBrought -> state.copy(bringing = true)
-    is GameUnbrought -> state.copy(bringing = false, wants = false)
-    is PlayWishChanged -> state.copy(wants = event.wantsToPlay)
-    else -> state
-}
+/** What a bring decision needs to know: is the game day on, did I join, am I bringing this game. */
+data class BringState(val open: Boolean = false, val ended: Boolean = false, val cancelled: Boolean = false, val joined: Boolean = false, val bringing: Boolean = false)
 
 private fun BringState.cantChange(): Rejection? = when {
     !open -> Rejection.NoSuchGameDay
@@ -59,8 +43,22 @@ private fun BringState.cantChange(): Rejection? = when {
 /** Only this player's bringing of this game is inside the boundary, so everyone can tick games at once. */
 object BringGameDecider : Decider<BringGame, BringState, Event> {
     override val initialState = BringState()
-    override fun query(command: BringGame) = bringQuery(command.gameDay, command.player, command.game)
-    override fun evolve(state: BringState, event: Event) = evolveBring(state, event)
+
+    override fun query(command: BringGame) = Query.of(
+        Query.Item(setOf(typeName<GameDayCreated>(), typeName<GameDayEnded>(), typeName<GameDayCancelled>()), setOf(Tags.gameDay(command.gameDay))),
+        Query.Item(setOf(typeName<PlayerJoined>()), setOf(Tags.gameDay(command.gameDay), Tags.player(command.player))),
+        Query.Item(setOf(typeName<GameBrought>(), typeName<GameUnbrought>()), setOf(Tags.gameDay(command.gameDay), Tags.player(command.player), Tags.game(command.game))),
+    )
+
+    override fun evolve(state: BringState, event: Event) = when (event) {
+        is GameDayCreated -> state.copy(open = true)
+        is GameDayEnded -> state.copy(ended = true)
+        is GameDayCancelled -> state.copy(cancelled = true)
+        is PlayerJoined -> state.copy(joined = true)
+        is GameBrought -> state.copy(bringing = true)
+        is GameUnbrought -> state.copy(bringing = false)
+        else -> state
+    }
 
     override fun decide(command: BringGame, state: BringState): Decision<Event> {
         state.cantChange()?.let { return Rejected(it) }
@@ -74,22 +72,69 @@ object BringGameDecider : Decider<BringGame, BringState, Event> {
     }
 }
 
-object SetPlayWishDecider : Decider<SetPlayWish, BringState, PlayWishChanged> {
-    override val initialState = BringState()
-    override fun query(command: SetPlayWish) = bringQuery(command.gameDay, command.player, command.game)
-    override fun evolve(state: BringState, event: Event) = evolveBring(state, event)
+/**
+ * What a wish decision needs to know: is the game day on, did I join, who brings what, and which games I already wish for.
+ * A game leaving the shelf drops everyone's wishes for it (see [Shelves]), so it stops counting against the limit.
+ */
+data class WishState(
+    val open: Boolean = false,
+    val ended: Boolean = false,
+    val cancelled: Boolean = false,
+    val joined: Boolean = false,
+    /** The player the decision is about: the query only lets their own join through. */
+    val me: PlayerId? = null,
+    val owners: Map<BggId, Set<PlayerId>> = emptyMap(),
+    val wished: Set<BggId> = emptySet(),
+)
 
-    override fun decide(command: SetPlayWish, state: BringState): Decision<PlayWishChanged> {
-        state.cantChange()?.let { return Rejected(it) }
+/**
+ * Any joined player can wish for any game on the shelf, up to [MAX_WISHES]. The boundary holds the day's
+ * shelf changes and my own wishes only, so other people's wishes never conflict with mine.
+ */
+object SetPlayWishDecider : Decider<SetPlayWish, WishState, PlayWishChanged> {
+    override val initialState = WishState()
+
+    override fun query(command: SetPlayWish) = Query.of(
+        Query.Item(setOf(typeName<GameDayCreated>(), typeName<GameDayEnded>(), typeName<GameDayCancelled>()), setOf(Tags.gameDay(command.gameDay))),
+        Query.Item(setOf(typeName<PlayerJoined>()), setOf(Tags.gameDay(command.gameDay), Tags.player(command.player))),
+        Query.Item(setOf(typeName<GameBrought>(), typeName<GameUnbrought>()), setOf(Tags.gameDay(command.gameDay))),
+        Query.Item(setOf(typeName<PlayWishChanged>()), setOf(Tags.gameDay(command.gameDay), Tags.player(command.player))),
+    )
+
+    override fun evolve(state: WishState, event: Event) = when (event) {
+        is GameDayCreated -> state.copy(open = true)
+        is GameDayEnded -> state.copy(ended = true)
+        is GameDayCancelled -> state.copy(cancelled = true)
+        is PlayerJoined -> state.copy(joined = true, me = event.player)
+        is GameBrought -> state.copy(owners = state.owners + (event.game to (state.owners[event.game].orEmpty() + event.player)))
+        is GameUnbrought -> {
+            val left = state.owners[event.game].orEmpty() - event.player
+            // Stepping back as an owner drops your own wish for the game, as it always did; the game leaving drops everyone's.
+            val wished = if (left.isEmpty() || event.player == state.me) state.wished - event.game else state.wished
+            state.copy(owners = if (left.isEmpty()) state.owners - event.game else state.owners + (event.game to left), wished = wished)
+        }
+        is PlayWishChanged -> state.copy(wished = if (event.wantsToPlay) state.wished + event.game else state.wished - event.game)
+        else -> state
+    }
+
+    override fun decide(command: SetPlayWish, state: WishState): Decision<PlayWishChanged> {
+        when {
+            !state.open -> return Rejected(Rejection.NoSuchGameDay)
+            state.cancelled -> return Rejected(Rejection.GameDayCancelled)
+            state.ended -> return Rejected(Rejection.GameDayOver)
+            !state.joined -> return Rejected(Rejection.NotJoined)
+            command.game !in state.owners -> return Rejected(Rejection.NotOnShelf)
+        }
+        val wants = command.game in state.wished
         return when {
-            !state.bringing -> Rejected(Rejection.NotBringing)
-            state.wants == command.wantsToPlay -> Accepted()
+            wants == command.wantsToPlay -> Accepted()
+            command.wantsToPlay && state.wished.size >= MAX_WISHES -> Rejected(Rejection.TooManyWishes)
             else -> with(command) { Accepted(PlayWishChanged(gameDay, player, game, wantsToPlay)) }
         }
     }
 }
 
-/** One game on a shelf: who brings it, and which of them really wants to play it. */
+/** One game on a shelf: who brings it, and which of the game day's players really want to play it. */
 data class ShelfGame(val game: BggId, val owners: List<PlayerId>, val eager: Set<PlayerId> = emptySet())
 
 /** The shelf of every game day. */
@@ -116,7 +161,7 @@ object Shelves : Projection<GameDayShelves> {
         }
         is GameUnbrought -> state.changed(event.gameDay) { shelf ->
             shelf.map { if (it.game == event.game) it.copy(owners = it.owners - event.player, eager = it.eager - event.player) else it }
-                .filter { it.owners.isNotEmpty() }
+                .filter { it.owners.isNotEmpty() } // gone from the shelf: the rest of its wishes go with it
         }
         is PlayWishChanged -> state.changed(event.gameDay) { shelf ->
             shelf.map {

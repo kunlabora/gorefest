@@ -103,7 +103,7 @@ data class GameUnbrought(val gameDay: GameDayId, val player: PlayerId, val game:
     override val tags get() = setOf(Tags.gameDay(gameDay), Tags.player(player), Tags.game(game))
 }
 
-/** The owner really wants to play a game they brought (or no longer does). A matching bonus. */
+/** A player really wants to play a game on the shelf (or no longer does). A matching bonus. Once only the owner could; the shape is the same. */
 @Serializable
 @SerialName("PlayWishChanged")
 data class PlayWishChanged(val gameDay: GameDayId, val player: PlayerId, val game: BggId, val wantsToPlay: Boolean) : Event {

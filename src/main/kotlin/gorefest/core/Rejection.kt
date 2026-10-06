@@ -25,8 +25,11 @@ sealed interface Rejection {
     /** The player hasn't joined the game day. */
     data object NotJoined : Rejection
 
-    /** The wish is about a game the player isn't bringing. */
-    data object NotBringing : Rejection
+    /** The wish is about a game nobody brought. */
+    data object NotOnShelf : Rejection
+
+    /** The player already wishes for the most games they may. */
+    data object TooManyWishes : Rejection
     data object NobodyPlayed : Rejection
     data object PlayersNotAtGameDay : Rejection
     data object ImplausibleDuration : Rejection

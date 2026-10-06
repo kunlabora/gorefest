@@ -31,7 +31,7 @@ fun TagConsumer<*>.wizardFragment(step: WizardStep) = main("gf-body gf-wizard") 
 
 private fun FlowContent.wizardContent(step: WizardStep) {
     val (gameDay, pair, round, total) = step
-    progress(round.step, total)
+    progress(round.progress.coerceAtMost(total - 1), total)
     div("gf-stack") {
         if (pair.basis == Basis.PLAYED) {
             span("gf-tag gf-tag--olive gf-tag--start") { icon("check"); +"You've played both" }
@@ -57,7 +57,8 @@ private fun FlowContent.wizardContent(step: WizardStep) {
         hiddenInput("top", round.top.joinToString(","))
         hiddenInput("mode", if (step.topUp) "topup" else "full")
         duel(pair.a, pair.b, keyIds = true)
-        if (pair.basis == Basis.PLAYED) duelAnswers() else duelAnswers("SKIP", "Don't know")
+        duelUnplayed()
+        duelAnswers("Haven't played either")
     }
 }
 

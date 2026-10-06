@@ -4,6 +4,7 @@ import gorefest.core.BggAccountLinked
 import gorefest.core.BggId
 import gorefest.core.GameBrought
 import gorefest.core.GameDayEnded
+import gorefest.core.PlayWishChanged
 import gorefest.core.PlayerId
 import gorefest.core.PlayerJoined
 import gorefest.core.gameday.anna
@@ -27,7 +28,9 @@ import gorefest.shell.web.shouldReplace
 import gorefest.shell.web.urlEncoded
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
+import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 import io.ktor.client.request.get
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.parameters
@@ -72,12 +75,12 @@ class ShelfRoutesTest {
     }
 
     @Test
-    fun `ticking a game puts it on the shelf and offers the wish toggle`() = test.webTest(session = kim) { client ->
+    fun `ticking a game puts it on the shelf`() = test.webTest(session = kim) { client ->
         val row = client.htmxPost("/gamedays/$gorefest7/shelf/$brass", parameters { append("bringing", "true") }).fragment()
 
         row shouldReplace "bring-$brass"
         row.one("input.gf-switch").hasAttr("checked") shouldBe true
-        row.one("button[hx-post]").attr("hx-post") shouldBe "/gamedays/$gorefest7/shelf/$brass/wish"
+        row.select("button").shouldBeEmpty()
         app.shelves.of(gorefest7).map { it.game } shouldBe listOf(brass)
     }
 
@@ -93,13 +96,68 @@ class ShelfRoutesTest {
     }
 
     @Test
-    fun `owners can say they really want to play it`() = test.webTest(session = kim) { client ->
-        client.htmxPost("/gamedays/$gorefest7/shelf/$brass", parameters { append("bringing", "true") })
+    fun `the bring page lists the whole shelf under 'What do you want to play', with a heart per game`() = test.webTest(session = kim) { client ->
+        given(GameBrought(gorefest7, anna, azul), GameBrought(gorefest7, kimId, brass), PlayWishChanged(gorefest7, anna, azul, true))
 
-        val row = client.htmxPost("/gamedays/$gorefest7/shelf/$brass/wish", parameters { append("wants", "true") }).fragment()
+        val page = client.get(bringPage).page()
 
-        row.one("button").attr("aria-pressed") shouldBe "true"
+        page.select("h2").map { it.text() } shouldContain "What do you want to play?"
+        page.select("#wish-list li .gf-game__name").map { it.text() } shouldContainExactly listOf("Azul", "Brass: Birmingham")
+        val azulRow = page.one("#wish-$azul")
+        azulRow.one("button").attr("hx-post") shouldBe "/gamedays/$gorefest7/shelf/$azul/wish"
+        azulRow.one("button").attr("aria-pressed") shouldBe "false"
+        azulRow.one(".gf-wish .gf-small").text() shouldBe "1 person wants this"
+        page.one("#wish-$brass button").attr("aria-pressed") shouldBe "false"
+        page.one("#wish-list").attr("hx-trigger") shouldBe "bring-list-changed from:body, shelf-changed from:body"
+    }
+
+    @Test
+    fun `any member can heart a game somebody else brought, and take it back`() = test.webTest(session = kim) { client ->
+        given(GameBrought(gorefest7, anna, azul))
+
+        val onResponse = client.htmxPost("/gamedays/$gorefest7/shelf/$azul/wish", parameters { append("wants", "true") })
+        onResponse.headers["HX-Trigger"] shouldBe "shelf-changed"
+        val on = onResponse.fragment()
+
+        on shouldReplace "wish-$azul"
+        on.one("button").attr("aria-pressed") shouldBe "true"
+        on.one("button").attr("hx-vals") shouldContain "\"wants\": \"false\""
+        on.one(".gf-wish .gf-small").text() shouldBe "1 person wants this"
         app.shelves.of(gorefest7).single().eager shouldBe setOf(kimId)
+
+        val off = client.htmxPost("/gamedays/$gorefest7/shelf/$azul/wish", parameters { append("wants", "false") }).fragment()
+        off.one("button").attr("aria-pressed") shouldBe "false"
+        app.shelves.of(gorefest7).single().eager shouldBe emptySet()
+    }
+
+    @Test
+    fun `a fourth heart is refused, saying why`() = test.webTest(session = kim) { client ->
+        val games = listOf("Azul", "Brass: Birmingham", "CATAN", "Root").map { name -> DevCatalog.games.first { it.name == name }.id }
+        given(*games.map { GameBrought(gorefest7, anna, it) }.toTypedArray(), *games.take(3).map { PlayWishChanged(gorefest7, kimId, it, true) }.toTypedArray())
+
+        val refused = client.htmxPost("/gamedays/$gorefest7/shelf/${games[3]}/wish", parameters { append("wants", "true") })
+
+        refused.status shouldBe HttpStatusCode.Conflict
+        refused.fragment().one(".gf-error").text() shouldBe "You can pick 3 favourites: take one off first"
+        app.shelves.of(gorefest7).first { it.game == games[3] }.eager shouldBe emptySet()
+    }
+
+    @Test
+    fun `a game nobody brought can't be hearted`() = test.webTest(session = kim) { client ->
+        val response = client.htmxPost("/gamedays/$gorefest7/shelf/$azul/wish", parameters { append("wants", "true") })
+
+        response.status shouldBe HttpStatusCode.Conflict
+        response.fragment().one(".gf-error").text() shouldBe "Nobody's bringing that game"
+    }
+
+    @Test
+    fun `the wish list reloads from the server, and ticking in the list asks for it`() = test.webTest(session = kim) { client ->
+        client.htmxPost("/gamedays/$gorefest7/shelf/$brass", parameters { append("bringing", "true") }).headers["HX-Trigger"] shouldBe "shelf-changed"
+
+        val list = client.get("$bringPage/wishes").fragment()
+
+        list shouldReplace "wish-list"
+        list.select(".gf-game__name").map { it.text() } shouldContainExactly listOf("Brass: Birmingham")
     }
 
     @Test
@@ -151,10 +209,10 @@ class ShelfRoutesTest {
     }
 
     @Test
-    fun `ticking a game in the list itself doesn't ask the list to reload`() = test.webTest(session = kim) { client ->
+    fun `ticking a game in the list itself doesn't reload that list, only the wish list`() = test.webTest(session = kim) { client ->
         val response = client.htmxPost("/gamedays/$gorefest7/shelf/$brass", parameters { append("bringing", "true") })
 
-        response.headers["HX-Trigger"] shouldBe null
+        response.headers["HX-Trigger"] shouldBe "shelf-changed"
     }
 
     @Test

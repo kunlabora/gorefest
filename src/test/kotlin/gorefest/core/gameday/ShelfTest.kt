@@ -46,20 +46,59 @@ class ShelfTest {
         BringGameDecider.given(*joined, GameDayEnded(gorefest7)).whenever(BringGame(gorefest7, bram, brass, true)).thenRejects(Rejection.GameDayOver)
     }
 
+    private val catan = BggId(13)
+    private val ark = BggId(342942)
+    private val onShelf = arrayOf<Event>(*joined, GameBrought(gorefest7, anna, brass))
+
     @Test
-    fun `wanting to play needs the game brought`() {
-        SetPlayWishDecider.given(*joined).whenever(SetPlayWish(gorefest7, bram, brass, true)).thenRejects(Rejection.NotBringing)
-        SetPlayWishDecider
-            .given(*joined, GameBrought(gorefest7, bram, brass))
-            .whenever(SetPlayWish(gorefest7, bram, brass, true))
-            .thenEmits(PlayWishChanged(gorefest7, bram, brass, true))
+    fun `any joined player can want a game somebody else brought`() {
+        SetPlayWishDecider.given(*onShelf).whenever(SetPlayWish(gorefest7, bram, brass, true)).thenEmits(PlayWishChanged(gorefest7, bram, brass, true))
+        SetPlayWishDecider.given(*onShelf).whenever(SetPlayWish(gorefest7, anna, brass, true)).thenEmits(PlayWishChanged(gorefest7, anna, brass, true))
     }
 
     @Test
-    fun `unbringing drops the wish, so bringing again starts neutral`() {
+    fun `wanting needs the game on the shelf, a joined player and a game day that's on`() {
+        SetPlayWishDecider.given(*joined).whenever(SetPlayWish(gorefest7, bram, brass, true)).thenRejects(Rejection.NotOnShelf)
+        SetPlayWishDecider.given(gameDayCreated(), GameBrought(gorefest7, anna, brass)).whenever(SetPlayWish(gorefest7, bram, brass, true)).thenRejects(Rejection.NotJoined)
+        SetPlayWishDecider.given(*onShelf, GameDayEnded(gorefest7)).whenever(SetPlayWish(gorefest7, bram, brass, true)).thenRejects(Rejection.GameDayOver)
+    }
+
+    @Test
+    fun `wanting what you already want, or not wanting what you don't, changes nothing`() {
+        SetPlayWishDecider.given(*onShelf, PlayWishChanged(gorefest7, bram, brass, true)).whenever(SetPlayWish(gorefest7, bram, brass, true)).thenEmitsNothing()
+        SetPlayWishDecider.given(*onShelf).whenever(SetPlayWish(gorefest7, bram, brass, false)).thenEmitsNothing()
         SetPlayWishDecider
-            .given(*joined, GameBrought(gorefest7, bram, brass), PlayWishChanged(gorefest7, bram, brass, true), GameUnbrought(gorefest7, bram, brass), GameBrought(gorefest7, bram, brass))
+            .given(*onShelf, PlayWishChanged(gorefest7, bram, brass, true))
             .whenever(SetPlayWish(gorefest7, bram, brass, false))
+            .thenEmits(PlayWishChanged(gorefest7, bram, brass, false))
+    }
+
+    @Test
+    fun `a player gets a few wishes, and giving one back frees it`() {
+        val shelf = arrayOf<Event>(*joined, *listOf(brass, azul, catan, ark).map { GameBrought(gorefest7, anna, it) }.toTypedArray())
+        val wished = listOf(brass, azul, catan).map { PlayWishChanged(gorefest7, bram, it, true) }.toTypedArray()
+
+        SetPlayWishDecider.given(*shelf, *wished).whenever(SetPlayWish(gorefest7, bram, ark, true)).thenRejects(Rejection.TooManyWishes)
+        SetPlayWishDecider.given(*shelf, *wished).whenever(SetPlayWish(gorefest7, bram, catan, false)).thenEmits(PlayWishChanged(gorefest7, bram, catan, false))
+        SetPlayWishDecider.given(*shelf, *wished, PlayWishChanged(gorefest7, bram, catan, false)).whenever(SetPlayWish(gorefest7, bram, ark, true)).thenEmits(PlayWishChanged(gorefest7, bram, ark, true))
+        // Other people's wishes don't count against mine.
+        SetPlayWishDecider.given(*shelf, *wished).whenever(SetPlayWish(gorefest7, anna, ark, true)).thenEmits(PlayWishChanged(gorefest7, anna, ark, true))
+    }
+
+    @Test
+    fun `a game that left the shelf takes the wishes with it, so bringing it again starts neutral and frees the slot`() {
+        val shelf = arrayOf<Event>(*joined, *listOf(brass, azul, catan, ark).map { GameBrought(gorefest7, anna, it) }.toTypedArray())
+        val wished = listOf(brass, azul, catan).map { PlayWishChanged(gorefest7, bram, it, true) }.toTypedArray()
+
+        SetPlayWishDecider.given(*shelf, *wished, GameUnbrought(gorefest7, anna, catan)).whenever(SetPlayWish(gorefest7, bram, ark, true)).thenEmits(PlayWishChanged(gorefest7, bram, ark, true))
+        SetPlayWishDecider
+            .given(*shelf, *wished, GameUnbrought(gorefest7, anna, catan), GameBrought(gorefest7, anna, catan))
+            .whenever(SetPlayWish(gorefest7, bram, catan, true))
+            .thenEmits(PlayWishChanged(gorefest7, bram, catan, true))
+        // Still on the shelf while one owner is left.
+        SetPlayWishDecider
+            .given(*onShelf, GameBrought(gorefest7, bram, brass), PlayWishChanged(gorefest7, bram, brass, true), GameUnbrought(gorefest7, anna, brass))
+            .whenever(SetPlayWish(gorefest7, bram, brass, true))
             .thenEmitsNothing()
     }
 
@@ -67,9 +106,31 @@ class ShelfTest {
     fun `the shelf shows each game once, with all owners`() {
         val shelf = listOf(
             GameBrought(gorefest7, anna, brass), GameBrought(gorefest7, bram, azul), GameBrought(gorefest7, bram, brass),
-            PlayWishChanged(gorefest7, bram, brass, true), GameUnbrought(gorefest7, bram, azul),
+            PlayWishChanged(gorefest7, bram, brass, true), PlayWishChanged(gorefest7, anna, brass, true), GameUnbrought(gorefest7, bram, azul),
         ).fold(Shelves.initialState, Shelves::evolve).of(gorefest7)
 
-        shelf shouldBe listOf(ShelfGame(brass, owners = listOf(anna, bram), eager = setOf(bram)))
+        shelf shouldBe listOf(ShelfGame(brass, owners = listOf(anna, bram), eager = setOf(bram, anna)))
+    }
+
+    @Test
+    fun `an owner stepping back drops their own wish but not other people's`() {
+        val events = listOf(
+            GameBrought(gorefest7, anna, brass), GameBrought(gorefest7, bram, brass),
+            PlayWishChanged(gorefest7, anna, brass, true), PlayWishChanged(gorefest7, bram, brass, true), GameUnbrought(gorefest7, anna, brass),
+        )
+        events.fold(Shelves.initialState, Shelves::evolve).of(gorefest7) shouldBe listOf(ShelfGame(brass, owners = listOf(bram), eager = setOf(bram)))
+
+        // The decider agrees: Anna's wish is gone (wanting again is news), Bram's stays (wanting again changes nothing).
+        SetPlayWishDecider.given(*joined, *events.toTypedArray()).whenever(SetPlayWish(gorefest7, anna, brass, true)).thenEmits(PlayWishChanged(gorefest7, anna, brass, true))
+        SetPlayWishDecider.given(*joined, *events.toTypedArray()).whenever(SetPlayWish(gorefest7, bram, brass, true)).thenEmitsNothing()
+    }
+
+    @Test
+    fun `a non-owner's wish survives the owners changing, but not the game leaving`() {
+        val events = listOf(GameBrought(gorefest7, anna, brass), PlayWishChanged(gorefest7, bram, brass, true), GameBrought(gorefest7, anna, azul), GameUnbrought(gorefest7, anna, azul))
+        events.fold(Shelves.initialState, Shelves::evolve).of(gorefest7) shouldBe listOf(ShelfGame(brass, owners = listOf(anna), eager = setOf(bram)))
+
+        (events + GameUnbrought(gorefest7, anna, brass) + GameBrought(gorefest7, anna, brass)).fold(Shelves.initialState, Shelves::evolve).of(gorefest7) shouldBe
+            listOf(ShelfGame(brass, owners = listOf(anna)))
     }
 }

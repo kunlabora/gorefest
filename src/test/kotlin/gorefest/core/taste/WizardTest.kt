@@ -39,7 +39,7 @@ class WizardTest {
 
     @Test
     fun `every fifth pair includes a popular anchor`() {
-        val pair = wizard.next(shelf, anchors, nobody, RoundState(step = 4), now).shouldNotBeNull()
+        val pair = wizard.next(shelf, anchors, nobody, RoundState(asked = listOf(0 to 1, 0 to 2, 0 to 3, 1 to 2).map { (i, j) -> setOf(shelf[i].id, shelf[j].id) }.toSet()), now).shouldNotBeNull()
 
         (pair.a in anchors || pair.b in anchors) shouldBe true
     }
@@ -86,7 +86,10 @@ class WizardTest {
             (pair.a.id in focus || pair.b.id in focus) shouldBe true
             round = wizard.advance(round, pair, emptyList())
         }
-        wizard.next(shelf, anchors, nobody, round, now, mustInclude = focus).shouldBeNull()
+        // The shelf pairs with it are used up: it's asked against an anchor, not dropped early.
+        val last = wizard.next(shelf, anchors, nobody, round, now, mustInclude = focus).shouldNotBeNull()
+        (last.a.id in focus || last.b.id in focus) shouldBe true
+        (last.a in anchors || last.b in anchors) shouldBe true
     }
 
     @Test
@@ -113,6 +116,21 @@ class WizardTest {
         wizard.shouldStop(RoundState(step = 10, stableSteps = 3)) shouldBe true
         wizard.shouldStop(RoundState(step = 10, stableSteps = 2)) shouldBe false
         wizard.shouldStop(RoundState(step = 9, stableSteps = 5)) shouldBe false
+        wizard.shouldStop(RoundState(step = 0, asked = (1..30).map { setOf(BggId(it), BggId(it + 100)) }.toSet())) shouldBe true
+    }
+
+    @Test
+    fun `a player who never learned anything still finishes, and never ends early while pairs remain`() {
+        var round = RoundState()
+        var asked = 0
+        while (!wizard.shouldStop(round)) {
+            val pair = wizard.next(shelf, anchors, nobody, round, now)
+            if (pair == null) break
+            round = wizard.advance(round, pair, emptyList(), learned = false)
+            asked++
+        }
+        asked shouldBe 30
+        round.step shouldBe 0
     }
 
     @Test

@@ -79,10 +79,22 @@ class BggXmlTest {
         game.bestPlayers shouldBe setOf(3, 4)
         game.recommendedPlayers shouldBe setOf(2)
         (game.minPlaytime to game.maxPlaytime) shouldBe (60 to 120)
+        game.playingTime shouldBe 120
         game.weight shouldBe 3.8871
         game.mechanics shouldBe setOf("Hand Management", "Network and Route Building")
         game.categories shouldBe setOf("Economic")
         game.popularityRank shouldBe 1
+    }
+
+    @Test
+    fun `a campaign game keeps BGG's playing time even when it repeats the max`() {
+        val game = BggXml.things(BggXml.parse("""
+            <items><item type="boardgame" id="1"><name type="primary" value="Seventh Continent"/><minplayers value="1"/><maxplayers value="4"/>
+            <playingtime value="1000"/><minplaytime value="5"/><maxplaytime value="1000"/></item></items>""".trimIndent())).single()
+
+        game.playingTime shouldBe 1000
+        game.hasWildPlaytimeRange shouldBe true
+        game.typicalMinutes shouldBe 71
     }
 
     @Test

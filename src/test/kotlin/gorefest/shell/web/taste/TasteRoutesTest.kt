@@ -1,6 +1,7 @@
 package gorefest.shell.web.taste
 
 import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.string.shouldNotContain
 import gorefest.core.BggId
 import gorefest.core.ComparisonRecorded
 import gorefest.core.ComparisonResult
@@ -15,6 +16,7 @@ import gorefest.shell.bgg.Collections
 import gorefest.shell.bgg.DevCatalog
 import gorefest.shell.web.TestApp
 import gorefest.shell.web.components.duel
+import gorefest.shell.web.components.typeText
 import gorefest.shell.web.components.long
 import gorefest.shell.web.components.page
 import gorefest.shell.web.fragment
@@ -24,6 +26,7 @@ import gorefest.shell.web.page
 import gorefest.shell.web.redirect
 import gorefest.shell.web.shouldReplace
 import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.matchers.comparables.shouldBeGreaterThanOrEqualTo as shouldBeGreaterThanOrEqual
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldStartWith
 import io.ktor.client.HttpClient
@@ -70,16 +73,30 @@ class TasteRoutesTest {
     }
 
     @Test
-    fun `the round shows two games and five ways to answer`() = test.webTest(session = kim) { client ->
+    fun `the round shows two games and the ways to answer`() = test.webTest(session = kim) { client ->
         val page = client.get(taste).page()
         val wizard = page.one("main#wizard")
 
         wizard.one("h1").text() shouldBe "Which would you rather try?"
         wizard.select(".gf-pick").map { it.attr("value") } shouldBe listOf("A", "B")
-        wizard.select(".gf-answer").map { it.attr("value") } shouldBe listOf("SKIP", "BOTH_MEH", "BOTH_GREAT")
+        wizard.select(".gf-answer").map { it.attr("value") } shouldBe listOf("UNPLAYED", "BOTH_MEH", "BOTH_GREAT")
+        wizard.select(".gf-answer").map { it.text() } shouldBe listOf("Haven't played either", "Both meh", "Both great")
+        wizard.select(".gf-unplayed button").map { it.attr("value") to it.text() } shouldBe listOf("UNPLAYED_A" to "Haven't played this", "UNPLAYED_B" to "Haven't played this")
+        wizard.text() shouldNotContain "Don't know"
         wizard.one("form").attr("hx-target") shouldBe "#wizard"
         wizard.one(".gf-progress__count").text() shouldBe "1 / 15"
         page.one(".gf-appbar a").attr("href") shouldBe "/gamedays/$gorefest7/favourites"
+    }
+
+    @Test
+    fun `each game in the duel says what kind of game it is`() = test.webTest(session = kim) { client ->
+        val wizard = client.get(taste).page().one("main#wizard")
+
+        wizard.select(".gf-pick").forEach { pick ->
+            val game = DevCatalog.games.first { it.name == pick.one(".gf-pick__name").text() }
+            pick.one(".gf-pick__type").text() shouldBe game.typeText
+            game.typeText.isNotEmpty() shouldBe true
+        }
     }
 
     @Test
@@ -117,6 +134,23 @@ class TasteRoutesTest {
     }
 
     @Test
+    fun `'haven't played this' on one card remembers only that game, and the round moves on`() = test.webTest(session = kim) { client ->
+        val first = client.get(taste).page().one("#wizard")
+        val a = BggId(first.one("input[name=a]").`val`().toInt())
+
+        val next = client.answer(first, "UNPLAYED_A").fragment()
+
+        next shouldReplace "wizard"
+        app.tastes.of(kimId).comparisons shouldHaveSize 0
+        app.tastes.of(kimId).played shouldBe mapOf(a to false)
+        next.one(".gf-progress__count").text() shouldBe "2 / 15" // nothing learned, but the bar moves
+        setOf(next.one("input[name=a]").`val`(), next.one("input[name=b]").`val`()) shouldBe
+            setOf(next.one("input[name=a]").`val`(), next.one("input[name=b]").`val`()).also {
+                (it == setOf(first.one("input[name=a]").`val`(), first.one("input[name=b]").`val`())) shouldBe false
+            }
+    }
+
+    @Test
     fun `after the last pair the payoff shows favourites from the shelf`() = test.webTest(session = kim) { client ->
         var wizard = client.get(taste).page().one("#wizard")
         var redirect: String? = null
@@ -135,6 +169,48 @@ class TasteRoutesTest {
         payoff.select(".gf-podium li > .gf-game > .gf-game__rank") shouldHaveSize 3
         payoff.select(".gf-game__reason").forEach { (it.text().startsWith("You picked it over") || it.text() == "Just a guess so far: it hasn't won a pair yet.") shouldBe true }
         payoff.one(".gf-kicker").text() shouldStartWith "Round done ·"
+    }
+
+    /** Answers each pair in turn with the next of [answers] (cycling) until the round redirects; returns where. */
+    private suspend fun HttpClient.finishRound(vararg answers: String): String {
+        var wizard = get(taste).page().one("#wizard")
+        repeat(60) { i ->
+            val response = answer(wizard, answers[i % answers.size])
+            response.headers["HX-Redirect"]?.let { return it }
+            wizard = response.fragment()
+        }
+        error("the round never ended")
+    }
+
+    @Test
+    fun `a finished round that included 'haven't played' pairs still counts as a taste we learned`() = test.webTest(session = kim) { client ->
+        client.finishRound("A", "UNPLAYED_A")
+
+        app.tastes.of(kimId).comparisons.size shouldBeGreaterThanOrEqual gorefest.core.matching.Matcher.KNOWN_AFTER
+        val picks = client.get("/gamedays/$gorefest7/suggestions?players=$kimId").fragment()
+        picks.select(".gf-notice") shouldHaveSize 0
+        picks.select("a[href=/gamedays/$gorefest7/taste]") shouldHaveSize 0
+    }
+
+    @Test
+    fun `answering 'haven't played' every time still ends the round`() = test.webTest(session = kim) { client ->
+        client.finishRound("UNPLAYED") shouldStartWith "/gamedays/$gorefest7/favourites"
+    }
+
+    @Test
+    fun `going back mid-round and answering a stale pair again doesn't derail the round`() = test.webTest(session = kim) { client ->
+        val first = client.get(taste).page().one("#wizard")
+        val second = client.answer(first, "A").fragment()
+        client.answer(second, "B")
+        client.answer(first, "B") // back button twice, then the first pair's old form is posted again
+
+        var wizard = client.get(taste).page().one("#wizard")
+        var redirect: String? = null
+        repeat(60) { if (redirect == null) client.answer(wizard, "A").let { r -> redirect = r.headers["HX-Redirect"]; if (redirect == null) wizard = r.fragment() } }
+
+        redirect!! shouldStartWith "/gamedays/$gorefest7/favourites"
+        val picks = client.get("/gamedays/$gorefest7/suggestions?players=$kimId").fragment()
+        picks.select(".gf-notice") shouldHaveSize 0
     }
 
     @Test

@@ -51,6 +51,25 @@ class ComponentsTest {
     }
 
     @Test
+    fun `facts show a range, or the typical time when the range is wild`() {
+        game(null).facts shouldBe "30–45 min · 2–4"
+        game(null).copy(minPlaytime = 5, maxPlaytime = 1000, playingTime = 120).facts shouldBe "~120 min · 2–4"
+        game(null).copy(minPlaytime = 60, maxPlaytime = 1200, playingTime = 0).facts shouldBe "~268 min · 2–4"
+    }
+
+    @Test
+    fun `a game's type is one or two telling words from its categories and mechanics`() {
+        fun typeOf(name: String) = gorefest.shell.bgg.DevCatalog.games.first { it.name == name }.typeWords
+        typeOf("Pandemic") shouldBe listOf("Cooperative")
+        typeOf("Wingspan") shouldBe listOf("Engine building", "Dice")
+        typeOf("Codenames") shouldBe listOf("Party")
+        typeOf("Azul") shouldBe listOf("Abstract", "Tile placing")
+        game(null).typeWords shouldBe emptyList()
+        game(null).typeText shouldBe ""
+        game(null).copy(categories = setOf("Card Game"), mechanics = setOf("Deck, Bag, and Pool Building")).typeText shouldBe "Deck building · Card game"
+    }
+
+    @Test
     fun `one zone fallback everywhere`() {
         zoneOrDefault(null).id shouldBe DEFAULT_TIME_ZONE
         zoneOrDefault("Not/AZone").id shouldBe DEFAULT_TIME_ZONE

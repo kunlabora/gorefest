@@ -16,7 +16,7 @@ Sample copy in the house voice. Keep the structure; change the words freely.
 
 - Question, unplayed pair: **Which would you rather try?** (tag: "Unplayed pair")
 - Question, played pair: **Which did you enjoy more?** (tag: "You've played both")
-- Answers: tap a game · **Haven't played** · **Both meh** · **Both great**
+- Answers: tap a game · **Haven't played either** · **Both meh** · **Both great**, plus **Haven't played this** under each game. "Haven't played" only ever means that: never "Don't know", which could also mean "I can't choose".
 - Stop early: **Done for now**
 - Returning top-up: "Two new games on the shelf. Four quick pairs will sharpen your picks."
 
@@ -34,7 +34,9 @@ Sample copy in the house voice. Keep the structure; change the words freely.
 One line, about 60 characters, naming people where it helps:
 
 - Novelty: "Nobody's played it and everyone's likely to enjoy it."
+- New to someone (they said they haven't played it): "New to Kim and Anna: a chance to try it." Never claims they'll enjoy it.
 - Owner's wish: "Kim brought it and has been itching to play."
+- Wished by the table: "Kim really wants to play this." · "Kim and Anna both want to play this." · "Three of you really want to play this."
 - Consensus: "Safe bet: all four of you rated it highly."
 - Time: "Fits your 90 minutes with room for snacks."
 - Player count: "Best at exactly five, which is you."
@@ -54,3 +56,15 @@ One line, about 60 characters, naming people where it helps:
 - **Check your mail** · "Opened this from WhatsApp or Signal? The code is the quicker route." · [Let me in]
 - Wrong code: "That code doesn't match. Two more tries, then we'll send a fresh one."
 - Mail subject: "Your Gorefest code: 391740". The code goes in the subject so it shows in the notification.
+
+## Shelf wishes
+
+- Section on the bring page: **What do you want to play?** · "Heart up to 3 games on the shelf you're really keen on. Each heart nudges a game up the suggestions."
+- Toggle: **I want to play this** / **I really want to play this** · count: "2 people want this"
+- Fourth heart: "You can pick 3 favourites: take one off first"
+- Empty: "Nothing on the shelf yet. Tick what you're bringing above."
+
+## Game type and time
+
+- Under a game's name: up to two words from BGG, uppercase small: "ABSTRACT · TILE PLACING", "COOPERATIVE", "CARD GAME".
+- Campaign games with a silly BGG range show the typical time: "~120 min", not "5–1000 min".

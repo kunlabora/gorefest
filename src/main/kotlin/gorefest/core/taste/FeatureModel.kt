@@ -22,7 +22,7 @@ fun features(game: Game): Features = buildMap {
     val tags = game.mechanics.map { "mechanic:$it" } + game.categories.map { "category:$it" }
     if (tags.isNotEmpty()) tags.forEach { put(it, 1 / sqrt(tags.size.toDouble())) }
     if (game.weight > 0) put("weight", game.weight - 2.5)
-    val minutes = (game.minPlaytime + game.maxPlaytime) / 2.0
+    val minutes = if (game.hasWildPlaytimeRange) game.typicalMinutes.toDouble() else (game.minPlaytime + game.maxPlaytime) / 2.0
     if (minutes > 0) put("length", ln(minutes / 60.0) / ln(2.0))
     game.bestPlayers.filter { it <= 6 }.forEach { put("best:$it", 0.5) }
 }

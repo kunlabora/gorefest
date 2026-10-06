@@ -10,6 +10,9 @@ class SuggestionTextsTest {
     fun `every reason has its sentence`() {
         mapOf(
             SuggestionReason.EagerOwner("Kim") to "Kim brought it and has been itching to play.",
+            SuggestionReason.WantedBy(listOf("Anna")) to "Anna really wants to play this.",
+            SuggestionReason.WantedBy(listOf("Anna", "Bram")) to "Anna and Bram both want to play this.",
+            SuggestionReason.WantedBy(listOf("Anna", "Bram", "Kim")) to "Three of you really want to play this.",
             SuggestionReason.NewAndLiked to "Nobody's played it and everyone's likely to enjoy it.",
             SuggestionReason.SafeBet(2) to "Safe bet: both of you rated it highly.",
             SuggestionReason.SafeBet(4) to "Safe bet: all four of you rated it highly.",
@@ -18,6 +21,8 @@ class SuggestionTextsTest {
             SuggestionReason.FitsWithRoomToSpare(90) to "Fits your 90 minutes with room for snacks.",
             SuggestionReason.PlaysWellWith(2) to "Plays well with two.",
             SuggestionReason.GoodMiddleGround to "A good middle ground for this table.",
+            SuggestionReason.NewToSome(listOf("Kim")) to "New to Kim: a chance to try it.",
+            SuggestionReason.NewToSome(listOf("Kim", "Anna", "Bram")) to "New to Kim, Anna and Bram: a chance to try it.",
         ).forEach { (reason, text) -> reason.text() shouldBe text }
     }
 

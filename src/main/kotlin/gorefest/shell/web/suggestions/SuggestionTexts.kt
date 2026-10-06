@@ -10,6 +10,11 @@ private fun Int.inWordsLower() = inWords().lowercase()
 /** The one-line reason under a suggestion. */
 fun SuggestionReason.text(): String = when (this) {
     is SuggestionReason.EagerOwner -> "$name brought it and has been itching to play."
+    is SuggestionReason.WantedBy -> when (names.size) {
+        1 -> "${names.single()} really wants to play this."
+        2 -> "${names.joinAnd()} both want to play this."
+        else -> "${names.size.inWords()} of you really want to play this."
+    }
     SuggestionReason.NewAndLiked -> "Nobody's played it and everyone's likely to enjoy it."
     is SuggestionReason.SafeBet -> "Safe bet: ${if (tableSize == 2) "both" else "all ${tableSize.inWordsLower()}"} of you rated it highly."
     is SuggestionReason.BestAtTableSize -> "Best at exactly ${tableSize.inWordsLower()}, which is you."
@@ -17,6 +22,7 @@ fun SuggestionReason.text(): String = when (this) {
     is SuggestionReason.FitsWithRoomToSpare -> "Fits your ${budget.asDuration()} with room for snacks."
     is SuggestionReason.PlaysWellWith -> "Plays well with ${tableSize.inWordsLower()}."
     SuggestionReason.GoodMiddleGround -> "A good middle ground for this table."
+    is SuggestionReason.NewToSome -> "New to ${names.joinAnd()}: a chance to try it."
 }
 
 /** What to say when nothing fits: a title and an explanation. */
@@ -31,3 +37,5 @@ fun Suggestions.NothingFits.text(): String = when (this) {
     is Suggestions.NothingFits.NoGameForTableSize -> "The shelf's short on games for $tableSize players. Try splitting into two tables."
     is Suggestions.NothingFits.NoGameInTime -> "Everything on the shelf takes longer. Loosen the time:"
 }
+
+private fun List<String>.joinAnd(): String = if (size < 2) joinToString() else dropLast(1).joinToString(", ") + " and " + last()

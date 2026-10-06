@@ -113,6 +113,7 @@ object BggXml {
             recommendedPlayers = recommended,
             minPlaytime = item.value("minplaytime")?.toIntOrNull() ?: item.value("playingtime")?.toIntOrNull() ?: 0,
             maxPlaytime = item.value("maxplaytime")?.toIntOrNull() ?: item.value("playingtime")?.toIntOrNull() ?: 0,
+            playingTime = item.value("playingtime")?.toIntOrNull() ?: 0,
             weight = ratings?.value("averageweight")?.toDoubleOrNull() ?: 0.0,
             mechanics = item.links("boardgamemechanic"),
             categories = item.links("boardgamecategory"),

@@ -24,24 +24,24 @@ A story is done when every criterion is ticked and covered by a test (decider gi
 | S16 | [Auto-close and summary](#s16-auto-close-and-summary) | ✅   | S12        |
 | S17 | [Find a date with a date poll](#s17-find-a-date-with-a-date-poll) | ✅ | S2, S5 |
 | | **User testing, 2026-10-06** | | |
-| U1 | [Joining the game day straight after signing up](requests/u1-join-after-signup.md) | 📋 | |
-| U2 | [Don't suggest games a player said they don't know](requests/u2-no-suggestion-for-unknown-game.md) | 📋 | |
-| U3 | [Absurd playtimes (7th Continent: 5-1000 min, Sleeping Gods: 60-1200 min)](requests/u3-absurd-playtimes.md) | 📋 | |
-| U4 | [Show a game's type/category to help make choices](requests/u4-game-type-in-choices.md) | 📋 | |
-| U5 | [Replace "Don't know" in the wizard with clearer "Haven't played it" wording](requests/u5-haven-t-played-wording.md) | 📋 | |
-| U6 | ["We haven't learned your taste" shown right after a taste test](requests/u6-taste-not-learned-bug.md) | 📋 | |
-| U7 | [Log plays during the game day, not only after it](requests/u7-log-plays-during-game-day.md) | 📋 | |
-| U8 | [Does logging a play influence the matching?](requests/u8-does-play-log-influence-matching.md) | 📋 | |
+| U1 | [Joining the game day straight after signing up](requests/u1-join-after-signup.md) | ✅ | |
+| U2 | [Don't suggest games a player said they don't know](requests/u2-no-suggestion-for-unknown-game.md) | ✅ | |
+| U3 | [Absurd playtimes (7th Continent: 5-1000 min, Sleeping Gods: 60-1200 min)](requests/u3-absurd-playtimes.md) | ✅ | |
+| U4 | [Show a game's type/category to help make choices](requests/u4-game-type-in-choices.md) | ✅ | |
+| U5 | [Replace "Don't know" in the wizard with clearer "Haven't played it" wording](requests/u5-haven-t-played-wording.md) | ✅ | |
+| U6 | ["We haven't learned your taste" shown right after a taste test](requests/u6-taste-not-learned-bug.md) | ✅ | |
+| U7 | [Log plays during the game day, not only after it](requests/u7-log-plays-during-game-day.md) | ✅ | |
+| U8 | [Does logging a play influence the matching?](requests/u8-does-play-log-influence-matching.md) | ✅ | |
 | U9 | [Having seen a table play a game helps form an opinion](requests/u9-seen-it-played.md) | 📋 | |
-| U10 | [Indicate which shelf game you really want to play](requests/u10-want-to-play-pick.md) | 📋 | |
+| U10 | [Indicate which shelf game you really want to play](requests/u10-want-to-play-pick.md) | ✅ | |
 | U11 | [Organise a small game evening from people's libraries](requests/u11-small-evening-from-library.md) | 📋 | |
-| U12 | [Player avatar circles have bad contrast with list items](requests/u12-avatar-contrast.md) | 📋 | |
-| U13 | [Placeholder text is too prominent](requests/u13-placeholder-colour.md) | 📋 | |
-| U14 | [Fun default game day titles](requests/u14-game-day-title-generator.md) | 📋 | |
-| U15 | [Loading indicator during active search](requests/u15-search-loading-indicator.md) | 📋 | |
-| U16 | [Cancel a game day](requests/u16-cancel-game-day.md) | 📋 | |
+| U12 | [Player avatar circles have bad contrast with list items](requests/u12-avatar-contrast.md) | ✅ | |
+| U13 | [Placeholder text is too prominent](requests/u13-placeholder-colour.md) | ✅ | |
+| U14 | [Fun default game day titles](requests/u14-game-day-title-generator.md) | ✅ | |
+| U15 | [Loading indicator during active search](requests/u15-search-loading-indicator.md) | ✅ | |
+| U16 | [Cancel a game day](requests/u16-cancel-game-day.md) | ✅ | |
 | U17 | [Link BGG by a message from a Gorefest bot account](requests/u17-bgg-link-via-bot-message.md) | 📋 | |
-| U18 | ["Your likely favourites today": pills overlap the bottom after scrolling](requests/u18-favourites-pills-overlap.md) | 📋 | |
+| U18 | ["Your likely favourites today": pills overlap the bottom after scrolling](requests/u18-favourites-pills-overlap.md) | ✅ | |
 | U19 | [Update emails when people add games (and push as an alternative)](requests/u19-update-emails-and-push.md) | 📋 | |
 
 S1–S13 is the MVP. S14–S16 make it good.
@@ -172,7 +172,7 @@ Follow-ups, not blocking:
 
 *As a new participant I want to answer a few quick "which one?" questions so that suggestions fit my taste.*
 
-- [x] Each step shows two games (image, name, one-line facts) with: A, B, haven't played, both meh, both great ("Don't know" instead of "haven't played" on unplayed pairs)
+- [x] Each step shows two games (image, name, one-line facts) with: A, B, haven't played, both meh, both great ("Haven't played either" and "Haven't played this" per game, since U5)
 - [x] Games come from shelf → host's collection → my collection → BGG top-ranked, with every fifth pair an anchor
 - [x] The next pair is the one the model is most uncertain about (closeness × combined variance)
 - [x] Stops after 15 pairs, or from 10 once the top 3 hasn't changed for three answers

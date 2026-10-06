@@ -62,6 +62,14 @@ class SuggestionsRoutesTest {
     }
 
     @Test
+    fun `a suggestion says what kind of game it is`() = test.webTest(session = kim) { client ->
+        val cards = client.get("/gamedays/$gorefest7/suggestions?players=$kimId&players=$anna&time=45m").fragment().select("article")
+
+        cards.associate { it.one(".gf-game__name").text() to it.one(".gf-game__type").text() } shouldBe
+            mapOf("Azul" to "Abstract · Tile placing", "Cascadia" to "Tile placing · Drafting", "Codenames" to "Party")
+    }
+
+    @Test
     fun `changing the table asks for new suggestions`() = test.webTest(session = kim) { client ->
         val fragment = client.get("/gamedays/$gorefest7/suggestions?players=$kimId&players=$anna&time=45m").fragment()
 
