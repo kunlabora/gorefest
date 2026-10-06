@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "gorefest"
-version = "0.1.0"
+version = "1.0.0"
 
 kotlin {
     jvmToolchain(25)
@@ -70,6 +70,8 @@ dependencies {
 
 // The design system in docs/design is the single source for the app's CSS and icons.
 tasks.processResources {
+    inputs.property("version", project.version.toString())
+    filesMatching("version.properties") { expand("version" to project.version.toString()) }
     from("docs/design/css") { into("static/css") }
     from("docs/design/fonts") { include("*.woff2"); into("static/fonts") }
     from("docs/design/icons") { include("*.svg", "favicon.ico", "apple-touch-icon.png"); into("static/icons") }
