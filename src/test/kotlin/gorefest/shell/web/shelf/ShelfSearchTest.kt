@@ -57,6 +57,14 @@ class ShelfSearchTest {
     }
 
     @Test
+    fun `the search box shows a spinner while a request is in flight`() = test.webTest(session = kim) { client ->
+        val search = client.get("/gamedays/$gorefest7/bring").page().one(".gf-search")
+
+        search.one("input").attr("hx-indicator") shouldBe "closest .gf-search"
+        search.one(".gf-spin.htmx-indicator").attr("aria-hidden") shouldBe "true"
+    }
+
+    @Test
     fun `games we don't know yet come from BGG and are cached`() = test.webTest(session = kim) { client ->
         val results = client.search("wingspan")
 
