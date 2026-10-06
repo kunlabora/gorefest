@@ -41,9 +41,14 @@ fun TagConsumer<*>.codeStep(returnTo: String, username: String, code: String, de
     p("gf-muted") { +"To prove "; strong { +username }; +" is you, put this code in your BGG profile:" }
     copyBox(code)
     ol("gf-small") {
-        li { +"On boardgamegeek.com, open "; strong { +"Account → Edit profile" }; +"." }
-        li { +"Paste the code into "; strong { +"Web address" }; +" (or any other field shown on your profile) and save." }
-        li { +"Come back and tap Verify. You can remove the code afterwards." }
+        li { +"On boardgamegeek.com, open your profile settings and find the "; strong { +"Contact Information" }; +" section." }
+        li { +"Paste the code into the "; strong { +"Website/Homepage" }; +" field, like in the picture." }
+        li { +"Submit. BGG asks for your BGG password to save contact information; that's BGG checking it's you, we never see it." }
+        li { +"Come back and tap Verify. Afterwards you can clear the field again." }
+    }
+    img(src = "/static/bgg-profile-code.webp", alt = "BGG's Contact Information form, with the code pasted into the Website/Homepage field") {
+        classes = setOf("gf-howto")
+        width = "660"; height = "195"; attributes["loading"] = "lazy"
     }
     if (dev) notice("dice", id = "dev-bgg") {
         +"Dev mode uses a fake BGG. "

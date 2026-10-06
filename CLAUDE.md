@@ -80,7 +80,7 @@ Tag convention: `player:{id}`, `gameday:{id}`, `game:{bggId}`, `datepoll:{id}`.
 - Attribution: every page (`page()`) carries the "Powered by BGG" logo, linked to BGG, in its footer (`bggCredit`), and game names link to their BGG page (`bggNameLink`). BGG confirmed the logo is the only attribution they need; keep it.
 - The site is private by design: `robots.txt` disallows all, every response sends `X-Robots-Tag: noindex`, and `page()` adds a robots meta tag. Keep it that way, so nobody finds the app by accident and loads BGG through us.
 - Without `BGG_TOKEN` the app uses `FakeBggApi` with `DevCatalog` (dev mode and tests). All real calls go through `BggGateway`.
-- The `user` endpoint has no free-text bio, so verification looks for the code in any profile field it returns (we suggest "Web address").
+- The `user` endpoint has no free-text bio, so verification looks for the code in any profile field it returns. We tell people to use Contact Information → Website/Homepage (`static/bgg-profile-code.webp` shows where); BGG asks for their password to save it, which doubles as proof the account is theirs.
 - BGG has no API for the top-ranked list; wizard anchors come from game ranks in the metadata cache.
 - One in-process coroutine worker, token bucket (~1 req / 5 s), priority queue: live searches and fresh account links jump ahead of routine refreshes.
 - Search the local metadata cache first; fall back to the BGG search endpoint.

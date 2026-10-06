@@ -282,6 +282,7 @@ div.gf-tile { cursor: default; }
 .gf-footer { padding: var(--space-4) var(--space-4) calc(var(--space-5) + env(safe-area-inset-bottom)); }
 .gf-footer .gf-credit { margin-top: 0; }
 .gf-footer .gf-credit--version { margin-top: var(--space-2); font-size: 12px; }
+.gf-howto { display: block; width: 100%; height: auto; border: 1px solid var(--line); border-radius: var(--radius-sm); }
 .gf-credit a, .gf-bgglink { color: inherit; text-decoration: none; }
 .gf-credit a { text-decoration: underline; }
 /* The logo is dark ink on transparent: keep it on a light pill so it reads in the dark theme too. */
