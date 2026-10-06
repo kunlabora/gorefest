@@ -72,9 +72,13 @@ fun FlowContent.segmented(name: String, legend: String, options: List<String>, c
     }
 }
 
-/** A search box with its magnifier: as you type it asks [url] and puts the answer at [target]. [extra] adds attributes to the input. */
+/**
+ * A search box with its magnifier: as you type it asks [url] and puts the answer at [target]. [extra] adds attributes to the input.
+ * While the request is in flight (the slow path, where BGG is asked) a small spinner shows at the end of the field.
+ */
 fun FlowContent.searchField(placeholder: String, label: String, url: String, target: String, extra: INPUT.() -> Unit = {}) = div("gf-search") {
     icon("search")
+    span("gf-spin gf-search__spin htmx-indicator") { attributes["aria-hidden"] = "true" }
     input(InputType.search, classes = "gf-input", name = "q") {
         this.placeholder = placeholder
         attributes["aria-label"] = label
@@ -83,6 +87,7 @@ fun FlowContent.searchField(placeholder: String, label: String, url: String, tar
         hx("trigger", "input changed delay:300ms, search")
         hx("target", target)
         hx("swap", "outerHTML")
+        hx("indicator", "closest .gf-search")
         extra()
     }
 }

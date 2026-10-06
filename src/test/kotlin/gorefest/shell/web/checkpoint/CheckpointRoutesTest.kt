@@ -80,6 +80,7 @@ class CheckpointRoutesTest {
         val form = client.get(log).page().one("#log-form")
         form.one("input[type=search]").attr("hx-get") shouldBe "$log/search"
         form.one("input[type=search]").attr("hx-target") shouldBe "#log-search-results"
+        form.one(".gf-search .gf-spin.htmx-indicator")
 
         // Shelf games are tiles already, so the results only add others.
         val results = client.get("$log/search?q=brass").fragment()

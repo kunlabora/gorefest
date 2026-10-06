@@ -29,6 +29,7 @@
   --surface-sunk: #f3edc4;
   --ink: var(--charcoal-brown);
   --ink-muted: var(--olive-bark);
+  --placeholder: #7d7352;
   --line: #e6dcaa;
   --line-strong: #857a55;
   --brand: var(--chocolate);
@@ -57,6 +58,7 @@
     --surface-sunk: #141713;
     --ink: var(--light-yellow);
     --ink-muted: #c9c19a;
+    --placeholder: #a8a58e;
     --line: #434a41;
     --line-strong: #8a9387;
     --brand-ink: #f0a060;
@@ -80,6 +82,7 @@
   --surface-sunk: #141713;
   --ink: var(--light-yellow);
   --ink-muted: #c9c19a;
+  --placeholder: #a8a58e;
   --line: #434a41;
   --line-strong: #8a9387;
   --brand-ink: #f0a060;
