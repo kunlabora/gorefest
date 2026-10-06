@@ -50,7 +50,8 @@ fun FlowContent.bggNameLink(game: Game) = a(game.bggUrl, target = "_blank", clas
 
 /**
  * An image URL that is safe in `src` and inside a CSS `url('...')`: http(s) from BGG, or our own `/static/` files.
- * Quotes, parentheses, backslashes, whitespace and the like are percent-encoded.
+ * Quotes, backslashes, whitespace and the like are percent-encoded; parentheses stay, because BGG signs its paths
+ * (`filters:strip_icc()`) and its CDN rejects them encoded. They're harmless inside a quoted `url('...')`.
  */
 fun safeImageUrl(url: String): String? {
     val trimmed = url.trim()
