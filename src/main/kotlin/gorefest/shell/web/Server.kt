@@ -35,6 +35,9 @@ import org.slf4j.LoggerFactory
 
 private val log = LoggerFactory.getLogger("gorefest.web")
 
+/** Nobody may index the site, except that Slack's link-preview bots may read pages to show a short card when someone pastes a link. */
+private const val ROBOTS_TXT = "User-agent: Slackbot-LinkExpanding\nUser-agent: Slackbot\nAllow: /\n\nUser-agent: *\nDisallow: /\n"
+
 private val NoIndex = createApplicationPlugin("NoIndex") {
     // Not onCall: Webjars answers (and completes) a call, e.g. a conditional 304, before that hook would run.
     onCallRespond { call, _ -> call.response.header("X-Robots-Tag", "noindex, nofollow, noarchive, noimageindex, nosnippet") }
@@ -59,7 +62,7 @@ fun Application.web(app: App) {
             val dbUp = runCatching { app.db.transaction { contextOf<gorefest.shell.db.Tx>().connection.isValid(2) } }.getOrDefault(false)
             if (dbUp) call.respondText("ok") else call.respondText("database unavailable", status = HttpStatusCode.ServiceUnavailable)
         }
-        get("/robots.txt") { call.respondText("User-agent: *\nDisallow: /\n") }
+        get("/robots.txt") { call.respondText(ROBOTS_TXT) }
         // Browsers ask for this by default, whatever the page's <link rel=icon> says.
         get("/favicon.ico") { call.respondRedirect("/static/icons/favicon.ico", permanent = false) }
         staticResources("/static", "static") {

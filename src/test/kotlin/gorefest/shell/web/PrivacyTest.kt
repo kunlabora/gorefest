@@ -20,7 +20,20 @@ class PrivacyTest {
     fun `robots txt disallows everything`() = test.webTest { client ->
         val response = client.get("/robots.txt")
         response.status shouldBe HttpStatusCode.OK
-        response.bodyAsText() shouldContain "Disallow: /"
+        response.bodyAsText() shouldContain "User-agent: *\nDisallow: /"
+    }
+
+    @Test
+    fun `robots txt lets Slack's link preview read pages`() = test.webTest { client ->
+        client.get("/robots.txt").bodyAsText() shouldContain "User-agent: Slackbot-LinkExpanding\nUser-agent: Slackbot\nAllow: /"
+    }
+
+    @Test
+    fun `the site address explains itself in a link preview`() = test.webTest { client ->
+        val page = client.get("/login").page()
+        page.one("meta[property=og:site_name]").attr("content") shouldBe "Gorefest"
+        page.one("meta[property=og:title]").attr("content") shouldContain "board games"
+        page.one("meta[property=og:description]").attr("content") shouldContain "board games"
     }
 
     @Test

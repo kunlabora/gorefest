@@ -5,8 +5,19 @@ import gorefest.shell.web.urlEncoded
 import kotlinx.html.*
 import kotlin.uuid.Uuid
 
-private fun HTML.authPage(title: String, dock: DIV.() -> Unit, content: MAIN.() -> Unit) =
-    page(title, appBar = { appBarTitle("Gorefest") }, dock = dock) { content() }
+private fun HTML.authPage(title: String, dock: DIV.() -> Unit, head: HEAD.() -> Unit = {}, content: MAIN.() -> Unit) =
+    page(title, appBar = { appBarTitle("Gorefest") }, dock = dock, head = head) { content() }
+
+private const val TAGLINE = "Gorefest helps your group pick the board games you'll enjoy most on a game day."
+
+/** What a chat app shows when someone pastes the bare site address (anonymous visitors land on this page): "Gorefest" alone says nothing. */
+private fun HEAD.sitePreview() {
+    meta(name = "description", content = TAGLINE)
+    openGraph("og:site_name", "Gorefest")
+    openGraph("og:title", "Gorefest: pick board games for your game day")
+    openGraph("og:description", "$TAGLINE Everyone answers a few A-or-B questions, then it suggests what suits the whole table.")
+    openGraph("og:type", "website")
+}
 
 private fun FlowContent.intro(heading: String, text: P.() -> Unit) = div("gf-stack") {
     h1("gf-h1") { +heading }
@@ -21,7 +32,7 @@ private val steps = listOf(
 
 /** What the app is for, shown to people who arrive without an invite. */
 private fun FlowContent.howItWorks() = section("gf-section") {
-    p("gf-lede") { +"Gorefest helps your group pick the board games you'll enjoy most on a game day." }
+    p("gf-lede") { +TAGLINE }
     ol("gf-steps") {
         steps.forEach { (title, text) ->
             li { strong { +title }; br; span("gf-muted") { +text } }
@@ -29,7 +40,11 @@ private fun FlowContent.howItWorks() = section("gf-section") {
     }
 }
 
-fun HTML.emailPage(returnTo: String) = authPage("Log in", dock = { primaryButton("Send me a code", form = "email-form") }) {
+fun HTML.emailPage(returnTo: String) = authPage(
+    "Log in",
+    dock = { primaryButton("Send me a code", form = "email-form") },
+    head = { if (returnTo == "/") sitePreview() },
+) {
     if (returnTo == "/") howItWorks()
     intro("What's your email?") { +"We'll send a link and a 6-digit code. No password to remember." }
     consumer.emailForm(returnTo)
