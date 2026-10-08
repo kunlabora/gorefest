@@ -400,8 +400,62 @@ div.gf-tile { cursor: default; }
 /* ==== R2 game day hub ==== */
 
 /* ==== R3 invite landing ==== */
+.gf-inv-hero .gf-split__copy { align-items: stretch; }
+.gf-inv-hero .gf-facts { gap: 8px; }
+.gf-inv-hero .gf-facts li { font-size: 17px; }
+.gf-inv-hero .gf-facts .gf-icon { width: 20px; height: 20px; }
+.gf-inv-fan { flex-direction: column; align-items: flex-start; gap: 8px; margin-top: 4px; }
+.gf-inv-fan p { margin: 0; }
+.gf-join { width: 100%; margin-top: 6px; }
+.gf-join > .gf-btn { width: 100%; }
+.gf-hand { display: none; }
+.gf-inv-next { gap: 20px; }
+.gf-inv-steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 22px; }
+.gf-inv-step { display: grid; grid-template-columns: 32px minmax(0, 1fr); gap: 2px 14px; align-items: start; }
+.gf-inv-step__num { grid-row: span 2; display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: var(--brand-soft); color: var(--brand-ink); font: 800 15px/1 var(--font-display); }
+.gf-inv-step__title { margin: 0; font: 700 17px/24px var(--font-sans); }
+.gf-inv-step__text { margin: 0; }
+@media (min-width: 720px) {
+  .gf-inv-hero { grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); gap: 64px; }
+  .gf-inv-hero:not(:has(.gf-hand)) { grid-template-columns: minmax(0, 640px); }
+  .gf-join:not(.gf-signin) { width: auto; align-self: flex-start; }
+  .gf-join:not(.gf-signin) > .gf-btn { width: auto; }
+  .gf-hand { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; padding-bottom: 18px; }
+  .gf-hand__card { padding: 8px 8px 14px; display: grid; gap: 8px; align-content: start; background: var(--surface-raised); border: 2px solid var(--line); border-radius: 20px; box-shadow: var(--shadow-edge); }
+  .gf-hand__card:nth-child(1) { transform: rotate(-2deg); }
+  .gf-hand__card:nth-child(2) { transform: rotate(1.5deg) translateY(18px); }
+  .gf-hand__card:nth-child(3) { transform: rotate(1deg); }
+  .gf-hand__card:nth-child(4) { transform: rotate(-1.5deg) translateY(18px); }
+  .gf-hand__name { margin: 0; padding-inline: 6px; font: 800 17px/20px var(--font-display); }
+  .gf-hand__chip { justify-self: start; margin-inline: 6px; padding: 3px 10px; border-radius: var(--radius-pill); background: var(--olive-soft); font: 700 12px/16px var(--font-sans); }
+  .gf-hand__more { grid-column: 1 / -1; margin: 22px 0 0; text-align: center; }
+  .gf-inv-steps { grid-template-columns: repeat(3, 1fr); gap: 32px; }
+}
 
 /* ==== R4 host a game day ==== */
+.gf-new-hero .gf-split__copy { align-items: flex-start; }
+.gf-newform { display: flex; flex-direction: column; gap: 16px; margin-top: 8px; width: 100%; }
+.gf-titlerow { display: flex; gap: 8px; align-items: flex-end; }
+.gf-titlerow .gf-field { flex: 1; min-width: 0; }
+.gf-titlerow .gf-btn { min-height: 52px; padding: 0 14px; }
+.gf-newform__two { display: grid; gap: 16px; }
+.gf-newform__hint { margin-top: -6px; }
+.gf-pvwrap { flex-direction: column; align-items: flex-start; gap: 14px; }
+.gf-pv { width: 100%; padding: 14px; display: grid; gap: 12px; background: var(--surface-raised); border: 2px solid var(--line); border-radius: 20px; box-shadow: var(--shadow-edge); transform: rotate(1.5deg); }
+.gf-pv__art { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.gf-pv__tile { aspect-ratio: 1; border-radius: 10px; background: var(--brand-soft); }
+.gf-pv__tile--1 { background: var(--olive-soft); }
+.gf-pv__tile--2 { background: var(--accent-soft); }
+.gf-pv__title { margin: 0; font: 800 30px/32px var(--font-display); letter-spacing: -.02em; overflow-wrap: anywhere; }
+.gf-pv__facts { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: 15px; }
+.gf-pv__facts li { display: flex; align-items: center; gap: 10px; }
+.gf-pv__facts li[hidden] { display: none; }
+.gf-pv__facts .gf-icon { width: 18px; height: 18px; color: var(--brand-ink); }
+@media (min-width: 720px) {
+  .gf-new-hero { grid-template-columns: minmax(0, 1fr) minmax(0, .85fr); gap: 72px; }
+  .gf-newform__two { grid-template-columns: 1fr 1fr; }
+  .gf-newform > .gf-btn { align-self: flex-start; }
+}
 
 /* ==== R5 taste round ==== */
 
