@@ -17,6 +17,7 @@ import gorefest.shell.web.one
 import gorefest.shell.web.shouldReplace
 import gorefest.shell.gameday.TitleGenerator
 import io.kotest.matchers.collections.shouldContain
+import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldNotBe
 import gorefest.shell.web.page
 import io.kotest.matchers.collections.shouldBeEmpty
@@ -30,6 +31,7 @@ import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.Parameters
 import io.ktor.http.parameters
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -86,21 +88,47 @@ class GameDayRoutesTest {
         val page = client.get("/gamedays/00000000-0000-0000-0000-000000000001").page()
 
         page.one("h1").text() shouldBe "Gorefest #7"
-        page.one("main > .gf-stack > .gf-kicker").text() shouldBe "Sun 27 Sep 2026 · Anna's place"
+        page.select(".gf-hubfacts li").map { it.text() } shouldContainExactly listOf("Sun 27 Sep 2026", "Anna's place", "1 going")
         page.players() shouldContainExactly listOf("Tim Bringing nothing yet You Host")
         page.select("#players button").shouldBeEmpty()
     }
 
     @Test
-    fun `the home page lists game days by date, linking to each`() = webTest { client ->
+    fun `the home page makes the next game day the hero, with the step I still owe it as the one brand button`() = webTest { client ->
         client.htmxPost("/gamedays", validForm)
 
-        val card = client.get("/").page().one("a.gf-daycard")
+        val page = client.get("/").page()
+        val hero = page.one(".gf-homeday")
 
-        card.attr("href") shouldBe "/gamedays/00000000-0000-0000-0000-000000000001"
-        card.one(".gf-date").text() shouldBe "Sep 27"
-        card.one(".gf-daycard__title").text() shouldBe "Gorefest #7"
-        card.one(".gf-daycard__meta").text() shouldBe "Anna's place · 1 going"
+        hero.one(".gf-homeday__title a").attr("href") shouldBe "/gamedays/00000000-0000-0000-0000-000000000001"
+        hero.one(".gf-homeday__title").text() shouldBe "Gorefest #7"
+        hero.one(".gf-date").text() shouldBe "Sep 27"
+        hero.one(".gf-homeday__meta").text() shouldBe "Anna's place · 1 going"
+        hero.one(".gf-tag--accent").text() shouldBe "Taste round not done"
+        page.one(".gf-btn--primary").attr("href") shouldBe "/gamedays/00000000-0000-0000-0000-000000000001/taste"
+        page.select(".gf-btn--primary") shouldHaveSize 1
+        page.one(".gf-home__aside a[href=/gamedays/new]").text() shouldBe "Host a game day"
+        page.select("a.gf-daycard").shouldBeEmpty()
+    }
+
+    @Test
+    fun `later game days wait in the coming up band, linking to each`() = webTest { client ->
+        client.htmxPost("/gamedays", validForm)
+        client.htmxPost("/gamedays", Parameters.build {
+            append("title", "Gorefest #8")
+            append("date", "2026-10-25")
+            append("place", "Bram's attic")
+            append("timeZone", "Europe/Brussels")
+        })
+
+        val page = client.get("/").page()
+
+        page.one(".gf-homeday__title").text() shouldBe "Gorefest #7"
+        val card = page.one(".gf-home__list a.gf-daycard")
+        card.attr("href") shouldBe "/gamedays/00000000-0000-0000-0000-000000000002"
+        card.one(".gf-date").text() shouldBe "Oct 25"
+        card.one(".gf-daycard__title").text() shouldBe "Gorefest #8"
+        card.one(".gf-daycard__meta").text() shouldBe "Bram's attic · 1 going"
     }
 
     @Test
@@ -108,8 +136,8 @@ class GameDayRoutesTest {
         val page = client.get("/").page()
 
         page.one(".gf-empty__title").text() shouldBe "No game days yet"
-        page.one(".gf-dock a.gf-btn--primary").attr("href") shouldBe "/gamedays/new"
-        page.one(".gf-dock a[href=/polls/new]").text() shouldBe "Not sure when? Find a date"
+        page.one(".gf-home__aside a.gf-btn--primary").attr("href") shouldBe "/gamedays/new"
+        page.one(".gf-home__aside a[href=/polls/new]").text() shouldBe "Find a date"
     }
 
     @Test
@@ -135,8 +163,8 @@ class GameDayRoutesTest {
         val pages = listOf("/", "/gamedays/new", "/gamedays/00000000-0000-0000-0000-000000000001", "/gamedays/00000000-0000-0000-0000-000000000001/edit")
 
         pages.forEach { url ->
-            val toggle = client.get(url).page().one(".gf-appbar > :last-child")
-            toggle.hasClass("gf-theme-toggle") shouldBe true
+            val toggle = client.get(url).page().one(".gf-appbar .gf-theme-toggle")
+            toggle.nextElementSibling() shouldBe null
             toggle.attr("_") shouldBe "on click call gorefestToggleTheme()"
             toggle.attr("aria-label") shouldBe "Dark mode"
             toggle.select(".gf-theme-toggle__moon svg, .gf-theme-toggle__sun svg").size shouldBe 2
@@ -232,7 +260,7 @@ class GameDayRoutesTest {
         saved.headers["HX-Redirect"] shouldBe "/gamedays/$id"
         val after = client.get("/gamedays/$id").page()
         after.one("h1").text() shouldBe "Gorefest #7½"
-        after.one("main > .gf-stack > .gf-kicker").text() shouldBe "Mon 28 Sep 2026 · Bram's attic"
+        after.select(".gf-hubfacts li").map { it.text() }.take(2) shouldContainExactly listOf("Mon 28 Sep 2026", "Bram's attic")
     }
 
     @Test

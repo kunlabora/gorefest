@@ -11,6 +11,14 @@ import gorefest.shell.web.DEFAULT_TIME_ZONE
 import gorefest.shell.web.zone
 import gorefest.shell.web.bgg.collection
 import gorefest.shell.web.components.ButtonSize
+import gorefest.shell.web.components.Nav
+import gorefest.shell.web.components.SiteBar
+import gorefest.shell.web.components.art
+import gorefest.shell.web.components.avatarStack
+import gorefest.shell.web.components.band
+import gorefest.shell.web.components.crumb
+import gorefest.shell.web.components.split
+import gorefest.shell.web.components.wrap
 import gorefest.shell.web.components.ButtonStyle
 import gorefest.shell.web.components.appBarAction
 import gorefest.shell.web.components.appBarTitle
@@ -49,6 +57,7 @@ import kotlinx.html.HTML
 import kotlinx.html.InputType
 import kotlinx.html.TagConsumer
 import kotlinx.html.a
+import kotlinx.html.article
 import kotlinx.html.button
 import kotlinx.html.div
 import kotlinx.html.form
@@ -66,33 +75,102 @@ import java.time.LocalDate
 import java.time.ZoneId
 
 
-fun HTML.homePage(gameDays: List<GameDaySummary>, polls: List<DatePollSummary>, today: LocalDate, bggLinked: Boolean) = page(
+/** The next open game day on the home hero: its people, a few covers from its shelf, and the step you still owe it. */
+data class HomeNext(val gameDay: GameDaySummary, val names: Map<PlayerId, String>, val shelf: List<Game>, val step: NextStep?)
+
+/** Everything the home page shows: the next game day is the hero, the rest (and open polls) sit in the "Coming up" band. */
+data class HomeView(
+    val next: HomeNext?,
+    val later: List<GameDaySummary>,
+    val polls: List<DatePollSummary>,
+    val today: LocalDate,
+    val bggLinked: Boolean,
+)
+
+context(me: CurrentPlayer)
+fun HTML.homePage(view: HomeView) = page(
     "Game days",
-    appBar = { appBarTitle("Gorefest"); logoutButton() },
-    dock = {
-        primaryLink("/gamedays/new", "Host a game day", icon = "plus")
-        linkButton("/polls/new", "Not sure when? Find a date", ButtonStyle.GHOST)
-    },
+    site = SiteBar(me, Nav.GAME_DAYS),
+    appBar = { logoutButton() },
+    mainClasses = "gf-landing gf-home",
 ) {
-    h1("gf-h1") { +"Your game days" }
-    if (!bggLinked) {
-        nextStep(
-            "Optional", "Link your BGG account",
-            "Bring games straight from your BoardGameGeek collection instead of searching for each one.",
-            "/bgg?returnTo=%2F", "Link BGG", ButtonStyle.SECONDARY,
-        )
-    } else p("gf-small") { a("/collection", classes = "gf-link") { +"Your collection" } }
-    if (polls.isNotEmpty()) div("gf-stack") {
-        h2("gf-h2") { +"Finding a date" }
-        polls.forEach { pollCard(it) }
-    }
-    if (gameDays.isEmpty()) {
-        if (polls.isEmpty()) emptyState("No game days yet", "Got an invite? Tap the link in your group chat. Or host one yourself, or ask your group which date works.")
-    } else {
-        div("gf-stack") {
-            if (polls.isNotEmpty()) h2("gf-h2") { +"Game days" }
-            gameDays.forEach { dayCard(it, today) }
+    val nothingYet = view.next == null && view.later.isEmpty() && view.polls.isEmpty()
+    wrap {
+        h1("gf-vh") { +"Your game days" }
+        div("gf-home__hero") {
+            div("gf-home__main") {
+                p("gf-kicker") { +(if (view.next != null) "Hi ${me.name.substringBefore(' ')} · next up" else "Hi ${me.name.substringBefore(' ')}") }
+                if (view.next != null) nextGameDay(view.next, view.today)
+                else if (nothingYet) emptyState("No game days yet", "Got an invite? Tap the link in your group chat. Or host one yourself, or ask your group which date works.")
+            }
+            div("gf-home__aside") {
+                // The one brand fill is the next step; without a game day, hosting takes it.
+                val hostStyle = if (view.next == null) ButtonStyle.PRIMARY else ButtonStyle.SECONDARY
+                article("gf-card gf-homecard") {
+                    h2("gf-homecard__title") { +"Host a game day" }
+                    p("gf-small gf-muted") { +"Pick a date, share a link, everyone brings games." }
+                    linkButton("/gamedays/new", "Host a game day", hostStyle, icon = "plus")
+                }
+                article("gf-card gf-homecard") {
+                    h2("gf-homecard__title") { +"Not sure when?" }
+                    p("gf-small gf-muted") { +"Ask your group which date suits them first." }
+                    linkButton("/polls/new", "Find a date", ButtonStyle.SECONDARY, icon = "calendar")
+                }
+            }
         }
+        // No nav under 720px, so the collection is one tap away here instead.
+        if (view.bggLinked) p("gf-small gf-phone-only") { a("/collection", classes = "gf-link") { +"Your collection" } }
+    }
+    if (view.later.isNotEmpty() || view.polls.isNotEmpty() || !view.bggLinked) band(sunk = true) {
+        div("gf-stack gf-home__coming") {
+            h2("gf-h2 gf-h2--section") { +"Coming up" }
+            div("gf-home__list") {
+                view.later.forEach { dayCard(it, view.today) }
+                view.polls.forEach { pollCard(it) }
+                if (!view.bggLinked) div("gf-dashrow") {
+                    id = "bgg-nudge"
+                    div {
+                        span("gf-daycard__title") { +"Link your BGG account" }
+                        span("gf-daycard__meta") { +"Bring games from your collection." }
+                    }
+                    linkButton("/bgg?returnTo=%2F", "Link BGG", ButtonStyle.SECONDARY, ButtonSize.SMALL)
+                }
+            }
+        }
+    }
+}
+
+/** The hero card: the date, who is going, a fan of covers from the shelf, and the one step you still owe. */
+private fun FlowContent.nextGameDay(next: HomeNext, today: LocalDate) {
+    val gameDay = next.gameDay
+    val base = "/gamedays/${gameDay.id}"
+    article("gf-card gf-homeday") {
+        div("gf-homeday__top") {
+            span("gf-date") {
+                span("gf-date__month") { +dateMonth(gameDay, today) }
+                +" "
+                span("gf-date__day") { +gameDay.date.dayOfMonth.toString() }
+            }
+            div {
+                style = "min-width: 0"
+                h2("gf-homeday__title") { a(base) { +gameDay.title } }
+                p("gf-muted gf-homeday__meta") { +listOf(gameDay.place, "${gameDay.players.size} going").filter { it.isNotBlank() }.joinToString(" · ") }
+            }
+        }
+        div("gf-homeday__mid") {
+            div("gf-homeday__who") {
+                avatarStack(gameDay.players, next.names)
+                if (next.step is NextStep.TasteRound) span("gf-tag gf-tag--accent") { +"Taste round not done" }
+            }
+            if (next.shelf.isNotEmpty()) div("gf-fan") {
+                // Each box tilts a little differently, like a hand of cards.
+                next.shelf.take(4).zip(listOf(-6, 3, -2, 5)).forEach { (game, tilt) -> art(game, extraStyle = "--r:${tilt}deg") }
+            }
+        }
+        next.step?.let { step ->
+            val (label, href) = step.action(base)
+            primaryLink(href, label)
+        } ?: linkButton(base, "Open ${gameDay.title}", ButtonStyle.PRIMARY, ButtonSize.LARGE, block = true)
     }
 }
 
@@ -164,49 +242,67 @@ fun HTML.gameDayPage(hub: GameDayHub) {
     val gameDay = hub.gameDay
     val isHost = gameDay.host == me.id
     val open = !gameDay.closed
-    page(gameDay.title, appBar = {
-        backLink("/", "All game days")
-        appBarTitle("Game days")
-        if (isHost && open) appBarAction("/gamedays/${gameDay.id}/edit", "Edit")
-    }) {
-        div("gf-stack") {
-            p("gf-kicker") { +listOf(gameDay.date.long(), gameDay.place).filter { it.isNotBlank() }.joinToString(" · ") }
-            h1("gf-h1") { +gameDay.title }
-            if (gameDay.cancelled) span("gf-tag") { +"Cancelled" } else if (gameDay.ended) span("gf-tag") { +"Ended" }
+    val base = "/gamedays/${gameDay.id}"
+    page(
+        gameDay.title,
+        site = SiteBar(me, Nav.GAME_DAYS),
+        appBar = { if (isHost && open) appBarAction("$base/edit", "Edit") },
+        mainClasses = "gf-landing gf-hub",
+    ) {
+        wrap {
+            split("gf-hub__hero") {
+                div("gf-split__copy") {
+                    crumb("/", "All game days")
+                    h1("gf-h1 gf-h1--hub") { +gameDay.title }
+                    if (gameDay.cancelled) span("gf-tag") { +"Cancelled" } else if (gameDay.ended) span("gf-tag") { +"Ended" }
+                    ul("gf-hubfacts") {
+                        li { icon("calendar"); +gameDay.date.long() }
+                        if (gameDay.place.isNotBlank()) li { icon("pin"); +gameDay.place }
+                        li { icon("users"); +"${gameDay.players.size} going" }
+                    }
+                    if (open && hub.shelf.isNotEmpty()) linkButton("$base/table", "Pick a game for my table", ButtonStyle.SECONDARY, ButtonSize.LARGE, icon = "dice")
+                }
+                hub.next?.let { nextStepCard(gameDay, it) }
+            }
         }
-        hub.next?.let { nextStepCard(gameDay, it) }
-        if (open && hub.shelf.isNotEmpty()) div("gf-stack") {
-            linkButton("/gamedays/${gameDay.id}/table", "Pick a game for my table", ButtonStyle.SECONDARY, ButtonSize.LARGE, block = true, icon = "dice")
+        band(sunk = true) {
+            div("gf-stack gf-hub__shelf") {
+                div("gf-sechead") {
+                    h2("gf-h2 gf-h2--section") { +"The shelf · ${hub.shelf.size}" }
+                    if (open) linkButton("$base/bring", "Bring games", ButtonStyle.SECONDARY, ButtonSize.SMALL, icon = "plus")
+                }
+                if (hub.shelf.isEmpty()) emptyState("Nothing on the shelf yet", "Tick the games you're bringing, and ask the others to do the same.")
+                else div("gf-tiles") {
+                    hub.shelf.forEach { (game, entry) -> gameTile(game, entry.owners.firstOrNull(), entry.owners.firstOrNull()?.let(hub.names::get)) }
+                }
+            }
         }
-        if (hub.played.isNotEmpty()) section("gf-section") {
-            // The log stays one tap away all day, not only through the checkpoint card.
-            sectionHead("Played today", "/gamedays/${gameDay.id}/log".takeIf { hub.next is NextStep.Checkpoint }, "Log a game")
-            ul("gf-list") {
-                hub.played.forEach { (game, log) ->
-                    li {
-                        gameRow(game, meta = "${log.players.map { hub.names[it] ?: "?" }.joinToString(", ")} · ${log.minutes} min") {
-                            span("gf-small gf-muted") { +log.at.atZone(zone(gameDay)).toLocalTime().withSecond(0).withNano(0).toString() }
+        wrap("gf-hub__rest") {
+            if (hub.played.isNotEmpty()) section("gf-section") {
+                // The log stays one tap away all day, not only through the checkpoint card.
+                sectionHead("Played today", "$base/log".takeIf { hub.next is NextStep.Checkpoint }, "Log a game")
+                ul("gf-list") {
+                    hub.played.forEach { (game, log) ->
+                        li {
+                            gameRow(game, meta = "${log.players.map { hub.names[it] ?: "?" }.joinToString(", ")} · ${log.minutes} min") {
+                                span("gf-small gf-muted") { +log.at.atZone(zone(gameDay)).toLocalTime().withSecond(0).withNano(0).toString() }
+                            }
                         }
                     }
                 }
             }
-        }
-        section("gf-section") {
-            sectionHead("The shelf · ${hub.shelf.size}", "/gamedays/${gameDay.id}/bring".takeIf { open }, "Bring games")
-            if (hub.shelf.isEmpty()) emptyState("Nothing on the shelf yet", "Tick the games you're bringing, and ask the others to do the same.")
-            else div("gf-tiles") {
-                hub.shelf.forEach { (game, entry) -> gameTile(game, entry.owners.firstOrNull(), entry.owners.firstOrNull()?.let(hub.names::get)) }
+            div("gf-hub__cols") {
+                section("gf-section") {
+                    sectionHead("Players", "$base/ready".takeIf { isHost && open }, "How ready are we?")
+                    consumer.players(gameDay, hub.names, broughtBy = hub.shelf.flatMap { (_, entry) -> entry.owners }.groupingBy { it }.eachCount())
+                }
+                if (open) section("gf-section") {
+                    h2("gf-h2") { +"Invite friends" }
+                    consumer.invite(gameDay, hub.inviteLink)
+                }
             }
+            if (isHost && open) p("gf-small") { a("$base/cancel", classes = "gf-link") { +"Cancel this game day" } }
         }
-        section("gf-section") {
-            sectionHead("Players", "/gamedays/${gameDay.id}/ready".takeIf { isHost && open }, "How ready are we?")
-            consumer.players(gameDay, hub.names, broughtBy = hub.shelf.flatMap { (_, entry) -> entry.owners }.groupingBy { it }.eachCount())
-        }
-        if (open) section("gf-section") {
-            h2("gf-h2") { +"Invite friends" }
-            consumer.invite(gameDay, hub.inviteLink)
-        }
-        if (isHost && open) p("gf-small") { a("/gamedays/${gameDay.id}/cancel", classes = "gf-link") { +"Cancel this game day" } }
     }
 }
 
@@ -223,6 +319,14 @@ fun HTML.cancelGameDayPage(gameDay: GameDaySummary, error: String? = null) =
             }
         }
     }
+
+/** The button for a step: its label and where it goes. */
+private fun NextStep.action(base: String): Pair<String, String> = when (this) {
+    is NextStep.Checkpoint -> "Log a game" to "$base/log"
+    NextStep.TasteRound -> "Tell us what you like" to "$base/taste"
+    is NextStep.TopUp -> "A few quick pairs" to "$base/taste"
+    is NextStep.Favourites -> "See your favourites" to "$base/favourites"
+}
 
 private fun FlowContent.nextStepCard(gameDay: GameDaySummary, next: NextStep) {
     val base = "/gamedays/${gameDay.id}"
@@ -285,9 +389,11 @@ fun TagConsumer<*>.invite(gameDay: GameDaySummary, link: String) = div("gf-stack
     }
 }
 
+private fun dateMonth(gameDay: GameDaySummary, today: LocalDate) = if (gameDay.date == today) "Today" else gameDay.date.monthShort()
+
 private fun FlowContent.dayCard(gameDay: GameDaySummary, today: LocalDate) = dayCard(
     href = "/gamedays/${gameDay.id}",
-    month = if (gameDay.date == today) "Today" else gameDay.date.monthShort(),
+    month = dateMonth(gameDay, today),
     day = gameDay.date.dayOfMonth.toString(),
     title = gameDay.title,
     meta = listOf(gameDay.place, "${gameDay.players.size} going").filter { it.isNotBlank() }.joinToString(" · "),

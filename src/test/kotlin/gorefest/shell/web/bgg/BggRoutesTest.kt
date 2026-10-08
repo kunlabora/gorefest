@@ -41,13 +41,13 @@ class BggRoutesTest {
 
     @Test
     fun `the home page suggests linking until it's done`() = test.webTest(session = kim) { client ->
-        client.get("/").page().one(".gf-next a").attr("href") shouldBe "/bgg?returnTo=%2F"
+        client.get("/").page().one("#bgg-nudge a").attr("href") shouldBe "/bgg?returnTo=%2F"
 
         test.bgg.putInProfile("KimPlays", code)
         client.username("KimPlays")
         client.verify("KimPlays")
 
-        client.get("/").page().select(".gf-next").shouldBeEmpty()
+        client.get("/").page().select("#bgg-nudge").shouldBeEmpty()
     }
 
     @Test

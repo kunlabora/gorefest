@@ -288,7 +288,7 @@ class DatePollRoutesTest {
 
         page.one("a.gf-daycard[href=$pollPage] .gf-daycard__title").text() shouldBe "Gorefest #8"
         page.one("a.gf-daycard[href=$pollPage] .gf-daycard__meta").text() shouldBe "0 of 2 answered"
-        page.one(".gf-dock a[href=/polls/new]").text() shouldBe "Not sure when? Find a date"
+        page.one(".gf-home__aside a[href=/polls/new]").text() shouldBe "Find a date"
     }
 
     @Test

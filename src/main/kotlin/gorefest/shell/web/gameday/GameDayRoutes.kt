@@ -54,7 +54,13 @@ fun Route.gameDayRoutes(app: App) {
             val me = contextOf<CurrentPlayer>()
             val gameDays = with(GameDays) { app.gameDaysById.forPlayer(me.id) { zone -> clock.todayIn(zone) } }
             val polls = app.datePolls.forPlayer(me.id).filter { it.open }
-            call.respondHtml { homePage(gameDays, polls, clock.todayIn(DEFAULT_TIME_ZONE), bggLinked = app.bggAccounts.isLinked(me.id)) }
+            val nextDay = gameDays.firstOrNull { !it.closed }
+            val next = nextDay?.let { day ->
+                val shelf = app.shelves.of(day.id).mapNotNull { entry -> app.catalog[entry.game] }
+                HomeNext(day, login.names(day.players), shelf, nextStep(app, day, me, shelf))
+            }
+            val view = HomeView(next, gameDays.filter { it !== nextDay }, polls, clock.todayIn(DEFAULT_TIME_ZONE), bggLinked = app.bggAccounts.isLinked(me.id))
+            call.respondHtml { homePage(view) }
         }
     }
 
