@@ -8,6 +8,7 @@ Helps a group of boardgamers pick the games they'll enjoy most at a game day, us
 - **Date poll**: a host asks a group which of a few dates suits them, before there is a game day. People answer yes/no per date; the host picks, and the game day is created from the pick.
 - **Collection**: games a player owns (synced from BGG).
 - **Shelf**: games brought to a specific game day.
+- **Bring request**: one player on a game day asking another to bring one game from their collection (U20). *Open* until the owner brings it (*answered*), says "not this time" (*declined*), or the asker takes it back (*withdrawn*). At most 3 standing per asker and 5 per owner per game day; withdrawn ones don't count.
 - **Candidates**: shelf games that fit a table (player count, time budget).
 - **Suggestions**: top-ranked candidates shown to a table (top 3, each with a one-line reason).
 - **Comparison**: a pairwise answer, with basis `VIBE` (unplayed, "which would you rather try?") or `PLAYED` ("which did you enjoy more?").
@@ -35,7 +36,7 @@ Helps a group of boardgamers pick the games they'll enjoy most at a game day, us
 
 ### Events (initial)
 
-`PlayerRegistered`, `LoggedIn`, `BggAccountLinked`, `GameDayCreated`, `GameDayDetailsChanged`, `InviteLinkRotated`, `PlayerJoined`, `GameBrought`, `GameUnbrought`, `PlayWishChanged`, `ComparisonRecorded(player, a, b, result, basis, at)`, `GamePlayStatusDeclared`, `PlayLogged(gameday, game, players, minutes)`, `GameDayCancelled`, `GameDayEnded`, and for date polls `DatePollCreated`, `DatePollJoined`, `DatePollAnswered`, `DatePollClosed`. `core/Event.kt` is the authoritative list.
+`PlayerRegistered`, `LoggedIn`, `BggAccountLinked`, `GameDayCreated`, `GameDayDetailsChanged`, `InviteLinkRotated`, `PlayerJoined`, `GameBrought`, `GameUnbrought`, `PlayWishChanged`, `ComparisonRecorded(player, a, b, result, basis, at)`, `GamePlayStatusDeclared`, `PlayLogged(gameday, game, players, minutes)`, `GameDayCancelled`, `GameDayEnded`, for bring requests `BringRequested`, `BringRequestWithdrawn`, `BringRequestDeclined` (answered is implied by the owner's `GameBrought`) and `BringRequestsAllowedChanged(player, allowed)` (the opt-out), and for date polls `DatePollCreated`, `DatePollJoined`, `DatePollAnswered`, `DatePollClosed`. `core/Event.kt` is the authoritative list.
 
 Tag convention: `player:{id}`, `gameday:{id}`, `game:{bggId}`, `datepoll:{id}`.
 
@@ -57,7 +58,7 @@ Tag convention: `player:{id}`, `gameday:{id}`, `game:{bggId}`, `datepoll:{id}`.
   - Rolling back to an older jar after a newer one wrote a new event type fails replay. Deploy forward, or restore.
 - **Deciders** are `object`s implementing `Decider`. Keep the query as narrow as the invariant allows, because anything outside it can't conflict (see `JoinGameDayDecider`).
 - Deciders and projections end their `when` with `else -> state`, so adding an event doesn't touch unrelated code.
-- **Web packages by feature**, named after the vocabulary: `web.auth`, `web.bgg` (linking, collection), `web.gameday` (hub, create/edit, readiness), `web.invite`, `web.datepoll` (find a date), `web.shelf` (bringing games), `web.taste` (wizard, favourites), `web.suggestions`, `web.checkpoint`, `web.dev`. Shared plumbing (`Server`, `Responses`, `CurrentPlayer`, `memberGameDay`) sits in `web` itself, components in `web.components`. Tests mirror this.
+- **Web packages by feature**, named after the vocabulary: `web.auth`, `web.bgg` (linking, collection), `web.gameday` (hub, create/edit, readiness), `web.invite`, `web.datepoll` (find a date), `web.shelf` (bringing games), `web.request` (asking someone to bring a game; the owner's section on the bring page), `web.taste` (wizard, favourites), `web.suggestions`, `web.checkpoint`, `web.dev`. Shared plumbing (`Server`, `Responses`, `CurrentPlayer`, `memberGameDay`) sits in `web` itself, components in `web.components`. Tests mirror this.
 - **Web layer, three levels.**
   - `XRoutes.kt`: HTTP only. Parse the request, run the decider, gather data into a small view model, and pick the view to respond with.
   - `XViews.kt`: the pages and fragments for that feature, as `HTML.xPage(view)` and `TagConsumer<*>.fragment(...)` functions, built from components.
@@ -122,6 +123,7 @@ Tag convention: `player:{id}`, `gameday:{id}`, `game:{bggId}`, `datepoll:{id}`.
 
 - Hard filter: player count within BGG best/recommended; fits time budget.
 - Score: mean predicted enjoyment − λ·spread (or least misery), blending appeal and enjoyment for unplayed games.
+- Bring requests (U20): a request is not a wish and doesn't heart anything; the matcher ignores it. The shell checks that the owner has the game in their collection before building `RequestBring` (the log doesn't know collections). Players can opt out on the collection page ("Let people on my game days ask me to bring games", on by default, `BringRequestsAllowedChanged`): they vanish from the ask screen and asking them is rejected (`OwnerNotAcceptingRequests`). Members' collections are visible to people on the same game day on the ask screen only. No mail or push (U19 is recorded only). Read model: `App.bringRequests` (`GameDayBringRequests.openFor/by/count/accepts`).
 - Bonuses: novelty (nobody has played), and a wish bonus per player at the table who really wants to play it (`PlayWishChanged`, up to 3 people).
 - Wishes: any joined player can heart up to `MAX_WISHES` (3) games on the shelf per game day, whoever brought them (`SetPlayWishDecider`, set on the bring page). The reason says who wants it (`SuggestionReason.WantedBy`; `EagerOwner` when the one wisher is an owner). A game leaving the shelf drops its wishes.
 - Declared unplayed: a game a player marked "Haven't played" and never compared is neutral for them (no guess from its features); it can only win on novelty and the reason is `SuggestionReason.NewToSome`. The wizard's only "don't know" answers are "Haven't played either / this" (U2, U5).

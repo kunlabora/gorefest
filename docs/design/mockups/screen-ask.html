@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="../css/tokens.css">
+<link rel="stylesheet" href="../css/gorefest.css">
+<script>var t = new URLSearchParams(location.search).get('theme'); if (t) document.documentElement.dataset.theme = t;</script>
+<meta charset="utf-8">
+<title>Ask someone to bring a game</title>
+<style>
+  body { margin: 0; background: var(--surface-sunk); color: var(--ink); font: 400 16px/24px var(--font-sans); }
+  .stage { display: flex; gap: 32px; padding: 24px; align-items: flex-start; }
+  .device { display: flex; flex-direction: column; gap: 10px; width: 360px; flex: none; }
+  .device-cap { margin: 0; font: 700 13px/18px var(--font-sans); color: var(--ink-muted); }
+  .phone { position: relative; width: 360px; height: 760px; border-radius: 40px; border: 9px solid #0e100d; box-shadow: 0 0 0 1px var(--line-strong); overflow: hidden; background: var(--surface); }
+  .phone .gf-screen { min-height: 100%; height: 100%; padding-top: 18px; overflow: hidden; }
+  .phone .gf-body { overflow: hidden; }
+</style>
+</head>
+<body>
+<!-- Static mockup of U20. Classes are the app's own (gf-row, gf-list, gf-tag, gf-btn, gf-switch, gf-game): nothing new except gf-sechead__actions. -->
+<div class="stage">
+
+<div class="device"><div class="phone"><div class="gf-screen">
+<header class="gf-appbar"><span class="gf-appbar__title">Gorefest #7</span></header>
+<main class="gf-body">
+<div class="gf-stack">
+  <p class="gf-kicker">Ask someone</p>
+  <h1 class="gf-h1">Who could bring what?</h1>
+  <p class="gf-muted" style="margin:0">Fancy a game you know somebody owns? Ask them to bring it. They answer with one tap, and you can ask up to 3.</p>
+</div>
+<div class="gf-search"><input class="gf-input" type="search" placeholder="Search for a game someone has" aria-label="Search for a game someone has"></div>
+<section class="gf-section"><h2 class="gf-h2">Your requests</h2><ul class="gf-list">
+  <li class="gf-row"><span class="gf-row__main"><span class="gf-row__title">Brass: Birmingham</span><span class="gf-row__sub">Asked Anna</span></span><button class="gf-btn gf-btn--ghost gf-btn--sm">Take it back</button></li>
+  <li class="gf-row"><span class="gf-row__main"><span class="gf-row__title">Azul</span><span class="gf-row__sub">Bram is bringing it</span></span><span class="gf-tag gf-tag--olive">Bringing it</span></li>
+  <li class="gf-row"><span class="gf-row__main"><span class="gf-row__title">Catan</span><span class="gf-row__sub">Not this time</span></span></li>
+</ul></section>
+<section class="gf-section"><h2 class="gf-h2">Or look through someone's collection</h2><ul class="gf-list">
+  <li class="gf-row"><span class="gf-avatar" data-hue="1" aria-hidden="true">AN</span><span class="gf-row__main"><span class="gf-row__title">Anna</span></span><a class="gf-btn gf-btn--secondary gf-btn--sm" href="#">See games</a></li>
+  <li class="gf-row"><span class="gf-avatar" data-hue="2" aria-hidden="true">BR</span><span class="gf-row__main"><span class="gf-row__title">Bram</span></span><a class="gf-btn gf-btn--secondary gf-btn--sm" href="#">See games</a></li>
+</ul></section>
+</main></div></div><p class="device-cap">Ask: search for a game, or pick a member</p></div>
+
+<div class="device"><div class="phone"><div class="gf-screen">
+<header class="gf-appbar"><span class="gf-appbar__title">Gorefest #7</span></header>
+<main class="gf-body">
+<div class="gf-stack">
+  <p class="gf-kicker">Ask Anna</p>
+  <h1 class="gf-h1">What could Anna bring?</h1>
+</div>
+<div class="gf-search"><input class="gf-input" type="search" placeholder="Filter Anna's games" aria-label="Filter games"></div>
+<ul class="gf-list">
+  <li><div class="gf-game gf-game--compact"><span class="gf-art gf-art--missing" data-hue="0"><span class="gf-art__mono">AZ</span></span><div class="gf-game__body"><h3 class="gf-game__name">Azul</h3><p class="gf-game__meta">30–45 min · light · 2–4</p></div><span class="gf-tag gf-tag--olive">Asked</span></div></li>
+  <li><div class="gf-game gf-game--compact"><span class="gf-art gf-art--missing" data-hue="1"><span class="gf-art__mono">BB</span></span><div class="gf-game__body"><h3 class="gf-game__name">Brass: Birmingham</h3><p class="gf-game__meta">60–120 min · heavy · 2–4</p></div><button class="gf-btn gf-btn--secondary gf-btn--sm">Ask</button></div></li>
+  <li><div class="gf-game gf-game--compact"><span class="gf-art gf-art--missing" data-hue="2"><span class="gf-art__mono">CA</span></span><div class="gf-game__body"><h3 class="gf-game__name">Carcassonne</h3><p class="gf-game__meta">30–45 min · light · 2–5</p></div><span class="gf-tag gf-tag--olive">Bringing it</span></div></li>
+  <li><div class="gf-game gf-game--compact"><span class="gf-art gf-art--missing" data-hue="0"><span class="gf-art__mono">SP</span></span><div class="gf-game__body"><h3 class="gf-game__name">Spirit Island</h3><p class="gf-game__meta">90–120 min · heavy · 1–4</p></div><span class="gf-small gf-muted">Not this time</span></div></li>
+  <li><div class="gf-game gf-game--compact"><span class="gf-art gf-art--missing" data-hue="1"><span class="gf-art__mono">WI</span></span><div class="gf-game__body"><h3 class="gf-game__name">Wingspan</h3><p class="gf-game__meta">40–70 min · medium-light · 1–5</p></div><button class="gf-btn gf-btn--secondary gf-btn--sm">Ask</button></div></li>
+</ul>
+<p class="gf-error">You've asked for 3 games already: take one back first</p>
+</main></div></div><p class="device-cap">One member's collection, and the cap's message</p></div>
+
+<div class="device"><div class="phone"><div class="gf-screen">
+<header class="gf-appbar"><span class="gf-appbar__title">Bring games</span></header>
+<main class="gf-body">
+<div class="gf-stack"><h1 class="gf-h1">What are you bringing?</h1></div>
+<section class="gf-section"><h2 class="gf-h2">People are asking</h2><ul class="gf-list">
+  <li class="gf-row"><span class="gf-avatars"><span class="gf-avatar" data-hue="1" aria-hidden="true">BR</span><span class="gf-avatar" data-hue="2" aria-hidden="true">CA</span></span><span class="gf-row__main"><span class="gf-row__title">Bram and Caro ask if you can bring Brass: Birmingham</span><span class="gf-row__sub">60–120 min · heavy · 2–4</span></span></li>
+  <li class="gf-row" style="padding-top:0"><button class="gf-btn gf-btn--primary gf-btn--sm">Bring it</button><button class="gf-btn gf-btn--ghost gf-btn--sm">Not this time</button></li>
+</ul></section>
+<section class="gf-section"><h2 class="gf-h2">Your collection · 24</h2><p class="gf-muted" style="margin:0">…the usual grid of tiles with a switch each.</p></section>
+</main></div></div><p class="device-cap">Bring page: the owner's requests above the collection</p></div>
+
+<div class="device"><div class="phone"><div class="gf-screen">
+<header class="gf-appbar"><span class="gf-appbar__title">Collection</span></header>
+<main class="gf-body">
+<div class="gf-stack"><p class="gf-kicker">BoardGameGeek</p><h1 class="gf-h1">Your collection</h1></div>
+<label class="gf-row"><span class="gf-row__main"><span class="gf-row__title">Let people on my game days ask me to bring games</span><span class="gf-row__sub">Only people on a game day you joined see your collection, and only to ask you for a game. You always get to say "Not this time".</span></span><input class="gf-switch" type="checkbox" role="switch" checked aria-label="Let people on my game days ask me to bring games"></label>
+<p class="gf-muted" style="margin:0">24 games from AnnaPlays on BGG.</p>
+</main></div></div><p class="device-cap">Collection page: the opt-out switch, on by default</p></div>
+
+</div>
+</body>
+</html>

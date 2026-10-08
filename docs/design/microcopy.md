@@ -64,6 +64,15 @@ One line, about 60 characters, naming people where it helps:
 - Fourth heart: "You can pick 3 favourites: take one off first"
 - Empty: "Nothing on the shelf yet. Tick what you're bringing above."
 
+## Bring requests
+
+- Ask screen: kicker **Ask someone** · **Who could bring what?** · "Fancy a game you know somebody owns? Ask them to bring it. They answer with one tap, and you can ask up to 3." · buttons **Ask** / **See games** / **Take it back**
+- States: **Asked** · **Bringing it** · "Anna is bringing it" · a decline reads only **Not this time**, no reason and no blame.
+- Owner's section on the bring page: **People are asking** · "Bram and Caro ask if you can bring Brass: Birmingham" · **Bring it** / **Not this time**. Never "Rejected" or "Declined".
+- Hub next step: kicker **Waiting for you** · "Can you bring Brass: Birmingham?" · "Bram asked you to bring it. One tap to say yes, or not this time." · **See what's asked**. Home tag: **Asked to bring a game**.
+- Switch on the collection page: **Let people on my game days ask me to bring games** · "Only people on a game day you joined see your collection, and only to ask you for a game. You always get to say "Not this time"."
+- Rejections: "You've asked for 3 games already: take one back first" · "They've been asked a lot already: leave it to them" · "They'd rather not be asked to bring games" · "They're already bringing that one"
+
 ## Game type and time
 
 - Under a game's name: up to two words from BGG, uppercase small: "ABSTRACT · TILE PLACING", "COOPERATIVE", "CARD GAME".

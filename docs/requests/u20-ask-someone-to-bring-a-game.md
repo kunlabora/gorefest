@@ -1,6 +1,6 @@
 # U20 Ask someone to bring a game from their collection
 
-Source: product idea, 2026-10-08. Status: 📋 (design, not built)
+Source: product idea, 2026-10-08. Status: ✅ built
 
 **Idea:** a player who joined a game day can ask another player on that game day to bring a particular game from their collection ("Anna, could you bring Brass?"). The owner answers with one tap: bring it, or not this time.
 
@@ -52,13 +52,19 @@ Source: product idea, 2026-10-08. Status: 📋 (design, not built)
 
 ## Criteria
 
-- [ ] A joined player can ask another joined player to bring a game in the owner's collection (`BringRequested`; decider + given/when/then test for each rejection and the no-op)
-- [ ] The owner sees open requests on the bring page and can bring it (open requests for that game are answered) or decline
-- [ ] The asker sees their open requests, can take one back, and sees when it is answered or declined
-- [ ] Caps (3 standing requests per asker per day, 5 per owner per day; taking one back frees both), enforced in the decider's query (concurrent asks can't slip past the cap: test with two interleaved appends)
-- [ ] Ticking the game anywhere answers the open requests (projection test)
-- [ ] The hub's next step and the readiness view mention waiting requests
-- [ ] Nobody outside the game day can ask or see requests; closed and cancelled game days are read-only (web tests)
-- [ ] The collection page has the opt-out switch and tells owners who can see their collection; opted-out players can't be asked (decider + web test)
-- [ ] Event evolution: new types only; documented in `CLAUDE.md` (vocabulary, events list, tag convention unchanged)
-- [ ] Design mockup in `docs/design/` and the screens use existing components
+- [x] A joined player can ask another joined player to bring a game in the owner's collection (`BringRequested`; decider + given/when/then test for each rejection and the no-op)
+- [x] The owner sees open requests on the bring page and can bring it (open requests for that game are answered) or decline
+- [x] The asker sees their open requests, can take one back, and sees when it is answered or declined
+- [x] Caps (3 standing requests per asker per day, 5 per owner per day; taking one back frees both), enforced in the decider's query (concurrent asks can't slip past the cap: test with two interleaved appends)
+- [x] Ticking the game anywhere answers the open requests (projection test)
+- [x] The hub's next step and the readiness view mention waiting requests
+- [x] Nobody outside the game day can ask or see requests; closed and cancelled game days are read-only (web tests)
+- [x] The collection page has the opt-out switch and tells owners who can see their collection; opted-out players can't be asked (decider + web test)
+- [x] Event evolution: new types only; documented in `CLAUDE.md` (vocabulary, events list, tag convention unchanged)
+- [x] Design mockup in `docs/design/` and the screens use existing components
+
+Built as designed, with these notes:
+- "Who has this?" is a search box on the ask screen (`/gamedays/{id}/ask-search`) listing the matching games of members who allow requests, each with its own Ask button; it is not a link on a shelf row, because a game on the shelf is already brought.
+- The ask screen and the owner's section are for open game days; an ended game day answers 404 on the pages, and a `POST` is rejected by the decider (`GameDayOver`).
+- The home hero tags a waiting request ("Asked to bring a game") and the hub's next step puts it first; the readiness view shows a notice with the number of open requests.
+- The asker's cap test with interleaved appends is in `CommandHandlerTest` (eight concurrent asks, exactly three land); the same for the owner's cap.

@@ -43,7 +43,7 @@ A story is done when every criterion is ticked and covered by a test (decider gi
 | U17 | [Link BGG by a message from a Gorefest bot account](requests/u17-bgg-link-via-bot-message.md) | 📋 | |
 | U18 | ["Your likely favourites today": pills overlap the bottom after scrolling](requests/u18-favourites-pills-overlap.md) | ✅ | |
 | U19 | [Update emails when people add games (and push as an alternative)](requests/u19-update-emails-and-push.md) | 📋 | |
-| U20 | [Ask someone to bring a game from their collection](requests/u20-ask-someone-to-bring-a-game.md) | 📋 | |
+| U20 | [Ask someone to bring a game from their collection](requests/u20-ask-someone-to-bring-a-game.md) | ✅ | |
 
 The screen-by-screen visual redesign has its own list: [redesign-backlog.md](redesign-backlog.md).
 
