@@ -368,3 +368,55 @@ div.gf-tile { cursor: default; }
   .gf-how__col > .gf-ill { grid-row: auto; height: 132px; margin-bottom: 10px; }
   .gf-screen--wide .gf-footer { padding-inline: 32px; }
 }
+
+/* ---------- Redesign foundation (docs/design/Gorefest App Redesign.html): site bar, nav, wrap, band, split ---------- */
+.gf-wordmark:has(+ .gf-nav) { flex: none; }
+.gf-nav { display: none; margin-left: var(--space-5); gap: var(--space-1); }
+.gf-nav a { padding: 8px 14px; border-radius: var(--radius-pill); font: 700 15px/20px var(--font-sans); color: var(--ink-muted); text-decoration: none; }
+.gf-nav a[aria-current] { background: var(--ink); color: var(--surface); }
+.gf-appbar__actions { display: flex; align-items: center; gap: var(--space-1); }
+.gf-appbar__actions .gf-avatar { width: 36px; height: 36px; }
+.gf-crumb { display: inline-flex; align-items: center; gap: var(--space-1); font: 700 15px/20px var(--font-sans); color: var(--ink-muted); text-decoration: none; }
+.gf-crumb .gf-icon { width: 20px; height: 20px; }
+.gf-wrap { width: 100%; max-width: 1080px; margin-inline: auto; padding: var(--space-2) var(--space-4) var(--space-6); }
+.gf-band--sunk { background: var(--surface-sunk); border-block: 1px solid var(--line); }
+.gf-band > .gf-wrap { padding-block: 28px var(--space-6); }
+.gf-split { display: grid; gap: 28px; }
+.gf-split__copy { display: flex; flex-direction: column; align-items: flex-start; gap: 14px; }
+.gf-phone-only { display: flex; }
+.gf-desk-only { display: none; }
+@media (min-width: 720px) {
+  .gf-nav { display: flex; }
+  .gf-wrap { padding: 40px 32px 56px; }
+  .gf-band > .gf-wrap { padding: 40px 32px 48px; }
+  .gf-split { grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr); gap: 64px; align-items: center; }
+  .gf-phone-only { display: none; }
+  .gf-desk-only { display: flex; }
+}
+
+/* ---------- Per-screen CSS slots: one block per redesign item, so parallel work doesn't collide. Keep your rules inside your block. ---------- */
+/* ==== R1 home ==== */
+
+/* ==== R2 game day hub ==== */
+
+/* ==== R3 invite landing ==== */
+
+/* ==== R4 host a game day ==== */
+
+/* ==== R5 taste round ==== */
+
+/* ==== R6 favourites ==== */
+
+/* ==== R7 bring games ==== */
+
+/* ==== R8 pick a game ==== */
+
+/* ==== R9 log a play ==== */
+
+/* ==== R10 link BGG ==== */
+
+/* ==== R11 find a date ==== */
+
+/* ==== R12 sign-in follow-ups ==== */
+
+/* ==== end of per-screen blocks ==== */

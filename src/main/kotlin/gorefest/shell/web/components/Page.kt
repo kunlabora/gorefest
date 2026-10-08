@@ -1,7 +1,9 @@
 package gorefest.shell.web.components
 
 import kotlinx.html.ButtonType
+import gorefest.shell.web.CurrentPlayer
 import kotlinx.html.DIV
+import kotlinx.html.nav
 import kotlinx.html.FlowContent
 import kotlinx.html.footer
 import kotlinx.html.FormMethod
@@ -33,6 +35,7 @@ import java.util.concurrent.ConcurrentHashMap
 /**
  * The page shell from the design system (docs/design): an app bar, the scrolling body,
  * and an optional dock at the bottom for the screen's primary action.
+ * A page with a [site] bar is the redesigned shell: wordmark, nav and your avatar, and the wide frame. [appBar] then only holds the page's own actions.
  * A [wide] page drops the phone-width column on desktop and lays out its own bands (the login landing).
  */
 fun HTML.page(
@@ -43,6 +46,7 @@ fun HTML.page(
     mainClasses: String = "",
     mainId: String? = null,
     wide: Boolean = false,
+    site: SiteBar? = null,
     content: MAIN.() -> Unit,
 ) {
     lang = "en"
@@ -69,10 +73,12 @@ fun HTML.page(
         head()
     }
     body {
-        div(if (wide) "gf-screen gf-screen--wide" else "gf-screen") {
+        div(if (wide || site != null) "gf-screen gf-screen--wide" else "gf-screen") {
             header("gf-appbar") {
-                appBar()
-                themeToggle()
+                if (site != null) siteBar(site, appBar) else {
+                    appBar()
+                    themeToggle()
+                }
             }
             main("gf-body $mainClasses".trim()) {
                 if (mainId != null) id = mainId
@@ -102,6 +108,42 @@ fun FlowContent.bggCredit() = p("gf-credit") {
 }
 
 fun FlowContent.appBarTitle(text: String) = span("gf-appbar__title") { +text }
+
+/** Which nav item is current, and who is looking: the redesigned app bar (docs/design/Gorefest App Redesign.html). */
+data class SiteBar(val me: CurrentPlayer, val current: Nav?)
+
+enum class Nav(val href: String, val label: String) { GAME_DAYS("/", "Game days"), COLLECTION("/collection", "Collection") }
+
+private fun FlowContent.siteBar(site: SiteBar, actions: FlowContent.() -> Unit) {
+    wordmark()
+    nav("gf-nav") {
+        attributes["aria-label"] = "Main"
+        Nav.entries.forEach { item ->
+            a(item.href) {
+                if (item == site.current) attributes["aria-current"] = "page"
+                +item.label
+            }
+        }
+    }
+    span("gf-appbar__end gf-appbar__actions") {
+        actions()
+        avatar(site.me.id, site.me.name)
+        themeToggle()
+    }
+}
+
+/** A quiet "back" link above a page's heading (replaces the app bar's back arrow on redesigned pages). */
+fun FlowContent.crumb(href: String, label: String) = a(href, classes = "gf-crumb") { icon("back"); +label }
+
+/** A centred 1080px column; the unit every redesigned page is built from. */
+fun FlowContent.wrap(classes: String = "", content: DIV.() -> Unit) = div(("gf-wrap " + classes).trim()) { content() }
+
+/** A full-width band across the page; [sunk] puts it on the sunk surface to group secondary material. */
+fun FlowContent.band(sunk: Boolean = false, classes: String = "", content: DIV.() -> Unit) =
+    div(("gf-band " + (if (sunk) "gf-band--sunk " else "") + classes).trim()) { wrap { content() } }
+
+/** Copy on one side, the picture on the other: two columns from 720px, stacked below. */
+fun FlowContent.split(classes: String = "", content: DIV.() -> Unit) = div(("gf-split " + classes).trim()) { content() }
 
 /** The brand in the app bar: the five-dot die from the favicon, then the name. */
 fun FlowContent.wordmark() = span("gf-wordmark") {

@@ -44,6 +44,8 @@ A story is done when every criterion is ticked and covered by a test (decider gi
 | U18 | ["Your likely favourites today": pills overlap the bottom after scrolling](requests/u18-favourites-pills-overlap.md) | ✅ | |
 | U19 | [Update emails when people add games (and push as an alternative)](requests/u19-update-emails-and-push.md) | 📋 | |
 
+The screen-by-screen visual redesign has its own list: [redesign-backlog.md](redesign-backlog.md).
+
 S1–S13 is the MVP. S14–S16 make it good.
 
 ---
