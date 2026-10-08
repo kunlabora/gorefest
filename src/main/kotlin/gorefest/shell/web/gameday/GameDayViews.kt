@@ -82,6 +82,8 @@ data class HomeNext(val gameDay: GameDaySummary, val names: Map<PlayerId, String
 data class HomeView(
     val next: HomeNext?,
     val later: List<GameDaySummary>,
+    /** Ended or cancelled: kept for reference, below "Coming up". */
+    val past: List<GameDaySummary>,
     val polls: List<DatePollSummary>,
     val today: LocalDate,
     val bggLinked: Boolean,
@@ -94,7 +96,7 @@ fun HTML.homePage(view: HomeView) = page(
     appBar = { logoutButton() },
     mainClasses = "gf-landing gf-home",
 ) {
-    val nothingYet = view.next == null && view.later.isEmpty() && view.polls.isEmpty()
+    val nothingYet = view.next == null && view.later.isEmpty() && view.past.isEmpty() && view.polls.isEmpty()
     wrap {
         h1("gf-vh") { +"Your game days" }
         div("gf-home__hero") {
@@ -136,6 +138,12 @@ fun HTML.homePage(view: HomeView) = page(
                     linkButton("/bgg?returnTo=%2F", "Link BGG", ButtonStyle.SECONDARY, ButtonSize.SMALL)
                 }
             }
+        }
+    }
+    if (view.past.isNotEmpty()) wrap {
+        div("gf-stack gf-home__past") {
+            h2("gf-h2 gf-h2--section") { +"Past" }
+            div("gf-home__list") { view.past.forEach { dayCard(it, view.today) } }
         }
     }
 }

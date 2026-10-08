@@ -132,6 +132,25 @@ class GameDayRoutesTest {
     }
 
     @Test
+    fun `a cancelled game day sits under Past, not Coming up`() = webTest { client ->
+        client.htmxPost("/gamedays", validForm)
+        client.htmxPost("/gamedays", Parameters.build {
+            append("title", "Gorefest #8")
+            append("date", "2026-10-25")
+            append("place", "Bram's attic")
+            append("timeZone", "Europe/Brussels")
+        })
+        val first = "00000000-0000-0000-0000-000000000001"
+        client.submitForm("/gamedays/$first/cancel", parameters {})
+
+        val page = client.get("/").page()
+
+        page.one(".gf-homeday__title").text() shouldBe "Gorefest #8"
+        page.select(".gf-home__coming a.gf-daycard").shouldBeEmpty()
+        page.one(".gf-home__past a.gf-daycard").one(".gf-tag").text() shouldBe "Cancelled"
+    }
+
+    @Test
     fun `the home page without game days explains how to get one`() = webTest { client ->
         val page = client.get("/").page()
 
