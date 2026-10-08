@@ -100,7 +100,10 @@ class AuthRoutesTest {
         val form = page.one("form#code-form")
         form.attr("hx-post") shouldBe "/login/code"
         form.one("input[name=code]").attr("autocomplete") shouldBe "one-time-code"
-        page.one(".gf-dock button").attr("form") shouldBe "code-form"
+        form.one("button[type=submit]").text() shouldBe "Let me in"
+        page.select(".gf-dock").size shouldBe 0
+        page.one(".gf-hero-band__copy > .gf-kicker").text() shouldBe "Step 2 of 2"
+        page.one(".gf-mailcard").attr("aria-hidden") shouldBe "true"
     }
 
     @Test

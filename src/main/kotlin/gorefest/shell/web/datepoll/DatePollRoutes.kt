@@ -20,6 +20,8 @@ import gorefest.shell.auth.Login
 import gorefest.shell.web.CurrentPlayer
 import gorefest.shell.web.DEFAULT_TIME_ZONE
 import gorefest.shell.web.authenticated
+import gorefest.shell.web.components.Nav
+import gorefest.shell.web.components.SiteBar
 import gorefest.shell.web.invite.deadInvitePage
 import gorefest.shell.web.message
 import gorefest.shell.web.redirect
@@ -45,14 +47,14 @@ fun Route.datePollRoutes(app: App) {
     suspend fun view(poll: DatePollSummary, me: CurrentPlayer) = DatePollView(
         poll = poll,
         names = login.names(poll.participants),
-        me = me.id,
+        viewer = me,
         today = clock.todayIn(poll.timeZone),
         inviteLink = "${config.baseUrl}/p/${app.invites.token(poll.id)}",
         gameDay = poll.picked?.let { app.gameDaysById[it.gameDay] },
     )
 
     get("/polls/new") {
-        authenticated { call.respondHtml { datePollFormPage() } }
+        authenticated { call.respondHtml { datePollFormPage(SiteBar(contextOf<CurrentPlayer>(), Nav.GAME_DAYS)) } }
     }
 
     get("/polls/new/date") {
