@@ -61,7 +61,7 @@ class BggRoutesTest {
         code shouldMatch Regex("GORE-[A-Z2-9]{6}")
         step.attr("hx-post") shouldBe "/bgg/verify"
         step.one("button[type=submit]").text() shouldBe "I've added it"
-        step.select(".gf-bgg__steps .gf-bgg__num").map { it.text() } shouldBe listOf("1", "2", "3")
+        step.select(".gf-stepper .gf-stepper__num").map { it.text() } shouldBe listOf("1", "2", "3")
         step.one(".gf-bgg__shot img").attr("src") shouldBe "/static/bgg-profile-code.webp"
         step.one("a[href='/bgg?returnTo=%2F']").text() shouldBe "Wrong username?"
     }

@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Layout components</title>
+<link rel="stylesheet" href="../css/tokens.css">
+<link rel="stylesheet" href="../css/gorefest.css">
+<script>var t = new URLSearchParams(location.search).get('theme'); if (t) document.documentElement.dataset.theme = t;</script>
+<style>
+  body { background: var(--surface); color: var(--ink); font: 400 16px/24px var(--font-sans); }
+  .demo { max-width: 1080px; margin: 0 auto; padding: 24px 16px 64px; display: flex; flex-direction: column; gap: 40px; }
+  .demo-cap { margin: 0; font: 700 12px/16px var(--font-sans); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-muted); }
+  .demo-frame { border: 1.5px dashed var(--line-strong); border-radius: var(--radius-lg); overflow: hidden; }
+  .demo-note { margin: 0; color: var(--ink-muted); max-width: 70ch; }
+</style>
+</head>
+<body>
+<div class="demo">
+  <h1 class="gf-h1">Layout components</h1>
+  <p class="demo-note">The building blocks every screen is made from, from <code>gorefest.css</code> and <code>web/components/Page.kt</code> and <code>Steps.kt</code>. Resize the window: below 720px everything stacks. The full set of screens built from these is in <a class="gf-link" href="../Gorefest%20App%20Redesign.html">Gorefest App Redesign</a>.</p>
+
+  <section class="gf-section"><p class="demo-cap">Site bar: wordmark, nav, avatar, theme (<code>page(site = SiteBar(me, Nav.X))</code>)</p>
+    <div class="demo-frame"><header class="gf-appbar">
+      <span class="gf-wordmark"><svg class="gf-wordmark__logo" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7"/><g><circle cx="10" cy="10" r="2.9"/><circle cx="22" cy="10" r="2.9"/><circle cx="16" cy="16" r="2.9"/><circle cx="10" cy="22" r="2.9"/><circle cx="22" cy="22" r="2.9"/></g></svg>Gorefest</span>
+      <nav class="gf-nav" aria-label="Main"><a href="#" aria-current="page">Game days</a><a href="#">Collection</a></nav>
+      <span class="gf-appbar__end gf-appbar__actions"><span class="gf-avatar">TS</span></span>
+    </header></div></section>
+
+  <section class="gf-section"><p class="demo-cap">Hero: <code>crumb</code>, kicker, <code>gf-h1--landing</code>, lede and the action in one eye-line (<code>split</code> adds the picture)</p>
+    <div class="demo-frame"><div class="gf-wrap"><div class="gf-split">
+      <div class="gf-split__copy">
+        <a class="gf-crumb" href="#"><svg class="gf-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>All game days</a>
+        <p class="gf-kicker">New game day</p>
+        <h1 class="gf-h1 gf-h1--landing">Host a game day</h1>
+        <p class="gf-lede gf-muted">Pick a date, share the link, and your friends bring the games.</p>
+        <a class="gf-btn gf-btn--primary gf-btn--lg" href="#">Create game day</a>
+      </div>
+      <div class="gf-card" style="padding:16px"><p class="gf-kicker">The picture goes here</p><p class="gf-muted">Cards, covers or a form.</p></div>
+    </div></div></div></section>
+
+  <section class="gf-section"><p class="demo-cap">Band: the sunk surface groups secondary material (<code>band(sunk = true)</code>)</p>
+    <div class="demo-frame"><div class="gf-band gf-band--sunk"><div class="gf-wrap"><h2 class="gf-h2">The shelf · 12</h2><p class="gf-muted">Full-width, hairline top and bottom, no card needed.</p></div></div></div></section>
+
+  <section class="gf-section"><p class="demo-cap">Card and tilted hand (<code>gf-card</code>, <code>gf-tilted</code>)</p>
+    <div class="demo-frame"><div class="gf-wrap"><div class="gf-tilted" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:18px">
+      <div class="gf-card" style="padding:16px"><b>Cascadia</b><p class="gf-muted gf-small">Suits all 5 players</p></div>
+      <div class="gf-card" style="padding:16px"><b>Azul</b><p class="gf-muted gf-small">4 of 5 love it</p></div>
+      <div class="gf-card" style="padding:16px"><b>Splendor</b><p class="gf-muted gf-small">Quick, 30 min</p></div>
+    </div></div></div></section>
+
+  <section class="gf-section"><p class="demo-cap">Stepper: numbered steps, three across from 720px (<code>stepper("gf-stepper--cols")</code>, <code>step()</code>); soft tone on sunk bands</p>
+    <div class="demo-frame"><div class="gf-wrap"><ol class="gf-stepper gf-stepper--cols">
+      <li class="gf-stepper__item"><span class="gf-stepper__num gf-stepper__num--soft">1</span><h3 class="gf-stepper__title">Sign in with your email</h3><p class="gf-muted gf-stepper__text">One tap, no password.</p></li>
+      <li class="gf-stepper__item"><span class="gf-stepper__num gf-stepper__num--soft">2</span><h3 class="gf-stepper__title">Pick between two games</h3><p class="gf-muted gf-stepper__text">A two-minute round teaches Gorefest your taste.</p></li>
+      <li class="gf-stepper__item"><span class="gf-stepper__num gf-stepper__num--soft">3</span><h3 class="gf-stepper__title">Bring games</h3><p class="gf-muted gf-stepper__text">Tick what you're bringing.</p></li>
+    </ol></div></div></section>
+
+  <section class="gf-section"><p class="demo-cap">Stepper as form sections (<code>stepper("gf-stepper--sections")</code>, <code>formStep()</code>)</p>
+    <div class="demo-frame"><div class="gf-wrap"><ol class="gf-stepper gf-stepper--sections">
+      <li class="gf-stepper__item"><span class="gf-stepper__num">1</span><h2 class="gf-stepper__title">The game</h2><div class="gf-stepper__body"><p class="gf-muted">Tiles go here.</p></div></li>
+      <li class="gf-stepper__item"><span class="gf-stepper__num">2</span><h2 class="gf-stepper__title">Who played?</h2><div class="gf-stepper__body"><p class="gf-muted">Player chips go here.</p></div></li>
+    </ol></div></div></section>
+
+  <section class="gf-section"><p class="demo-cap">Sign-in row: a field and its button on one line from 720px (<code>gf-signin</code>)</p>
+    <div class="demo-frame"><div class="gf-wrap"><form class="gf-signin" onsubmit="return false"><label class="gf-label" for="e">Email address</label><div class="gf-signin__row"><input class="gf-input" id="e" placeholder="you@example.com"><button class="gf-btn gf-btn--primary gf-btn--lg" type="button">Send me a code</button></div><p class="gf-hint">We'll email a sign-in link and a 6-digit code. No password.</p></form></div></div></section>
+</div>
+</body>
+</html>

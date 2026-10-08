@@ -108,10 +108,10 @@ private fun FlowContent.joinButton(path: String, title: String) =
     }
 
 /** Four box covers as a tilted hand of cards, each with who brings it. Desktop only; phones get the small fan. */
-private fun FlowContent.hand(shelf: List<Pair<Game, ShelfGame>>, names: Map<PlayerId, String>) = div("gf-hand") {
+private fun FlowContent.hand(shelf: List<Pair<Game, ShelfGame>>, names: Map<PlayerId, String>) = div("gf-hand gf-tilted") {
     attributes["aria-hidden"] = "true"
     shelf.take(4).forEach { (game, entry) ->
-        div("gf-hand__card") {
+        div("gf-card gf-hand__card") {
             art(game)
             h3("gf-hand__name") { +game.name }
             span("gf-hand__chip") { +broughtBy(entry.owners.mapNotNull { names[it] }) }
@@ -129,19 +129,13 @@ private fun broughtBy(owners: List<String>) = when (owners.size) {
 
 private fun FlowContent.whatHappensNext(loggedIn: Boolean) = div("gf-stack gf-inv-next") {
     h2("gf-h2") { +"What happens next" }
-    ol("gf-inv-steps") {
+    stepper("gf-stepper--cols") {
         listOf(
             (if (loggedIn) "Join the guest list" else "Sign in with your email") to
                 (if (loggedIn) "One tap and you're on the guest list." else "One tap, no password. You're on the guest list straight away."),
             "Pick between two games" to "A two-minute round of this-or-that teaches Gorefest your taste.",
             "Bring games, get suggestions" to "Tick what you're bringing. On the day, Gorefest picks what suits the table.",
-        ).forEachIndexed { i, (title, text) ->
-            li("gf-inv-step") {
-                span("gf-inv-step__num") { +"${i + 1}" }
-                h3("gf-inv-step__title") { +title }
-                p("gf-muted gf-inv-step__text") { +text }
-            }
-        }
+        ).forEachIndexed { i, (title, text) -> step(i + 1, title, { +text }, StepTone.SOFT) }
     }
 }
 

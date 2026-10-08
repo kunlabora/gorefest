@@ -43,10 +43,10 @@ private fun FlowContent.tile(mono: String, hue: Int, extra: String = "") =
     span("gf-minitile gf-minitile--$hue $extra".trim()) { +mono }
 
 /** What a suggestion looks like, as three cards on the hero. Decoration for people who arrive without an invite. */
-private fun FlowContent.sampleSuggestions() = div("gf-samples") {
+private fun FlowContent.sampleSuggestions() = div("gf-samples gf-tilted") {
     attributes["aria-hidden"] = "true"
     listOf(Triple("Cascadia", "Suits all 5 players", 0), Triple("Azul", "4 of 5 love it", 1), Triple("Splendor", "Quick, 30 min", 2)).forEach { (name, reason, hue) ->
-        div("gf-sample") {
+        div("gf-card gf-sample") {
             tile(name.take(2), hue, "gf-minitile--big")
             div {
                 h3("gf-sample__name") { +name }
@@ -74,15 +74,8 @@ private fun FlowContent.illustration(which: Illustration) = div("gf-ill") {
 private fun FlowContent.howItWorks() = div("gf-how-band") {
     section("gf-how") {
         h2("gf-h2") { +"How it works" }
-        ol("gf-how__cols") {
-            steps.forEachIndexed { i, (title, text, ill) ->
-                li("gf-how__col") {
-                    illustration(ill)
-                    p("gf-kicker") { +"Step ${i + 1}" }
-                    h3("gf-how__title") { +title }
-                    p("gf-muted gf-how__text") { +text }
-                }
-            }
+        stepper("gf-stepper--cols") {
+            steps.forEachIndexed { i, (title, text, ill) -> illustratedStep(i + 1, title, text) { illustration(ill) } }
         }
     }
 }
@@ -122,7 +115,7 @@ fun HTML.codePage(attempt: Uuid, email: String, returnTo: String, dev: Boolean) 
     }
 
 /** What the mail looks like, so people know what to look for in their inbox. Decoration, desktop only. */
-private fun FlowContent.mailCard() = div("gf-mailcard") {
+private fun FlowContent.mailCard() = div("gf-card gf-mailcard") {
     attributes["aria-hidden"] = "true"
     p("gf-kicker") { +"Inbox · just now" }
     h3("gf-mailcard__subject") { +"Your Gorefest code: 482913" }

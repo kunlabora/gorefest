@@ -52,7 +52,7 @@ fun HTML.bringPage(
             }
             aside("gf-bring__side") {
                 consumer.bringSummary(gameDay, summary)
-                if (!gameDay.ended) section("gf-bring__card gf-bring__wishes") {
+                if (!gameDay.ended) section("gf-card gf-bring__card gf-bring__wishes") {
                     h2("gf-label") { +"Really want to play something?" }
                     p("gf-muted gf-small") { +"Heart up to $MAX_WISHES games on the shelf. Each heart nudges a game up the suggestions." }
                     consumer.wishList(gameDay, wishes)
@@ -79,7 +79,7 @@ fun TagConsumer<*>.bringSummary(gameDay: GameDaySummary, summary: ShelfSummary) 
     hx("trigger", "$BRING_LIST_CHANGED from:body delay:150ms, $SHELF_CHANGED from:body delay:150ms")
     hx("swap", "outerHTML")
     val mine = summary.mine.size
-    section("gf-bring__card gf-bring__shelf") {
+    section("gf-card gf-bring__card gf-bring__shelf") {
         p("gf-kicker") { +"On the shelf now" }
         div("gf-bring__count") {
             b("gf-bring__total") { +"${summary.total}" }

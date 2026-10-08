@@ -130,7 +130,7 @@ fun TagConsumer<*>.datePollResults(view: DatePollView, error: String? = null) = 
     poll.tallies().forEach { tally ->
         val declined = poll.answers.filter { (_, dates) -> tally.date !in dates }.keys.map { view.names[it] ?: "someone" }
         val unanswered = poll.waitingOn.size
-        article("gf-opt" + if (tally.date == best) " gf-opt--best" else "") {
+        article("gf-card gf-opt" + if (tally.date == best) " gf-opt--best" else "") {
             div("gf-opt__top") {
                 span("gf-date") {
                     span("gf-date__month") { +tally.date.format(MONTH) }

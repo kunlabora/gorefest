@@ -58,6 +58,7 @@ BoardGameGeek thumbnails come in any ratio and quality. Always put them in `.gf-
 - Every page sits in the wide frame (`.gf-screen--wide`): a 1080px column (`wrap`), with full-width `band`s (the sunk surface groups secondary material). From 720px, `split` puts copy and picture side by side; below that everything stacks. Desktop and phone are one markup.
 - The app bar is the brand: the wordmark everywhere, plus a nav (Game days, Collection) and your avatar once signed in (`SiteBar`). Back links are a `crumb` above the heading, not an arrow in the bar.
 - The sticky dock is for phones only, where the action is in thumb reach; on desktop the action sits beside its field or content (`.gf-phone-only` / `.gf-desk-only`).
+- **Build a new screen from the shared pieces, not from its own CSS:** `wrap` / `band` / `split` for layout, `gf-card` (+ `gf-tilted`) for raised cards, `stepper` / `step` for anything numbered, the `gf-signin` row for a field with its button. A screen block in `gorefest.css` holds only what is truly its own. If a second screen wants the same thing, it moves into the shared block first. See `mockups/component-layout.html`.
 - The pattern for every screen is the login's: kicker, big headline, one line of help, the action, and the product shown on tilted raised cards. See `Gorefest App Redesign.html`.
 - Wizard picks accept keyboard shortcuts: the `A`/`B` key hints on each pick are real. Wire them with a small hyperscript handler.
 

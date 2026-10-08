@@ -80,9 +80,9 @@ fun TagConsumer<*>.logForm(view: LogFormView, me: CurrentPlayer, values: Paramet
         hx("swap", "outerHTML")
         hyperscript(LOG_SUMMARY_SCRIPT)
         val summary = logSummary(view, values)
-        div("gf-log__steps") {
-            if (error != null) errorNotice(error)
-            logStep(1, "The game") {
+        if (error != null) errorNotice(error)
+        stepper("gf-stepper--sections") {
+            formStep(1, "The game") {
                 if (view.games.isEmpty()) p("gf-muted") { +"Nothing on the shelf yet. Search for the game you played." }
                 val chosenGame = values["game"] ?: view.games.firstOrNull()?.id?.toString()
                 div("gf-tiles") { view.games.forEach { gameTileChoice(it, "game", checked = it.id.toString() == chosenGame) } }
@@ -95,11 +95,11 @@ fun TagConsumer<*>.logForm(view: LogFormView, me: CurrentPlayer, values: Paramet
                     consumer.logSearchResults(emptyList(), bggUnavailable = false)
                 }
             }
-            logStep(2, "Who played?") {
+            formStep(2, "Who played?") {
                 val chosen = values.getAll("players")?.toSet() ?: setOf(me.id.toString())
                 playerChips(view.gameDay.players, view.names, checked = { it.toString() in chosen })
             }
-            logStep(3, "Roughly how long?") {
+            formStep(3, "Roughly how long?") {
                 segmented("duration", "Duration", DURATIONS.map { it.first }, checked = values["duration"] ?: "45m")
             }
         }
@@ -111,13 +111,6 @@ fun TagConsumer<*>.logForm(view: LogFormView, me: CurrentPlayer, values: Paramet
             p("gf-hint") { +"Then one quick question about it." }
         }
     }
-
-/** One numbered question of the form, with the same number disc as the login's "how it works". */
-private fun FlowContent.logStep(number: Int, title: String, body: FlowContent.() -> Unit) = section("gf-log__step") {
-    span("gf-log__num") { attributes["aria-hidden"] = "true"; +"$number" }
-    h2("gf-log__title") { +title }
-    div("gf-log__body") { body() }
-}
 
 /** Games found by the search above the form: more tiles in the same radio group. */
 fun TagConsumer<*>.logSearchResults(games: List<Game>, bggUnavailable: Boolean) = div {

@@ -41,7 +41,7 @@ fun HTML.tablePage(view: TableView) = page(
                 hx("target", "#suggestions")
                 hx("swap", "outerHTML")
                 hiddenInput(TABLE_SET, "1")
-                section("gf-picker__panel") {
+                section("gf-card gf-picker__panel") {
                     h2("gf-h2") { +"Who's at the table?" }
                     playerChips(view.gameDay.players, view.names, checked = { view.chosen == null || it.toString() in view.chosen })
                     h2("gf-h2") { +"How long?" }

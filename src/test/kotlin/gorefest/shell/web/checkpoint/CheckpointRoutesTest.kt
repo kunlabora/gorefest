@@ -92,7 +92,7 @@ class CheckpointRoutesTest {
         val page = client.get(log).page()
 
         page.one(".gf-nav a[aria-current=page]").text() shouldBe "Game days"
-        page.select("#log-form .gf-log__step .gf-log__title").map { it.text() } shouldBe listOf("The game", "Who played?", "Roughly how long?")
+        page.select("#log-form .gf-stepper__item .gf-stepper__title").map { it.text() } shouldBe listOf("The game", "Who played?", "Roughly how long?")
         val summary = page.one("#log-form .gf-log__summary")
         summary.one("[data-log=game]").text() shouldBe "Azul"
         summary.one("[data-log=about]").text() shouldBe "1 player · about 45 min"

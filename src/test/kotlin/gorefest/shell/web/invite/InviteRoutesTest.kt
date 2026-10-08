@@ -80,7 +80,7 @@ class InviteRoutesTest {
         form.one("input[type=email][name=email]").hasAttr("required") shouldBe true
         form.one("button").text() shouldBe "Join Gorefest #7"
         page.select(".gf-appbar .gf-nav").shouldBeEmpty()
-        page.texts(".gf-inv-step__title") shouldBe listOf("Sign in with your email", "Pick between two games", "Bring games, get suggestions")
+        page.texts(".gf-stepper__title") shouldBe listOf("Sign in with your email", "Pick between two games", "Bring games, get suggestions")
     }
 
     @Test

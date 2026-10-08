@@ -115,7 +115,7 @@ fun HTML.favouritesPage(me: CurrentPlayer, view: Payoff) {
                     view.favourites.isEmpty() -> emptyState("Not enough answers yet", "A few quick pairs and we'll know what you'll enjoy on this shelf.") {
                         linkButton("/gamedays/${gameDay.id}/taste", "Start the taste round", ButtonStyle.SECONDARY)
                     }
-                    else -> ol("gf-podium") { view.favourites.forEachIndexed { i, f -> li("gf-sample gf-fav") { favourite(i + 1, f) } } }
+                    else -> ol("gf-podium gf-tilted") { view.favourites.forEachIndexed { i, f -> li("gf-card gf-sample gf-fav") { favourite(i + 1, f) } } }
                 }
             }
         }

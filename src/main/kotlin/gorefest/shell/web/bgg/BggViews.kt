@@ -76,11 +76,11 @@ fun TagConsumer<*>.codeStep(returnTo: String, username: String, code: String, de
                 a("/bgg?returnTo=${returnTo.urlEncoded()}", classes = "gf-link") { +"Wrong username?" }
             }
         }
-        ol("gf-bgg__steps") {
-            bggStep(1, "Open your BGG profile settings", text = {
+        stepper {
+            step(1, "Open your BGG profile settings", text = {
                 +"Log in to BoardGameGeek, then open your profile settings and find the "; strong { +"Contact Information" }; +" section."
             })
-            bggStep(2, "Paste the code into \"Website\"", text = {
+            step(2, "Paste the code into \"Website\"", text = {
                 +"Paste it into the "; strong { +"Website/Homepage" }; +" field, like in the picture. BGG asks for your BGG password to save contact information; that's BGG checking it's you, we never see it."
             }) {
                 div("gf-bgg__shot") {
@@ -90,18 +90,11 @@ fun TagConsumer<*>.codeStep(returnTo: String, username: String, code: String, de
                     }
                 }
             }
-            bggStep(3, "Come back and tap the button", text = { +"Afterwards you can clear the field again." })
+            step(3, "Come back and tap the button", text = { +"Afterwards you can clear the field again." })
         }
     }
 
 fun TagConsumer<*>.devProfileFilled() = p("gf-small") { id = "dev-bgg"; +"Done: the fake BGG profile has the code. Now tap \"I've added it\"." }
-
-private fun OL.bggStep(number: Int, title: String, text: P.() -> Unit, extra: (DIV.() -> Unit)? = null) = li("gf-bgg__step") {
-    span("gf-bgg__num") { attributes["aria-hidden"] = "true"; +"$number" }
-    h3("gf-bgg__title") { +title }
-    p("gf-muted gf-bgg__text") { text() }
-    if (extra != null) div("gf-bgg__extra") { extra() }
-}
 
 private fun TagConsumer<*>.bggForm(action: String, returnTo: String, classes: String, content: FORM.() -> Unit) =
     form(action = action, method = FormMethod.post, classes = classes) {

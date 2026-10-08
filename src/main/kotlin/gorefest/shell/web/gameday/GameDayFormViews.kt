@@ -56,7 +56,7 @@ private fun FlowContent.invitePreview(host: String, values: Parameters) = div("g
     val date = values["date"]?.let { runCatching { LocalDate.parse(it).full() }.getOrNull() } ?: "Pick a date"
     val place = values["place"].orEmpty()
     p("gf-kicker") { +"What your friends see" }
-    article("gf-pv") {
+    article("gf-card gf-pv") {
         id = "invite-preview"
         div("gf-pv__art") { listOf(0, 1, 2).forEach { span("gf-pv__tile gf-pv__tile--$it") } }
         p("gf-kicker") { +"$host invites you to a game day" }
