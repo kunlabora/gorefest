@@ -2,7 +2,6 @@ package gorefest.shell.web.suggestions
 
 import gorefest.core.PlayerId
 import gorefest.core.gameday.GameDaySummary
-import gorefest.core.matching.Suggestions
 import gorefest.core.matching.TablePlayer
 import gorefest.core.taste.PlayerGames
 import gorefest.shell.App
@@ -22,27 +21,27 @@ import kotlin.uuid.Uuid
 
 context(login: Login)
 fun Route.suggestionsRoutes(app: App) {
-    suspend fun suggestionsFor(gameDay: GameDaySummary, params: Parameters, me: CurrentPlayer): Pair<Suggestions, Int> {
+    suspend fun tableView(gameDay: GameDaySummary, params: Parameters, me: CurrentPlayer): TableView {
         // The form always sends TABLE_SET, so "no players" means nobody; without it (first page load) it means everyone.
         val picked = params.getAll("players").orEmpty().takeIf { params.contains(TABLE_SET) || it.isNotEmpty() }
         val chosen = picked?.mapNotNull { runCatching { PlayerId(Uuid.parse(it)) }.getOrNull() }
             ?.filter { it in gameDay.players } ?: gameDay.players
         val budget = TIMES.firstOrNull { it.first == params["time"] }?.second
-        val names = login.names(chosen)
+        val names = login.names(gameDay.players)
         val table = chosen.map { id ->
             TablePlayer(id, names[id] ?: "Someone", PlayerGames(app.tastes.of(id), app.collectionSync.collection(id)))
         }
         val shelf = app.shelves.of(gameDay.id).mapNotNull { entry -> app.catalog[entry.game]?.let { it to entry } }
-        return app.matcher.suggest(table, shelf, budget, app.clock.instant(), speed = app.groupSpeed(chosen)) to table.size
+        val suggestions = app.matcher.suggest(table, shelf, budget, app.clock.instant(), speed = app.groupSpeed(chosen))
+        val ticked = params.getAll("players")?.toSet() ?: emptySet<String>().takeIf { params.contains(TABLE_SET) }
+        return TableView(gameDay, names, ticked, chosen, params["time"] ?: "Any", suggestions, table.size, me)
     }
 
     get("/gamedays/{id}/table") {
         authenticated {
             val me = contextOf<CurrentPlayer>()
             val gameDay = memberGameDay(app, me) ?: return@authenticated call.respond(HttpStatusCode.NotFound)
-            val names = login.names(gameDay.players)
-            val (suggestions, size) = suggestionsFor(gameDay, call.parameters, me)
-            val view = TableView(gameDay, names, call.parameters.getAll("players")?.toSet() ?: emptySet<String>().takeIf { call.parameters.contains(TABLE_SET) }, call.parameters["time"] ?: "Any", suggestions, size, me.id)
+            val view = tableView(gameDay, call.parameters, me)
             call.respondHtml { tablePage(view) }
         }
     }
@@ -51,9 +50,8 @@ fun Route.suggestionsRoutes(app: App) {
         authenticated {
             val me = contextOf<CurrentPlayer>()
             val gameDay = memberGameDay(app, me) ?: return@authenticated call.respond(HttpStatusCode.NotFound)
-            val (suggestions, size) = suggestionsFor(gameDay, call.parameters, me)
-            val names = login.names(gameDay.players)
-            respondFragment { suggestions(suggestions, size, gameDay, names, me.id) }
+            val view = tableView(gameDay, call.parameters, me)
+            respondFragment { suggestions(view) }
         }
     }
 }
