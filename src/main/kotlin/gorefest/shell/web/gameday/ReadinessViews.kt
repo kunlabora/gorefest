@@ -10,7 +10,7 @@ import gorefest.shell.web.CurrentPlayer
 import gorefest.shell.web.components.*
 import kotlinx.html.*
 
-data class ReadinessView(val gameDay: GameDaySummary, val readiness: Readiness, val names: Map<PlayerId, String>, val daysToGo: Long, val tasteLink: String)
+data class ReadinessView(val gameDay: GameDaySummary, val readiness: Readiness, val names: Map<PlayerId, String>, val daysToGo: Long, val tasteLink: String, val openRequests: Int = 0)
 
 context(me: CurrentPlayer)
 fun HTML.readinessPage(view: ReadinessView) {
@@ -34,6 +34,10 @@ fun HTML.readinessPage(view: ReadinessView) {
                     stat("${readiness.tasteReady}/${readiness.joined}", "taste ready")
                 }
                 readiness.gaps.lastOrNull()?.let { gap -> notice("users") { gapText(gap) } }
+                if (view.openRequests > 0) notice("dice") {
+                    strong { +"${view.openRequests.of("bring request")} waiting." }
+                    +" Somebody asked for a game and hasn't had an answer yet."
+                }
                 if (readiness.shelf == 0) notice("dice") { strong { +"The shelf is empty." }; +" Tick what you're bringing and ask the others to do the same." }
             }
         }

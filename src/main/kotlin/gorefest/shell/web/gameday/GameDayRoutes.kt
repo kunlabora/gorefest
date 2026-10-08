@@ -27,6 +27,7 @@ import gorefest.shell.web.checkpoint.checkpointLabel
 import gorefest.shell.web.components.errorNotice
 import gorefest.shell.web.components.nextStep
 import gorefest.shell.web.memberGameDay
+import gorefest.shell.web.request.ownerRequests
 import gorefest.shell.web.redirect
 import gorefest.shell.web.respondFragment
 import gorefest.shell.web.taste.TOP_UP_AFTER
@@ -57,7 +58,7 @@ fun Route.gameDayRoutes(app: App) {
             val nextDay = gameDays.firstOrNull { !it.closed }
             val next = nextDay?.let { day ->
                 val shelf = app.shelves.of(day.id).mapNotNull { entry -> app.catalog[entry.game] }
-                HomeNext(day, login.names(day.players), shelf, nextStep(app, day, me, shelf))
+                HomeNext(day, login.names(day.players), shelf, nextStep(app, day, me, shelf, login))
             }
             val (past, later) = gameDays.filter { it !== nextDay }.partition { it.closed }
             val view = HomeView(next, later, past, polls, clock.todayIn(DEFAULT_TIME_ZONE), bggLinked = app.bggAccounts.isLinked(me.id))
@@ -137,7 +138,7 @@ fun Route.gameDayRoutes(app: App) {
                 names = login.names(gameDay.players),
                 shelf = shelf,
                 played = app.plays.on(gameDay.id).mapNotNull { log -> app.catalog[log.game]?.let { it to log } },
-                next = nextStep(app, gameDay, me, shelf.map { it.first }),
+                next = nextStep(app, gameDay, me, shelf.map { it.first }, login),
                 inviteLink = inviteLink(app, gameDay),
                 logOffered = gameDay.date <= clock.todayIn(gameDay.timeZone),
             )
@@ -180,8 +181,14 @@ fun Route.gameDayRoutes(app: App) {
 
 /** The taste round until there's enough to go on. Then, before the day, top-up or favourites; on the day, the checkpoint. After: nothing. */
 context(clock: Clock)
-private suspend fun nextStep(app: App, gameDay: GameDaySummary, me: CurrentPlayer, shelf: List<gorefest.core.game.Game>): NextStep? {
+private suspend fun nextStep(app: App, gameDay: GameDaySummary, me: CurrentPlayer, shelf: List<gorefest.core.game.Game>, login: Login): NextStep? {
     if (gameDay.closed) return null
+    // Somebody waiting for an answer from me comes first.
+    val asked = ownerRequests(app, gameDay, me, login)
+    if (asked.isNotEmpty()) {
+        val askers = asked.flatMap { it.askers }.distinctBy { it.first }.map { it.second.substringBefore(' ') }
+        return NextStep.BringRequests(askers, asked.map { it.game.name })
+    }
     val onTheDay = gameDay.date <= clock.todayIn(gameDay.timeZone)
     val history = app.tastes.of(me.id)
     val answers = history.comparisons.size

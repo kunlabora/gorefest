@@ -48,6 +48,7 @@ import gorefest.shell.web.components.primaryButton
 import gorefest.shell.web.components.primaryLink
 import gorefest.shell.web.components.sectionHead
 import gorefest.shell.web.datepoll.pollCard
+import gorefest.shell.web.request.joinNames
 import gorefest.shell.web.suggestions.suggestions
 import io.ktor.http.Parameters
 import kotlinx.html.ButtonType
@@ -169,6 +170,7 @@ private fun FlowContent.nextGameDay(next: HomeNext, today: LocalDate) {
             div("gf-homeday__who") {
                 avatarStack(gameDay.players, next.names)
                 if (next.step is NextStep.TasteRound) span("gf-tag gf-tag--accent") { +"Taste round not done" }
+                if (next.step is NextStep.BringRequests) span("gf-tag gf-tag--accent") { +"Asked to bring a game" }
             }
             if (next.shelf.isNotEmpty()) div("gf-fan") {
                 // Each box tilts a little differently, like a hand of cards.
@@ -184,6 +186,8 @@ private fun FlowContent.nextGameDay(next: HomeNext, today: LocalDate) {
 
 /** What the next-step card on the hub should push. */
 sealed interface NextStep {
+    /** Somebody asked me to bring games: [askers] are the first names, [games] the games. */
+    data class BringRequests(val askers: List<String>, val games: List<String>) : NextStep
     data class Checkpoint(val label: String) : NextStep
     data object TasteRound : NextStep
     data class TopUp(val uncertain: Int) : NextStep
@@ -236,7 +240,10 @@ fun HTML.gameDayPage(hub: GameDayHub) {
             div("gf-stack gf-hub__shelf") {
                 div("gf-sechead") {
                     h2("gf-h2 gf-h2--section") { +"The shelf · ${hub.shelf.size}" }
-                    if (open) linkButton("$base/bring", "Bring games", ButtonStyle.SECONDARY, ButtonSize.SMALL, icon = "plus")
+                    if (open) div("gf-sechead__actions") {
+                        if (gameDay.players.size > 1) linkButton("$base/ask", "Ask someone", ButtonStyle.GHOST, ButtonSize.SMALL)
+                        linkButton("$base/bring", "Bring games", ButtonStyle.SECONDARY, ButtonSize.SMALL, icon = "plus")
+                    }
                 }
                 if (hub.shelf.isEmpty()) emptyState("Nothing on the shelf yet", "Tick the games you're bringing, and ask the others to do the same.")
                 else div("gf-tiles") {
@@ -294,6 +301,7 @@ fun HTML.cancelGameDayPage(gameDay: GameDaySummary, error: String? = null) =
 
 /** The button for a step: its label and where it goes. */
 private fun NextStep.action(base: String): Pair<String, String> = when (this) {
+    is NextStep.BringRequests -> "See what's asked" to "$base/bring"
     is NextStep.Checkpoint -> "Log a game" to "$base/log"
     NextStep.TasteRound -> "Tell us what you like" to "$base/taste"
     is NextStep.TopUp -> "A few quick pairs" to "$base/taste"
@@ -303,6 +311,15 @@ private fun NextStep.action(base: String): Pair<String, String> = when (this) {
 private fun FlowContent.nextStepCard(gameDay: GameDaySummary, next: NextStep) {
     val base = "/gamedays/${gameDay.id}"
     when (next) {
+        is NextStep.BringRequests -> {
+            val one = next.games.size == 1
+            nextStep(
+                "Waiting for you", if (one) "Can you bring ${next.games.single()}?" else "${next.games.size.inWords().replaceFirstChar { it.uppercase() }} games to bring?",
+                if (one) "${next.askers.joinNames()} asked you to bring it. One tap to say yes, or not this time."
+                else "${next.askers.joinNames()} asked you to bring ${next.games.joinNames()}. One tap each to say yes, or not this time.",
+                "$base/bring", "See what's asked",
+            )
+        }
         is NextStep.Checkpoint -> nextStep(next.label, "What did you play?", "Log it in 20 seconds and get fresh suggestions for the next round.", "$base/log", "Log a game")
         NextStep.TasteRound -> nextStep(
             "Your next step", "Tell us what you like",

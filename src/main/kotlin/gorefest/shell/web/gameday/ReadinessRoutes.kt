@@ -27,7 +27,7 @@ fun Route.readinessRoutes(app: App) {
             val names = login.names(gameDay.players)
             val today = app.clock.todayIn(gameDay.timeZone)
             val days = ChronoUnit.DAYS.between(today, gameDay.date)
-            val view = ReadinessView(gameDay, readiness, names, days, tasteLink = "${config.baseUrl}/gamedays/${gameDay.id}/taste")
+            val view = ReadinessView(gameDay, readiness, names, days, tasteLink = "${config.baseUrl}/gamedays/${gameDay.id}/taste", openRequests = app.bringRequests.count(gameDay.id))
             call.respondHtml { readinessPage(view) }
         }
     }

@@ -16,6 +16,8 @@ import gorefest.shell.web.message
 import gorefest.shell.web.authenticated
 import gorefest.shell.web.bgg.collection
 import gorefest.shell.web.memberGameDay
+import gorefest.shell.web.request.bringRequests
+import gorefest.shell.web.request.ownerRequests
 import gorefest.shell.web.respondFragment
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.html.respondHtml
@@ -35,7 +37,8 @@ fun Route.shelfRoutes(app: App) {
             val gameDay = memberGameDay(app, me) ?: return@authenticated call.respond(HttpStatusCode.NotFound)
             val rows = bringList(app, gameDay, me)
             val summary = summaryFor(app, gameDay, me, login)
-            call.respondHtml { bringPage(me, gameDay, rows, wishList(app, gameDay, me), app.bggAccounts.isLinked(me.id), summary) }
+            val requests = ownerRequests(app, gameDay, me, login)
+            call.respondHtml { bringPage(me, gameDay, rows, wishList(app, gameDay, me), app.bggAccounts.isLinked(me.id), summary, requests) }
         }
     }
 
@@ -87,7 +90,7 @@ fun Route.shelfRoutes(app: App) {
             val form = call.receiveParameters()
             val bringing = form["bringing"] == "true"
             val decision = app.commands.handle(BringGameDecider, BringGame(gameDay.id, me.id, game.id, bringing))
-            respondBringDecision(app, gameDay, game, me, decision, rowPrefix = form["row"] ?: "bring")
+            respondBringDecision(app, gameDay, game, me, decision, rowPrefix = form["row"] ?: "bring", login)
         }
     }
 
@@ -144,8 +147,14 @@ private fun RoutingContext.shelfTarget(app: App, me: CurrentPlayer): Pair<GameDa
 }
 
 private suspend fun RoutingContext.respondBringDecision(
-    app: App, gameDay: GameDaySummary, game: Game, me: CurrentPlayer, decision: Decision<*>, rowPrefix: String,
+    app: App, gameDay: GameDaySummary, game: Game, me: CurrentPlayer, decision: Decision<*>, rowPrefix: String, login: Login,
 ) {
+    if (rowPrefix == "request") {
+        // "Bring it" on a request: the same decision as ticking the game, answered with the requests section; the list below looks again.
+        call.response.header("HX-Trigger", BRING_LIST_CHANGED)
+        val requests = ownerRequests(app, gameDay, me, login)
+        return respondFragment(if (decision is Decision.Rejected) HttpStatusCode.Conflict else HttpStatusCode.OK) { bringRequests(gameDay, requests) }
+    }
     val row = bringRow(game, app.shelves.of(gameDay.id), me)
     val prefix = if (rowPrefix == "search") "search" else "bring"
     // A search row isn't in the list below it, so tell the list to look again.

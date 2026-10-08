@@ -13,6 +13,7 @@ import gorefest.shell.web.dev.devRoutes
 import gorefest.shell.web.gameday.gameDayRoutes
 import gorefest.shell.web.gameday.readinessRoutes
 import gorefest.shell.web.invite.inviteRoutes
+import gorefest.shell.web.request.requestRoutes
 import gorefest.shell.web.shelf.shelfRoutes
 import gorefest.shell.web.suggestions.suggestionsRoutes
 import gorefest.shell.web.taste.tasteRoutes
@@ -76,6 +77,7 @@ fun Application.web(app: App) {
         context(app.login) { bggRoutes(app) }
         context(app.login) { collectionRoutes(app) }
         context(app.login) { shelfRoutes(app) }
+        context(app.login) { requestRoutes(app) }
         context(app.login) { tasteRoutes(app) }
         context(app.login) { suggestionsRoutes(app) }
         context(app.login) { checkpointRoutes(app) }

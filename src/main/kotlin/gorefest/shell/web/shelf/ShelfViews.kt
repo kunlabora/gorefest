@@ -6,6 +6,8 @@ import gorefest.core.gameday.GameDaySummary
 import gorefest.core.gameday.MAX_WISHES
 import gorefest.shell.web.CurrentPlayer
 import gorefest.shell.web.components.*
+import gorefest.shell.web.request.OwnerRequest
+import gorefest.shell.web.request.bringRequests
 import gorefest.shell.web.urlEncoded
 import kotlinx.html.*
 
@@ -23,6 +25,7 @@ data class ShelfSummary(val total: Int, val byPlayer: List<ShelfOwner>, val mine
 
 fun HTML.bringPage(
     me: CurrentPlayer, gameDay: GameDaySummary, rows: List<BringRow>, wishes: List<WishRow>, linked: Boolean, summary: ShelfSummary,
+    requests: List<OwnerRequest> = emptyList(),
 ) = page(
     "Bring games",
     site = SiteBar(me, Nav.GAME_DAYS),
@@ -47,6 +50,7 @@ fun HTML.bringPage(
         div("gf-bring") {
             div("gf-bring__main") {
                 if (!gameDay.closed) consumer.searchResults(gameDay, emptyList(), bggUnavailable = false)
+                if (!gameDay.closed) consumer.bringRequests(gameDay, requests)
                 consumer.bringList(gameDay, rows, linked)
                 if (rows.isEmpty() && linked) emptyState("Your collection is empty", "Mark games as owned on BGG, or search for them.")
             }

@@ -1,6 +1,13 @@
 package gorefest.shell.eventstore
 
+import gorefest.core.BggId
+import gorefest.core.BringRequested
 import gorefest.core.PlayerId
+import gorefest.core.Rejection
+import gorefest.core.gameday.MAX_ASKS_PER_OWNER
+import gorefest.core.gameday.MAX_BRING_REQUESTS
+import gorefest.core.gameday.RequestBring
+import gorefest.core.gameday.RequestBringDecider
 import gorefest.core.PlayerJoined
 import gorefest.core.GameDayId
 import gorefest.core.eventsourcing.Query
@@ -108,5 +115,34 @@ class CommandHandlerTest {
 
         decisions.filter { it == Decision.Accepted(PlayerJoined(gorefest7, bram)) } shouldHaveSize 1
         db.transaction { store.readAll(after = 0) }.count { it.event is PlayerJoined } shouldBe 1
+    }
+
+    @Test
+    suspend fun `concurrent bring requests can't slip past the asker's cap`() {
+        val asker = PlayerId(Uuid.random())
+        val owners = List(8) { PlayerId(Uuid.random()) }
+        db.transaction { store.append((owners + asker).map { PlayerJoined(gorefest7, it) }) }
+
+        val decisions = coroutineScope {
+            owners.mapIndexed { i, owner -> async { commands.handle(RequestBringDecider, RequestBring(gorefest7, asker, owner, BggId(100 + i))) } }.awaitAll()
+        }
+
+        decisions.count { it is Decision.Accepted } shouldBe MAX_BRING_REQUESTS
+        decisions.filterIsInstance<Decision.Rejected>().map { it.reason }.distinct() shouldBe listOf(Rejection.TooManyBringRequests)
+        db.transaction { store.readAll(after = 0) }.count { it.event is BringRequested } shouldBe MAX_BRING_REQUESTS
+    }
+
+    @Test
+    suspend fun `concurrent bring requests can't slip past the owner's cap`() {
+        val owner = PlayerId(Uuid.random())
+        val askers = List(8) { PlayerId(Uuid.random()) }
+        db.transaction { store.append((askers + owner).map { PlayerJoined(gorefest7, it) }) }
+
+        val decisions = coroutineScope {
+            askers.mapIndexed { i, asker -> async { commands.handle(RequestBringDecider, RequestBring(gorefest7, asker, owner, BggId(100 + i))) } }.awaitAll()
+        }
+
+        decisions.count { it is Decision.Accepted } shouldBe MAX_ASKS_PER_OWNER
+        decisions.filterIsInstance<Decision.Rejected>().map { it.reason }.distinct() shouldBe listOf(Rejection.OwnerAskedEnough)
     }
 }

@@ -204,7 +204,7 @@ class ShelfRoutesTest {
         page.select(".gf-sechead h2").first()!!.text() shouldBe "The shelf · 3"
         page.select(".gf-tile").map { it.one(".gf-tile__name").text() to it.one(".gf-tile__owner").text() } shouldContainExactly
             listOf("Brass: Birmingham" to "K", "Azul" to "A", "CATAN" to "A")
-        page.one(".gf-sechead a").attr("href") shouldBe bringPage
+        page.select(".gf-sechead a").map { it.attr("href") } shouldContainExactly listOf("/gamedays/$gorefest7/ask", bringPage)
     }
 
     @Test

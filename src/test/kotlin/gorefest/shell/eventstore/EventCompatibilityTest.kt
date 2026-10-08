@@ -17,6 +17,10 @@ import gorefest.core.GameDayDetailsChanged
 import gorefest.core.GameDayCancelled
 import gorefest.core.GameDayEnded
 import gorefest.core.GameDayId
+import gorefest.core.BringRequestDeclined
+import gorefest.core.BringRequestWithdrawn
+import gorefest.core.BringRequested
+import gorefest.core.BringRequestsAllowedChanged
 import gorefest.core.GamePlayStatusDeclared
 import gorefest.core.GameUnbrought
 import gorefest.core.InviteLinkRotated
@@ -79,6 +83,14 @@ class EventCompatibilityTest {
             GameUnbrought(gameDay, player(p1), BggId(13)),
         """{"type":"PlayWishChanged","gameDay":"$d1","player":"$p1","game":13,"wantsToPlay":true}""" to
             PlayWishChanged(gameDay, player(p1), BggId(13), true),
+        """{"type":"BringRequested","gameDay":"$d1","asker":"$p1","owner":"$p2","game":13}""" to
+            BringRequested(gameDay, player(p1), player(p2), BggId(13)),
+        """{"type":"BringRequestWithdrawn","gameDay":"$d1","asker":"$p1","owner":"$p2","game":13}""" to
+            BringRequestWithdrawn(gameDay, player(p1), player(p2), BggId(13)),
+        """{"type":"BringRequestDeclined","gameDay":"$d1","owner":"$p2","game":13,"asker":"$p1"}""" to
+            BringRequestDeclined(gameDay, player(p2), BggId(13), player(p1)),
+        """{"type":"BringRequestsAllowedChanged","player":"$p1","allowed":false}""" to
+            BringRequestsAllowedChanged(player(p1), false),
         """{"type":"ComparisonRecorded","player":"$p1","a":13,"b":822,"result":"BOTH_GREAT","basis":"VIBE","at":"2026-10-03T09:00:00Z"}""" to
             ComparisonRecorded(player(p1), BggId(13), BggId(822), ComparisonResult.BOTH_GREAT, Basis.VIBE, Instant.parse("2026-10-03T09:00:00Z")),
         """{"type":"GamePlayStatusDeclared","player":"$p1","game":13,"played":false}""" to

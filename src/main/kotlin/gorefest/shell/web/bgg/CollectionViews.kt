@@ -5,12 +5,13 @@ import gorefest.shell.bgg.CollectionSyncState
 import gorefest.shell.bgg.SyncStatus
 import gorefest.shell.web.CurrentPlayer
 import gorefest.shell.web.components.*
+import gorefest.shell.web.request.bringRequestsSwitch
 import kotlinx.html.*
 
 data class CollectionView(val sync: CollectionSyncState?, val games: List<Game>)
 
 /** [onward] is where the player was going before linking BGG (bringing games, say): it gets the page's one brand button. */
-fun HTML.collectionPage(view: CollectionView, me: CurrentPlayer, onward: String? = null) = page("Your collection", site = SiteBar(me, Nav.COLLECTION)) {
+fun HTML.collectionPage(view: CollectionView, me: CurrentPlayer, bringRequestsAllowed: Boolean, onward: String? = null) = page("Your collection", site = SiteBar(me, Nav.COLLECTION)) {
     wrap("gf-collection") {
         p("gf-kicker") { +"BoardGameGeek" }
         h1("gf-h1 gf-h1--landing") { +"Your collection" }
@@ -18,6 +19,7 @@ fun HTML.collectionPage(view: CollectionView, me: CurrentPlayer, onward: String?
             linkButton(onward, onwardLabel(onward), ButtonStyle.PRIMARY, ButtonSize.LARGE)
             p("gf-small gf-muted") { +"Your games are on their way from BGG; you can carry on while they load." }
         }
+        consumer.bringRequestsSwitch(bringRequestsAllowed)
         consumer.collection(view)
     }
 }
