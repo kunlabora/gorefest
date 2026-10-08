@@ -5,8 +5,19 @@ import gorefest.shell.web.urlEncoded
 import kotlinx.html.*
 import kotlin.uuid.Uuid
 
-private fun HTML.authPage(title: String, dock: DIV.() -> Unit, head: HEAD.() -> Unit = {}, content: MAIN.() -> Unit) =
-    page(title, appBar = { wordmark() }, dock = dock, head = head) { content() }
+/** The login's hero for the follow-up steps: wordmark bar, kicker, big heading, then the page's own copy; an optional [aside] sits beside it on desktop. */
+private fun HTML.authHero(
+    title: String, kicker: String, heading: String, aside: (FlowContent.() -> Unit)? = null, copy: FlowContent.() -> Unit,
+) = page(title, appBar = { wordmark() }, mainClasses = "gf-landing", wide = true) {
+    div("gf-hero-band") {
+        div("gf-hero-band__copy") {
+            p("gf-kicker") { +kicker }
+            h1("gf-h1 gf-h1--landing") { +heading }
+            copy()
+        }
+        aside?.invoke(this)
+    }
+}
 
 private const val TAGLINE = "Gorefest helps your group pick the board games you'll enjoy most on a game day."
 
@@ -17,11 +28,6 @@ private fun HEAD.sitePreview() {
     openGraph("og:title", "Gorefest: pick board games for your game day")
     openGraph("og:description", "$TAGLINE Everyone answers a few A-or-B questions, then it suggests what suits the whole table.")
     openGraph("og:type", "website")
-}
-
-private fun FlowContent.intro(heading: String, text: P.() -> Unit) = div("gf-stack") {
-    h1("gf-h1") { +heading }
-    p("gf-muted") { text() }
 }
 
 private val steps = listOf(
@@ -105,8 +111,8 @@ fun HTML.emailPage(returnTo: String) {
 }
 
 fun HTML.codePage(attempt: Uuid, email: String, returnTo: String, dev: Boolean) =
-    authPage("Check your mail", dock = { primaryButton("Let me in", form = "code-form") }) {
-        intro("Check your mail") { +"We sent a code to "; strong { +email }; +". Type it here, or tap the link in the mail." }
+    authHero("Check your mail", "Step 2 of 2", "Check your mail", aside = { mailCard() }) {
+        p("gf-lede gf-muted") { +"We sent a code to "; strong("gf-ink") { +email }; +". Type it here, or tap the link in the mail." }
         if (dev) notice("mail") {
             +"Dev mode: mail isn't sent. "
             a("/dev/mailbox", classes = "gf-link") { attributes["target"] = "_blank"; +"Open the dev mailbox" }
@@ -115,20 +121,32 @@ fun HTML.codePage(attempt: Uuid, email: String, returnTo: String, dev: Boolean) 
         resendLinks(email, returnTo)
     }
 
-fun HTML.confirmLinkPage(email: String, token: String) = authPage("Log in", dock = { primaryButton("Let me in", form = "link-form") }) {
-    intro("Almost in") { +"Tap below to log in as "; strong { +email }; +"." }
-    form(action = "/login/link", method = FormMethod.post) {
+/** What the mail looks like, so people know what to look for in their inbox. Decoration, desktop only. */
+private fun FlowContent.mailCard() = div("gf-mailcard") {
+    attributes["aria-hidden"] = "true"
+    p("gf-kicker") { +"Inbox · just now" }
+    h3("gf-mailcard__subject") { +"Your Gorefest code: 482913" }
+    p("gf-mailcard__code") { +"482913" }
+    p("gf-muted gf-small") { +"Type it in the app, or tap the button. It works once, for 15 minutes." }
+    span("gf-mailcard__link") { +"Log me in" }
+}
+
+fun HTML.confirmLinkPage(email: String, token: String) = authHero("Log in", "Signing in", "Almost in") {
+    p("gf-lede gf-muted") { +"Tap below to log in as "; strong("gf-ink") { +email }; +"." }
+    form(action = "/login/link", method = FormMethod.post, classes = "gf-signin") {
         id = "link-form"
         hiddenInput("token", token)
+        button(type = ButtonType.submit, classes = buttonClasses(ButtonStyle.PRIMARY, ButtonSize.LARGE)) { spinner(); +"Let me in" }
     }
 }
 
-fun HTML.deadLinkPage() = authPage("Link expired", dock = { primaryLink("/login", "Send me a new code") }) {
-    intro("This link has expired") { +"Login links work once, for 15 minutes. Ask for a fresh one and you're in." }
+fun HTML.deadLinkPage() = authHero("Link expired", "Sign in", "This link has expired") {
+    p("gf-lede gf-muted") { +"Login links work once, for 15 minutes. Ask for a fresh one and you're in." }
+    div("gf-signin") { linkButton("/login", "Send me a new code", ButtonStyle.PRIMARY, ButtonSize.LARGE) }
 }
 
-fun HTML.welcomePage(returnTo: String, name: String) = authPage("Welcome", dock = { primaryButton("That's me", form = "name-form") }) {
-    intro("What should we call you?") { +"Your friends see this on game days." }
+fun HTML.welcomePage(returnTo: String, name: String) = authHero("Welcome", "Welcome to Gorefest", "What should we call you?") {
+    p("gf-lede gf-muted") { +"Your friends see this on game days." }
     consumer.nameForm(returnTo, name)
 }
 
@@ -171,40 +189,47 @@ fun TagConsumer<*>.emailForm(returnTo: String, email: String = "", error: String
         p("gf-hint") { +"We'll email a sign-in link and a 6-digit code. No password." }
     }
 
-fun TagConsumer<*>.codeForm(attempt: Uuid, error: String? = null) = singleFieldForm("code-form", "/login/code") {
+/** The big code field with the button directly under it; htmx re-renders the form in place when the server rejects the code. */
+fun TagConsumer<*>.codeForm(attempt: Uuid, error: String? = null) = singleFieldForm("code-form", "/login/code", "Let me in", error) {
     hiddenInput("attempt", attempt.toString())
-    field("code", "6-digit code", hint = "Opened this from WhatsApp or Signal? The code is the quicker route.", error = error) {
-        input(InputType.text, name = "code", classes = "gf-input gf-code") {
-            id = "code"
-            required = true
-            maxLength = "6"
-            placeholder = "······"
-            attributes["inputmode"] = "numeric"
-            attributes["autocomplete"] = "one-time-code"
-            if (error != null) attributes["aria-invalid"] = "true"
-        }
+    label("gf-label") { htmlFor = "code"; +"6-digit code" }
+    input(InputType.text, name = "code", classes = "gf-input gf-code") {
+        id = "code"
+        required = true
+        maxLength = "6"
+        placeholder = "······"
+        attributes["inputmode"] = "numeric"
+        attributes["autocomplete"] = "one-time-code"
+        if (error != null) attributes["aria-invalid"] = "true"
     }
+    if (error != null) fieldError(error)
+    p("gf-hint") { +"Opened this from WhatsApp or Signal? The code is the quicker route." }
 }
 
-fun TagConsumer<*>.nameForm(returnTo: String, name: String, error: String? = null) = singleFieldForm("name-form", "/welcome") {
+fun TagConsumer<*>.nameForm(returnTo: String, name: String, error: String? = null) = singleFieldForm("name-form", "/welcome", "That's me", error, inline = true) {
     hiddenInput("returnTo", returnTo)
-    field("name", "Name", error = error) {
-        input(InputType.text, name = "name", classes = "gf-input") {
-            id = "name"
-            required = true
-            value = name
-            placeholder = "Kim"
-            attributes["autocomplete"] = "given-name"
-            if (error != null) attributes["aria-invalid"] = "true"
-        }
+    label("gf-label") { htmlFor = "name"; +"Name" }
+    input(InputType.text, name = "name", classes = "gf-input") {
+        id = "name"
+        required = true
+        value = name
+        placeholder = "Kim"
+        attributes["autocomplete"] = "given-name"
+        if (error != null) attributes["aria-invalid"] = "true"
     }
+    if (error != null) fieldError(error)
 }
 
-/** A form that htmx re-renders in place when the server rejects the input. Its submit button sits in the dock. */
-private fun TagConsumer<*>.singleFieldForm(formId: String, action: String, content: FORM.() -> Unit) =
-    form(action = action, method = FormMethod.post, classes = "gf-section") {
-        id = formId
-        hx("post", action)
-        hx("swap", "outerHTML")
-        content()
-    }
+/**
+ * A one-field form in the login's layout: label, field, error, then the button (beside the field when [inline], under it otherwise).
+ * htmx re-renders it in place when the server rejects the input. [content] holds the hidden inputs, the label, the input and the hint.
+ */
+private fun TagConsumer<*>.singleFieldForm(
+    formId: String, action: String, button: String, error: String?, inline: Boolean = false, content: FORM.() -> Unit,
+) = form(action = action, method = FormMethod.post, classes = listOfNotNull("gf-signin", if (inline) "gf-signin--inline" else "gf-signin--stacked", "gf-field--invalid".takeIf { error != null }).joinToString(" ")) {
+    id = formId
+    hx("post", action)
+    hx("swap", "outerHTML")
+    content()
+    button(type = ButtonType.submit, classes = buttonClasses(ButtonStyle.PRIMARY, ButtonSize.LARGE)) { spinner(); +button }
+}

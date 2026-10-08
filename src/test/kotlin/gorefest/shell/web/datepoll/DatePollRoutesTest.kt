@@ -109,7 +109,11 @@ class DatePollRoutesTest {
         page.select("#answer-form input[name=dates]").map { it.`val`() } shouldContainExactly listOf("2026-10-09", "2026-10-10", "2026-10-11")
         page.one("#answer-form").attr("hx-post") shouldBe "$pollPage/answer"
         page.one("#answer-form").attr("hx-target") shouldBe "#poll-results"
-        page.select("#poll-results li") shouldHaveSize 3
+        page.select("#poll-results .gf-opt") shouldHaveSize 3
+        page.select(".gf-opt--best") shouldHaveSize 0 // nobody has answered yet
+        page.select(".gf-opt .gf-meter i") shouldHaveSize 6 // one segment per participant, per date
+        page.one(".gf-kicker").text() shouldBe "Finding a date · 0 of 2 answered"
+        page.one("header .gf-nav a[aria-current=page]").text() shouldBe "Game days"
         page.select("#poll-results button[hx-post]") shouldHaveSize 0 // only the host picks
         page.one(".gf-copy__value").text() shouldBe "http://localhost:8080/p/${token()}"
     }
@@ -156,10 +160,11 @@ class DatePollRoutesTest {
         val results = client.htmxPost("$pollPage/answer", parameters { append("dates", sat.toString()); append("dates", fri.toString()) }).fragment()
 
         results shouldReplace "poll-results"
-        results.select(".gf-row").map { it.one(".gf-row__title").text() to it.one(".gf-row__sub").ownText() } shouldContainExactly
-            listOf("Fri 9 Oct" to "1 can", "Sat 10 Oct" to "2 can", "Sun 11 Oct" to "1 can")
-        results.one(".gf-tag--brand").text() shouldBe "Best so far"
-        results.select(".gf-row").first { it.select(".gf-tag--brand").isNotEmpty() }.one(".gf-row__title").text() shouldBe "Sat 10 Oct"
+        results.select(".gf-opt").map { it.one(".gf-opt__title").text() to it.one(".gf-who > span:last-child").text() } shouldContainExactly
+            listOf("Friday 9 October" to "1 can · Anna can't", "Saturday 10 October" to "2 can", "Sunday 11 October" to "1 can · Bram can't")
+        results.one(".gf-tag--brand").text() shouldBe "Most can come"
+        results.one(".gf-opt--best .gf-opt__title").text() shouldBe "Saturday 10 October"
+        results.select(".gf-opt--best .gf-meter i.is-yes") shouldHaveSize 2
         app.datePolls.of(poll)!!.answers[bramId] shouldBe setOf(fri, sat)
     }
 
@@ -184,6 +189,9 @@ class DatePollRoutesTest {
         page.select("#poll-results button[hx-post]").map { it.attr("hx-vals") } shouldContainExactly
             listOf("""{"date": "2026-10-09"}""", """{"date": "2026-10-10"}""", """{"date": "2026-10-11"}""")
         page.select("#poll-results button[hx-post]").first()!!.attr("hx-confirm") shouldContain "game day is created"
+        // The best date wears the brand: its button is the only primary one on the page.
+        page.select("#poll-results .gf-btn--primary").size shouldBe 1
+        page.one(".gf-opt--best button").text() shouldBe "Pick this date"
     }
 
     @Test
@@ -274,7 +282,7 @@ class DatePollRoutesTest {
             val results = client.get(pollPage).page().one("#poll-results")
 
             results.one(".gf-tag--olive").text() shouldBe "Picked"
-            results.select(".gf-row").first { it.select(".gf-tag--olive").isNotEmpty() }.one(".gf-row__title").text() shouldBe "Sun 11 Oct"
+            results.one(".gf-tag--olive").parent()!!.one(".gf-opt__title").text() shouldBe "Sunday 11 October"
             results.select("button[hx-post]") shouldHaveSize 0
             client.get("/").page().select("a.gf-daycard[href=$pollPage]") shouldHaveSize 0
         }
