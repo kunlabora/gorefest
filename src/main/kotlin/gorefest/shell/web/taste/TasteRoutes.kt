@@ -70,7 +70,7 @@ fun Route.tasteRoutes(app: App) {
             val pair = (if (topUpRound) app.topUpWizard.stalePair(inputs.player, app.catalog::get, now) else null)
                 ?: app.wizardFor(topUpRound).next(inputs.pool, inputs.anchors, inputs.player, round, now, inputs.focus(topUpRound, now))
                 ?: return@authenticated redirect("/gamedays/${gameDay.id}/favourites")
-            call.respondHtml { wizardPage(WizardStep(gameDay, pair, round, app.wizardFor(topUpRound).roundLength, topUpRound)) }
+            call.respondHtml { wizardPage(me, WizardStep(gameDay, pair, round, app.wizardFor(topUpRound).roundLength, topUpRound)) }
         }
     }
 
@@ -119,7 +119,7 @@ fun Route.tasteRoutes(app: App) {
                 app.predictor.favourites(inputs.player, hosts, now, count = 2)
             } else emptyList()
             val hostName = login.names(listOf(gameDay.host))[gameDay.host] ?: "the host"
-            call.respondHtml { favouritesPage(Payoff(gameDay, answers, inputs.shelf.isEmpty(), favourites, hostName, hostFavourites)) }
+            call.respondHtml { favouritesPage(me, Payoff(gameDay, answers, inputs.shelf.isEmpty(), favourites, hostName, hostFavourites)) }
         }
     }
 }

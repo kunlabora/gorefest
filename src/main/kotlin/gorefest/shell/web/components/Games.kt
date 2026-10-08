@@ -186,11 +186,11 @@ fun FlowContent.duelUnplayed() = div("gf-unplayed") {
     }
 }
 
-/** The three answers under a duel: [firstLabel] says "haven't played" (it covers both games), then both meh and both great. */
-fun FlowContent.duelAnswers(firstLabel: String = "Haven't played") = div("gf-answers") {
+/** The three answers under a duel: [firstLabel] says "haven't played" (it covers both games), then both meh and both great. With [keyIds], "both meh" and "both great" get ids `answer-meh` / `answer-great` for the 2 and 1 keys. */
+fun FlowContent.duelAnswers(firstLabel: String = "Haven't played", keyIds: Boolean = false) = div("gf-answers") {
     answer("UNPLAYED", firstLabel, "unplayed")
-    answer("BOTH_MEH", "Both meh", "meh")
-    answer("BOTH_GREAT", "Both great", "star", great = true)
+    answer("BOTH_MEH", "Both meh", "meh", id = if (keyIds) "answer-meh" else null)
+    answer("BOTH_GREAT", "Both great", "star", great = true, id = if (keyIds) "answer-great" else null)
 }
 
 private fun FlowContent.pick(game: Game, key: String, keyId: Boolean) = button(type = ButtonType.submit, classes = "gf-pick") {
@@ -205,8 +205,9 @@ private fun FlowContent.pick(game: Game, key: String, keyId: Boolean) = button(t
     spinner()
 }
 
-private fun FlowContent.answer(value: String, label: String, iconName: String, great: Boolean = false) =
+private fun FlowContent.answer(value: String, label: String, iconName: String, great: Boolean = false, id: String? = null) =
     button(type = ButtonType.submit, classes = if (great) "gf-answer gf-answer--great" else "gf-answer") {
+        if (id != null) this.id = id
         name = "answer"
         this.value = value
         icon(iconName)

@@ -85,7 +85,21 @@ class TasteRoutesTest {
         wizard.text() shouldNotContain "Don't know"
         wizard.one("form").attr("hx-target") shouldBe "#wizard"
         wizard.one(".gf-progress__count").text() shouldBe "1 / 15"
-        page.one(".gf-appbar a").attr("href") shouldBe "/gamedays/$gorefest7/favourites"
+        page.one(".gf-appbar__actions a.gf-btn").attr("href") shouldBe "/gamedays/$gorefest7/favourites"
+        page.one(".gf-nav a[aria-current]").text() shouldBe "Game days"
+    }
+
+    @Test
+    fun `the question and the pair sit in a split, with key hints and ids for the 1 and 2 keys`() = test.webTest(session = kim) { client ->
+        val wizard = client.get(taste).page().one("main#wizard")
+
+        wizard.select(".gf-split > .gf-wiz__copy h1") shouldHaveSize 1
+        wizard.select(".gf-split > form.gf-wizard__form .gf-duel") shouldHaveSize 1
+        wizard.select(".gf-wiz__keys kbd").map { it.text() } shouldBe listOf("A", "B", "1", "2")
+        wizard.one("#answer-great").attr("value") shouldBe "BOTH_GREAT"
+        wizard.one("#answer-meh").attr("value") shouldBe "BOTH_MEH"
+        wizard.one("form").attr("_") shouldContain "#answer-great.click()"
+        wizard.one("form").attr("_") shouldContain "#answer-meh.click()"
     }
 
     @Test
@@ -165,9 +179,14 @@ class TasteRoutesTest {
         val payoff = client.get(redirect!!).page()
         payoff.one("h1").text() shouldBe "Your likely favourites today"
         payoff.select(".gf-podium li") shouldHaveSize 3
-        // The rank pills sit inside their cards (the cards are positioned and isolated), so the dock can't be overlapped by them.
-        payoff.select(".gf-podium li > .gf-game > .gf-game__rank") shouldHaveSize 3
-        payoff.select(".gf-game__reason").forEach { (it.text().startsWith("You picked it over") || it.text() == "Just a guess so far: it hasn't won a pair yet.") shouldBe true }
+        // The rank pills sit inside their cards, which are positioned, so nothing can overlap the bottom of the page.
+        payoff.select(".gf-podium li.gf-sample > .gf-game__rank").map { it.text() } shouldBe listOf("1", "2", "3")
+        payoff.select(".gf-podium li .gf-art") shouldHaveSize 3
+        payoff.select(".gf-dock") shouldHaveSize 0
+        payoff.one(".gf-pay__cta a.gf-btn--primary").attr("href") shouldBe "/gamedays/$gorefest7"
+        payoff.one(".gf-pay__cta a.gf-btn--ghost").attr("href") shouldBe "/gamedays/$gorefest7/taste"
+        payoff.one(".gf-lede").text() shouldStartWith "Based on how you picked"
+        payoff.select(".gf-fav__reason").forEach { (it.text().startsWith("You picked it over") || it.text() == "Just a guess so far: it hasn't won a pair yet.") shouldBe true }
         payoff.one(".gf-kicker").text() shouldStartWith "Round done ·"
     }
 
