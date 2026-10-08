@@ -1,0 +1,557 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Gorefest Login Redesign</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600..800&display=swap">
+<style>
+/* Layout: a review document. Each design renders live inside a scaled device frame (desktop 1280 / phone 390),
+   built from Gorefest's own tokens (tokens.css) so the comparison is like for like. */
+:root {
+  --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-5: 24px; --space-6: 32px; --space-7: 48px;
+  --radius-sm: 6px; --radius-md: 12px; --radius-lg: 20px; --radius-pill: 999px;
+  --font-display: "Bricolage Grotesque", ui-rounded, system-ui, sans-serif;
+  --font-sans: "Atkinson Hyperlegible Next", "Atkinson Hyperlegible", system-ui, sans-serif;
+
+  --light-yellow: #fffbdb;
+  --surface: #fffbdb; --surface-raised: #fffef3; --surface-sunk: #f3edc4;
+  --ink: #30362f; --ink-muted: #625834; --placeholder: #7d7352;
+  --line: #e6dcaa; --line-strong: #857a55;
+  --brand: #da7422; --on-brand: #1e2119; --brand-ink: #9a4d12; --brand-soft: #f9dfc2;
+  --accent: #a59132; --accent-soft: #efe4a8;
+  --olive: #625834; --on-olive: #fffbdb; --olive-soft: #e9e3c3;
+  --danger: #b3261e; --danger-soft: #f8d9d2;
+  --good: #3f6b2f;
+  --shadow-edge: 0 3px 0 #e6dcaa;
+  --shadow-brand-edge: 0 3px 0 #9a4d12;
+  --shadow-lift: 0 10px 24px rgba(48,54,47,0.16);
+  --page: #f3edc4;
+  --frame: #30362f; --frame-ink: #c9c19a;
+  --annot: #c42b6a; --on-annot: #ffffff;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --surface: #1c201b; --surface-raised: #30362f; --surface-sunk: #141713;
+    --ink: #fffbdb; --ink-muted: #c9c19a; --placeholder: #a8a58e;
+    --line: #434a41; --line-strong: #8a9387;
+    --brand-ink: #f0a060; --brand-soft: #4a2c12; --accent-soft: #3a3517;
+    --olive: #c4b877; --on-olive: #1c201b; --olive-soft: #34331f;
+    --danger: #ff8a7a; --danger-soft: #4a1d18; --good: #a9cf8f;
+    --shadow-edge: 0 3px 0 #0e100d; --shadow-brand-edge: 0 3px 0 #8a4410; --shadow-lift: 0 10px 24px rgba(0,0,0,0.5);
+    --page: #111410; --frame: #000000; --frame-ink: #8a9387;
+    --annot: #ff6fa8; --on-annot: #1c0a12;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --surface: #1c201b; --surface-raised: #30362f; --surface-sunk: #141713;
+  --ink: #fffbdb; --ink-muted: #c9c19a; --placeholder: #a8a58e;
+  --line: #434a41; --line-strong: #8a9387;
+  --brand-ink: #f0a060; --brand-soft: #4a2c12; --accent-soft: #3a3517;
+  --olive: #c4b877; --on-olive: #1c201b; --olive-soft: #34331f;
+  --danger: #ff8a7a; --danger-soft: #4a1d18; --good: #a9cf8f;
+  --shadow-edge: 0 3px 0 #0e100d; --shadow-brand-edge: 0 3px 0 #8a4410; --shadow-lift: 0 10px 24px rgba(0,0,0,0.5);
+  --page: #111410; --frame: #000000; --frame-ink: #8a9387;
+  --annot: #ff6fa8; --on-annot: #1c0a12;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+body { background: var(--page); color: var(--ink); font: 400 16px/1.55 var(--font-sans); padding-inline: 16px; padding-block: 0 64px; }
+:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
+h1, h2, h3, p, ol, ul { margin: 0; }
+
+/* ---------- Review document ---------- */
+.doc { max-width: 1180px; margin-inline: auto; display: flex; flex-direction: column; gap: 72px; }
+.intro { padding-top: 48px; display: grid; gap: 16px; max-width: 70ch; }
+.eyebrow { font: 700 12px/16px var(--font-sans); letter-spacing: .1em; text-transform: uppercase; color: var(--brand-ink); }
+.intro h1 { font: 800 clamp(34px, 5vw, 52px)/1.02 var(--font-display); letter-spacing: -.025em; text-wrap: balance; }
+.intro p { font-size: 18px; color: var(--ink-muted); }
+.intro code, .flaw code, .notes code { font: 600 .88em/1 ui-monospace, "SF Mono", Menlo, monospace; background: var(--surface-raised); border: 1px solid var(--line); border-radius: 4px; padding: 1px 4px; color: var(--ink); }
+
+.toolbar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 10; margin-inline: -16px; padding: 10px 16px; background: color-mix(in srgb, var(--page) 88%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+.toolbar__in { max-width: 1180px; margin-inline: auto; display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; }
+.seg { display: inline-flex; padding: 3px; border-radius: var(--radius-pill); background: var(--surface-raised); border: 1.5px solid var(--line-strong); }
+.seg button { appearance: none; border: 0; background: none; color: var(--ink); font: 700 14px/1 var(--font-sans); padding: 9px 14px; border-radius: var(--radius-pill); cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--surface); }
+.jump { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 14px; }
+.jump a { color: var(--ink-muted); font-weight: 700; text-decoration: none; }
+.jump a:hover { color: var(--brand-ink); text-decoration: underline; }
+
+.design { display: flex; flex-direction: column; gap: 24px; scroll-margin-top: 72px; }
+.design__head { display: grid; gap: 20px; }
+@media (min-width: 900px) { .design__head { grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 48px; align-items: start; } }
+.design__title { display: grid; gap: 8px; }
+.design__title h2 { font: 800 32px/1.05 var(--font-display); letter-spacing: -.02em; text-wrap: balance; }
+.design__title p { color: var(--ink-muted); max-width: 52ch; }
+.tag { justify-self: start; font: 700 12px/1 var(--font-sans); letter-spacing: .06em; text-transform: uppercase; padding: 6px 10px; border-radius: var(--radius-pill); background: var(--olive-soft); color: var(--ink); }
+.tag--now { background: var(--danger-soft); }
+.notes { display: grid; gap: 10px; padding: 0; list-style: none; }
+.notes li { position: relative; padding-left: 22px; min-width: 0; }
+.notes li::before { content: ""; position: absolute; left: 4px; top: .62em; width: 8px; height: 8px; border-radius: 2px; background: var(--brand); transform: rotate(45deg); }
+.notes strong { font-weight: 700; }
+
+/* Flaw list under the current design */
+.flaws { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); counter-reset: none; }
+.flaw { display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 4px 12px; padding: 16px; background: var(--surface); border: 1.5px solid var(--line); border-radius: var(--radius-md); }
+.flaw .n { grid-row: span 3; }
+.flaw h3 { font: 700 17px/1.3 var(--font-sans); }
+.flaw p { font-size: 15px; color: var(--ink-muted); }
+.flaw .fix { color: var(--ink); }
+.flaw .fix b { color: var(--good); }
+.n { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--annot); color: var(--on-annot); font: 800 13px/1 var(--font-display); font-variant-numeric: tabular-nums; }
+
+.verdict { display: grid; gap: 12px; padding: 28px; border-radius: var(--radius-lg); background: var(--surface); border: 2px solid var(--line); max-width: 860px; }
+.verdict h2 { font: 800 26px/1.1 var(--font-display); }
+.verdict p { color: var(--ink-muted); }
+.verdict p strong { color: var(--ink); }
+
+/* ---------- Device frames ---------- */
+.viewport { position: relative; width: 100%; }
+.device { position: absolute; top: 0; left: 0; transform-origin: top left; background: var(--frame); border-radius: 12px; overflow: hidden; box-shadow: var(--shadow-lift); --w: 1280px; --vh: 780px; width: var(--w); }
+[data-mode="phone"] .device { --w: 406px; --vh: 812px; border-radius: 36px; padding: 8px; }
+.chrome { display: flex; align-items: center; gap: 8px; height: 34px; padding: 0 14px; color: var(--frame-ink); font: 400 12px/1 var(--font-sans); }
+.chrome i { width: 10px; height: 10px; border-radius: 50%; background: currentColor; opacity: .45; }
+.chrome span { margin-left: 14px; padding: 5px 12px; border-radius: 6px; background: color-mix(in srgb, var(--frame-ink) 14%, transparent); }
+[data-mode="phone"] .chrome { display: none; }
+[data-mode="phone"] .m { border-radius: 28px; overflow: hidden; }
+
+/* ---------- Shared mockup primitives (scoped to .m) ---------- */
+.m { container-type: inline-size; min-height: var(--vh); display: flex; flex-direction: column; background: var(--surface); color: var(--ink); font: 400 16px/24px var(--font-sans); text-align: left; }
+.m button, .m input { font: inherit; }
+.m .btn { appearance: none; display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 0 24px; border: 2px solid transparent; border-radius: var(--radius-md); font: 700 16px/20px var(--font-sans); cursor: pointer; white-space: nowrap; }
+.m .btn--primary { background: var(--brand); color: var(--on-brand); box-shadow: var(--shadow-brand-edge); }
+.m .btn--lg { min-height: 56px; font-size: 18px; border-radius: var(--radius-lg); }
+.m .btn--block { width: 100%; }
+.m .iconbtn { appearance: none; width: 44px; height: 44px; display: inline-grid; place-items: center; border: 0; border-radius: 50%; background: transparent; color: var(--ink); cursor: pointer; }
+.m .icon { width: 22px; height: 22px; }
+.m .field { display: flex; flex-direction: column; gap: 6px; }
+.m label { font: 700 15px/20px var(--font-sans); }
+.m .input { width: 100%; min-width: 0; min-height: 52px; padding: 0 16px; border: 2px solid var(--line-strong); border-radius: var(--radius-md); background: var(--surface-raised); color: var(--ink); font: 400 17px/24px var(--font-sans); }
+.m .input::placeholder { color: var(--placeholder); }
+.m .muted { color: var(--ink-muted); }
+.m .small { font-size: 14px; line-height: 20px; }
+.m .kicker { font: 700 12px/16px var(--font-sans); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-muted); }
+.m .wordmark { display: inline-flex; align-items: center; gap: 10px; font: 800 21px/1 var(--font-display); letter-spacing: -.02em; color: var(--ink); }
+.m .logo { width: 30px; height: 30px; flex: none; }
+.m .logo rect { fill: var(--brand); }
+.m .logo circle { fill: var(--on-brand); }
+.m .bgg { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: var(--radius-sm); background: var(--light-yellow); color: #3f3a8a; font: 800 12px/1 var(--font-display); letter-spacing: .02em; border: 1px solid #d9d2a6; }
+.m .bgg b { color: #ff5100; }
+.m .ver { font-size: 12px; color: var(--ink-muted); }
+.m .num { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: var(--ink); color: var(--surface); font: 800 15px/1 var(--font-display); flex: none; }
+
+/* Annotation pins (current design only) */
+.an { position: relative; }
+.pin { position: absolute; top: -4px; left: -44px; z-index: 3; display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--annot); color: var(--on-annot); font: 800 14px/1 var(--font-display); box-shadow: 0 0 0 3px var(--surface); }
+.pin--right { left: auto; right: -44px; }
+@container (max-width: 719px) {
+  .pin { left: auto; right: -8px; top: -12px; }
+  .pin--right { right: -8px; }
+  .pin--desk { display: none; }
+}
+
+/* ---------- Current design (faithful copy of gorefest.css) ---------- */
+.cur-screen { flex: 1; display: flex; flex-direction: column; width: 100%; }
+@container (min-width: 720px) { .cur-screen { max-width: 480px; margin-inline: auto; } }
+.cur .appbar { display: flex; align-items: center; gap: 8px; min-height: 56px; padding: 8px 8px 8px 16px; }
+.cur .appbar__title { flex: 1; font: 700 15px/20px var(--font-sans); color: var(--ink-muted); }
+.cur .body { flex: 1; display: flex; flex-direction: column; gap: 24px; padding: 8px 16px 24px; }
+.cur .section { display: flex; flex-direction: column; gap: 12px; }
+.cur .stack { display: flex; flex-direction: column; gap: 8px; }
+.cur .lede { font: 400 17px/24px var(--font-sans); }
+.cur .h1 { font: 800 30px/32px var(--font-display); letter-spacing: -.02em; }
+.cur .steps { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 16px; counter-reset: s; }
+.cur .steps > li { position: relative; padding-left: 44px; counter-increment: s; }
+.cur .steps > li::before { content: counter(s); position: absolute; left: 0; top: -2px; display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: var(--ink); color: var(--surface); font: 800 15px/1 var(--font-display); }
+.cur .dock { display: flex; flex-direction: column; padding: 12px 16px 16px; background: var(--surface); border-top: 1px solid var(--line); }
+.cur .footer { padding: 16px 16px 24px; display: flex; flex-direction: column; align-items: center; gap: 8px; font-size: 13px; color: var(--ink-muted); }
+
+/* ---------- A: Form first ---------- */
+.alt-a .bar__in { max-width: 1040px; margin-inline: auto; display: flex; align-items: center; justify-content: space-between; padding: 12px 8px 12px 16px; }
+.alt-a main { flex: 1; width: 100%; max-width: 1040px; margin-inline: auto; padding: 8px 16px 32px; display: flex; flex-direction: column; gap: 40px; }
+.alt-a .card { display: flex; flex-direction: column; gap: 10px; }
+.alt-a .card h1 { font: 800 32px/34px var(--font-display); letter-spacing: -.02em; }
+.alt-a form { display: flex; flex-direction: column; gap: 14px; margin-top: 14px; }
+.alt-a .how { display: flex; flex-direction: column; gap: 18px; padding-top: 28px; border-top: 1px solid var(--line); }
+.alt-a .how h2 { font: 700 22px/26px var(--font-display); }
+.alt-a .steps { list-style: none; padding: 0; display: grid; gap: 18px; }
+.alt-a .steps li { display: grid; grid-template-columns: 32px minmax(0, 1fr); gap: 2px 14px; }
+.alt-a .steps .num { grid-row: span 2; }
+.alt-a .steps h3 { font: 700 17px/24px var(--font-sans); }
+.alt-a footer { display: flex; align-items: center; justify-content: center; gap: 16px; padding: 16px 16px 24px; }
+@container (min-width: 720px) {
+  .alt-a main { padding: 24px 32px 40px; gap: 48px; }
+  .alt-a .card { width: 460px; align-self: center; padding: 36px; background: var(--surface-raised); border: 2px solid var(--line); border-radius: var(--radius-lg); box-shadow: var(--shadow-edge); }
+  .alt-a .how { border-top: 0; padding-top: 0; }
+  .alt-a .how h2 { text-align: center; }
+  .alt-a .steps { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 32px; }
+  .alt-a footer { max-width: 1040px; width: 100%; margin-inline: auto; justify-content: space-between; padding: 16px 32px 24px; border-top: 1px solid var(--line); }
+}
+
+/* ---------- B: Split ---------- */
+.alt-b .mbar { display: flex; align-items: center; justify-content: space-between; padding: 12px 8px 12px 16px; }
+.alt-b .grid { flex: 1; display: flex; flex-direction: column; }
+.alt-b .formcol { display: flex; flex-direction: column; padding: 8px 16px 32px; }
+.alt-b .formcol__top { display: none; }
+.alt-b .form { display: flex; flex-direction: column; gap: 12px; width: 100%; }
+.alt-b .form h1 { font: 800 30px/32px var(--font-display); letter-spacing: -.02em; }
+.alt-b form { display: flex; flex-direction: column; gap: 14px; margin-top: 12px; }
+.alt-b .formcol footer { display: none; }
+.alt-b .pitch { background: var(--surface-sunk); padding: 32px 16px 28px; display: flex; flex-direction: column; gap: 22px; }
+.alt-b .pitch .wordmark { display: none; }
+.alt-b .hero { font: 800 28px/30px var(--font-display); letter-spacing: -.025em; text-wrap: balance; }
+.alt-b .pitch .lede { color: var(--ink-muted); }
+.alt-b .tl { list-style: none; padding: 0; display: flex; flex-direction: column; }
+.alt-b .tl li { position: relative; padding: 0 0 22px 50px; }
+.alt-b .tl li:last-child { padding-bottom: 0; }
+.alt-b .tl .num { position: absolute; left: 0; top: -4px; background: var(--brand); color: var(--on-brand); }
+.alt-b .tl li:not(:last-child)::after { content: ""; position: absolute; left: 15px; top: 32px; bottom: 0; border-left: 2px dashed var(--line-strong); }
+.alt-b .tl h3 { font: 700 17px/24px var(--font-sans); }
+.alt-b .mfoot { display: flex; justify-content: center; align-items: center; gap: 16px; padding: 16px 16px 24px; background: var(--surface-sunk); }
+@container (min-width: 720px) {
+  .alt-b .mbar, .alt-b .mfoot { display: none; }
+  .alt-b .grid { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); min-height: var(--vh); }
+  .alt-b .pitch { order: -1; padding: 40px 64px 48px; gap: 30px; }
+  .alt-b .pitch .wordmark { display: inline-flex; margin-bottom: 36px; }
+  .alt-b .hero { font-size: 46px; line-height: 46px; max-width: 13ch; }
+  .alt-b .pitch .lede { font-size: 18px; max-width: 42ch; }
+  .alt-b .formcol { padding: 16px 32px 24px; }
+  .alt-b .formcol__top { display: flex; justify-content: flex-end; }
+  .alt-b .form { flex: 1; justify-content: center; max-width: 380px; margin-inline: auto; }
+  .alt-b .formcol footer { display: flex; justify-content: space-between; align-items: center; }
+}
+
+/* ---------- C: Show, don't tell ---------- */
+.alt-c .bar__in { max-width: 1080px; margin-inline: auto; display: flex; align-items: center; justify-content: space-between; padding: 12px 8px 12px 16px; }
+.alt-c .heroband { max-width: 1080px; width: 100%; margin-inline: auto; padding: 8px 16px 32px; display: grid; gap: 32px; }
+.alt-c .copy { display: flex; flex-direction: column; gap: 14px; }
+.alt-c .copy h1 { font: 800 34px/35px var(--font-display); letter-spacing: -.03em; text-wrap: balance; }
+.alt-c .copy .lede { font-size: 17px; color: var(--ink-muted); }
+.alt-c form { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+.alt-c .row { display: flex; flex-direction: column; gap: 10px; }
+.alt-c .picks { display: none; }
+.alt-c .howband { background: var(--surface-sunk); border-block: 1px solid var(--line); }
+.alt-c .how { max-width: 1080px; margin-inline: auto; padding: 28px 16px 32px; display: flex; flex-direction: column; gap: 20px; }
+.alt-c .how h2 { font: 700 22px/26px var(--font-display); }
+.alt-c .cols { list-style: none; padding: 0; display: grid; gap: 22px; }
+.alt-c .col { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 4px 16px; align-items: start; }
+.alt-c .ill { grid-row: span 3; height: 96px; display: grid; place-items: center; background: var(--surface-raised); border: 1.5px solid var(--line); border-radius: var(--radius-md); overflow: hidden; }
+.alt-c .col h3 { font: 700 17px/24px var(--font-sans); }
+.alt-c footer { display: flex; align-items: center; justify-content: center; gap: 16px; padding: 16px 16px 24px; }
+/* mini UI used in the illustrations */
+.alt-c .tile { display: grid; place-items: center; border-radius: 8px; font: 800 15px/1 var(--font-display); color: var(--ink); }
+.alt-c .h0 { background: var(--brand-soft); } .alt-c .h1c { background: var(--olive-soft); } .alt-c .h2c { background: var(--accent-soft); }
+.alt-c .duel { position: relative; display: flex; gap: 8px; }
+.alt-c .duel .tile { width: 40px; height: 48px; border: 2px solid var(--line); }
+.alt-c .duel .tile.on { border-color: var(--brand); box-shadow: 0 2px 0 var(--brand-ink); }
+.alt-c .duel .or { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; background: var(--ink); color: var(--surface); font: 800 8px/1 var(--font-display); }
+.alt-c .invite { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.alt-c .link { padding: 4px 8px; border-radius: var(--radius-pill); background: var(--surface); border: 1.5px dashed var(--line-strong); font: 700 10px/1 ui-monospace, Menlo, monospace; color: var(--ink-muted); }
+.alt-c .faces { display: flex; }
+.alt-c .faces span { width: 22px; height: 22px; margin-left: -5px; border-radius: 50%; border: 2px solid var(--surface-raised); display: grid; place-items: center; font: 800 9px/1 var(--font-display); color: var(--ink); }
+.alt-c .three { display: flex; flex-direction: column; gap: 4px; width: 84%; }
+.alt-c .three div { display: flex; align-items: center; gap: 6px; padding: 3px 6px; border-radius: 6px; background: var(--surface); border: 1px solid var(--line); font: 700 10px/14px var(--font-sans); }
+.alt-c .three i { font-style: normal; width: 14px; height: 14px; border-radius: 4px; display: grid; place-items: center; font-size: 8px; }
+.alt-c .three div::after { content: "✓"; margin-left: auto; color: var(--good); }
+/* hero illustration: three suggestion cards */
+.alt-c .sug { display: grid; grid-template-columns: 76px minmax(0, 1fr); gap: 14px; align-items: center; padding: 12px; background: var(--surface-raised); border: 2px solid var(--line); border-radius: var(--radius-lg); box-shadow: var(--shadow-edge); }
+.alt-c .sug .tile { width: 76px; height: 76px; font-size: 26px; }
+.alt-c .sug h3 { font: 800 19px/22px var(--font-display); }
+.alt-c .chip { display: inline-block; margin-top: 6px; padding: 3px 9px; border-radius: var(--radius-pill); background: var(--olive-soft); font: 700 12px/16px var(--font-sans); }
+@container (min-width: 720px) {
+  .alt-c .heroband { grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr); align-items: center; gap: 64px; padding: 40px 32px 56px; }
+  .alt-c .copy h1 { font-size: 52px; line-height: 52px; }
+  .alt-c .copy .lede { font-size: 19px; line-height: 28px; max-width: 40ch; }
+  .alt-c .row { flex-direction: row; }
+  .alt-c .row .input { flex: 1; }
+  .alt-c .row .btn { min-height: 52px; }
+  .alt-c .picks { display: flex; flex-direction: column; gap: 14px; }
+  .alt-c .picks .sug:nth-child(1) { transform: rotate(-1.5deg); }
+  .alt-c .picks .sug:nth-child(2) { transform: translateX(28px) rotate(1deg); }
+  .alt-c .picks .sug:nth-child(3) { transform: rotate(-.5deg); }
+  .alt-c .how { padding: 40px 32px 48px; gap: 28px; }
+  .alt-c .cols { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px; }
+  .alt-c .col { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+  .alt-c .ill { grid-row: auto; height: 132px; margin-bottom: 10px; }
+  .alt-c footer { max-width: 1080px; width: 100%; margin-inline: auto; justify-content: space-between; padding: 18px 32px 24px; }
+}
+
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="moon" viewBox="0 0 24 24"><path d="M19.5 14.5A8 8 0 019.5 4.5a8 8 0 1010 10z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+</svg>
+
+<div class="doc">
+  <header class="intro">
+    <p class="eyebrow">Design review · /login</p>
+    <h1>Gorefest sign-in, reworked</h1>
+    <p>The current login screen is a phone layout stretched to every screen. The pitch sits above the task, the steps read as an unlabelled list, and the button lives in a dock away from its field. Below: the current page with its problems pinned, then three alternatives built from Gorefest's own tokens.</p>
+  </header>
+</div>
+
+<nav class="toolbar" aria-label="Review controls">
+  <div class="toolbar__in">
+    <div class="seg" role="group" aria-label="Preview width">
+      <button type="button" id="mode-desktop" data-mode="desktop" aria-pressed="true">Desktop 1280</button>
+      <button type="button" id="mode-phone" data-mode="phone" aria-pressed="false">Phone 390</button>
+    </div>
+    <div class="jump"><a href="#current">Current</a><a href="#form-first">A · Form first</a><a href="#split">B · Split</a><a href="#show">C · Show, don't tell</a><a href="#pick">Recommendation</a></div>
+  </div>
+</nav>
+
+<div class="doc" style="padding-top: 40px">
+
+  <!-- ================= CURRENT ================= -->
+  <section class="design" id="current">
+    <div class="design__head">
+      <div class="design__title">
+        <span class="tag tag--now">Live today</span>
+        <h2>Current page</h2>
+        <p>Reconstructed from the live HTML and <code>gorefest.css</code>. Pins match the list below. Switch to Phone to see the layout it was designed for.</p>
+      </div>
+    </div>
+
+    <div class="viewport"><div class="device"><div class="chrome"><i></i><i></i><i></i><span>gorefest.kunlabora.ninja/login</span></div>
+      <div class="m cur"><div class="cur-screen an">
+        <span class="pin pin--right pin--desk" style="top: 64px">1</span>
+        <header class="appbar"><span class="appbar__title">Gorefest</span><button class="iconbtn" type="button" tabindex="-1" aria-label="Dark mode"><svg class="icon"><use href="#moon"/></svg></button></header>
+        <main class="body">
+          <section class="section">
+            <p class="lede an"><span class="pin">2</span>Gorefest helps your group pick the board games you'll enjoy most on a game day.</p>
+            <ol class="steps an"><span class="pin" style="top: 40px">3</span>
+              <li><strong>Say what you'd rather play</strong><br><span class="muted">A quick round of A-or-B picks teaches it your taste.</span></li>
+              <li><strong>Join a game day</strong><br><span class="muted">Your host shares an invite link, and everyone brings their games.</span></li>
+              <li><strong>Get three suggestions</strong><br><span class="muted">Tick who's at the table and it picks what suits them all.</span></li>
+            </ol>
+          </section>
+          <div class="stack an"><span class="pin">4</span>
+            <h1 class="h1">What's your email?</h1>
+            <p class="muted">We'll send a link and a 6-digit code. No password to remember.</p>
+          </div>
+          <form class="section" onsubmit="return false">
+            <div class="field"><label class="an" for="email-cur"><span class="pin pin--right">5</span>Email</label><input class="input" type="email" id="email-cur" tabindex="-1"></div>
+          </form>
+        </main>
+        <div class="dock an"><span class="pin" style="top: 20px">6</span><button class="btn btn--primary btn--lg btn--block" type="button" tabindex="-1">Send me a code</button></div>
+        <footer class="footer"><span class="bgg">POWERED BY <b>BGG</b></span><span class="an" style="font-size:12px"><span class="pin pin--right" style="top:-6px">7</span>Gorefest v1.0.0</span></footer>
+      </div></div>
+    </div></div>
+
+    <div class="flaws">
+      <article class="flaw"><span class="n">1</span><h3>A phone strip on a laptop</h3>
+        <p>At 720px and up, <code>.gf-screen</code> caps at <code>max-width: 480px</code>, app bar and dock included. On a 1280px screen that's 37% of the width, with no edge or surface change to show where the column ends, so the page looks unfinished rather than focused.</p>
+        <p class="fix"><b>Fix:</b> give desktop its own layout (card, split or two-column hero) instead of a capped phone column.</p></article>
+      <article class="flaw"><span class="n">2</span><h3>Pitch above the task</h3>
+        <p>Most people on <code>/login</code> are returning users, but the first thing they see is a 17px explainer. The brand is a 15px muted label in the app bar, and the only heading on the page is the email question halfway down.</p>
+        <p class="fix"><b>Fix:</b> lead with brand and the sign-in form; move the explainer below or beside it.</p></article>
+      <article class="flaw"><span class="n">3</span><h3>Steps read as a list, not "How it works"</h3>
+        <p>An unlabelled <code>&lt;ol&gt;</code> with black discs looks like bullets. Each step is a bold line, a <code>&lt;br&gt;</code> and a muted line. The copy says "teaches <em>it</em>" and "<em>it</em> picks" without saying what "it" is.</p>
+        <p class="fix"><b>Fix:</b> add a "How Gorefest works" heading, give steps their own row or columns, name Gorefest as the subject.</p></article>
+      <article class="flaw"><span class="n">4</span><h3>One gap for everything</h3>
+        <p><code>.gf-body</code> puts 24px between every block, so the pitch-to-form gap equals the heading-to-field gap. Nothing groups the explainer as one unit and the form as another. Top padding under the app bar is 8px, everything else 24px.</p>
+        <p class="fix"><b>Fix:</b> tight spacing within a group, a clear break (divider, surface or 48px+) between pitch and form.</p></article>
+      <article class="flaw"><span class="n">5</span><h3>Asked twice</h3>
+        <p>H1 "What's your email?", then label "Email", with the helper sentence above the field instead of tied to it. The heading and helper sit outside the <code>&lt;form&gt;</code>.</p>
+        <p class="fix"><b>Fix:</b> heading says what the page is ("Sign in to Gorefest"); the label asks for the email.</p></article>
+      <article class="flaw"><span class="n">6</span><h3>Button cut off from its field</h3>
+        <p>Submit lives in <code>.gf-dock</code> outside <code>&lt;main&gt;</code>, linked by <code>form="email-form"</code>. <code>.gf-body</code> has <code>flex: 1</code>, so on any tall screen the button drifts to the bottom with dead space and a border line between it and the input.</p>
+        <p class="fix"><b>Fix:</b> on a one-field form, put the button directly under (or beside) the input.</p></article>
+      <article class="flaw"><span class="n">7</span><h3>Small stuff</h3>
+        <p>The footer sits below the "sticky" dock, so the dock is never actually at the bottom. A version string on the login screen is noise for users. The tab title is just "Log in", with no product name.</p>
+        <p class="fix"><b>Fix:</b> footer row with BGG credit; version in a muted corner or the settings page; title "Sign in · Gorefest".</p></article>
+    </div>
+  </section>
+
+  <!-- ================= A ================= -->
+  <section class="design" id="form-first">
+    <div class="design__head">
+      <div class="design__title">
+        <span class="tag">Alternative A · Smallest change</span>
+        <h2>Form first</h2>
+        <p>Same components and tokens, reordered. Mostly a template and CSS change.</p>
+      </div>
+      <ul class="notes">
+        <li><strong>Brand and task on top.</strong> A real wordmark, then "Sign in to Gorefest" with the form and its button in one card.</li>
+        <li><strong>Labelled steps.</strong> "How Gorefest works" gets a heading and sits below a divider, three columns on desktop.</li>
+        <li><strong>Desktop has a layout.</strong> 1040px container; the card is 460px and centred, so the form stays a comfortable width.</li>
+        <li><strong>No dock.</strong> The button follows the field; the footer becomes one quiet row.</li>
+      </ul>
+    </div>
+    <div class="viewport"><div class="device"><div class="chrome"><i></i><i></i><i></i><span>gorefest.kunlabora.ninja/login</span></div>
+      <div class="m alt-a">
+        <header class="bar"><div class="bar__in">
+          <span class="wordmark"><svg class="logo" viewBox="0 0 30 30" aria-hidden="true"><rect width="30" height="30" rx="8"/><circle cx="9" cy="9" r="2.6"/><circle cx="15" cy="15" r="2.6"/><circle cx="21" cy="21" r="2.6"/></svg>Gorefest</span>
+          <button class="iconbtn" type="button" tabindex="-1" aria-label="Dark mode"><svg class="icon"><use href="#moon"/></svg></button>
+        </div></header>
+        <main>
+          <section class="card">
+            <p class="kicker">Board game days, sorted</p>
+            <h1>Sign in to Gorefest</h1>
+            <p class="muted">We'll email you a sign-in link and a 6-digit code. No password to remember.</p>
+            <form onsubmit="return false">
+              <div class="field"><label for="email-a">Email address</label><input class="input" type="email" id="email-a" placeholder="you@example.com" tabindex="-1"></div>
+              <button class="btn btn--primary btn--lg btn--block" type="button" tabindex="-1">Send me a code</button>
+            </form>
+          </section>
+          <section class="how">
+            <h2>How Gorefest works</h2>
+            <ol class="steps">
+              <li><span class="num">1</span><h3>Pick between two games</h3><p class="muted">A quick round of this-or-that teaches Gorefest your taste.</p></li>
+              <li><span class="num">2</span><h3>Join a game day</h3><p class="muted">Your host sends an invite link. Everyone adds the games they're bringing.</p></li>
+              <li><span class="num">3</span><h3>Get three suggestions</h3><p class="muted">Tick who's at the table and Gorefest picks three games that suit everyone.</p></li>
+            </ol>
+          </section>
+        </main>
+        <footer><span class="bgg">POWERED BY <b>BGG</b></span><span class="ver">v1.0.0</span></footer>
+      </div>
+    </div></div>
+  </section>
+
+  <!-- ================= B ================= -->
+  <section class="design" id="split">
+    <div class="design__head">
+      <div class="design__title">
+        <span class="tag">Alternative B · Two jobs, two panels</span>
+        <h2>Split</h2>
+        <p>The explainer and the form each get their own surface, so they never compete.</p>
+      </div>
+      <ul class="notes">
+        <li><strong>Desktop splits the screen.</strong> Left: a sunk panel with a headline and the steps. Right: the form, vertically centred at 380px.</li>
+        <li><strong>Steps as a path.</strong> Numbered brand discs joined by a dashed line, because these really are three steps in order.</li>
+        <li><strong>Phone puts the form first.</strong> Sign-in, then the sunk panel as a clearly separate "what is this" block.</li>
+        <li><strong>Spacing does the grouping.</strong> The surface change separates pitch from form; no 24px-everywhere rhythm.</li>
+      </ul>
+    </div>
+    <div class="viewport"><div class="device"><div class="chrome"><i></i><i></i><i></i><span>gorefest.kunlabora.ninja/login</span></div>
+      <div class="m alt-b">
+        <header class="mbar">
+          <span class="wordmark"><svg class="logo" viewBox="0 0 30 30" aria-hidden="true"><rect width="30" height="30" rx="8"/><circle cx="9" cy="9" r="2.6"/><circle cx="15" cy="15" r="2.6"/><circle cx="21" cy="21" r="2.6"/></svg>Gorefest</span>
+          <button class="iconbtn" type="button" tabindex="-1" aria-label="Dark mode"><svg class="icon"><use href="#moon"/></svg></button>
+        </header>
+        <div class="grid">
+          <div class="formcol">
+            <div class="formcol__top"><button class="iconbtn" type="button" tabindex="-1" aria-label="Dark mode"><svg class="icon"><use href="#moon"/></svg></button></div>
+            <section class="form">
+              <h1>Sign in</h1>
+              <p class="muted">We'll email you a sign-in link and a 6-digit code. No password to remember.</p>
+              <form onsubmit="return false">
+                <div class="field"><label for="email-b">Email address</label><input class="input" type="email" id="email-b" placeholder="you@example.com" tabindex="-1"></div>
+                <button class="btn btn--primary btn--lg btn--block" type="button" tabindex="-1">Send me a code</button>
+              </form>
+            </section>
+            <footer><span class="bgg">POWERED BY <b>BGG</b></span><span class="ver">v1.0.0</span></footer>
+          </div>
+          <section class="pitch">
+            <span class="wordmark"><svg class="logo" viewBox="0 0 30 30" aria-hidden="true"><rect width="30" height="30" rx="8"/><circle cx="9" cy="9" r="2.6"/><circle cx="15" cy="15" r="2.6"/><circle cx="21" cy="21" r="2.6"/></svg>Gorefest</span>
+            <h2 class="hero">Pick the game everyone at the table wants to play.</h2>
+            <p class="lede">Gorefest learns what each player likes and suggests games for your next game day.</p>
+            <p class="kicker">How it works</p>
+            <ol class="tl">
+              <li><span class="num">1</span><h3>Pick between two games</h3><p class="muted">A quick round of this-or-that teaches Gorefest your taste.</p></li>
+              <li><span class="num">2</span><h3>Join a game day</h3><p class="muted">Your host sends an invite link. Everyone adds the games they're bringing.</p></li>
+              <li><span class="num">3</span><h3>Get three suggestions</h3><p class="muted">Tick who's at the table and Gorefest picks three that suit everyone.</p></li>
+            </ol>
+          </section>
+        </div>
+        <footer class="mfoot"><span class="bgg">POWERED BY <b>BGG</b></span><span class="ver">v1.0.0</span></footer>
+      </div>
+    </div></div>
+  </section>
+
+  <!-- ================= C ================= -->
+  <section class="design" id="show">
+    <div class="design__head">
+      <div class="design__title">
+        <span class="tag">Alternative C · Most expressive</span>
+        <h2>Show, don't tell</h2>
+        <p>A small landing page. The steps are shown with mini versions of the real screens instead of described in words.</p>
+      </div>
+      <ul class="notes">
+        <li><strong>Headline plus inline form.</strong> Email and button share one row on desktop, so signing in takes one glance.</li>
+        <li><strong>The product is the picture.</strong> Three suggestion cards echo the result screen and use the existing <code>.gf-art--missing</code> hue tiles.</li>
+        <li><strong>Illustrated steps.</strong> An A/B duel, an invite link with faces, a three-game shortlist, each in its own band.</li>
+        <li><strong>Cost.</strong> Needs a few new components; the hero cards are hidden on phone to keep the form above the fold.</li>
+      </ul>
+    </div>
+    <div class="viewport"><div class="device"><div class="chrome"><i></i><i></i><i></i><span>gorefest.kunlabora.ninja/login</span></div>
+      <div class="m alt-c">
+        <header class="bar"><div class="bar__in">
+          <span class="wordmark"><svg class="logo" viewBox="0 0 30 30" aria-hidden="true"><rect width="30" height="30" rx="8"/><circle cx="9" cy="9" r="2.6"/><circle cx="15" cy="15" r="2.6"/><circle cx="21" cy="21" r="2.6"/></svg>Gorefest</span>
+          <button class="iconbtn" type="button" tabindex="-1" aria-label="Dark mode"><svg class="icon"><use href="#moon"/></svg></button>
+        </div></header>
+        <div class="heroband">
+          <div class="copy">
+            <p class="kicker">For board game groups</p>
+            <h1>Find the game your whole table wants to play.</h1>
+            <p class="lede">Gorefest learns what each player likes, then suggests three games for your next game day.</p>
+            <form onsubmit="return false">
+              <label for="email-c">Email address</label>
+              <div class="row"><input class="input" type="email" id="email-c" placeholder="you@example.com" tabindex="-1"><button class="btn btn--primary" type="button" tabindex="-1">Send me a code</button></div>
+              <p class="small muted">We'll email a sign-in link and a 6-digit code. No password.</p>
+            </form>
+          </div>
+          <div class="picks" aria-hidden="true">
+            <div class="sug"><span class="tile h0">Ca</span><div><h3>Cascadia</h3><span class="chip">Suits all 5 players</span></div></div>
+            <div class="sug"><span class="tile h1c">Az</span><div><h3>Azul</h3><span class="chip">4 of 5 love it</span></div></div>
+            <div class="sug"><span class="tile h2c">Sp</span><div><h3>Splendor</h3><span class="chip">Quick, 30 min</span></div></div>
+          </div>
+        </div>
+        <div class="howband"><section class="how">
+          <h2>How it works</h2>
+          <ol class="cols">
+            <li class="col"><div class="ill" aria-hidden="true"><div class="duel"><span class="tile h0 on">Wi</span><span class="or">OR</span><span class="tile h2c">Co</span></div></div>
+              <p class="kicker">Step 1</p><h3>Pick between two games</h3><p class="muted">A quick round of this-or-that teaches Gorefest your taste.</p></li>
+            <li class="col"><div class="ill" aria-hidden="true"><div class="invite"><span class="link">gorefest…/join/k7f2</span><div class="faces"><span class="h0">AN</span><span class="h1c">JO</span><span class="h2c">LT</span><span class="h0">MK</span></div></div></div>
+              <p class="kicker">Step 2</p><h3>Join a game day</h3><p class="muted">Your host sends an invite link. Everyone adds the games they're bringing.</p></li>
+            <li class="col"><div class="ill" aria-hidden="true"><div class="three"><div><i class="h0">1</i>Cascadia</div><div><i class="h1c">2</i>Azul</div><div><i class="h2c">3</i>Splendor</div></div></div>
+              <p class="kicker">Step 3</p><h3>Get three suggestions</h3><p class="muted">Tick who's at the table and Gorefest picks three that suit everyone.</p></li>
+          </ol>
+        </section></div>
+        <footer><span class="bgg">POWERED BY <b>BGG</b></span><span class="ver">v1.0.0</span></footer>
+      </div>
+    </div></div>
+  </section>
+
+  <section class="verdict" id="pick">
+    <p class="eyebrow">Recommendation</p>
+    <h2>Ship A now, grow into B or C</h2>
+    <p><strong>A fixes every pinned flaw</strong> with the existing component set: form first, button attached, labelled steps, a real desktop layout. It's a template reorder plus one <code>@media (min-width: 720px)</code> block.</p>
+    <p><strong>B</strong> is the better desktop page if a lot of first-time visitors arrive through invite links, since the explainer gets equal space without pushing the form down. <strong>C</strong> is the strongest pitch but needs new illustration components; worth it if <code>/login</code> doubles as the public landing page.</p>
+  </section>
+</div>
+
+<script>
+(function () {
+  var body = document.body;
+  function setMode(mode) {
+    body.dataset.mode = mode;
+    document.querySelectorAll('.seg button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.mode === mode)); });
+    try { localStorage.setItem('gf-review-mode', mode); } catch (e) {}
+    fitAll();
+  }
+  function fit(vp) {
+    var dev = vp.firstElementChild;
+    var w = dev.offsetWidth;
+    var avail = vp.clientWidth;
+    var s = Math.min(1, avail / w);
+    dev.style.transform = 'scale(' + s + ')';
+    dev.style.left = Math.max(0, (avail - w * s) / 2) + 'px';
+    vp.style.height = Math.ceil(dev.offsetHeight * s) + 'px';
+  }
+  function fitAll() { document.querySelectorAll('.viewport').forEach(fit); }
+  document.querySelectorAll('.seg button').forEach(function (b) { b.addEventListener('click', function () { setMode(b.dataset.mode); }); });
+  var saved = null;
+  try { saved = localStorage.getItem('gf-review-mode'); } catch (e) {}
+  setMode(saved === 'phone' ? 'phone' : 'desktop');
+  if ('ResizeObserver' in window) {
+    var ro = new ResizeObserver(fitAll);
+    document.querySelectorAll('.viewport, .device').forEach(function (el) { ro.observe(el); });
+  }
+  window.addEventListener('resize', fitAll);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitAll);
+})();
+</script>
+
+</body></html>

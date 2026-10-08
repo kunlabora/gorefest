@@ -6,7 +6,7 @@ import kotlinx.html.*
 import kotlin.uuid.Uuid
 
 private fun HTML.authPage(title: String, dock: DIV.() -> Unit, head: HEAD.() -> Unit = {}, content: MAIN.() -> Unit) =
-    page(title, appBar = { appBarTitle("Gorefest") }, dock = dock, head = head) { content() }
+    page(title, appBar = { wordmark() }, dock = dock, head = head) { content() }
 
 private const val TAGLINE = "Gorefest helps your group pick the board games you'll enjoy most on a game day."
 
@@ -25,29 +25,83 @@ private fun FlowContent.intro(heading: String, text: P.() -> Unit) = div("gf-sta
 }
 
 private val steps = listOf(
-    "Say what you'd rather play" to "A quick round of A-or-B picks teaches it your taste.",
-    "Join a game day" to "Your host shares an invite link, and everyone brings their games.",
-    "Get three suggestions" to "Tick who's at the table and it picks what suits them all.",
+    Triple("Pick between two games", "A quick round of this-or-that teaches Gorefest your taste.", Illustration.DUEL),
+    Triple("Join a game day", "Your host sends an invite link. Everyone adds the games they're bringing.", Illustration.INVITE),
+    Triple("Get three suggestions", "Tick who's at the table and Gorefest picks three that suit everyone.", Illustration.SHORTLIST),
 )
 
-/** What the app is for, shown to people who arrive without an invite. */
-private fun FlowContent.howItWorks() = section("gf-section") {
-    p("gf-lede") { +TAGLINE }
-    ol("gf-steps") {
-        steps.forEach { (title, text) ->
-            li { strong { +title }; br; span("gf-muted") { +text } }
+private enum class Illustration { DUEL, INVITE, SHORTLIST }
+
+/** A game's stand-in tile: two letters on one of the three box-art hues. Decoration only, so no real game is implied. */
+private fun FlowContent.tile(mono: String, hue: Int, extra: String = "") =
+    span("gf-minitile gf-minitile--$hue $extra".trim()) { +mono }
+
+/** What a suggestion looks like, as three cards on the hero. Decoration for people who arrive without an invite. */
+private fun FlowContent.sampleSuggestions() = div("gf-samples") {
+    attributes["aria-hidden"] = "true"
+    listOf(Triple("Cascadia", "Suits all 5 players", 0), Triple("Azul", "4 of 5 love it", 1), Triple("Splendor", "Quick, 30 min", 2)).forEach { (name, reason, hue) ->
+        div("gf-sample") {
+            tile(name.take(2), hue, "gf-minitile--big")
+            div {
+                h3("gf-sample__name") { +name }
+                span("gf-sample__chip") { +reason }
+            }
         }
     }
 }
 
-fun HTML.emailPage(returnTo: String) = authPage(
-    "Log in",
-    dock = { primaryButton("Send me a code", form = "email-form") },
-    head = { if (returnTo == "/") sitePreview() },
-) {
-    if (returnTo == "/") howItWorks()
-    intro("What's your email?") { +"We'll send a link and a 6-digit code. No password to remember." }
-    consumer.emailForm(returnTo)
+private fun FlowContent.illustration(which: Illustration) = div("gf-ill") {
+    attributes["aria-hidden"] = "true"
+    when (which) {
+        Illustration.DUEL -> div("gf-ill__duel") { tile("Wi", 0, "gf-minitile--on"); span("gf-ill__or") { +"OR" }; tile("Co", 2) }
+        Illustration.INVITE -> div("gf-ill__invite") {
+            span("gf-ill__link") { +"…/join/k7f2" }
+            div("gf-ill__faces") { listOf("AN" to 0, "JO" to 1, "LT" to 2, "MK" to 0).forEach { (initials, hue) -> span("gf-ill__face gf-minitile--$hue") { +initials } } }
+        }
+        Illustration.SHORTLIST -> div("gf-ill__three") {
+            listOf("Cascadia", "Azul", "Splendor").forEachIndexed { i, name -> div { tile("${i + 1}", i, "gf-minitile--tiny"); +name } }
+        }
+    }
+}
+
+/** What the app is for, shown to people who arrive without an invite. */
+private fun FlowContent.howItWorks() = div("gf-how-band") {
+    section("gf-how") {
+        h2("gf-h2") { +"How it works" }
+        ol("gf-how__cols") {
+            steps.forEachIndexed { i, (title, text, ill) ->
+                li("gf-how__col") {
+                    illustration(ill)
+                    p("gf-kicker") { +"Step ${i + 1}" }
+                    h3("gf-how__title") { +title }
+                    p("gf-muted gf-how__text") { +text }
+                }
+            }
+        }
+    }
+}
+
+/** The sign-in landing: brand and form first, then what the app does. Invitees skip the pitch and the sample cards. */
+fun HTML.emailPage(returnTo: String) {
+    val landing = returnTo == "/"
+    page(
+        "Sign in · Gorefest",
+        appBar = { wordmark() },
+        head = { if (landing) sitePreview() },
+        mainClasses = "gf-landing",
+        wide = true,
+    ) {
+        div("gf-hero-band") {
+            div("gf-hero-band__copy") {
+                p("gf-kicker") { +"For board game groups" }
+                h1("gf-h1 gf-h1--landing") { +"Find the game your whole table wants to play." }
+                p("gf-lede gf-muted") { +"Gorefest learns what each player likes, then suggests three games for your next game day." }
+                consumer.emailForm(returnTo)
+            }
+            if (landing) sampleSuggestions()
+        }
+        if (landing) howItWorks()
+    }
 }
 
 fun HTML.codePage(attempt: Uuid, email: String, returnTo: String, dev: Boolean) =
@@ -93,19 +147,29 @@ private fun FlowContent.resendLinks(email: String, returnTo: String) = form(acti
     a("/login?returnTo=${returnTo.urlEncoded()}", classes = "gf-link") { +"Change email" }
 }
 
-fun TagConsumer<*>.emailForm(returnTo: String, email: String = "", error: String? = null) = singleFieldForm("email-form", "/login") {
-    hiddenInput("returnTo", returnTo)
-    field("email", "Email", error = error) {
-        input(InputType.email, name = "email", classes = "gf-input") {
-            id = "email"
-            required = true
-            value = email
-            attributes["inputmode"] = "email"
-            attributes["autocomplete"] = "email"
-            if (error != null) attributes["aria-invalid"] = "true"
+/** Email and button share one row on a wide screen; htmx re-renders the form in place when the server rejects the input. */
+fun TagConsumer<*>.emailForm(returnTo: String, email: String = "", error: String? = null) =
+    form(action = "/login", method = FormMethod.post, classes = if (error != null) "gf-signin gf-field--invalid" else "gf-signin") {
+        id = "email-form"
+        hx("post", "/login")
+        hx("swap", "outerHTML")
+        hiddenInput("returnTo", returnTo)
+        label("gf-label") { htmlFor = "email"; +"Email address" }
+        div("gf-signin__row") {
+            input(InputType.email, name = "email", classes = "gf-input") {
+                id = "email"
+                required = true
+                value = email
+                placeholder = "you@example.com"
+                attributes["inputmode"] = "email"
+                attributes["autocomplete"] = "email"
+                if (error != null) attributes["aria-invalid"] = "true"
+            }
+            button(type = ButtonType.submit, classes = buttonClasses(ButtonStyle.PRIMARY, ButtonSize.LARGE)) { spinner(); +"Send me a code" }
         }
+        if (error != null) fieldError(error)
+        p("gf-hint") { +"We'll email a sign-in link and a 6-digit code. No password." }
     }
-}
 
 fun TagConsumer<*>.codeForm(attempt: Uuid, error: String? = null) = singleFieldForm("code-form", "/login/code") {
     hiddenInput("attempt", attempt.toString())

@@ -33,6 +33,7 @@ import java.util.concurrent.ConcurrentHashMap
 /**
  * The page shell from the design system (docs/design): an app bar, the scrolling body,
  * and an optional dock at the bottom for the screen's primary action.
+ * A [wide] page drops the phone-width column on desktop and lays out its own bands (the login landing).
  */
 fun HTML.page(
     title: String,
@@ -41,6 +42,7 @@ fun HTML.page(
     head: HEAD.() -> Unit = {},
     mainClasses: String = "",
     mainId: String? = null,
+    wide: Boolean = false,
     content: MAIN.() -> Unit,
 ) {
     lang = "en"
@@ -67,7 +69,7 @@ fun HTML.page(
         head()
     }
     body {
-        div("gf-screen") {
+        div(if (wide) "gf-screen gf-screen--wide" else "gf-screen") {
             header("gf-appbar") {
                 appBar()
                 themeToggle()
@@ -100,6 +102,14 @@ fun FlowContent.bggCredit() = p("gf-credit") {
 }
 
 fun FlowContent.appBarTitle(text: String) = span("gf-appbar__title") { +text }
+
+/** The brand in the app bar: the five-dot die from the favicon, then the name. */
+fun FlowContent.wordmark() = span("gf-wordmark") {
+    unsafe {
+        +"""<svg class="gf-wordmark__logo" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7"/><g><circle cx="10" cy="10" r="2.9"/><circle cx="22" cy="10" r="2.9"/><circle cx="16" cy="16" r="2.9"/><circle cx="10" cy="22" r="2.9"/><circle cx="22" cy="22" r="2.9"/></g></svg>"""
+    }
+    +"Gorefest"
+}
 
 fun FlowContent.backLink(href: String, label: String) = a(href, classes = "gf-iconbtn") {
     attributes["aria-label"] = label
