@@ -138,6 +138,7 @@ fun Route.gameDayRoutes(app: App) {
                 played = app.plays.on(gameDay.id).mapNotNull { log -> app.catalog[log.game]?.let { it to log } },
                 next = nextStep(app, gameDay, me, shelf.map { it.first }),
                 inviteLink = inviteLink(app, gameDay),
+                logOffered = gameDay.date <= clock.todayIn(gameDay.timeZone),
             )
             call.respondHtml { gameDayPage(hub) }
         }
@@ -176,14 +177,16 @@ fun Route.gameDayRoutes(app: App) {
     }
 }
 
-/** Before the day: taste round, then top-up or favourites. On the day: the checkpoint. After: nothing. */
+/** The taste round until there's enough to go on. Then, before the day, top-up or favourites; on the day, the checkpoint. After: nothing. */
 context(clock: Clock)
 private suspend fun nextStep(app: App, gameDay: GameDaySummary, me: CurrentPlayer, shelf: List<gorefest.core.game.Game>): NextStep? {
     if (gameDay.closed) return null
-    if (gameDay.date <= clock.todayIn(gameDay.timeZone)) return NextStep.Checkpoint(checkpointLabel(gameDay, clock))
+    val onTheDay = gameDay.date <= clock.todayIn(gameDay.timeZone)
     val history = app.tastes.of(me.id)
     val answers = history.comparisons.size
+    // Someone new on the day still needs the taste round first; the checkpoint stays one tap away on the hub.
     if (answers < TOP_UP_AFTER) return NextStep.TasteRound
+    if (onTheDay) return NextStep.Checkpoint(checkpointLabel(gameDay, clock))
     val uncertain = app.topUpWizard.uncertain(PlayerGames(history, app.collectionSync.collection(me.id)), shelf, clock.instant()).size
     return if (uncertain > 0) NextStep.TopUp(uncertain) else NextStep.Favourites(answers)
 }

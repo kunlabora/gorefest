@@ -190,6 +190,8 @@ data class GameDayHub(
     val played: List<Pair<Game, PlayLogged>>,
     val next: NextStep?,
     val inviteLink: String,
+    /** The game day has started: playing is under way, so logging a play is offered whatever the next step is. */
+    val logOffered: Boolean = false,
 )
 
 context(me: CurrentPlayer)
@@ -216,6 +218,8 @@ fun HTML.gameDayPage(hub: GameDayHub) {
                         li { icon("users"); +"${gameDay.players.size} going" }
                     }
                     if (open && hub.shelf.isNotEmpty()) linkButton("$base/table", "Pick a game for my table", ButtonStyle.SECONDARY, ButtonSize.LARGE, icon = "dice")
+                    // On the day, someone still doing their taste round can log a play from here too.
+                    if (open && hub.logOffered && hub.next !is NextStep.Checkpoint) linkButton("$base/log", "Log a game", ButtonStyle.GHOST, ButtonSize.SMALL)
                 }
                 hub.next?.let { nextStepCard(gameDay, it) }
             }

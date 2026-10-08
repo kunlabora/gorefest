@@ -1,6 +1,8 @@
 package gorefest.shell.web.checkpoint
 
 import gorefest.core.Basis
+import gorefest.core.ComparisonRecorded
+import gorefest.core.ComparisonResult
 import gorefest.core.GameBrought
 import gorefest.core.GamePlayStatusDeclared
 import gorefest.core.PlayLogged
@@ -58,7 +60,17 @@ class CheckpointRoutesTest {
     private val log = "/gamedays/$gorefest7/log"
 
     @Test
-    fun `on the day, the hub asks what you played`() = test.webTest(session = kim) { client ->
+    fun `on the day, someone with no taste yet is still offered the taste round, with the log one tap away`() = test.webTest(session = kim) { client ->
+        val page = client.get("/gamedays/$gorefest7").page()
+
+        page.one(".gf-next a").attr("href") shouldBe "/gamedays/$gorefest7/taste"
+        page.one(".gf-hub__hero a[href=$log]").text() shouldBe "Log a game"
+    }
+
+    @Test
+    fun `on the day, once there is a taste the hub asks what you played`() = test.webTest(session = kim) { client ->
+        given(*Array(10) { ComparisonRecorded(kimId, azul, cascadia, ComparisonResult.A, Basis.VIBE, test.clock.instant()) })
+
         val next = client.get("/gamedays/$gorefest7").page().one(".gf-next")
 
         next.one(".gf-kicker").text() shouldBe "Lunch checkpoint"
@@ -203,6 +215,7 @@ class CheckpointRoutesTest {
 
     @Test
     fun `during the game day a play can be logged, and the hub keeps the log one tap away`() = test.webTest(session = kim) { client ->
+        given(*Array(10) { ComparisonRecorded(kimId, azul, cascadia, ComparisonResult.A, Basis.VIBE, test.clock.instant()) })
         val response = client.htmxPost(log, parameters { append("game", azul.toString()); append("players", kimId.toString()); append("duration", "30m") })
         response.status shouldBe io.ktor.http.HttpStatusCode.NoContent
         app.plays.on(gorefest7) shouldHaveSize 1
