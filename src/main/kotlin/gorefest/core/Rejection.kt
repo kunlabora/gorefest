@@ -30,6 +30,24 @@ sealed interface Rejection {
 
     /** The player already wishes for the most games they may. */
     data object TooManyWishes : Rejection
+
+    // Bring requests
+    /** The person asked to bring a game hasn't joined the game day. */
+    data object OwnerNotJoined : Rejection
+    data object CantAskYourself : Rejection
+
+    /** The owner already brings that game. */
+    data object AlreadyBringing : Rejection
+
+    /** The asker has as many requests standing as they may have. */
+    data object TooManyBringRequests : Rejection
+
+    /** The owner has been asked as often as is fair for one game day. */
+    data object OwnerAskedEnough : Rejection
+
+    /** The owner turned bring requests off. */
+    data object OwnerNotAcceptingRequests : Rejection
+
     data object NobodyPlayed : Rejection
     data object PlayersNotAtGameDay : Rejection
     data object ImplausibleDuration : Rejection

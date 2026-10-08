@@ -4,6 +4,8 @@ import gorefest.core.GameDayId
 import gorefest.core.gameday.GameDaySummary
 import gorefest.core.datepoll.DatePollBoard
 import gorefest.core.datepoll.DatePolls
+import gorefest.core.gameday.BringRequests
+import gorefest.core.gameday.GameDayBringRequests
 import gorefest.core.gameday.GameDays
 import gorefest.core.gameday.Plays
 import gorefest.core.gameday.GameDayPlays
@@ -66,15 +68,17 @@ class App(
     private val gameDayProjector = Projector(GameDays, db, store)
     private val bggAccountProjector = Projector(BggAccounts, db, store)
     private val shelfProjector = Projector(Shelves, db, store)
+    private val bringRequestProjector = Projector(BringRequests, db, store)
     private val tasteProjector = Projector(Tastes, db, store)
     private val playProjector = Projector(Plays, db, store)
     private val datePollProjector = Projector(DatePolls, db, store)
-    private val projectors = listOf(gameDayProjector, bggAccountProjector, shelfProjector, tasteProjector, playProjector, datePollProjector)
+    private val projectors = listOf(gameDayProjector, bggAccountProjector, shelfProjector, bringRequestProjector, tasteProjector, playProjector, datePollProjector)
 
     /** Read models: the latest snapshot of each projection, kept current by [commands] and [start]. */
     val gameDaysById: Map<GameDayId, GameDaySummary> get() = gameDayProjector.state
     val bggAccounts: LinkedBggAccounts get() = bggAccountProjector.state
     val shelves: GameDayShelves get() = shelfProjector.state
+    val bringRequests: GameDayBringRequests get() = bringRequestProjector.state
     val tastes: PlayerTastes get() = tasteProjector.state
     val plays: GameDayPlays get() = playProjector.state
     val datePolls: DatePollBoard get() = datePollProjector.state

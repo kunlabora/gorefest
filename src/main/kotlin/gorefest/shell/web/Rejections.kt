@@ -2,6 +2,7 @@ package gorefest.shell.web
 
 import gorefest.core.Rejection
 import gorefest.core.datepoll.MAX_POLL_DATES
+import gorefest.core.gameday.MAX_BRING_REQUESTS
 import gorefest.core.gameday.MAX_WISHES
 
 /** The sentence a person sees for a decider's rejection: one place for all of them. */
@@ -20,6 +21,12 @@ fun Rejection.message(): String = when (this) {
     Rejection.NotJoined -> "Join the game day first"
     Rejection.NotOnShelf -> "Nobody's bringing that game"
     Rejection.TooManyWishes -> "You can pick $MAX_WISHES favourites: take one off first"
+    Rejection.OwnerNotJoined -> "They haven't joined this game day"
+    Rejection.CantAskYourself -> "That's your own game: just tick it"
+    Rejection.AlreadyBringing -> "They're already bringing that one"
+    Rejection.TooManyBringRequests -> "You've asked for $MAX_BRING_REQUESTS games already: take one back first"
+    Rejection.OwnerAskedEnough -> "They've been asked a lot already: leave it to them"
+    Rejection.OwnerNotAcceptingRequests -> "They'd rather not be asked to bring games"
     Rejection.NobodyPlayed -> "Tick who played"
     Rejection.PlayersNotAtGameDay -> "Only players at this game day can be in a log"
     Rejection.ImplausibleDuration -> "That doesn't look like a real duration"

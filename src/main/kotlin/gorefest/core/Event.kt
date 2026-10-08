@@ -110,6 +110,34 @@ data class PlayWishChanged(val gameDay: GameDayId, val player: PlayerId, val gam
     override val tags get() = setOf(Tags.gameDay(gameDay), Tags.player(player), Tags.game(game))
 }
 
+/** [asker] asks [owner], who joined the same game day, to bring [game] from their collection. Nothing displayable: names come from the BGG cache. */
+@Serializable
+@SerialName("BringRequested")
+data class BringRequested(val gameDay: GameDayId, val asker: PlayerId, val owner: PlayerId, val game: BggId) : Event {
+    override val tags get() = setOf(Tags.gameDay(gameDay), Tags.player(asker), Tags.player(owner), Tags.game(game))
+}
+
+/** The asker took the request back. It stops counting against both caps. */
+@Serializable
+@SerialName("BringRequestWithdrawn")
+data class BringRequestWithdrawn(val gameDay: GameDayId, val asker: PlayerId, val owner: PlayerId, val game: BggId) : Event {
+    override val tags get() = setOf(Tags.gameDay(gameDay), Tags.player(asker), Tags.player(owner), Tags.game(game))
+}
+
+/** The owner said "not this time" to one asker's request. A request is answered by [GameBrought], so it has no event of its own. */
+@Serializable
+@SerialName("BringRequestDeclined")
+data class BringRequestDeclined(val gameDay: GameDayId, val owner: PlayerId, val game: BggId, val asker: PlayerId) : Event {
+    override val tags get() = setOf(Tags.gameDay(gameDay), Tags.player(asker), Tags.player(owner), Tags.game(game))
+}
+
+/** Whether people on the player's game days may ask them to bring games. Allowed until the player says otherwise. */
+@Serializable
+@SerialName("BringRequestsAllowedChanged")
+data class BringRequestsAllowedChanged(val player: PlayerId, val allowed: Boolean) : Event {
+    override val tags get() = setOf(Tags.player(player))
+}
+
 /** VIBE: "which would you rather try?" (unplayed). PLAYED: "which did you enjoy more?". */
 enum class Basis { VIBE, PLAYED }
 
