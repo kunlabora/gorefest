@@ -447,8 +447,56 @@ div.gf-tile { cursor: default; }
 /* ==== R8 pick a game ==== */
 
 /* ==== R9 log a play ==== */
+.gf-log__head { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; margin-bottom: 22px; }
+.gf-log { display: grid; gap: var(--space-5); align-items: start; }
+.gf-log__steps { display: grid; gap: 28px; min-width: 0; }
+.gf-log__step { display: grid; grid-template-columns: 32px minmax(0, 1fr); gap: 10px 14px; }
+.gf-log__num { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: var(--ink); color: var(--surface); font: 800 15px/1 var(--font-display); }
+.gf-log__title { margin: 0; font: 700 20px/32px var(--font-display); }
+.gf-log__body { grid-column: 1 / -1; display: grid; gap: 14px; min-width: 0; }
+.gf-log__sub { margin: 0; font: 700 15px/20px var(--font-sans); color: var(--ink-muted); }
+.gf-log__search { display: grid; gap: 10px; }
+.gf-log .gf-tiles { grid-template-columns: repeat(4, 1fr); }
+.gf-log__summary { display: none; }
+.gf-log__compare { display: flex; flex-direction: column; gap: var(--space-4); }
+@media (min-width: 720px) {
+  .gf-log { grid-template-columns: minmax(0, 1.2fr) minmax(0, .8fr); gap: 56px; }
+  .gf-log__body { grid-column: 2; }
+  .gf-log .gf-tiles { grid-template-columns: repeat(5, 1fr); }
+  .gf-log__summary { display: grid; gap: 14px; position: sticky; top: 16px; padding: 20px; background: var(--surface-raised); border: 1px solid var(--line); border-radius: var(--radius-lg); box-shadow: var(--shadow-lift); }
+  .gf-log__game { margin: 0; font: 800 28px/30px var(--font-display); letter-spacing: -.02em; overflow-wrap: anywhere; }
+  .gf-log__about, .gf-log__summary .gf-hint { margin: 0; }
+  .gf-log__summary .gf-hint { text-align: center; }
+}
 
 /* ==== R10 link BGG ==== */
+.gf-bgg { display: grid; gap: 28px; align-items: start; margin-top: var(--space-4); }
+.gf-bgg__copy { display: flex; flex-direction: column; align-items: flex-start; gap: 14px; min-width: 0; }
+.gf-bgg__copy > .gf-signin, .gf-bgg__copy > .gf-copy { width: 100%; }
+.gf-bgg--code .gf-copy { max-width: 420px; padding: 8px 8px 8px 20px; border-width: 2px; }
+.gf-bgg--code .gf-copy__value { font: 800 22px/32px var(--font-display); letter-spacing: .05em; }
+.gf-bgg__copy > .gf-hint, .gf-bgg__copy .gf-field { margin: 0; }
+.gf-bgg__copy .gf-btn { min-height: 56px; }
+.gf-bgg__steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 22px; }
+.gf-bgg__step { display: grid; grid-template-columns: 32px minmax(0, 1fr); gap: 2px 14px; }
+.gf-bgg__num { grid-row: span 3; display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: var(--ink); color: var(--surface); font: 800 15px/1 var(--font-display); }
+.gf-bgg__title { margin: 0; font: 700 17px/24px var(--font-sans); }
+.gf-bgg__text { margin: 0; }
+.gf-bgg__extra { margin-top: 6px; }
+.gf-bgg__extra:empty { display: none; }
+.gf-bgg__shot { overflow: hidden; border: 1.5px solid var(--line); border-radius: var(--radius-md); background: var(--surface-raised); }
+.gf-bgg__shot .gf-howto { border: 0; }
+.gf-bgg__done { margin-top: var(--space-4); }
+.gf-collection { display: flex; flex-direction: column; align-items: stretch; gap: var(--space-3); }
+.gf-collection .gf-h1, .gf-collection .gf-kicker { align-self: flex-start; }
+@media (min-width: 720px) {
+  .gf-bgg--username { max-width: 640px; }
+  .gf-bgg--code .gf-copy__value { font-size: 28px; letter-spacing: .08em; }
+  .gf-bgg--code { grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: 64px; }
+  .gf-collection__list { display: grid; grid-template-columns: 1fr 1fr; }
+  .gf-collection__list > li:nth-child(2) { border-top: 0; }
+  .gf-collection__list > li:nth-child(even) { border-left: 1px solid var(--line); }
+}
 
 /* ==== R11 find a date ==== */
 

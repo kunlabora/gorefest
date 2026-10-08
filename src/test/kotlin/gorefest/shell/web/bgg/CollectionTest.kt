@@ -105,7 +105,9 @@ class CollectionTest {
     fun `the page polls while importing, then lists the games alphabetically`() = test.webTest(session = kim) { client ->
         app.db.transaction { gorefest.shell.bgg.Collections().setStatus(kimId, "KimPlays", SyncStatus.QUEUED, "BGG is preparing your collection", test.clock.instant()) }
 
-        val waiting = client.get("/collection").page().one("#collection")
+        val shell = client.get("/collection").page()
+        shell.one(".gf-nav a[aria-current=page]").text() shouldBe "Collection"
+        val waiting = shell.one("#collection")
         waiting.attr("hx-trigger") shouldBe "every 2s"
         waiting.attr("hx-get") shouldBe "/collection/status"
         waiting.one(".gf-notice p").text() shouldBe "BGG is preparing your collection"

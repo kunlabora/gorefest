@@ -102,7 +102,7 @@ fun Route.checkpointRoutes(app: App) {
             val player = PlayerGames(app.tastes.of(me.id), app.collectionSync.collection(me.id))
             val candidates = (player.history.played.filterValues { it }.keys + player.owned + player.history.comparedGames).mapNotNull(app.catalog::get)
             val other = app.wizard.partner(player, game.id, candidates, app.clock.instant()) ?: return@authenticated redirect(tableLink)
-            call.respondHtml { logComparePage(LogCompareView(gameDay, game, other, players.size, minutes.toString(), tableLink)) }
+            call.respondHtml { logComparePage(LogCompareView(gameDay, game, other, players.size, minutes.toString(), tableLink), me) }
         }
     }
 
