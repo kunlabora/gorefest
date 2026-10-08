@@ -59,6 +59,20 @@ class BggRoutesTest {
         step.one(".gf-copy__value").text() shouldBe code
         code shouldMatch Regex("GORE-[A-Z2-9]{6}")
         step.attr("hx-post") shouldBe "/bgg/verify"
+        step.one("button[type=submit]").text() shouldBe "I've added it"
+        step.select(".gf-bgg__steps .gf-bgg__num").map { it.text() } shouldBe listOf("1", "2", "3")
+        step.one(".gf-bgg__shot img").attr("src") shouldBe "/static/bgg-profile-code.webp"
+        step.one("a[href='/bgg?returnTo=%2F']").text() shouldBe "Wrong username?"
+    }
+
+    @Test
+    fun `the username step is a hero with an inline button and Collection as the current nav item`() = test.webTest(session = kim) { client ->
+        val page = client.get("/bgg?returnTo=%2F").page()
+
+        page.one(".gf-nav a[aria-current=page]").text() shouldBe "Collection"
+        page.one("#bgg-form .gf-signin__row input[name=username]")
+        page.one("#bgg-form .gf-signin__row button[type=submit]").text() shouldBe "Next"
+        page.one("#bgg-form a[href='/']").text() shouldBe "Not now"
     }
 
     @Test

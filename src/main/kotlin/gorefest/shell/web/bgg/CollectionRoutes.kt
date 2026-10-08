@@ -21,7 +21,7 @@ fun Route.collectionRoutes(app: App) {
             val me = contextOf<CurrentPlayer>()
             if (!app.bggAccounts.isLinked(me.id)) return@authenticated redirect("/bgg?returnTo=%2Fcollection")
             val view = collectionView(app, me)
-            call.respondHtml { collectionPage(view) }
+            call.respondHtml { collectionPage(view, me) }
         }
     }
 

@@ -3,14 +3,18 @@ package gorefest.shell.web.bgg
 import gorefest.core.game.Game
 import gorefest.shell.bgg.CollectionSyncState
 import gorefest.shell.bgg.SyncStatus
+import gorefest.shell.web.CurrentPlayer
 import gorefest.shell.web.components.*
 import kotlinx.html.*
 
 data class CollectionView(val sync: CollectionSyncState?, val games: List<Game>)
 
-fun HTML.collectionPage(view: CollectionView) = page("Your collection", appBar = { backLink("/", "Your game days"); appBarTitle("Your collection") }) {
-    h1("gf-h1") { +"Your collection" }
-    consumer.collection(view)
+fun HTML.collectionPage(view: CollectionView, me: CurrentPlayer) = page("Your collection", site = SiteBar(me, Nav.COLLECTION)) {
+    wrap("gf-collection") {
+        p("gf-kicker") { +"BoardGameGeek" }
+        h1("gf-h1 gf-h1--landing") { +"Your collection" }
+        consumer.collection(view)
+    }
 }
 
 /** Polls every 2 s while BGG is still working, then shows the games. */
@@ -36,7 +40,7 @@ fun TagConsumer<*>.collection(view: CollectionView) = div("gf-stack") {
         SyncStatus.DONE -> {
             p("gf-muted") { +"${view.games.size} games from ${sync.username} on BGG." }
             if (view.games.isEmpty()) emptyState("No games in your BGG collection", "Mark games as owned on BGG, then sync again.")
-            else ul("gf-list") { view.games.forEach { li { gameRow(it) } } }
+            else ul("gf-list gf-collection__list") { view.games.forEach { li { gameRow(it) } } }
             syncButton("Sync again")
         }
     }

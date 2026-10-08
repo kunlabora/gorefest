@@ -76,6 +76,33 @@ class CheckpointRoutesTest {
     }
 
     @Test
+    fun `the log page has three numbered steps, a summary card and a dock that submit the same form`() = test.webTest(session = kim) { client ->
+        val page = client.get(log).page()
+
+        page.one(".gf-nav a[aria-current=page]").text() shouldBe "Game days"
+        page.select("#log-form .gf-log__step .gf-log__title").map { it.text() } shouldBe listOf("The game", "Who played?", "Roughly how long?")
+        val summary = page.one("#log-form .gf-log__summary")
+        summary.one("[data-log=game]").text() shouldBe "Azul"
+        summary.one("[data-log=about]").text() shouldBe "1 player · about 45 min"
+        summary.one("button[type=submit]").text() shouldBe "Log it"
+        // On a phone the dock holds the button and says what will be logged; the hyperscript keeps both current.
+        page.one(".gf-dock.gf-phone-only button").attr("form") shouldBe "log-form"
+        page.one(".gf-dock [data-log=dock]").text() shouldBe "Log Azul · 1 player · 45m"
+        page.one("#log-form").attr("_").contains("on change call update()") shouldBe true
+    }
+
+    @Test
+    fun `the quick question page keeps the shell and the duel`() = test.webTest(session = kim) { client ->
+        val logged = client.htmxPost(log, parameters { append("game", azul.toString()); append("players", kimId.toString()); append("duration", "45m") })
+        given(GamePlayStatusDeclared(kimId, cascadia, played = true))
+
+        val page = client.get(logged.headers["HX-Redirect"]!!).page()
+
+        page.one(".gf-nav a[aria-current=page]").text() shouldBe "Game days"
+        page.select(".gf-pick__name").map { it.text() } shouldBe listOf("Azul", "Cascadia")
+    }
+
+    @Test
     fun `a game that isn't on the shelf can be found by search and logged`() = test.webTest(session = kim) { client ->
         val form = client.get(log).page().one("#log-form")
         form.one("input[type=search]").attr("hx-get") shouldBe "$log/search"
