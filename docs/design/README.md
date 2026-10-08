@@ -2,6 +2,7 @@
 
 The Gorefest design system and mockups for every screen in [the design brief](../design-brief.md).
 
+- **Redesign proposal:** open [`Gorefest App Redesign.html`](<Gorefest App Redesign.html>) (serve the repo root, e.g. `python3 -m http.server`, so the covers load). It redraws every screen in the login's layout; desktop and phone are one markup.
 - **Open [`mockups/index.html`](mockups/index.html) in a browser** to see all screens and components, in light and dark.
 - [`brand-book.md`](brand-book.md): voice, colour, type, layout, htmx patterns and accessibility rules. Read this before building a page.
 - [`microcopy.md`](microcopy.md): sample copy for every screen and the product-name candidates.
