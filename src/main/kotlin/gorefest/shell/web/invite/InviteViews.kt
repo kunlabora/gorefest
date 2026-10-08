@@ -86,6 +86,7 @@ private fun FlowContent.signInForm(path: String, title: String) =
         hx("post", "/login")
         hx("swap", "outerHTML")
         hiddenInput("returnTo", "$path?join=1")
+        hiddenInput("submitLabel", "Join $title")
         label("gf-label") { htmlFor = "email"; +"Your email" }
         div("gf-signin__row") {
             input(InputType.email, name = "email", classes = "gf-input") {

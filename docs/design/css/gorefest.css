@@ -714,4 +714,9 @@ div.gf-tile { cursor: default; }
   .gf-mailcard__link { display: inline-flex; justify-self: start; padding: 10px 16px; border-radius: 12px; background: var(--brand); color: var(--on-brand); font: 700 15px/20px var(--font-sans); box-shadow: var(--shadow-brand-edge); }
 }
 
+/* ==== R13 remaining pages ==== */
+.gf-narrow { width: 100%; max-width: 560px; }
+.gf-cancel-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.gf-readiness { max-width: 640px; }
+
 /* ==== end of per-screen blocks ==== */

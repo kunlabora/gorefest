@@ -1,5 +1,6 @@
 package gorefest.shell.web.auth
 
+import io.ktor.http.Parameters
 import gorefest.core.auth.LoginCheck
 import gorefest.core.PlayerId
 import gorefest.shell.AppConfig
@@ -42,13 +43,13 @@ fun Route.authRoutes() {
         val returnTo = safeReturnTo(form["returnTo"])
         val email = form["email"].orEmpty().trim().lowercase()
         if (!EMAIL.matches(email)) {
-            return@post respondFragment { emailForm(returnTo, form["email"].orEmpty(), "That doesn't look like an email address.") }
+            return@post respondFragment { emailForm(returnTo, form["email"].orEmpty(), "That doesn't look like an email address.", form.submitLabel()) }
         }
         when (val requested = login.request(email, returnTo, address = call.request.origin.remoteAddress)) {
             is Login.Requested.Sent -> redirect("/login/code?attempt=${requested.attempt}")
             Login.Requested.TooMany ->
                 if (form["resend"] == "1") respondFragment { errorNotice("That's a lot of codes. Wait a bit, then try again.", id = "resend") }
-                else respondFragment { emailForm(returnTo, form["email"].orEmpty(), "That's a lot of codes. Wait a bit, then try again.") }
+                else respondFragment { emailForm(returnTo, form["email"].orEmpty(), "That's a lot of codes. Wait a bit, then try again.", form.submitLabel()) }
         }
     }
 
@@ -142,3 +143,6 @@ private fun LoginCheck.message() = when (this) {
     LoginCheck.AlreadyUsed -> "That code was already used. Send it again for a fresh one."
     LoginCheck.Ok -> error("Not a failure")
 }
+
+/** The invite page signs people in through this route and wants its own button label back after an error. */
+private fun Parameters.submitLabel(): String = this["submitLabel"]?.takeIf { it.length <= 80 } ?: "Send me a code"

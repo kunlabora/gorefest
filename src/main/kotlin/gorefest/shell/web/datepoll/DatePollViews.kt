@@ -186,24 +186,32 @@ fun HTML.pollInvitePage(view: PollInviteView) {
     val host = view.names[poll.host] ?: "Someone"
     page(
         "Find a date: ${poll.title}",
-        appBar = { appBarTitle("Gorefest") },
+        appBar = { wordmark() },
+        mainClasses = "gf-landing",
+        wide = true,
         head = {
             openGraph("og:title", "$host is finding a date: ${poll.title}")
             openGraph("og:description", poll.dates.joinToString(" · ") { it.short() })
         },
-        dock = { joinForm(view.path, "Join and answer", view.loggedIn) },
     ) {
-        inviterLine(poll.host, view.names[poll.host], "wants to find a date for a game day")
-        h1("gf-hero") { +poll.title }
-        ul("gf-facts") {
-            if (poll.place.isNotBlank()) li { icon("pin"); +poll.place }
-            li { icon("calendar"); +"${poll.dates.size.of("date")} to choose from" }
-            li { icon("users"); avatarStack(poll.participants, view.names); +"${poll.participants.size.of("person", "people")} in" }
+        wrap {
+            split {
+                div("gf-split__copy") {
+                    inviterLine(poll.host, view.names[poll.host], "wants to find a date for a game day")
+                    h1("gf-h1 gf-h1--landing") { +poll.title }
+                    ul("gf-facts") {
+                        if (poll.place.isNotBlank()) li { icon("pin"); +poll.place }
+                        li { icon("calendar"); +"${poll.dates.size.of("date")} to choose from" }
+                        li { icon("users"); avatarStack(poll.participants, view.names); +"${poll.participants.size.of("person", "people")} in" }
+                    }
+                    p("gf-small gf-muted") { +"Tick the dates you can make. ${host} picks the winner and the game day appears." }
+                    div("gf-narrow") { joinForm(view.path, "Join and answer", view.loggedIn) }
+                }
+                ul("gf-list") {
+                    poll.dates.forEach { date -> li("gf-row") { span("gf-row__main") { span("gf-row__title") { +date.short() } } } }
+                }
+            }
         }
-        ul("gf-list") {
-            poll.dates.forEach { date -> li("gf-row") { span("gf-row__main") { span("gf-row__title") { +date.short() } } } }
-        }
-        p("gf-small gf-muted") { +"Tick the dates you can make. ${host} picks the winner and the game day appears." }
     }
 }
 

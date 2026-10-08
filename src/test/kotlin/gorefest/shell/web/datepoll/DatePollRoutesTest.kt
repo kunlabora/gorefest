@@ -134,7 +134,7 @@ class DatePollRoutesTest {
         val landing = client.get("/p/${token()}").page()
         landing.one("h1").text() shouldBe "Gorefest #8"
         landing.select(".gf-list li").map { it.text() } shouldContainExactly listOf("Fri 9 Oct", "Sat 10 Oct", "Sun 11 Oct")
-        landing.one(".gf-dock form").attr("action") shouldBe "/p/${token()}/join"
+        landing.one(".gf-narrow form").attr("action") shouldBe "/p/${token()}/join"
 
         client.submitForm("/p/${token()}/join", Parameters.Empty).headers["Location"] shouldBe pollPage
         app.datePolls.of(poll)!!.participants shouldBe listOf(annaId, bramId, kimId)

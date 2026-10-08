@@ -262,15 +262,20 @@ fun HTML.gameDayPage(hub: GameDayHub) {
 }
 
 /** The host's confirm step: cancelling is final, and nobody is mailed. */
+context(me: CurrentPlayer)
 fun HTML.cancelGameDayPage(gameDay: GameDaySummary, error: String? = null) =
-    page("Cancel ${gameDay.title}", appBar = { backLink("/gamedays/${gameDay.id}", gameDay.title); appBarTitle("Cancel game day") }) {
-        div("gf-stack") {
-            h1("gf-h1") { +"Cancel ${gameDay.title}?" }
-            if (error != null) errorNotice(error)
-            p("gf-muted") { +"The game day stays visible to everyone who joined, marked as cancelled, and can't be changed anymore. The invite link stops working. Nobody gets an email, so tell your group yourself." }
-            form(action = "/gamedays/${gameDay.id}/cancel", method = FormMethod.post, classes = "gf-stack") {
-                button(type = ButtonType.submit, classes = buttonClasses(ButtonStyle.PRIMARY, ButtonSize.LARGE, block = true)) { +"Yes, cancel the game day" }
-                linkButton("/gamedays/${gameDay.id}", "Keep it", ButtonStyle.GHOST, block = true)
+    page("Cancel ${gameDay.title}", site = SiteBar(me, Nav.GAME_DAYS), mainClasses = "gf-landing") {
+        wrap {
+            div("gf-split__copy gf-narrow") {
+                crumb("/gamedays/${gameDay.id}", gameDay.title)
+                p("gf-kicker") { +"Cancel game day" }
+                h1("gf-h1 gf-h1--landing") { +"Cancel ${gameDay.title}?" }
+                if (error != null) errorNotice(error)
+                p("gf-lede gf-muted") { +"The game day stays visible to everyone who joined, marked as cancelled, and can't be changed anymore. The invite link stops working. Nobody gets an email, so tell your group yourself." }
+                form(action = "/gamedays/${gameDay.id}/cancel", method = FormMethod.post, classes = "gf-cancel-actions") {
+                    button(type = ButtonType.submit, classes = buttonClasses(ButtonStyle.PRIMARY, ButtonSize.LARGE)) { +"Yes, cancel the game day" }
+                    linkButton("/gamedays/${gameDay.id}", "Keep it", ButtonStyle.GHOST)
+                }
             }
         }
     }

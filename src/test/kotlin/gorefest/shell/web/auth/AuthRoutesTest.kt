@@ -117,6 +117,13 @@ class AuthRoutesTest {
     }
 
     @Test
+    fun `an invite's sign-in keeps its own button label when the email is rejected`() = test.webTest { client ->
+        val form = client.htmxPost("/login", parameters { append("email", "kim-at-home"); append("submitLabel", "Join Gorefest #7") }).fragment()
+
+        form.one("button[type=submit]").text() shouldBe "Join Gorefest #7"
+    }
+
+    @Test
     fun `the code logs a new player in, asks their name, then goes where they were going`() = test.webTest { client ->
         client.askForCode(returnTo = "/gamedays/new")
 

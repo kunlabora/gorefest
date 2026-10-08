@@ -6,7 +6,7 @@ import kotlinx.html.*
 
 private val LINK = Regex("""https?://\S+""")
 
-fun HTML.devMailboxPage(mails: List<Mail>) = page("Dev mailbox", appBar = { appBarTitle("Dev mailbox") }) {
+fun HTML.devMailboxPage(mails: List<Mail>) = page("Dev mailbox", appBar = { wordmark() }, mainClasses = "gf-landing", wide = true) { wrap {
     h1("gf-h1") { +"Dev mailbox" }
     if (mails.isEmpty()) emptyState("No mail yet", "Ask for a login code and it shows up here.")
     ul("gf-list") {
@@ -22,4 +22,4 @@ fun HTML.devMailboxPage(mails: List<Mail>) = page("Dev mailbox", appBar = { appB
         }
     }
     p("gf-small") { +"Newest first. Mail lives in memory and is gone after a restart." }
-}
+} }

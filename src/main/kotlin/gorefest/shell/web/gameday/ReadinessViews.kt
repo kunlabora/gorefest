@@ -15,29 +15,34 @@ data class ReadinessView(val gameDay: GameDaySummary, val readiness: Readiness, 
 context(me: CurrentPlayer)
 fun HTML.readinessPage(view: ReadinessView) {
     val (gameDay, readiness) = view
-    page("How ready are we?", appBar = { backLink("/gamedays/${gameDay.id}", gameDay.title); appBarTitle("${gameDay.title} · Host") }) {
-        div("gf-stack") {
-            p("gf-kicker") {
-                +when {
-                    view.daysToGo > 1 -> "${view.daysToGo} days to go"
-                    view.daysToGo == 1L -> "Tomorrow"
-                    view.daysToGo == 0L -> "Today"
-                    else -> "Over"
+    page("How ready are we?", site = SiteBar(me, Nav.GAME_DAYS), mainClasses = "gf-landing") {
+        wrap {
+            div("gf-split__copy gf-readiness") {
+                crumb("/gamedays/${gameDay.id}", gameDay.title)
+                p("gf-kicker") {
+                    +when {
+                        view.daysToGo > 1 -> "${view.daysToGo} days to go"
+                        view.daysToGo == 1L -> "Tomorrow"
+                        view.daysToGo == 0L -> "Today"
+                        else -> "Over"
+                    }
                 }
+                h1("gf-h1 gf-h1--landing") { +"How ready are we?" }
+                div("gf-stats") {
+                    stat("${readiness.joined}", "joined")
+                    stat("${readiness.shelf}", "on the shelf")
+                    stat("${readiness.tasteReady}/${readiness.joined}", "taste ready")
+                }
+                readiness.gaps.lastOrNull()?.let { gap -> notice("users") { gapText(gap) } }
+                if (readiness.shelf == 0) notice("dice") { strong { +"The shelf is empty." }; +" Tick what you're bringing and ask the others to do the same." }
             }
-            h1("gf-h1") { +"How ready are we?" }
         }
-        div("gf-stats") {
-            stat("${readiness.joined}", "joined")
-            stat("${readiness.shelf}", "on the shelf")
-            stat("${readiness.tasteReady}/${readiness.joined}", "taste ready")
-        }
-        readiness.gaps.lastOrNull()?.let { gap -> notice("users") { gapText(gap) } }
-        if (readiness.shelf == 0) notice("dice") { strong { +"The shelf is empty." }; +" Tick what you're bringing and ask the others to do the same." }
-        section("gf-section") {
-            h2("gf-h2") { +"Players" }
-            ul("gf-list") { readiness.players.forEach { playerRow(it, view) } }
-            p("gf-hint") { +"Nudge copies a friendly message with a link to the taste round. Paste it in the chat." }
+        band(sunk = true) {
+            div("gf-stack") {
+                h2("gf-h2") { +"Players" }
+                ul("gf-list") { readiness.players.forEach { playerRow(it, view) } }
+                p("gf-hint") { +"Nudge copies a friendly message with a link to the taste round. Paste it in the chat." }
+            }
         }
     }
 }

@@ -166,12 +166,13 @@ private fun FlowContent.resendLinks(email: String, returnTo: String) = form(acti
 }
 
 /** Email and button share one row on a wide screen; htmx re-renders the form in place when the server rejects the input. */
-fun TagConsumer<*>.emailForm(returnTo: String, email: String = "", error: String? = null) =
+fun TagConsumer<*>.emailForm(returnTo: String, email: String = "", error: String? = null, submitLabel: String = "Send me a code") =
     form(action = "/login", method = FormMethod.post, classes = if (error != null) "gf-signin gf-field--invalid" else "gf-signin") {
         id = "email-form"
         hx("post", "/login")
         hx("swap", "outerHTML")
         hiddenInput("returnTo", returnTo)
+        if (submitLabel != "Send me a code") hiddenInput("submitLabel", submitLabel)
         label("gf-label") { htmlFor = "email"; +"Email address" }
         div("gf-signin__row") {
             input(InputType.email, name = "email", classes = "gf-input") {
@@ -183,7 +184,7 @@ fun TagConsumer<*>.emailForm(returnTo: String, email: String = "", error: String
                 attributes["autocomplete"] = "email"
                 if (error != null) attributes["aria-invalid"] = "true"
             }
-            button(type = ButtonType.submit, classes = buttonClasses(ButtonStyle.PRIMARY, ButtonSize.LARGE)) { spinner(); +"Send me a code" }
+            button(type = ButtonType.submit, classes = buttonClasses(ButtonStyle.PRIMARY, ButtonSize.LARGE)) { spinner(); +submitLabel }
         }
         if (error != null) fieldError(error)
         p("gf-hint") { +"We'll email a sign-in link and a 6-digit code. No password." }

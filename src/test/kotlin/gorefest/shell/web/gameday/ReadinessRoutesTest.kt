@@ -49,7 +49,7 @@ class ReadinessRoutesTest {
 
         val page = client.get(ready).page()
 
-        page.one("main > .gf-stack > .gf-kicker").text() shouldBe "3 days to go"
+        page.one(".gf-readiness > .gf-kicker").text() shouldBe "3 days to go"
         page.select(".gf-stat").map { it.text() } shouldBe listOf("2 joined", "1 on the shelf", "0/2 taste ready")
         page.select(".gf-row") shouldHaveSize 2
         val nudge = page.one(".gf-row button")
