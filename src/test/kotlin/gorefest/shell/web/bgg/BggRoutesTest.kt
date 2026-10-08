@@ -11,6 +11,7 @@ import gorefest.shell.web.one
 import gorefest.shell.web.page
 import gorefest.shell.web.shouldReplace
 import io.kotest.matchers.collections.shouldBeEmpty
+import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldMatch
 import io.ktor.client.request.get
@@ -94,10 +95,21 @@ class BggRoutesTest {
     fun `with the code on the profile, the account is linked and you go back`() = test.webTest(session = kim) { client ->
         test.bgg.putInProfile("KimPlays", "My site: https://example.com $code")
 
-        client.verify("KimPlays").headers["HX-Redirect"] shouldBe "/collection"
+        client.verify("KimPlays").headers["HX-Redirect"] shouldBe "/collection?returnTo=%2Fgamedays%2Fnew"
 
         app.bggAccounts.usernameOf(kimId) shouldBe "KimPlays"
         client.get("/bgg").page().one("h1").text() shouldBe "You're linked"
+    }
+
+    @Test
+    fun `the collection page offers the way back to where you were going`() = test.webTest(session = kim) { client ->
+        test.bgg.putInProfile("KimPlays", code)
+        client.verify("KimPlays")
+
+        val back = client.get("/collection?returnTo=%2Fgamedays%2Fabc%2Fbring").page().one(".gf-continue a.gf-btn--primary")
+        back.attr("href") shouldBe "/gamedays/abc/bring"
+        back.text() shouldBe "Back to bringing games"
+        client.get("/collection").page().select(".gf-continue") shouldHaveSize 0
     }
 
     @Test
@@ -115,6 +127,6 @@ class BggRoutesTest {
 
         button.attr("hx-post") shouldBe "/dev/bgg/profile"
         client.htmxPost("/dev/bgg/profile", parameters { append("username", "KimPlays"); append("code", code) })
-        client.verify("KimPlays").headers["HX-Redirect"] shouldBe "/collection"
+        client.verify("KimPlays").headers["HX-Redirect"] shouldBe "/collection?returnTo=%2Fgamedays%2Fnew"
     }
 }

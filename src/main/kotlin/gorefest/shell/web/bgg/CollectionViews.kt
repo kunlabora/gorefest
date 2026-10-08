@@ -9,13 +9,20 @@ import kotlinx.html.*
 
 data class CollectionView(val sync: CollectionSyncState?, val games: List<Game>)
 
-fun HTML.collectionPage(view: CollectionView, me: CurrentPlayer) = page("Your collection", site = SiteBar(me, Nav.COLLECTION)) {
+/** [onward] is where the player was going before linking BGG (bringing games, say): it gets the page's one brand button. */
+fun HTML.collectionPage(view: CollectionView, me: CurrentPlayer, onward: String? = null) = page("Your collection", site = SiteBar(me, Nav.COLLECTION)) {
     wrap("gf-collection") {
         p("gf-kicker") { +"BoardGameGeek" }
         h1("gf-h1 gf-h1--landing") { +"Your collection" }
+        if (onward != null) div("gf-continue") {
+            linkButton(onward, onwardLabel(onward), ButtonStyle.PRIMARY, ButtonSize.LARGE)
+            p("gf-small gf-muted") { +"Your games are on their way from BGG; you can carry on while they load." }
+        }
         consumer.collection(view)
     }
 }
+
+private fun onwardLabel(path: String) = if (path.endsWith("/bring")) "Back to bringing games" else "Carry on"
 
 /** Polls every 2 s while BGG is still working, then shows the games. */
 fun TagConsumer<*>.collection(view: CollectionView) = div("gf-stack") {

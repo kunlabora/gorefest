@@ -12,6 +12,7 @@ import gorefest.shell.web.CurrentPlayer
 import gorefest.shell.web.message
 import gorefest.shell.web.authenticated
 import gorefest.shell.web.redirect
+import gorefest.shell.web.urlEncoded
 import gorefest.shell.web.respondFragment
 import gorefest.shell.web.safeReturnTo
 import io.ktor.server.html.respondHtml
@@ -65,7 +66,8 @@ fun Route.bggRoutes(app: App) {
             when (val decision = app.commands.handle(LinkBggAccountDecider, LinkBggAccount(me.id, user.name))) {
                 is Decision.Accepted -> {
                     app.collectionSync.request(me.id, user.name, BggPriority.LINK)
-                    redirect("/collection")
+                    // Back to where the player was heading (bringing games, say): the collection page offers the way on.
+                    redirect(if (returnTo == "/") "/collection" else "/collection?returnTo=${returnTo.urlEncoded()}")
                 }
                 is Decision.Rejected -> respondFragment { codeStep(returnTo, username, code, dev, decision.reason.message()) }
             }

@@ -9,6 +9,7 @@ import gorefest.shell.web.CurrentPlayer
 import gorefest.shell.web.authenticated
 import gorefest.shell.web.redirect
 import gorefest.shell.web.respondFragment
+import gorefest.shell.web.safeReturnTo
 import io.ktor.server.html.respondHtml
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
@@ -21,7 +22,7 @@ fun Route.collectionRoutes(app: App) {
             val me = contextOf<CurrentPlayer>()
             if (!app.bggAccounts.isLinked(me.id)) return@authenticated redirect("/bgg?returnTo=%2Fcollection")
             val view = collectionView(app, me)
-            call.respondHtml { collectionPage(view, me) }
+            call.respondHtml { collectionPage(view, me, onward = call.parameters["returnTo"]?.let(::safeReturnTo)?.takeIf { it != "/" && it != "/collection" }) }
         }
     }
 

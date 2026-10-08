@@ -719,4 +719,6 @@ div.gf-tile { cursor: default; }
 .gf-cancel-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
 .gf-readiness { max-width: 640px; }
 
+.gf-continue { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-2); }
+
 /* ==== end of per-screen blocks ==== */
