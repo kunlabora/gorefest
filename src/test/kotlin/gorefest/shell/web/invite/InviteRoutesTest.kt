@@ -1,5 +1,6 @@
 package gorefest.shell.web.invite
 
+import gorefest.core.GameBrought
 import gorefest.core.GameDayEnded
 import gorefest.core.InviteLinkRotated
 import gorefest.core.PlayerId
@@ -7,6 +8,7 @@ import gorefest.core.PlayerJoined
 import gorefest.core.gameday.anna
 import gorefest.core.gameday.gameDayCreated
 import gorefest.core.gameday.gorefest7
+import gorefest.shell.bgg.DevCatalog
 import gorefest.shell.web.TestApp
 import gorefest.shell.web.components.facts
 import gorefest.shell.web.components.hx
@@ -17,6 +19,7 @@ import gorefest.shell.web.htmxPost
 import gorefest.shell.web.one
 import gorefest.shell.web.page
 import gorefest.shell.web.shouldReplace
+import gorefest.shell.web.texts
 import gorefest.shell.web.urlEncoded
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.shouldBe
@@ -62,10 +65,43 @@ class InviteRoutesTest {
         val page = client.get(link).page()
 
         page.one("main .gf-muted strong").text() shouldBe "Anna"
-        page.one("h1.gf-hero").text() shouldBe "Gorefest #7"
+        page.one("h1").text() shouldBe "Gorefest #7"
         page.select(".gf-facts li").map { it.ownText() } shouldBe listOf("Sunday 27 September", "Anna's place", "1 player going")
-        page.one(".gf-dock form").attr("action") shouldBe "$link/join"
-        page.one(".gf-dock button").text() shouldBe "Join Gorefest #7"
+    }
+
+    @Test
+    fun `a logged-out visitor starts signing in on the invite itself and comes back to join`() = test.webTest { client ->
+        val page = client.get(link).page()
+
+        val form = page.one("form#invite-signin")
+        form.attr("action") shouldBe "/login"
+        form.attr("hx-post") shouldBe "/login"
+        form.one("input[name=returnTo]").`val`() shouldBe "$link?join=1"
+        form.one("input[type=email][name=email]").hasAttr("required") shouldBe true
+        form.one("button").text() shouldBe "Join Gorefest #7"
+        page.select(".gf-appbar .gf-nav").shouldBeEmpty()
+        page.texts(".gf-inv-step__title") shouldBe listOf("Sign in with your email", "Pick between two games", "Bring games, get suggestions")
+    }
+
+    @Test
+    fun `a logged-in player sees the site bar and just a join button`() = test.webTest(session = kim) { client ->
+        val page = client.get(link).page()
+
+        page.select("form#invite-signin").shouldBeEmpty()
+        page.one("form[action=$link/join] button").text() shouldBe "Join Gorefest #7"
+        page.texts(".gf-appbar .gf-nav a") shouldBe listOf("Game days", "Collection")
+    }
+
+    @Test
+    fun `the shelf shows as a hand of covers, each with who brings it`() = test.webTest { client ->
+        app.catalog.put(DevCatalog.games, test.clock.instant())
+        given(GameBrought(gorefest7, anna, DevCatalog.games.first { it.name == "Azul" }.id))
+
+        val page = client.get(link).page()
+
+        page.one(".gf-hand .gf-hand__name").text() shouldBe "Azul"
+        page.one(".gf-hand .gf-hand__chip").text() shouldBe "Brought by Anna"
+        page.select(".gf-inv-fan .gf-art").size shouldBe 1
     }
 
     @Test

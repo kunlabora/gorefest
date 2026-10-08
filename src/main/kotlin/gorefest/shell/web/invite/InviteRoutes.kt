@@ -9,6 +9,7 @@ import gorefest.shell.AppConfig
 import gorefest.shell.auth.Login
 import gorefest.shell.auth.Player
 import gorefest.shell.gameday.InviteLinks
+import gorefest.shell.web.CurrentPlayer
 import gorefest.shell.web.message
 import gorefest.shell.web.components.full
 import gorefest.shell.web.gameday.invite
@@ -71,8 +72,8 @@ fun Route.inviteRoutes(app: App, invites: InviteLinks) {
         // Back from signing up or logging in for this invite: the player already said yes, so join without asking again.
         if (me?.name != null && invites.isJoinMarker(call.parameters["join"], me.id, "/i/$token")) return@get join(gameDay, me)
 
-        val names = login.names(gameDay.players)
-        val shelf = app.shelves.of(gameDay.id).mapNotNull { app.catalog[it.game] }
+        val shelf = app.shelves.of(gameDay.id).mapNotNull { entry -> app.catalog[entry.game]?.let { it to entry } }
+        val names = login.names(gameDay.players + shelf.flatMap { it.second.owners })
         val landing = InviteLanding(
             gameDay = gameDay,
             names = names,
@@ -81,6 +82,7 @@ fun Route.inviteRoutes(app: App, invites: InviteLinks) {
             baseUrl = config.baseUrl,
             path = "/i/$token",
             loggedIn = me != null,
+            me = me?.name?.let { CurrentPlayer(me.id, it) },
         )
         call.respondHtml { invitePage(landing) }
     }

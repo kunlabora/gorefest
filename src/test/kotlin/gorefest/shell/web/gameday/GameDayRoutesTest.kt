@@ -119,6 +119,19 @@ class GameDayRoutesTest {
         form.attr("hx-post") shouldBe "/gamedays"
         form.select("input.gf-input").map { it.attr("name") } shouldContainExactly listOf("title", "date", "place")
         form.one("label[for=title]").text() shouldBe "Title"
+        form.one("button[type=submit]").text() shouldBe "Create game day"
+    }
+
+    @Test
+    fun `the invite preview mirrors the fields, in the browser`() = webTest { client ->
+        val page = client.get("/gamedays/new").page()
+
+        val form = page.one("form")
+        form.attr("_") shouldContain "put t into #pv-title"
+        page.one("#pv-title").text() shouldBe page.one("#title").`val`()
+        page.one("#pv-date").text() shouldBe "Pick a date"
+        page.one("#pv-place-row").hasAttr("hidden") shouldBe true
+        page.one(".gf-pv").parents().any { it.hasClass("gf-desk-only") } shouldBe true
     }
 
     @Test
@@ -135,8 +148,8 @@ class GameDayRoutesTest {
         val pages = listOf("/", "/gamedays/new", "/gamedays/00000000-0000-0000-0000-000000000001", "/gamedays/00000000-0000-0000-0000-000000000001/edit")
 
         pages.forEach { url ->
-            val toggle = client.get(url).page().one(".gf-appbar > :last-child")
-            toggle.hasClass("gf-theme-toggle") shouldBe true
+            val toggle = client.get(url).page().one(".gf-appbar .gf-theme-toggle")
+            toggle.nextElementSibling() shouldBe null
             toggle.attr("_") shouldBe "on click call gorefestToggleTheme()"
             toggle.attr("aria-label") shouldBe "Dark mode"
             toggle.select(".gf-theme-toggle__moon svg, .gf-theme-toggle__sun svg").size shouldBe 2
@@ -320,7 +333,7 @@ class GameDayRoutesTest {
         val fragment = client.get("/gamedays/title?title=${title.replace(" ", "+")}").fragment()
         fragment shouldReplace "title-field"
         fragment.one("#title").`val`() shouldNotBe title
-        fragment.one("button").text() shouldBe "Another one"
+        fragment.one("button").attr("aria-label") shouldBe "Another title"
     }
 
     @Test
