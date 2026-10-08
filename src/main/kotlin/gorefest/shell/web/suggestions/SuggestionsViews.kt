@@ -2,67 +2,110 @@ package gorefest.shell.web.suggestions
 
 import gorefest.core.PlayerId
 import gorefest.core.gameday.GameDaySummary
-import gorefest.core.matching.Matcher
 import gorefest.core.matching.Suggestions
+import gorefest.shell.web.CurrentPlayer
 import gorefest.shell.web.components.*
 import kotlinx.html.*
 
-/** Time options: label to budget in minutes (null: any). */
 /** Hidden marker in the table form: present-but-empty `players` means nobody is ticked, not everybody. */
 const val TABLE_SET = "tableSet"
 
+/** Time options: label to budget in minutes (null: any). */
 val TIMES = listOf("Any" to null, "45m" to 45, "90m" to 90, "2h" to 120, "3h+" to 240)
 
-/** The table picker: who's playing, how long, and the suggestions for that. [chosen] is null for "everyone". */
+/** The table picker: who's playing, how long, and the suggestions for that. [chosen] is null for "everyone"; [table] is who that comes to. */
 data class TableView(
     val gameDay: GameDaySummary,
     val names: Map<PlayerId, String>,
     val chosen: Set<String>?,
+    val table: List<PlayerId>,
     val time: String,
     val suggestions: Suggestions,
     val tableSize: Int,
-    val me: PlayerId,
+    val me: CurrentPlayer,
 )
 
 fun HTML.tablePage(view: TableView) = page(
     "Pick a game",
-    appBar = { backLink("/gamedays/${view.gameDay.id}", view.gameDay.title); appBarTitle("${view.gameDay.title} · Pick a game") },
+    site = SiteBar(view.me, Nav.GAME_DAYS),
+    mainClasses = "gf-body--pick",
 ) {
-    form(classes = "gf-section") {
-        id = "table-form"
-        hx("get", "/gamedays/${view.gameDay.id}/suggestions")
-        hx("trigger", "change")
-        hx("target", "#suggestions")
-        hx("swap", "outerHTML")
-        hiddenInput(TABLE_SET, "1")
-        h2("gf-h2") { +"Who's at the table?" }
-        playerChips(view.gameDay.players, view.names, checked = { view.chosen == null || it.toString() in view.chosen })
-        segmented("time", "Time", TIMES.map { it.first }, checked = view.time, idPrefix = "time")
+    wrap {
+        crumb("/gamedays/${view.gameDay.id}", view.gameDay.title)
+        h1("gf-h1 gf-picker__title") { +"Pick a game" }
+        div("gf-picker") {
+            form(classes = "gf-picker__side") {
+                id = "table-form"
+                hx("get", "/gamedays/${view.gameDay.id}/suggestions")
+                hx("trigger", "change")
+                hx("target", "#suggestions")
+                hx("swap", "outerHTML")
+                hiddenInput(TABLE_SET, "1")
+                section("gf-picker__panel") {
+                    h2("gf-h2") { +"Who's at the table?" }
+                    playerChips(view.gameDay.players, view.names, checked = { view.chosen == null || it.toString() in view.chosen })
+                    h2("gf-h2") { +"How long?" }
+                    segmented("time", "Time", TIMES.map { it.first }, checked = view.time, idPrefix = "time")
+                }
+            }
+            consumer.suggestions(view)
+        }
     }
-    consumer.suggestions(view.suggestions, view.tableSize, view.gameDay, view.names, view.me)
 }
 
-fun TagConsumer<*>.suggestions(suggestions: Suggestions, tableSize: Int, gameDay: GameDaySummary, names: Map<PlayerId, String>, me: PlayerId) = section("gf-section") {
+/**
+ * The answer, swapped whenever the table form changes: the collapsed table bar (phone) and the picks.
+ * The root lays out as the page's own grid cells (`display: contents`), so the bar sits above the form on the phone.
+ */
+fun TagConsumer<*>.suggestions(view: TableView) = section("gf-picker__answer") {
     id = "suggestions"
     attributes["aria-live"] = "polite"
-    when (suggestions) {
-        is Suggestions.Found -> {
-            h2("gf-h2") { +"Play this" }
-            if (suggestions.unknown.isNotEmpty()) unknownTaste(suggestions.unknown, tableSize, gameDay, names, me)
-            suggestions.top.forEachIndexed { i, s ->
-                rankedGame(i + 1, s.game, s.reason.text()) { icon("clock"); +"~${s.minutes} min for ${if (i == 0) "the $tableSize of you" else "$tableSize"}" }
+    tableBar(view)
+    div("gf-picker__results") {
+        when (val suggestions = view.suggestions) {
+            is Suggestions.Found -> {
+                h2("gf-h2") { +"Play this" }
+                if (suggestions.unknown.isNotEmpty()) unknownTaste(suggestions.unknown, view.tableSize, view.gameDay, view.names, view.me.id)
+                suggestions.top.take(1).forEach { s ->
+                    rankedGame(1, s.game, s.reason.text()) { icon("clock"); +"~${s.minutes} min for the ${view.tableSize} of you" }
+                }
+                if (suggestions.top.size > 1) div("gf-picker__more") {
+                    suggestions.top.drop(1).forEachIndexed { i, s ->
+                        rankedGame(i + 2, s.game, s.reason.text()) { icon("clock"); +"~${s.minutes} min for ${view.tableSize}" }
+                    }
+                }
+            }
+            is Suggestions.NothingFits -> emptyState(suggestions.title(), suggestions.text()) {
+                if (suggestions !is Suggestions.NothingFits.NoGameInTime) return@emptyState
+                val relax = suggestions.relaxTo ?: return@emptyState
+                val fitsThen = suggestions.fitsThen
+                val label = TIMES.firstOrNull { it.second == relax }?.first ?: "Any"
+                div("gf-stack") {
+                    style = "width: 100%"
+                    relaxButton(label, "Try ${relax.asDuration()}: $fitsThen ${if (fitsThen == 1) "game fits" else "games fit"}")
+                }
             }
         }
-        is Suggestions.NothingFits -> emptyState(suggestions.title(), suggestions.text()) {
-            if (suggestions !is Suggestions.NothingFits.NoGameInTime) return@emptyState
-            val relax = suggestions.relaxTo ?: return@emptyState
-            val fitsThen = suggestions.fitsThen
-            val label = TIMES.firstOrNull { it.second == relax }?.first ?: "Any"
-            div("gf-stack") {
-                style = "width: 100%"
-                relaxButton(label, "Try ${relax.asDuration()}: $fitsThen ${if (fitsThen == 1) "game fits" else "games fit"}")
+    }
+}
+
+/** On the phone the table form folds away: this bar says who and how long, and "Change" unfolds it. */
+private fun FlowContent.tableBar(view: TableView) = div("gf-tablebar") {
+    avatarStack(view.table, view.names, max = 4)
+    div("gf-tablebar__text") {
+        b { +if (view.tableSize == 0) "Nobody at the table" else "${view.tableSize} at the table" }
+        span("gf-muted gf-small") {
+            +when (view.time) {
+                "Any" -> "Any length"
+                "3h+" -> "3 hours or more"
+                else -> TIMES.firstOrNull { it.first == view.time }?.second?.let { "Up to ${it.asDuration()}" } ?: "Any length"
             }
         }
+    }
+    button(type = ButtonType.button, classes = buttonClasses(ButtonStyle.SECONDARY, ButtonSize.SMALL)) {
+        attributes["aria-controls"] = "table-form"
+        hyperscript("on click toggle .is-open on #table-form")
+        +"Change"
     }
 }
 

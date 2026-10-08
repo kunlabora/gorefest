@@ -34,7 +34,8 @@ fun Route.shelfRoutes(app: App) {
             val me = contextOf<CurrentPlayer>()
             val gameDay = memberGameDay(app, me) ?: return@authenticated call.respond(HttpStatusCode.NotFound)
             val rows = bringList(app, gameDay, me)
-            call.respondHtml { bringPage(gameDay, rows, wishList(app, gameDay, me), app.bggAccounts.isLinked(me.id)) }
+            val summary = summaryFor(app, gameDay, me, login)
+            call.respondHtml { bringPage(me, gameDay, rows, wishList(app, gameDay, me), app.bggAccounts.isLinked(me.id), summary) }
         }
     }
 
@@ -44,7 +45,18 @@ fun Route.shelfRoutes(app: App) {
             val me = contextOf<CurrentPlayer>()
             val gameDay = memberGameDay(app, me) ?: return@authenticated call.respond(HttpStatusCode.NotFound)
             val rows = bringList(app, gameDay, me)
-            respondFragment { bringList(gameDay, rows) }
+            val linked = app.bggAccounts.isLinked(me.id)
+            respondFragment { bringList(gameDay, rows, linked) }
+        }
+    }
+
+    /** The shelf count, who brought what and the tray, fetched again when the shelf changed. */
+    get("/gamedays/{id}/bring/summary") {
+        authenticated {
+            val me = contextOf<CurrentPlayer>()
+            val gameDay = memberGameDay(app, me) ?: return@authenticated call.respond(HttpStatusCode.NotFound)
+            val summary = summaryFor(app, gameDay, me, login)
+            respondFragment { bringSummary(gameDay, summary) }
         }
     }
 
@@ -102,6 +114,16 @@ private suspend fun bringList(app: App, gameDay: GameDaySummary, me: CurrentPlay
     val shelf = app.shelves.of(gameDay.id)
     val ids = owned + shelf.filter { me.id in it.owners }.map { it.game }
     return ids.mapNotNull(app.catalog::get).sortedBy { it.name.lowercase() }.map { bringRow(it, shelf, me) }
+}
+
+private suspend fun summaryFor(app: App, gameDay: GameDaySummary, me: CurrentPlayer, login: Login): ShelfSummary {
+    val shelf = app.shelves.of(gameDay.id)
+    val counts = shelf.flatMap { it.owners }.groupingBy { it }.eachCount()
+    val names = login.names(counts.keys)
+    val byPlayer = counts.map { (id, count) -> ShelfOwner(id, names[id] ?: "Someone", count) }
+        .sortedWith(compareByDescending<ShelfOwner> { it.count }.thenBy { it.name })
+    val mine = shelf.filter { me.id in it.owners }.mapNotNull { app.catalog[it.game] }
+    return ShelfSummary(shelf.size, byPlayer, mine)
 }
 
 /** Everything on the shelf, in the order it was brought, with my hearts. */

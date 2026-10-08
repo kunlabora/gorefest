@@ -27,6 +27,7 @@ import gorefest.shell.web.page
 import gorefest.shell.web.shouldReplace
 import gorefest.shell.web.urlEncoded
 import io.kotest.matchers.collections.shouldBeEmpty
+import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
@@ -67,7 +68,7 @@ class ShelfRoutesTest {
     fun `my collection is listed with a switch per game`() = test.webTest(session = kim) { client ->
         val page = client.get(bringPage).page()
 
-        page.select("#bring-list .gf-game__name").map { it.text() } shouldContainExactly listOf("Azul", "Brass: Birmingham")
+        page.select("#bring-list .gf-tile__name").map { it.text() } shouldContainExactly listOf("Azul", "Brass: Birmingham")
         val switch = page.one("#bring-$brass input.gf-switch")
         switch.attr("hx-post") shouldBe "/gamedays/$gorefest7/shelf/$brass"
         switch.attr("hx-target") shouldBe "#bring-$brass"
@@ -101,7 +102,7 @@ class ShelfRoutesTest {
 
         val page = client.get(bringPage).page()
 
-        page.select("h2").map { it.text() } shouldContain "What do you want to play?"
+        page.select("h2").map { it.text() } shouldContain "Really want to play something?"
         page.select("#wish-list li .gf-game__name").map { it.text() } shouldContainExactly listOf("Azul", "Brass: Birmingham")
         val azulRow = page.one("#wish-$azul")
         azulRow.one("button").attr("hx-post") shouldBe "/gamedays/$gorefest7/shelf/$azul/wish"
@@ -151,7 +152,39 @@ class ShelfRoutesTest {
     }
 
     @Test
-    fun `the wish list reloads from the server, and ticking in the list asks for it`() = test.webTest(session = kim) { client ->
+    fun `the sidebar counts the table's shelf, says who brought what and what I'm adding, and Done goes back to the hub`() = test.webTest(session = kim) { client ->
+        given(GameBrought(gorefest7, kimId, brass), GameBrought(gorefest7, anna, azul), GameBrought(gorefest7, anna, BggId(13)))
+
+        val page = client.get(bringPage).page()
+
+        page.one(".gf-nav a[aria-current]").text() shouldBe "Game days"
+        val summary = page.one("#bring-summary")
+        summary.attr("hx-get") shouldBe "$bringPage/summary"
+        summary.attr("hx-trigger") shouldBe "bring-list-changed from:body delay:150ms, shelf-changed from:body delay:150ms"
+        summary.one(".gf-bring__total").text() shouldBe "3"
+        summary.select(".gf-bring__who li").map { it.one(".gf-bring__who-name").text() to it.select("span").last()!!.text() } shouldContainExactly
+            listOf("Anna" to "2 games", "Kim" to "1 game")
+        summary.one(".gf-bring__done a").text() shouldBe "Done: 1 game"
+        summary.one(".gf-bring__done a").attr("href") shouldBe "/gamedays/$gorefest7"
+        summary.one(".gf-tray a").attr("href") shouldBe "/gamedays/$gorefest7"
+        page.one("#bring-list h2").text() shouldBe "Your collection · 2"
+        page.one("#bring-$brass input").hasAttr("checked") shouldBe true
+    }
+
+    @Test
+    fun `the summary reloads from the server when the shelf changes`() = test.webTest(session = kim) { client ->
+        client.htmxPost("/gamedays/$gorefest7/shelf/$brass", parameters { append("bringing", "true") })
+
+        val summary = client.get("$bringPage/summary").fragment()
+
+        summary shouldReplace "bring-summary"
+        summary.one(".gf-bring__total").text() shouldBe "1"
+        summary.select(".gf-fan .gf-art").shouldNotBeEmpty()
+        summary.one(".gf-tray__count").text() shouldBe "1 game"
+    }
+
+    @Test
+    fun `the wish list reloads from the server,and ticking in the list asks for it`() = test.webTest(session = kim) { client ->
         client.htmxPost("/gamedays/$gorefest7/shelf/$brass", parameters { append("bringing", "true") }).headers["HX-Trigger"] shouldBe "shelf-changed"
 
         val list = client.get("$bringPage/wishes").fragment()
@@ -201,7 +234,7 @@ class ShelfRoutesTest {
 
             val list = client.get("$bringPage/list").fragment()
             list shouldReplace "bring-list"
-            list.select(".gf-game__name").map { it.text() } shouldContainExactly listOf("CATAN")
+            list.select(".gf-tile__name").map { it.text() } shouldContainExactly listOf("CATAN")
 
             client.htmxPost("/gamedays/$gorefest7/shelf/$catan", parameters { append("row", "search") })
             client.get("$bringPage/list").fragment().select("li").shouldBeEmpty()

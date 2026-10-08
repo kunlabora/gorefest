@@ -62,6 +62,22 @@ class SuggestionsRoutesTest {
     }
 
     @Test
+    fun `the top pick stands alone, the other two are compact, and the table bar says who and how long`() = test.webTest(session = kim) { client ->
+        val page = client.get(table).page()
+
+        page.one(".gf-nav a[aria-current]").text() shouldBe "Game days"
+        page.select("#suggestions .gf-game--large") shouldHaveSize 1
+        page.select("#suggestions .gf-picker__more article") shouldHaveSize 2
+        page.one("#suggestions .gf-tablebar b").text() shouldBe "2 at the table"
+        page.one("#suggestions .gf-tablebar span.gf-muted").text() shouldBe "Any length"
+        page.one("#suggestions .gf-tablebar button").attr("_") shouldContain "#table-form"
+
+        val tight = client.get("/gamedays/$gorefest7/suggestions?players=$kimId&time=90m").fragment()
+        tight.one(".gf-tablebar b").text() shouldBe "1 at the table"
+        tight.one(".gf-tablebar span.gf-muted").text() shouldBe "Up to 90 minutes"
+    }
+
+    @Test
     fun `a suggestion says what kind of game it is`() = test.webTest(session = kim) { client ->
         val cards = client.get("/gamedays/$gorefest7/suggestions?players=$kimId&players=$anna&time=45m").fragment().select("article")
 
