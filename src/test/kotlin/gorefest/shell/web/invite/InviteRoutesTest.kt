@@ -222,8 +222,8 @@ class InviteRoutesTest {
     }
 
     private fun joined(name: String = "Nina") = kotlinx.coroutines.runBlocking {
-        app.login.names(app.gameDaysById.getValue(gorefest7).players).values.toList()
-    } == listOf("Anna", name)
+        app.login.names(app.gameDaysById.getValue(gorefest7).players).values.toSet()
+    } == setOf("Anna", name) // a set: the database returns rows in no promised order
 
     @Test
     fun `a new player goes invite, email, code, name and lands joined on the game day`() = test.webTest { client ->
