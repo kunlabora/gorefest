@@ -113,10 +113,11 @@ fun TagConsumer<*>.logForm(view: LogFormView, me: CurrentPlayer, values: Paramet
     }
 
 /** Games found by the search above the form: more tiles in the same radio group. */
-fun TagConsumer<*>.logSearchResults(games: List<Game>, bggUnavailable: Boolean) = div {
+fun TagConsumer<*>.logSearchResults(games: List<Game>, bggUnavailable: Boolean, nothingFor: String? = null) = div {
     id = "log-search-results"
     if (bggUnavailable) p("gf-small gf-muted") { +"BGG isn't answering right now, so these are only games we already know." }
     if (games.isNotEmpty()) div("gf-tiles") { games.forEach { gameTileChoice(it, "game", checked = false) } }
+    else if (nothingFor != null) p("gf-small gf-muted gf-search-empty") { +"Nothing found for \u201c$nothingFor\u201d. Try another spelling." }
 }
 
 /** Step 2: one PLAYED comparison between what was just played and something else they played. */

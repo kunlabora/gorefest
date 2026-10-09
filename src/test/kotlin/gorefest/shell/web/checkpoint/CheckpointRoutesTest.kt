@@ -23,6 +23,8 @@ import gorefest.shell.web.shouldReplace
 import gorefest.shell.web.suggestions.suggestions
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.collections.shouldBeEmpty
+import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldStartWith
 import io.ktor.client.request.forms.submitForm
 import io.ktor.client.request.get
@@ -127,6 +129,9 @@ class CheckpointRoutesTest {
         results.select(".gf-tile .gf-tile__name").map { it.text() } shouldBe listOf("Brass: Birmingham")
         // ...and the shelf's own games never repeat as results.
         client.get("$log/search?q=azul").fragment().select(".gf-tile") shouldHaveSize 0
+        // A search that finds nothing says so; a shelf game that was left out is not "nothing".
+        client.get("$log/search?q=zzzzzz").fragment().one(".gf-search-empty").text() shouldContain "Nothing found for"
+        client.get("$log/search?q=azul").fragment().select(".gf-search-empty").shouldBeEmpty()
 
         val brass = id("Brass: Birmingham")
         val logged = client.htmxPost(log, parameters { append("game", brass.toString()); append("players", kimId.toString()); append("duration", "90m") })

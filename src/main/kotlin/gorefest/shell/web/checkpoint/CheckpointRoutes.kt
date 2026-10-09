@@ -63,10 +63,11 @@ fun Route.checkpointRoutes(app: App) {
         authenticated {
             val me = contextOf<CurrentPlayer>()
             val gameDay = memberGameDay(app, me) ?: return@authenticated call.respond(HttpStatusCode.NotFound)
-            val result = app.gameSearch.search(call.parameters["q"].orEmpty())
+            val query = call.parameters["q"].orEmpty()
+            val result = app.gameSearch.search(query)
             // Shelf games are tiles already: a second radio for the same game would repeat its id.
             val onShelf = logChoices(app, gameDay).map { it.id }.toSet()
-            respondFragment { logSearchResults(result.games.filter { it.id !in onShelf }, result.bggUnavailable) }
+            respondFragment { logSearchResults(result.games.filter { it.id !in onShelf }, result.bggUnavailable, result.nothingFor(query)) }
         }
     }
 
