@@ -82,6 +82,8 @@ class TasteRoutesTest {
         wizard.select(".gf-answer").map { it.attr("value") } shouldBe listOf("UNPLAYED", "BOTH_MEH", "BOTH_GREAT")
         wizard.select(".gf-answer").map { it.text() } shouldBe listOf("Haven't played either", "Both meh", "Both great")
         wizard.select(".gf-unplayed button").map { it.attr("value") to it.text() } shouldBe listOf("UNPLAYED_A" to "Haven't played this", "UNPLAYED_B" to "Haven't played this")
+        // Said apart, for screen readers and voice control: each names its game.
+        wizard.select(".gf-unplayed button").map { it.attr("aria-label") } shouldBe wizard.select(".gf-pick__name").map { "Haven't played ${it.text()}" }
         wizard.text() shouldNotContain "Don't know"
         wizard.one("form").attr("hx-target") shouldBe "#wizard"
         wizard.one(".gf-progress__count").text() shouldBe "1 / 15"

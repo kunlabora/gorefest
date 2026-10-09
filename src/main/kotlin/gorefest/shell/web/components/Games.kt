@@ -175,11 +175,12 @@ fun FlowContent.duel(a: Game, b: Game, keyIds: Boolean = false) = div("gf-duel g
 }
 
 /** One "Haven't played this" button under each game of a duel (answers `UNPLAYED_A` and `UNPLAYED_B`), for when only one of the two is new to you. */
-fun FlowContent.duelUnplayed() = div("gf-unplayed") {
-    listOf("A", "B").forEach { key ->
+fun FlowContent.duelUnplayed(a: Game, b: Game) = div("gf-unplayed") {
+    listOf("A" to a, "B" to b).forEach { (key, game) ->
         button(type = ButtonType.submit, classes = "gf-unplayed__button") {
             name = "answer"
             value = "UNPLAYED_$key"
+            attributes["aria-label"] = "Haven't played ${game.name}"
             icon("unplayed")
             +"Haven't played this"
         }
