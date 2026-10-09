@@ -23,3 +23,7 @@ GET /gamedays/{id}/suggestions?tableSet=1&players={tim}
 
 ## Suspected cause (guess)
 `web/suggestions/SuggestionsViews.kt` line ~70: `+"~${s.minutes} min for the ${view.tableSize} of you"` has no case for `tableSize == 1`. (`SuggestionTexts.kt` has a similar `SafeBet` sentence, `all ${tableSize.inWordsLower()} of you rated it highly`, worth checking for 1.)
+
+## Status
+
+Status: fixed. A table of one now reads "for you" on the suggestion cards, and the SafeBet reason no longer says "all one of you"; commit: BUG-016 fix.

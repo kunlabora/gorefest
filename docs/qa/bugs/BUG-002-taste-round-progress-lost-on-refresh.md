@@ -31,3 +31,7 @@ finished after 18 answers ['HX-Redirect: .../favourites?answers=12']
 
 ## Suspected cause (guess)
 `TasteRoutes.kt`, `get("/gamedays/{id}/taste")` always builds a fresh `RoundState` (step 0, nothing asked). Round state lives only in hidden form fields, so it dies with the page; the answers already in `app.tastes` are not used to seed `step`.
+
+## Status
+
+Status: fixed. A full round now reseeds its step and asked pairs from the answers already recorded when the page loads (TasteRoutes), so a reload continues and the payoff counts every answer; commit: BUG-002 fix.

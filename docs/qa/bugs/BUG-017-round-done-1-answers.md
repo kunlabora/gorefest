@@ -22,3 +22,7 @@ GET /gamedays/{id}/favourites?answers=-5  ->  Round done · -5 answers
 
 ## Suspected cause (guess)
 `web/taste/TasteViews.kt` line 95: `+"Round done · ${view.answers} answers"` has no singular case (other screens such as readiness do pluralise: "1 answer: picks will be guesses").
+
+## Status
+
+Status: fixed. The kicker pluralises ("1 answer") and the payoff ignores a non-positive answers parameter; commit: BUG-017 fix.

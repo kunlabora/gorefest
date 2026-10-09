@@ -66,7 +66,9 @@ fun Route.tasteRoutes(app: App) {
             val inputs = inputs(gameDay, me)
             val now = app.clock.instant()
             val topUpRound = inputs.player.history.comparisons.size >= TOP_UP_AFTER
-            val round = RoundState(top = inputs.top(now))
+            // A full round survives a reload: the answers already recorded are its steps and its asked pairs.
+            val done = if (topUpRound) emptyList() else inputs.player.history.comparisons
+            val round = RoundState(step = done.size, asked = done.map { setOf(it.a, it.b) }.toSet(), top = inputs.top(now))
             val pair = (if (topUpRound) app.topUpWizard.stalePair(inputs.player, app.catalog::get, now) else null)
                 ?: app.wizardFor(topUpRound).next(inputs.pool, inputs.anchors, inputs.player, round, now, inputs.focus(topUpRound, now))
                 ?: return@authenticated redirect("/gamedays/${gameDay.id}/favourites")
@@ -112,7 +114,7 @@ fun Route.tasteRoutes(app: App) {
             val gameDay = memberGameDay(app, me) ?: return@authenticated call.respond(HttpStatusCode.NotFound)
             val inputs = inputs(gameDay, me)
             val now = app.clock.instant()
-            val answers = call.parameters["answers"]?.toIntOrNull()
+            val answers = call.parameters["answers"]?.toIntOrNull()?.takeIf { it > 0 }
             val favourites = app.predictor.favourites(inputs.player, inputs.shelf, now)
             val hostFavourites = if (inputs.shelf.isEmpty() && gameDay.host != me.id) {
                 val hosts = app.collectionSync.collection(gameDay.host).mapNotNull(app.catalog::get)

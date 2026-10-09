@@ -67,11 +67,11 @@ fun TagConsumer<*>.suggestions(view: TableView) = section("gf-picker__answer") {
                 h2("gf-h2") { +"Play this" }
                 if (suggestions.unknown.isNotEmpty()) unknownTaste(suggestions.unknown, view.tableSize, view.gameDay, view.names, view.me.id)
                 suggestions.top.take(1).forEach { s ->
-                    rankedGame(1, s.game, s.reason.text()) { icon("clock"); +"~${s.minutes} min for the ${view.tableSize} of you" }
+                    rankedGame(1, s.game, s.reason.text()) { icon("clock"); +"~${s.minutes} min ${if (view.tableSize == 1) "for you" else "for the ${view.tableSize} of you"}" }
                 }
                 if (suggestions.top.size > 1) div("gf-picker__more") {
                     suggestions.top.drop(1).forEachIndexed { i, s ->
-                        rankedGame(i + 2, s.game, s.reason.text()) { icon("clock"); +"~${s.minutes} min for ${view.tableSize}" }
+                        rankedGame(i + 2, s.game, s.reason.text()) { icon("clock"); +"~${s.minutes} min ${if (view.tableSize == 1) "for you" else "for ${view.tableSize}"}" }
                     }
                 }
             }

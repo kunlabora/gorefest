@@ -14,6 +14,7 @@ class SuggestionTextsTest {
             SuggestionReason.WantedBy(listOf("Anna", "Bram")) to "Anna and Bram both want to play this.",
             SuggestionReason.WantedBy(listOf("Anna", "Bram", "Kim")) to "Three of you really want to play this.",
             SuggestionReason.NewAndLiked to "Nobody's played it and everyone's likely to enjoy it.",
+            SuggestionReason.SafeBet(1) to "Safe bet: you rated it highly.",
             SuggestionReason.SafeBet(2) to "Safe bet: both of you rated it highly.",
             SuggestionReason.SafeBet(4) to "Safe bet: all four of you rated it highly.",
             SuggestionReason.BestAtTableSize(3) to "Best at exactly three, which is you.",
