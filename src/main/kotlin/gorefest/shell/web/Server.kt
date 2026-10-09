@@ -55,6 +55,15 @@ private val NoIndex = createApplicationPlugin("NoIndex") {
     onCallRespond { call, _ -> call.response.header("X-Robots-Tag", "noindex, nofollow, noarchive, noimageindex, nosnippet") }
 }
 
+/** Pages are personal: `no-store` keeps them out of the history cache, so Back after logout doesn't show the last person's page. Assets set their own caching. */
+private val NoStorePages = createApplicationPlugin("NoStorePages") {
+    onCallRespond { call, _ ->
+        val path = call.request.local.uri
+        val isAsset = path.startsWith("/static/") || path.startsWith("/webjars/")
+        if (!isAsset && !call.response.headers.contains(HttpHeaders.CacheControl)) call.response.header(HttpHeaders.CacheControl, "no-store")
+    }
+}
+
 /** A 404 with nothing to say (the routes' `respond(NotFound)`, or no route at all) gets the on-brand page. Pages that answer 404 with their own body, like a dead invite, are left alone. */
 private val NotFoundPage = createApplicationPlugin("NotFoundPage") {
     onCallRespond { _, body ->
@@ -71,6 +80,9 @@ fun Application.web(app: App) {
     install(Webjars)
     // Private by design: no search engine or archive should list this site, so nobody finds it by accident.
     install(NoIndex)
+    install(NoStorePages)
+    install(AutoHeadResponse)
+    install(ConditionalHeaders)
     install(NotFoundPage)
     install(StatusPages) {
         // A malformed request is the client's problem: no error log, no stack trace.
