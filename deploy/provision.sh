@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# One-time setup of a fresh Ubuntu 24.04 server for gorefest (Java 25, PostgreSQL 18 and Caddy from their own repositories). Run as root from a copy of deploy/:
+# One-time setup of a fresh Ubuntu 26.04 (or 24.04) server for gorefest (Java 25, PostgreSQL 18 and Caddy from their own repositories). Run as root from a copy of deploy/:
 #   bash provision.sh <domain> "<public key GitHub Actions deploys with>"
 # Safe to run again: it keeps existing secrets, the database password and /etc/gorefest/env.
 set -euo pipefail
@@ -13,7 +13,7 @@ echo "== Packages"
 apt-get update -q
 apt-get install -yq curl gnupg ufw postgresql-common rclone fontconfig fonts-dejavu-core unattended-upgrades debian-keyring debian-archive-keyring apt-transport-https
 
-# PostgreSQL 18 from the PostgreSQL project's own repository (what dev and the tests run): Ubuntu 24.04 itself ships 16.
+# PostgreSQL 18 from the PostgreSQL project's own repository (what dev and the tests run): the same version on every Ubuntu release (24.04 ships 16).
 if ! command -v psql >/dev/null || ! pg_lsclusters 2>/dev/null | grep -q '^18 '; then
   # A server that already runs an older cluster needs an upgrade, not a second install: do that by hand first.
   if pg_lsclusters 2>/dev/null | grep -qE '^[0-9]+ '; then
@@ -25,7 +25,7 @@ if ! command -v psql >/dev/null || ! pg_lsclusters 2>/dev/null | grep -q '^18 ';
   apt-get install -yq postgresql-18
 fi
 
-# Java 25 from Adoptium (Temurin): Ubuntu 24.04 itself ships 21.
+# Java 25 from Adoptium (Temurin): Ubuntu 24.04 ships 21; 26.04 has 25 too, but one source keeps releases alike.
 if ! command -v java >/dev/null || ! java -version 2>&1 | grep -q '"25'; then
   curl -fsSL https://packages.adoptium.net/artifactory/api/gpg/key/public | gpg --dearmor -o /usr/share/keyrings/adoptium.gpg
   echo "deb [signed-by=/usr/share/keyrings/adoptium.gpg] https://packages.adoptium.net/artifactory/deb $(. /etc/os-release && echo "$VERSION_CODENAME") main" \

@@ -24,7 +24,7 @@ Use region **Paris (fr-par)** for everything: Transactional Email only exists th
 Compute → Instances → Create:
 - Zone: `fr-par-1` (or 2)
 - Type: **DEV1-S** (2 vCPU, 2 GB)
-- Image: **Ubuntu 24.04 (Noble)**
+- Image: **Ubuntu 26.04 (Resolute Raccoon)**
 - Storage: the default local volume is plenty
 - Flexible IPv4: yes
 
@@ -46,7 +46,7 @@ scp -r deploy root@IP:/root/
 ```bash
 ssh root@IP "bash /root/deploy/provision.sh boardfest.be '$(cat ~/.ssh/gorefest_deploy.pub)'"
 ```
-This installs Java 25, PostgreSQL 18 (from the PostgreSQL apt repository, as Ubuntu ships 16), Caddy and rclone, creates the `gorefest` (app) and `deploy` (CI) users, the database, the systemd units, the firewall and automatic security updates. It also writes `/etc/gorefest/env` with a fresh `SECRET_KEY` and database password.
+This installs Java 25, PostgreSQL 18 (from the PostgreSQL project's apt repository, so every Ubuntu release runs the same major version as dev and the tests), Caddy and rclone, creates the `gorefest` (app) and `deploy` (CI) users, the database, the systemd units, the firewall and automatic security updates. It also writes `/etc/gorefest/env` with a fresh `SECRET_KEY` and database password.
 
 ## 6. Transactional Email
 

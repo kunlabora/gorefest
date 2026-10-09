@@ -2,7 +2,7 @@
 
 One cheap VPS: the fat jar under systemd, Postgres, Caddy in front for TLS, and a nightly `pg_dump` to object storage. GitHub Actions builds, tests and deploys every push to `main`.
 
-**On Scaleway: follow [scaleway.md](scaleway.md).** `provision.sh` does the one-time setup below in one go on Ubuntu 24.04; the manual steps are here for other hosts.
+**On Scaleway: follow [scaleway.md](scaleway.md).** `provision.sh` does the one-time setup below in one go on Ubuntu 26.04 (24.04 also works); the manual steps are here for other hosts.
 
 ## Moving an existing server from Postgres 16 to 18
 
@@ -25,8 +25,8 @@ If the data matters, install `postgresql-18` from the PostgreSQL repository next
    sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y   # the PostgreSQL project's apt repository
    sudo apt install postgresql-18
    ```
-   Postgres 18 is what dev (`compose.yaml`) and the tests run; Ubuntu 24.04's own `postgresql` package is 16, so don't install that one. A server that already has an older cluster needs `pg_upgradecluster` before this.
-   Java 25 and Caddy also come from their own apt repositories, because Ubuntu 24.04 ships neither `openjdk-25` nor a current Caddy: Temurin 25 from Adoptium (`temurin-25-jre`) and Caddy from Cloudsmith. `provision.sh` shows the exact repository and key setup.
+   Postgres 18 is what dev (`compose.yaml`) and the tests run; Ubuntu 24.04's own `postgresql` package is 16, so don't install that one there. A server that already has an older cluster needs `pg_upgradecluster` before this.
+   Java 25 and Caddy also come from their own apt repositories, because Ubuntu 24.04 ships neither `openjdk-25` nor a current Caddy (26.04 has both, but the repositories keep every release alike): Temurin 25 from Adoptium (`temurin-25-jre`) and Caddy from Cloudsmith. `provision.sh` shows the exact repository and key setup.
    `fontconfig` and a font are needed for the invite preview image (Java2D).
 2. **Users and folders**: the service user `gorefest` only reads releases; a `deploy` user (member of group `gorefest`) writes them.
    ```bash
