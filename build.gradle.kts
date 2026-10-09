@@ -49,6 +49,8 @@ dependencies {
     implementation(libs.ktor.server.call.logging)
     implementation(libs.ktor.server.status.pages)
     implementation(libs.ktor.server.forwarded.header)
+    implementation(libs.ktor.server.auto.head.response)
+    implementation(libs.ktor.server.conditional.headers)
     implementation(libs.coroutines.core)
     implementation(libs.serialization.json)
     implementation(libs.kotlinx.html)

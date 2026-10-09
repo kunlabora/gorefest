@@ -25,3 +25,7 @@ curl -I .../                         -> HTTP/1.1 405 Method Not Allowed
 
 ## Suspected cause (guess)
 `Server.kt` `staticResources("/static", "static") { modify { ... } }` only adds a header for `.woff2`; the Ktor `CachingHeaders`/`ConditionalHeaders` plugins are not installed and `AutoHeadResponse` is missing.
+
+## Status
+
+**Status: fixed.** Static assets now carry a SHA-256 ETag and `Cache-Control: no-cache` (fonts keep their immutable year), and HEAD is answered like GET via `AutoHeadResponse` and `ConditionalHeaders`.

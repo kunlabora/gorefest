@@ -1,7 +1,10 @@
 package gorefest.shell.web
 
 import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
+import io.ktor.client.request.head
+import io.ktor.client.request.header
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpHeaders
@@ -82,6 +85,28 @@ class PrivacyTest {
         css shouldContain "../fonts/" // faces point at /static/fonts relative to /static/css
         css.contains("googleapis") shouldBe false
         css.contains("gstatic") shouldBe false
-        client.get("/static/css/gorefest.css").headers[HttpHeaders.CacheControl] shouldBe null
+        }
+
+    @Test
+    fun `static assets carry validators, revalidate, and answer HEAD`() = test.webTest { client ->
+        val first = client.get("/static/css/gorefest.css")
+        first.headers[HttpHeaders.CacheControl] shouldBe "no-cache"
+        val etag = first.headers[HttpHeaders.ETag].shouldNotBeNull()
+
+        client.get("/static/css/gorefest.css") { header(HttpHeaders.IfNoneMatch, etag) }.status shouldBe HttpStatusCode.NotModified
+
+        val head = client.head("/static/css/gorefest.css")
+        head.status shouldBe HttpStatusCode.OK
+        head.bodyAsText() shouldBe ""
+        client.head("/login").status shouldBe HttpStatusCode.OK
+    }
+
+    @Test
+    fun `pages are never stored, so Back after logout shows nothing`() = kotlinx.coroutines.runBlocking {
+        val session = test.loggedIn("Tim")
+        test.webTest(session = session) { client ->
+            client.get("/").headers[HttpHeaders.CacheControl] shouldBe "no-store"
+            client.get("/login").headers[HttpHeaders.CacheControl] shouldBe "no-store"
+        }
     }
 }
