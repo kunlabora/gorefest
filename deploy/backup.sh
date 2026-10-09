@@ -1,7 +1,11 @@
 #!/usr/bin/env bash
-# Nightly: dump the database to a temp file, verify it, upload it with rclone and keep 30 days.
+# Nightly: dump the database to a temp file, verify it, upload it with rclone and keep 30 days at most.
 set -euo pipefail
 : "${BACKUP_REMOTE:?}" "${BACKUP_DATABASE_URI:?}"
+
+# Prune first: a failing dump must never keep old data past the 30-day maximum (GDPR retention, docs/gdpr.md).
+# Only our own dumps: never touch anything else in the bucket.
+rclone delete --min-age 30d --include 'gorefest-*.dump' "$BACKUP_REMOTE"
 
 stamp="$(date -u +%Y-%m-%dT%H%MZ)"
 name="gorefest-$stamp.dump"
@@ -12,6 +16,4 @@ trap 'rm -f "$tmp"' EXIT
 pg_dump --format=custom --no-owner --file "$tmp" "$BACKUP_DATABASE_URI"
 pg_restore --list "$tmp" >/dev/null   # fails on a damaged or incomplete archive
 rclone copyto "$tmp" "$BACKUP_REMOTE/$name"
-# Only our own dumps: never touch anything else in the bucket.
-rclone delete --min-age 30d --include 'gorefest-*.dump' "$BACKUP_REMOTE"
 echo "Backed up $name"

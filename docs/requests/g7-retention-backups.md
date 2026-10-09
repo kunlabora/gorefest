@@ -6,7 +6,7 @@ Source: GDPR analysis, 2026-10-09 ([`docs/gdpr.md`](../gdpr.md)). Status: 📋
 
 **Wanted:**
 - *Retention rules*, decided and written in `docs/gdpr.md` and the notice: login attempts 1 day (done), sessions until expiry (done), accounts inactive for 24 months get a warning mail then are erased through G2 (a job in the existing purge loop, `Login.startPurging`, behind `INACTIVE_ACCOUNT_MONTHS`, default 24, 0 = off), finished game days' free text (place) blanked 12 months after `GameDayEnded` (new `GameDayPlaceForgotten` event + a log rewrite of the old `place`, or simply keep place out of events by design: pick one and say why).
-- *Backups*: keep the 30-day rule in `deploy/backup.sh`; document in `deploy/README.md` that erased data leaves backups within 30 days.
+- *Backups*: 30 days is the **maximum**, decided. `deploy/backup.sh` prunes before dumping so a failing dump can't leave old data past it (done); add a check that fails loudly if any `gorefest-*.dump` in the bucket is older than 30 days (e.g. a second line in the backup service or a monitoring note), and make sure object versioning/object lock stay off (`deploy/scaleway.md` says so) since they would keep deleted dumps; document in `deploy/README.md` that erased data leaves backups within 30 days.
 - *Restore*: `deploy/README.md` restore section gets a step that re-applies `erasures` (G2 table) after a restore, and a script `deploy/reapply-erasures.sh` or a `--reapply-erasures` startup flag that does it. Never restore without it.
 
 **Criteria**

@@ -18,7 +18,7 @@ The app is private by design (invite-only, `noindex`), small, hosted in the EU (
 | IP address | in-memory rate limiter for login mails (`Login.perAddress`); Ktor `CallLogging` | Yes | Not persisted by us; check what the logs and journald keep |
 | Cookies | `gf_session` (session), `gf_theme` (set client-side) | n/a | Both strictly necessary/functional: no consent banner needed, but name them in the notice |
 | Mail content | Scaleway TEM (prod), Postmark/Resend optional | Email, name, recap | Processor |
-| Backups | nightly `pg_dump`, 30 days, Scaleway Object Storage fr-par | Everything above | Erasure reaches backups only by expiry |
+| Backups | nightly `pg_dump`, 30 days at most (decided), Scaleway Object Storage fr-par | Everything above | Erasure reaches backups only by expiry |
 
 ## Processors and transfers
 
