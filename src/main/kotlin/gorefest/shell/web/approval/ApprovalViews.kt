@@ -1,0 +1,37 @@
+package gorefest.shell.web.approval
+
+import gorefest.shell.auth.Player
+import gorefest.shell.web.CurrentPlayer
+import gorefest.shell.web.components.*
+import kotlinx.html.*
+
+context(me: CurrentPlayer)
+fun HTML.approvalsPage(waiting: List<Player>) = page("New accounts", site = SiteBar(me, Nav.GAME_DAYS), mainClasses = "gf-landing") {
+    wrap {
+        div("gf-split__copy") {
+            p("gf-kicker") { +"Admin" }
+            h1("gf-h1 gf-h1--landing") { +"New accounts" }
+            p("gf-lede") { +"People who signed up and are waiting to be let in. Only approve people you know." }
+        }
+    }
+    band(sunk = true) {
+        div("gf-stack") {
+            if (waiting.isEmpty()) emptyState("Nobody is waiting", "New sign-ups show up here, and you get an email for each.")
+            else ul("gf-list") { waiting.forEach { row(it) } }
+        }
+    }
+}
+
+private fun UL.row(player: Player) = li("gf-row") {
+    avatar(player.id, player.name)
+    span("gf-row__main") {
+        span("gf-row__title") { +player.name.orEmpty() }
+        span("gf-row__sub") { +player.email }
+    }
+    form(action = "/admin/approvals/${player.id.value}/approve", method = FormMethod.post) {
+        button(type = ButtonType.submit, classes = buttonClasses(ButtonStyle.PRIMARY, ButtonSize.NORMAL)) { +"Approve" }
+    }
+    form(action = "/admin/approvals/${player.id.value}/reject", method = FormMethod.post) {
+        button(type = ButtonType.submit, classes = buttonClasses(ButtonStyle.GHOST, ButtonSize.NORMAL)) { +"Reject" }
+    }
+}

@@ -227,3 +227,11 @@ private fun TagConsumer<*>.singleFieldForm(
     content()
     button(type = ButtonType.submit, classes = buttonClasses(ButtonStyle.PRIMARY, ButtonSize.LARGE)) { spinner(); +button }
 }
+
+/** Signed in and named, but the admin hasn't approved the account yet. [returnTo] is where they were headed. */
+fun HTML.pendingPage(name: String, returnTo: String) = authHero("Waiting for approval", "Almost there, $name", "Waiting for a thumbs up") {
+    p("gf-lede gf-muted") { +"Gorefest is a private group, so a person lets every new account in by hand. You'll get an email as soon as it's done." }
+    div("gf-signin") {
+        linkButton(returnTo, "Check again", ButtonStyle.SECONDARY, ButtonSize.LARGE)
+    }
+}

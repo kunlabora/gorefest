@@ -12,12 +12,14 @@ const val SESSION_COOKIE = "gf_session"
 
 /**
  * Runs [block] as the logged-in player. Without a session it sends the browser to log in;
- * a player without a name yet goes through the welcome step first. Both come back here afterwards.
+ * a player without a name yet goes through the welcome step first, and one the admin hasn't approved yet waits on the pending page.
+ * All come back here afterwards.
  */
 context(login: Login)
 suspend fun RoutingContext.authenticated(block: suspend context(CurrentPlayer) RoutingContext.() -> Unit) {
     val player = sessionPlayer() ?: return redirect("/login?returnTo=${currentPage().urlEncoded()}")
     val name = player.name ?: return redirect("/welcome?returnTo=${currentPage().urlEncoded()}")
+    if (!player.approved) return redirect("/pending?returnTo=${currentPage().urlEncoded()}")
     block(CurrentPlayer(player.id, name), this)
 }
 

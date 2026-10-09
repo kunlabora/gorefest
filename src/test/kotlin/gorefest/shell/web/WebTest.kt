@@ -63,11 +63,11 @@ class TestApp(config: AppConfig = AppConfig.dev()) {
     }
 
     /** A named player with a session, skipping the mail round trip. Returns the session token. */
-    suspend fun loggedIn(name: String, id: PlayerId = PlayerId(Uuid.random())): String {
+    suspend fun loggedIn(name: String, id: PlayerId = PlayerId(Uuid.random()), approved: Boolean = true): String {
         val secrets = Secrets(app.config.secretKey)
         val token = secrets.token()
         app.db.transaction {
-            val player = Players().findOrCreate("${name.lowercase()}@example.com", id)
+            val player = Players().findOrCreate("${name.lowercase()}@example.com", id, approved)
             Players().rename(player.id, name)
             Sessions().create(secrets.hash(token), player.id, clock.instant() + Duration.ofDays(365))
         }

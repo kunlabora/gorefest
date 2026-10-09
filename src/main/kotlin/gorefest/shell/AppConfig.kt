@@ -4,8 +4,13 @@ package gorefest.shell
  * Settings from the environment. `GOREFEST_ENV=dev` (the default until S1 adds production)
  * enables the dev mailbox and allows a built-in secret key.
  */
-data class AppConfig(val baseUrl: String, val secretKey: String, val dev: Boolean) {
+data class AppConfig(val baseUrl: String, val secretKey: String, val dev: Boolean, val adminEmail: String? = null) {
     val secureCookies get() = baseUrl.startsWith("https://")
+
+    /** New accounts wait for the admin's approval. Off only in dev without `ADMIN_EMAIL`, where everyone is let in. */
+    val approvalRequired get() = adminEmail != null
+
+    fun isAdmin(email: String) = adminEmail != null && email.equals(adminEmail, ignoreCase = true)
 
     companion object {
         fun dev(baseUrl: String = "http://localhost:8080") = AppConfig(baseUrl, DEV_SECRET, dev = true)
@@ -16,6 +21,7 @@ data class AppConfig(val baseUrl: String, val secretKey: String, val dev: Boolea
                 baseUrl = (env("BASE_URL") ?: "http://localhost:8080").trimEnd('/'),
                 secretKey = env("SECRET_KEY") ?: if (dev) DEV_SECRET else error("SECRET_KEY is required outside dev"),
                 dev = dev,
+                adminEmail = env("ADMIN_EMAIL")?.trim()?.lowercase() ?: if (dev) null else error("ADMIN_EMAIL is required outside dev: the person who approves new accounts"),
             )
         }
 

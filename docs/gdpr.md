@@ -44,6 +44,10 @@ Ordered by how much they matter.
 
 Fine as is: hashed single-use tokens, `noindex`, no third-party fonts (self-hosted, so no IP leak to Google), no analytics/trackers, EU hosting, rate limiting, no guests, `no-store` caching on pages.
 
+## Household exemption: approval flow (G9, done)
+
+New accounts are approved by hand by the admin (`ADMIN_EMAIL`) before they can do anything. This makes the closed, personal circle visible and demonstrable, which is what the Art. 2(2)(c) argument rests on. It does **not** settle it: Recital 18 says people providing the *means* for others' personal activity can still be controllers, and a link to Kunlabora (hosting, billing, work time) undermines "no professional connection". Keep G1 to G8 regardless.
+
 ## Open questions (need a human)
 
 - Who is the controller, and does the household/personal-activity exemption apply to a group of friends? If it grows beyond that, assume it doesn't.

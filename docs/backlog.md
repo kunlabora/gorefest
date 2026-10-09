@@ -272,3 +272,4 @@ Analysis in [`gdpr.md`](gdpr.md); one request file per story. G2 is the hard one
 | G6 | [Change email, unlink BGG](requests/g6-rectification.md) | 📋 | G2 |
 | G7 | [Retention, backups and restore](requests/g7-retention-backups.md) | 📋 | G2 |
 | G8 | [Logs and URLs: no secrets, short retention](requests/g8-logs.md) | 📋 |  |
+| G9 | Manual approval of new accounts: `/pending`, `/admin/approvals`, `ADMIN_EMAIL` (supports the household-exemption argument; see `gdpr.md`) | ✅ | |

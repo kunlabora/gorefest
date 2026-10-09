@@ -125,7 +125,48 @@ class Login(
 
     suspend fun logout(sessionToken: String) = db.transaction { sessions.delete(secrets.hash(sessionToken)) }
 
-    suspend fun rename(player: PlayerId, name: String) = db.transaction { players.rename(player, name) }
+    /** Names the player. A player the admin hasn't approved yet gets the admin a mail the first time they name themselves. */
+    suspend fun rename(player: PlayerId, name: String) {
+        val (before, after) = db.transaction {
+            val before = players.find(player)
+            players.rename(player, name)
+            before to players.find(player)
+        }
+        if (before?.name == null && after != null && !after.approved) notifyAdmin(after)
+    }
+
+    private suspend fun notifyAdmin(newcomer: Player) {
+        val admin = config.adminEmail ?: return
+        mailer.send(
+            Mail(
+                to = admin,
+                subject = "${newcomer.name} wants into Gorefest",
+                text = "${newcomer.name} (${newcomer.email}) signed up and is waiting for your approval:\n${config.baseUrl}/admin/approvals\n",
+                sentAt = clock.instant(),
+            ),
+        )
+    }
+
+    /** Accounts waiting for the admin, oldest first. */
+    suspend fun waiting(): List<Player> = db.transaction { players.waiting() }
+
+    /** Lets the player in and tells them. False if they weren't waiting. */
+    suspend fun approve(id: PlayerId): Boolean {
+        val (done, player) = db.transaction { players.approve(id) to players.find(id) }
+        if (done && player != null) {
+            mailer.send(Mail(player.email, "You're in on Gorefest", "Welcome, ${player.name}. Your account is approved:\n${config.baseUrl}/\n", clock.instant()))
+        }
+        return done
+    }
+
+    /** Turns the account down: it's removed, and they're told. False if they weren't waiting. */
+    suspend fun reject(id: PlayerId): Boolean {
+        val (done, player) = db.transaction { players.find(id).let { found -> players.deleteUnapproved(id) to found } }
+        if (done && player != null) {
+            mailer.send(Mail(player.email, "About your Gorefest account", "Sorry, your Gorefest sign-up wasn't approved. This is a private group, so it's by invitation only.\n", clock.instant()))
+        }
+        return done
+    }
 
     suspend fun names(ids: Collection<PlayerId>): Map<PlayerId, String> = db.transaction { players.names(ids) }
 
@@ -150,7 +191,9 @@ class Login(
             if (verification.check != LoginCheck.Ok) {
                 return@transaction null to LoginResult.Failed(verification.check, stored.email, stored.returnTo)
             }
-            val player = players.findOrCreate(stored.email, PlayerId(ids.next()))
+            val player = players.findOrCreate(stored.email, PlayerId(ids.next()), approved = !config.approvalRequired || config.isAdmin(stored.email))
+            // The admin may have signed up before being configured as one.
+            if (config.isAdmin(stored.email) && !player.approved) players.approve(player.id)
             val token = secrets.token()
             sessions.create(secrets.hash(token), player.id, clock.instant() + SESSION_TTL)
             player.id to LoginResult.LoggedIn(player.id, token, stored.returnTo, needsName = player.name == null)

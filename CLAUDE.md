@@ -58,7 +58,7 @@ Tag convention: `player:{id}`, `gameday:{id}`, `game:{bggId}`, `datepoll:{id}`.
   - Rolling back to an older jar after a newer one wrote a new event type fails replay. Deploy forward, or restore.
 - **Deciders** are `object`s implementing `Decider`. Keep the query as narrow as the invariant allows, because anything outside it can't conflict (see `JoinGameDayDecider`).
 - Deciders and projections end their `when` with `else -> state`, so adding an event doesn't touch unrelated code.
-- **Web packages by feature**, named after the vocabulary: `web.auth`, `web.bgg` (linking, collection), `web.gameday` (hub, create/edit, readiness), `web.invite`, `web.datepoll` (find a date), `web.shelf` (bringing games), `web.request` (asking someone to bring a game; the owner's section on the bring page), `web.taste` (wizard, favourites), `web.suggestions`, `web.checkpoint`, `web.dev`. Shared plumbing (`Server`, `Responses`, `CurrentPlayer`, `memberGameDay`) sits in `web` itself, components in `web.components`. Tests mirror this.
+- **Web packages by feature**, named after the vocabulary: `web.auth`, `web.approval` (admin approves new accounts), `web.bgg` (linking, collection), `web.gameday` (hub, create/edit, readiness), `web.invite`, `web.datepoll` (find a date), `web.shelf` (bringing games), `web.request` (asking someone to bring a game; the owner's section on the bring page), `web.taste` (wizard, favourites), `web.suggestions`, `web.checkpoint`, `web.dev`. Shared plumbing (`Server`, `Responses`, `CurrentPlayer`, `memberGameDay`) sits in `web` itself, components in `web.components`. Tests mirror this.
 - **Web layer, three levels.**
   - `XRoutes.kt`: HTTP only. Parse the request, run the decider, gather data into a small view model, and pick the view to respond with.
   - `XViews.kt`: the pages and fragments for that feature, as `HTML.xPage(view)` and `TagConsumer<*>.fragment(...)` functions, built from components.
@@ -97,6 +97,7 @@ Tag convention: `player:{id}`, `gameday:{id}`, `game:{bggId}`, `datepoll:{id}`.
 - The code is in the mail subject too. The link opens a confirm page and logs in on POST, because mail scanners pre-fetch GET links.
 - Email and display name live in the plain `players` table; events only carry player ids, so a player can be erased.
 - `GOREFEST_ENV=dev` (the default for now) sends mail to an in-memory dev mailbox at `/dev/mailbox`. Production needs `SECRET_KEY` and a mail provider (S1).
+- **Account approval**: a new account waits on `/pending` until the admin (`ADMIN_EMAIL`, required outside dev) approves it at `/admin/approvals`; `players.approved_at` holds it (existing players were grandfathered by V5). `authenticated` and the invite/poll joins check it. The admin gets a mail when someone names themselves; the person gets one on approval or rejection (rejecting deletes the account). The admin's own email is approved at first login. Dev without `ADMIN_EMAIL` lets everyone in. The point is keeping the circle a closed, personal one (the GDPR household-exemption argument, `docs/gdpr.md`).
 - Transactional mail: Scaleway TEM (production), Postmark or Resend, picked by `MAIL_PROVIDER`.
 
 ## Taste model
