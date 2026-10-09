@@ -15,8 +15,8 @@ Method: curl with cookie jars for ~12 players (Tim, Anna, Bram, Cara, Dan, Eve, 
 | [BUG-009](bugs/BUG-009-your-collection-count-includes-searched-games.md) | "Your collection · N" counts games found by search that you do not own | cosmetic | Bringing games | open |
 | [BUG-010](bugs/BUG-010-find-a-date-add-another-date-unlimited.md) | "Add another date" has no limit, the server only complains after submit (max 14) | cosmetic | Date poll form | open |
 | [BUG-011](bugs/BUG-011-static-assets-have-no-cache-validators.md) | CSS and JS are re-downloaded on every page view; HEAD requests to them 404 | minor | Static serving | open |
-| [BUG-012](bugs/BUG-012-cancelled-game-day-shows-bring-games-prompt.md) | A cancelled game day still tells you to "Tick the games you're bringing" | cosmetic | Game day hub | open |
-| [BUG-013](bugs/BUG-013-wizard-havent-played-buttons-indistinguishable.md) | The two "Haven't played this" buttons in the taste round have identical accessible names | minor | Taste wizard duel component | open |
+| [BUG-012](bugs/BUG-012-cancelled-game-day-shows-bring-games-prompt.md) | A cancelled game day still tells you to "Tick the games you're bringing" | cosmetic | Game day hub | fixed |
+| [BUG-013](bugs/BUG-013-wizard-havent-played-buttons-indistinguishable.md) | The two "Haven't played this" buttons in the taste round have identical accessible names | minor | Taste wizard duel component | fixed |
 | [BUG-014](bugs/BUG-014-authenticated-pages-cacheable-after-logout.md) | After logging out, the Back button shows the previous user's pages | minor | Auth / HTTP caching headers | open |
 | [BUG-015](bugs/BUG-015-post-without-form-body-returns-500.md) | POSTing without a form body (or with JSON) answers HTTP 500 instead of 400/415 | minor | Web layer, every route that calls `call.receiveParameters | fixed |
 | [BUG-016](bugs/BUG-016-solo-table-says-the-1-of-you.md) | A one-person table gets "~30 min for the 1 of you" | cosmetic | Suggestions | open |

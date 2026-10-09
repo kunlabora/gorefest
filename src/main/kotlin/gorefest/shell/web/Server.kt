@@ -30,6 +30,11 @@ import io.ktor.server.http.content.staticResources
 import io.ktor.server.plugins.calllogging.CallLogging
 import io.ktor.server.plugins.forwardedheaders.XForwardedHeaders
 import io.ktor.server.plugins.statuspages.StatusPages
+import io.ktor.http.ContentType
+import io.ktor.http.content.TextContent
+import io.ktor.http.withCharset
+import kotlinx.html.html
+import kotlinx.html.stream.createHTML
 import io.ktor.server.response.respondRedirect
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
@@ -47,6 +52,15 @@ private val NoIndex = createApplicationPlugin("NoIndex") {
     onCallRespond { call, _ -> call.response.header("X-Robots-Tag", "noindex, nofollow, noarchive, noimageindex, nosnippet") }
 }
 
+/** A 404 with nothing to say (the routes' `respond(NotFound)`, or no route at all) gets the on-brand page. Pages that answer 404 with their own body, like a dead invite, are left alone. */
+private val NotFoundPage = createApplicationPlugin("NotFoundPage") {
+    onCallRespond { _, body ->
+        if (body == HttpStatusCode.NotFound) transformBody {
+            TextContent("<!DOCTYPE html>\n" + createHTML().html { notFoundPage() }, ContentType.Text.Html.withCharset(Charsets.UTF_8), HttpStatusCode.NotFound)
+        }
+    }
+}
+
 fun Application.web(app: App) {
     install(CallLogging)
     // Caddy in front sets X-Forwarded-For. Safe to trust only because the app listens on localhost.
@@ -54,6 +68,7 @@ fun Application.web(app: App) {
     install(Webjars)
     // Private by design: no search engine or archive should list this site, so nobody finds it by accident.
     install(NoIndex)
+    install(NotFoundPage)
     install(StatusPages) {
         // A malformed request is the client's problem: no error log, no stack trace.
         exception<UnsupportedMediaTypeException> { call, _ ->

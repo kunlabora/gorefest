@@ -12,7 +12,7 @@ import gorefest.shell.web.urlEncoded
 import kotlinx.html.*
 
 /** A game as it appears on the bring page: am I bringing it. */
-data class BringRow(val game: Game, val bringing: Boolean)
+data class BringRow(val game: Game, val bringing: Boolean, val owned: Boolean = true)
 
 /** A game on the shelf as it appears under "Really want to play something?": do I want it, and how many people do. */
 data class WishRow(val game: Game, val wants: Boolean, val wishers: Int)
@@ -124,18 +124,18 @@ fun TagConsumer<*>.bringList(gameDay: GameDaySummary, rows: List<BringRow>, link
     hx("get", "/gamedays/${gameDay.id}/bring/list")
     hx("trigger", "$BRING_LIST_CHANGED from:body")
     hx("swap", "outerHTML")
-    if (rows.isNotEmpty() || linked) h2("gf-h2") { +"${if (linked) "Your collection" else "Your games"} · ${rows.size}" }
+    if (rows.isNotEmpty() || linked) h2("gf-h2") { +"${if (linked) "Your collection" else "Your games"} · ${if (linked) rows.count { it.owned } else rows.size}" }
     ul("gf-bring-grid") { rows.forEach { bringItem(gameDay, it, readOnly = gameDay.closed) } }
 }
 
 /** Search results land in a grid like the collection's, above it; empty until something is searched. */
-fun TagConsumer<*>.searchResults(gameDay: GameDaySummary, rows: List<BringRow>, bggUnavailable: Boolean) = div("gf-bring__results") {
+fun TagConsumer<*>.searchResults(gameDay: GameDaySummary, rows: List<BringRow>, bggUnavailable: Boolean, nothingFor: String? = null) = div("gf-bring__results") {
     id = "search-results"
     if (bggUnavailable) p("gf-small gf-muted") { +"BGG isn't answering right now, so these are only games we already know." }
     if (rows.isNotEmpty()) {
         h2("gf-h2") { +"Found" }
         ul("gf-bring-grid") { rows.forEach { consumer.bringItem(gameDay, it, readOnly = false, prefix = "search") } }
-    }
+    } else if (nothingFor != null) p("gf-small gf-muted gf-search-empty") { +"Nothing found for \u201c$nothingFor\u201d. Try another spelling." }
 }
 
 /** One game as a tile with its tick. Search results use [prefix] "search" so they don't share ids with the same game in the list. */

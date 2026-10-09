@@ -77,9 +77,10 @@ fun Route.shelfRoutes(app: App) {
         authenticated {
             val me = contextOf<CurrentPlayer>()
             val gameDay = memberGameDay(app, me) ?: return@authenticated call.respond(HttpStatusCode.NotFound)
-            val result = app.gameSearch.search(call.parameters["q"].orEmpty())
+            val query = call.parameters["q"].orEmpty()
+            val result = app.gameSearch.search(query)
             val shelf = app.shelves.of(gameDay.id)
-            respondFragment { searchResults(gameDay, result.games.map { bringRow(it, shelf, me) }, result.bggUnavailable) }
+            respondFragment { searchResults(gameDay, result.games.map { bringRow(it, shelf, me) }, result.bggUnavailable, result.nothingFor(query)) }
         }
     }
 
@@ -116,7 +117,7 @@ private suspend fun bringList(app: App, gameDay: GameDaySummary, me: CurrentPlay
     val owned = if (app.bggAccounts.isLinked(me.id)) app.collectionSync.collection(me.id) else emptySet()
     val shelf = app.shelves.of(gameDay.id)
     val ids = owned + shelf.filter { me.id in it.owners }.map { it.game }
-    return ids.mapNotNull(app.catalog::get).sortedBy { it.name.lowercase() }.map { bringRow(it, shelf, me) }
+    return ids.mapNotNull(app.catalog::get).sortedBy { it.name.lowercase() }.map { bringRow(it, shelf, me).copy(owned = it.id in owned) }
 }
 
 private suspend fun summaryFor(app: App, gameDay: GameDaySummary, me: CurrentPlayer, login: Login): ShelfSummary {

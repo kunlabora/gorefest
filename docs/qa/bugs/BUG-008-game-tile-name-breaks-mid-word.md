@@ -21,3 +21,7 @@ The label wraps as `Carcassonn` / `e` on both desktop and phone.
 
 ## Suspected cause (guess)
 `docs/design/css/gorefest.css` line ~118, `.gf-tile__name { ... overflow-wrap: anywhere; ... }` lets the browser break anywhere when the tile is narrow; tiles in the log are ~70px wide. `overflow-wrap: break-word` plus a slightly smaller font or wider min tile would avoid it.
+
+## Status
+
+Status: fixed. Tile names wrap with overflow-wrap: break-word and the log tiles use auto-fill columns of at least 108px, so "Carcassonne" fits on one line. (commit 552f702)

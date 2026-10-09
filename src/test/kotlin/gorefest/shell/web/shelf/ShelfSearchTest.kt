@@ -20,6 +20,7 @@ import gorefest.shell.web.urlEncoded
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 import io.ktor.client.request.get
 import io.ktor.http.parameters
 import org.junit.jupiter.api.BeforeEach
@@ -87,8 +88,18 @@ class ShelfSearchTest {
     }
 
     @Test
+    fun `a search that finds nothing says so`() = test.webTest(session = kim) { client ->
+        val results = client.search("zzzzzz")
+
+        results shouldReplace "search-results"
+        results.one(".gf-search-empty").text() shouldContain "Nothing found for \u201czzzzzz\u201d"
+        client.search("azul").select(".gf-search-empty").shouldBeEmpty()
+    }
+
+    @Test
     fun `short queries don't search`() = test.webTest(session = kim) { client ->
         client.search("w").select("li").shouldBeEmpty()
+        client.search("w").select(".gf-search-empty").shouldBeEmpty()
         test.bgg.searchCalls.shouldBeEmpty()
     }
 

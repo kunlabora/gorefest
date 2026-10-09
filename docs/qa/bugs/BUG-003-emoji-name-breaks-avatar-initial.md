@@ -24,3 +24,7 @@ The avatar shows `?D`: a lone UTF-16 surrogate half is rendered (replacement/`?`
 
 ## Suspected cause (guess)
 `web/components/Avatars.kt`, `initials()`: `it.first().uppercase()` takes a single UTF-16 `Char`, which splits surrogate pairs. Use `codePointAt`/`Character.toChars` or grapheme-aware first char.
+
+## Status
+
+Status: fixed. initials() takes whole code points and ignores words that start with a symbol, so "🎲 Dice Lord" shows "DL". (commit b1d4c99)

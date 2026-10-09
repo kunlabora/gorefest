@@ -61,7 +61,7 @@ private fun FlowContent.wizardContent(step: WizardStep) {
             hiddenInput("top", round.top.joinToString(","))
             hiddenInput("mode", if (step.topUp) "topup" else "full")
             duel(pair.a, pair.b, keyIds = true)
-            duelUnplayed()
+            duelUnplayed(pair.a, pair.b)
             duelAnswers("Haven't played either", keyIds = true)
         }
     }

@@ -8,11 +8,14 @@ import java.util.concurrent.ConcurrentHashMap
 
 /** Searches games we know first, and asks BGG only when that comes up short. */
 class GameSearch(private val catalog: Catalog, private val bgg: BggGateway, private val clock: Clock) {
-    data class Result(val games: List<Game>, val bggUnavailable: Boolean = false)
+    data class Result(val games: List<Game>, val bggUnavailable: Boolean = false, val tooShort: Boolean = false) {
+        /** What to say "nothing found" about: the [query] when a real search came up empty, otherwise null. */
+        fun nothingFor(query: String): String? = query.trim().takeIf { games.isEmpty() && !tooShort && it.isNotEmpty() }
+    }
 
     suspend fun search(query: String): Result {
         val q = query.trim()
-        if (q.length < MIN_LENGTH) return Result(emptyList())
+        if (q.length < MIN_LENGTH) return Result(emptyList(), tooShort = true)
         val local = catalog.search(q)
         if (local.size >= ENOUGH) return Result(local.take(LIMIT))
         val key = q.lowercase()

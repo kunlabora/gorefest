@@ -16,5 +16,10 @@ fun FlowContent.avatarStack(players: List<PlayerId>, names: Map<PlayerId, String
     players.take(max).forEach { avatar(it, names[it], size = "gf-avatar--sm") }
 }
 
-fun initials(name: String): String =
-    name.split(' ', '-').filter { it.isNotBlank() }.take(2).joinToString("") { it.first().uppercase() }.ifEmpty { "?" }
+/** The first letters of the first two words. Words that start with a symbol (an emoji) only count when there are no others. */
+fun initials(name: String): String {
+    val words = name.split(' ', '-').filter { it.isNotBlank() }
+    val named = words.filter { Character.isLetterOrDigit(it.codePointAt(0)) }.ifEmpty { words }
+    // A whole code point, not a Char: an emoji is two of those and half of one shows as "?".
+    return named.take(2).joinToString("") { it.substring(0, it.offsetByCodePoints(0, 1)).uppercase() }.ifEmpty { "?" }
+}

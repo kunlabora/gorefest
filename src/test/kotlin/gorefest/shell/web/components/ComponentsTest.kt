@@ -4,6 +4,7 @@ import gorefest.core.BggId
 import gorefest.core.game.Game
 import gorefest.shell.web.DEFAULT_TIME_ZONE
 import gorefest.shell.web.bgg.codeStep
+import gorefest.shell.web.components.initials
 import gorefest.shell.web.zoneOrDefault
 import io.kotest.matchers.shouldBe
 import kotlinx.html.div
@@ -48,6 +49,16 @@ class ComponentsTest {
 
         json["username"]!!.jsonPrimitive.content shouldBe "a\"b'c"
         json["code"]!!.jsonPrimitive.content shouldBe "x\"y"
+    }
+
+    @Test
+    fun `initials are whole characters, and an emoji doesn't count as a word`() {
+        initials("Tim Schraepen") shouldBe "TS"
+        initials("anna-lena") shouldBe "AL"
+        initials("\uD83C\uDFB2 Dice Lord") shouldBe "DL"
+        initials("\uD83C\uDFB2Dice") shouldBe "\uD83C\uDFB2"
+        initials("\uD83C\uDFB2") shouldBe "\uD83C\uDFB2"
+        initials("  ") shouldBe "?"
     }
 
     @Test

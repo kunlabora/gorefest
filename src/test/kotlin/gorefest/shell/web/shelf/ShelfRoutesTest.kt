@@ -65,6 +65,17 @@ class ShelfRoutesTest {
     private val bringPage = "/gamedays/$gorefest7/bring"
 
     @Test
+    fun `the collection count leaves out games found by search`() = test.webTest(session = kim) { client ->
+        val wingspan = BggId(266192)
+        given(GameBrought(gorefest7, kimId, wingspan))
+
+        val page = client.get(bringPage).page()
+
+        page.select("#bring-list .gf-tile__name").map { it.text() } shouldContain "Wingspan"
+        page.one("#bring-list h2").text() shouldBe "Your collection \u00b7 2"
+    }
+
+    @Test
     fun `my collection is listed with a switch per game`() = test.webTest(session = kim) { client ->
         val page = client.get(bringPage).page()
 

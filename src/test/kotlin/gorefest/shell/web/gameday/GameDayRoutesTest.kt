@@ -273,6 +273,19 @@ class GameDayRoutesTest {
     }
 
     @Test
+    fun `a not found answers with a page that says nothing about why, and a way back`() = webTest { client ->
+        for (path in listOf("/gamedays/00000000-0000-0000-0000-00000000beef", "/nonexistent")) {
+            val response = client.get(path)
+            response.status shouldBe HttpStatusCode.NotFound
+            response.headers["X-Robots-Tag"]!! shouldContain "noindex"
+            val page = response.page()
+            page.one("meta[name=robots]").attr("content") shouldContain "noindex"
+            page.one(".gf-empty__title").text() shouldBe "That page isn't here"
+            page.one(".gf-empty a[href=/]")
+        }
+    }
+
+    @Test
     fun `unknown game days are not found`() = webTest { client ->
         client.get("/gamedays/00000000-0000-0000-0000-00000000beef").status shouldBe HttpStatusCode.NotFound
         client.get("/gamedays/not-a-uuid").status shouldBe HttpStatusCode.NotFound
@@ -390,6 +403,8 @@ class GameDayRoutesTest {
         val hub = client.get("/gamedays/$gorefest7").page()
         hub.one("h1 ~ span.gf-tag").text() shouldBe "Cancelled"
         hub.select("a[href=/gamedays/$gorefest7/cancel], a[href=/gamedays/$gorefest7/edit], a[href=/gamedays/$gorefest7/bring]").shouldBeEmpty()
+        // An empty shelf asks for nothing on a day that can't be changed anymore.
+        hub.one(".gf-hub__shelf .gf-empty__text").text() shouldBe "No games were brought."
         client.get("/").page().one("a[href=/gamedays/$gorefest7]").text() shouldContain "Cancelled"
     }
 
