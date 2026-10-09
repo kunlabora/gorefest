@@ -20,3 +20,7 @@ Heading becomes `Your collection · 32`; Wingspan is mixed into the alphabetical
 
 ## Suspected cause (guess)
 `ShelfRoutes.kt` `bringList()` deliberately merges "anything I brought that isn't in it (found by search)" into the collection list; the view labels the merged list and its count as the collection.
+
+## Status
+
+Status: fixed. The "Your collection" heading counts only games the player owns; games brought from search still sit in the grid but no longer inflate the count. (commit 87c3355)

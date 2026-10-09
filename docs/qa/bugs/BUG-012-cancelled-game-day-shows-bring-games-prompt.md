@@ -20,3 +20,7 @@ Header correctly shows "Cancelled", but the shelf section reads "Nothing on the 
 
 ## Suspected cause (guess)
 `GameDayViews.kt` shelf empty state is rendered regardless of `gameDay.cancelled`.
+
+## Status
+
+Status: fixed. A cancelled or ended game day with an empty shelf says "No games were brought." instead of asking people to tick games. (commit 089c6d7)

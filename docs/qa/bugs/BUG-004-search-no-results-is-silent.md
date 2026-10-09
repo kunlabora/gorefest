@@ -26,3 +26,7 @@ GET /gamedays/{id}/log/search?q=zzzzzz    ->  <div id="log-search-results"></div
 
 ## Suspected cause (guess)
 `ShelfViews.kt` `searchResults()` and `CheckpointViews.kt` `logSearchResults()` render nothing when `rows`/`games` is empty and `bggUnavailable` is false; there is no empty-state branch. The same function is used for the initial (empty) page, so the "no query yet" and "no match" cases need to be told apart.
+
+## Status
+
+Status: fixed. Searches that ran and found nothing now answer "Nothing found for ..., try another spelling" on the bring page and the play log; too-short queries stay silent. (commit 87c3355)

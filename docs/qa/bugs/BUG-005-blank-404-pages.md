@@ -25,3 +25,7 @@ HTTP/1.1 404 Not Found   X-Robots-Tag: ...   Content-Length: 0
 
 ## Suspected cause (guess)
 Routes call `call.respond(HttpStatusCode.NotFound)` everywhere and `Server.kt` installs `StatusPages` only for `Throwable`; adding `status(HttpStatusCode.NotFound)` (and 500) handlers that render a `page(...)` would fix all of them in one place.
+
+## Status
+
+Status: fixed. A bodiless 404 (any route, or no route) is turned into an on-brand page with the wordmark bar and a way back, still noindex and saying nothing about why; pages with their own 404 body (dead invites) are untouched. (commit 089c6d7)

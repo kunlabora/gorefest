@@ -20,3 +20,7 @@ Scripted click loop: date input count grew `4,5,...,18`, button still in the DOM
 
 ## Suspected cause (guess)
 `GET /polls/new/date` (`DatePollRoutes.kt`) always returns another `dateField()`; it does not know how many exist. The add button could carry the count or be swapped out at the limit.
+
+## Status
+
+Status: fixed. The add button is disabled once the form holds MAX_POLL_DATES fields (server-side on re-render, hyperscript after each add). (commit ae5ca0c)

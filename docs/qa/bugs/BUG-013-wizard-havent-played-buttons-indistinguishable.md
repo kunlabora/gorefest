@@ -25,3 +25,7 @@ No screenshot (visually it looks right: each sits under its card).
 
 ## Suspected cause (guess)
 `TasteViews.kt` / the `duel` component renders the button text as a fixed string; add `aria-label="Haven't played ${game.name}"` (visible text can stay).
+
+## Status
+
+Status: fixed. Each "Haven't played this" button carries aria-label "Haven't played <game>". (commit 3d16d69)
