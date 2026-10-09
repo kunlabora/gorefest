@@ -25,3 +25,7 @@ Reproduced once in the browser; the missing header was checked on several authen
 
 ## Suspected cause (guess)
 Authenticated HTML responses carry no `Cache-Control: no-store` (or `private, no-cache`); `NoIndex` plugin only sets `X-Robots-Tag`. Setting it for responses behind `authenticated {}` (and on `/logout`'s redirect target) would stop bfcache/history reuse.
+
+## Status
+
+**Status: fixed.** Every non-asset response now gets `Cache-Control: no-store` (the `NoStorePages` plugin in `Server.kt`), so history and bfcache keep nothing.

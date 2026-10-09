@@ -26,7 +26,10 @@ import io.ktor.server.plugins.ContentTransformationException
 import io.ktor.server.plugins.UnsupportedMediaTypeException
 import io.ktor.server.application.createApplicationPlugin
 import io.ktor.server.application.install
+import io.ktor.server.http.content.ETagProvider
 import io.ktor.server.http.content.staticResources
+import io.ktor.server.plugins.autohead.AutoHeadResponse
+import io.ktor.server.plugins.conditionalheaders.ConditionalHeaders
 import io.ktor.server.plugins.calllogging.CallLogging
 import io.ktor.server.plugins.forwardedheaders.XForwardedHeaders
 import io.ktor.server.plugins.statuspages.StatusPages
@@ -96,8 +99,13 @@ fun Application.web(app: App) {
         // Browsers ask for this by default, whatever the page's <link rel=icon> says.
         get("/favicon.ico") { call.respondRedirect("/static/icons/favicon.ico", permanent = false) }
         staticResources("/static", "static") {
+            // The ETag (hash of the file) lets browsers revalidate (a 304) instead of re-downloading on every page.
+            etag(ETagProvider.StrongSha256)
             // Font files never change under the same name (a new version gets a new file), so browsers may keep them for a year.
-            modify { url, call -> if (url.path.endsWith(".woff2")) call.response.header(HttpHeaders.CacheControl, "public, max-age=31536000, immutable") }
+            modify { url, call ->
+                val cacheControl = if (url.path.endsWith(".woff2")) "public, max-age=31536000, immutable" else "no-cache"
+                call.response.header(HttpHeaders.CacheControl, cacheControl)
+            }
         }
         context(app.login, app.config) { authRoutes() }
         context(app.ids, app.clock, app.login, app.config) { gameDayRoutes(app) }
