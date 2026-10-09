@@ -245,7 +245,8 @@ fun HTML.gameDayPage(hub: GameDayHub) {
                         linkButton("$base/bring", "Bring games", ButtonStyle.SECONDARY, ButtonSize.SMALL, icon = "plus")
                     }
                 }
-                if (hub.shelf.isEmpty()) emptyState("Nothing on the shelf yet", "Tick the games you're bringing, and ask the others to do the same.")
+                if (hub.shelf.isEmpty() && open) emptyState("Nothing on the shelf yet", "Tick the games you're bringing, and ask the others to do the same.")
+                else if (hub.shelf.isEmpty()) emptyState("Nothing on the shelf", "No games were brought.")
                 else div("gf-tiles") {
                     hub.shelf.forEach { (game, entry) -> gameTile(game, entry.owners.firstOrNull(), entry.owners.firstOrNull()?.let(hub.names::get)) }
                 }
