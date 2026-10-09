@@ -14,17 +14,17 @@ import java.time.Instant
 import java.util.concurrent.Flow
 
 class HttpMailerTest {
-    private val mail = Mail("kim@example.com", "Your Gorefest code: 391740", "Your code is 391740.", Instant.EPOCH)
+    private val mail = Mail("kim@example.com", "Your Boardfest code: 391740", "Your code is 391740.", Instant.EPOCH)
 
     @Test
     fun `postmark gets its token header and a text body`() {
-        val request = PostmarkMailer("pm-token", "Gorefest <hi@gorefest.app>").request(mail)
+        val request = PostmarkMailer("pm-token", "Boardfest <hi@gorefest.app>").request(mail)
 
         request.uri().toString() shouldBe "https://api.postmarkapp.com/email"
         request.headers().firstValue("X-Postmark-Server-Token").get() shouldBe "pm-token"
         val body = body(request)
         body.getValue("To").jsonPrimitive.content shouldBe "kim@example.com"
-        body.getValue("From").jsonPrimitive.content shouldBe "Gorefest <hi@gorefest.app>"
+        body.getValue("From").jsonPrimitive.content shouldBe "Boardfest <hi@gorefest.app>"
         body.getValue("TextBody").jsonPrimitive.content shouldBe "Your code is 391740."
     }
 
@@ -39,13 +39,13 @@ class HttpMailerTest {
 
     @Test
     fun `scaleway gets its token, a from object, recipients and the project`() {
-        val request = ScalewayMailer("scw-secret", "Gorefest <hello@gorefest.example.org>", "project-123").request(mail)
+        val request = ScalewayMailer("scw-secret", "Boardfest <hello@gorefest.example.org>", "project-123").request(mail)
 
         request.uri().toString() shouldBe "https://api.scaleway.com/transactional-email/v1alpha1/regions/fr-par/emails"
         request.headers().firstValue("X-Auth-Token").get() shouldBe "scw-secret"
         val body = body(request)
         body.getValue("from").jsonObject.let { (it.getValue("name").jsonPrimitive.content to it.getValue("email").jsonPrimitive.content) } shouldBe
-            ("Gorefest" to "hello@gorefest.example.org")
+            ("Boardfest" to "hello@gorefest.example.org")
         body.getValue("to").jsonArray.single().jsonObject.getValue("email").jsonPrimitive.content shouldBe "kim@example.com"
         body.getValue("project_id").jsonPrimitive.content shouldBe "project-123"
         body.getValue("text").jsonPrimitive.content shouldBe "Your code is 391740."

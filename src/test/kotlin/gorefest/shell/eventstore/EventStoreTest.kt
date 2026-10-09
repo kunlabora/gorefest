@@ -58,11 +58,11 @@ class EventStoreTest {
     suspend fun `a query item needs every tag`() {
         db.transaction { store.append(listOf(PlayerJoined(gorefest7, anna), PlayerJoined(gorefest7, bram))) }
 
-        val bramInGorefest7 = Query.of(
+        val bramInBoardfest7 = Query.of(
             Query.Item(setOf(typeName<PlayerJoined>()), setOf(Tags.gameDay(gorefest7), Tags.player(bram))),
         )
 
-        db.transaction { store.read(bramInGorefest7) }.events.map { it.event } shouldContainExactly
+        db.transaction { store.read(bramInBoardfest7) }.events.map { it.event } shouldContainExactly
             listOf(PlayerJoined(gorefest7, bram))
     }
 

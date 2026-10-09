@@ -16,9 +16,9 @@ class GameDaysTest {
 
     @Test
     fun `details changes update the summary`() {
-        val state = project(gameDayCreated(), GameDayDetailsChanged(gorefest7, "Gorefest #8", today, "Kim's"))
+        val state = project(gameDayCreated(), GameDayDetailsChanged(gorefest7, "Boardfest #8", today, "Kim's"))
 
-        state.getValue(gorefest7).title shouldBe "Gorefest #8"
+        state.getValue(gorefest7).title shouldBe "Boardfest #8"
         state.getValue(gorefest7).place shouldBe "Kim's"
     }
 

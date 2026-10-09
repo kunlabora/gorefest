@@ -151,7 +151,7 @@ class GameDayRoutesTest {
     fun `later game days wait in the coming up band, linking to each`() = webTest { client ->
         client.htmxPost("/gamedays", validForm)
         client.htmxPost("/gamedays", Parameters.build {
-            append("title", "Gorefest #8")
+            append("title", "Boardfest #8")
             append("date", "2026-10-25")
             append("place", "Bram's attic")
             append("timeZone", "Europe/Brussels")
@@ -163,7 +163,7 @@ class GameDayRoutesTest {
         val card = page.one(".gf-home__list a.gf-daycard")
         card.attr("href") shouldBe "/gamedays/00000000-0000-0000-0000-000000000002"
         card.one(".gf-date").text() shouldBe "Oct 25"
-        card.one(".gf-daycard__title").text() shouldBe "Gorefest #8"
+        card.one(".gf-daycard__title").text() shouldBe "Boardfest #8"
         card.one(".gf-daycard__meta").text() shouldBe "Bram's attic · 1 going"
     }
 
@@ -171,7 +171,7 @@ class GameDayRoutesTest {
     fun `a cancelled game day sits under Past, not Coming up`() = webTest { client ->
         client.htmxPost("/gamedays", validForm)
         client.htmxPost("/gamedays", Parameters.build {
-            append("title", "Gorefest #8")
+            append("title", "Boardfest #8")
             append("date", "2026-10-25")
             append("place", "Bram's attic")
             append("timeZone", "Europe/Brussels")
@@ -181,7 +181,7 @@ class GameDayRoutesTest {
 
         val page = client.get("/").page()
 
-        page.one(".gf-homeday__title").text() shouldBe "Gorefest #8"
+        page.one(".gf-homeday__title").text() shouldBe "Boardfest #8"
         page.select(".gf-home__coming a.gf-daycard").shouldBeEmpty()
         page.one(".gf-home__past a.gf-daycard").one(".gf-tag").text() shouldBe "Cancelled"
     }

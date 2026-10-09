@@ -1,8 +1,8 @@
-# U17 Link BGG by a message from a Gorefest bot account
+# U17 Link BGG by a message from a Boardfest bot account
 
 Source: user testing, 2026-10-06. Status: 📋
 
-**Feedback:** Change the BGG linking process: have a Gorefest bot account on BGG send a personal message to the person who wants to link, containing a link or code.
+**Feedback:** Change the BGG linking process: have a Boardfest bot account on BGG send a personal message to the person who wants to link, containing a link or code.
 
 **Feasibility note:** the BGG XML API2 is read-only; it has no way to send geekmail, so this needs scripted web login to a bot account, which BGG's terms may not allow (we told them we only use the API with our token). Ask BGG before building.
 

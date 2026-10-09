@@ -85,7 +85,7 @@ class AuthRoutesTest {
         mailbox.all shouldHaveSize 1
         val mail = mailbox.all.single()
         mail.to shouldBe "kim@example.com"
-        mail.subject shouldMatch Regex("""Your Gorefest code: \d{6}""")
+        mail.subject shouldMatch Regex("""Your Boardfest code: \d{6}""")
         mail.text shouldContain "Your code is ${code()}."
         mail.text shouldContain "http://localhost:8080/login/link?token="
     }

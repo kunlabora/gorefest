@@ -1,6 +1,6 @@
 # Redesign backlog
 
-Brings the whole app in line with the new login (layout C). The reference is [`design/Gorefest App Redesign.html`](design/Gorefest%20App%20Redesign.html): every item below is one screen drawn there, with its desktop and phone view from one markup.
+Brings the whole app in line with the new login (layout C). The reference is [`design/Gorefest App Redesign.html`](design/Boardfest%20App%20Redesign.html): every item below is one screen drawn there, with its desktop and phone view from one markup.
 
 Status: 📋 todo · 🚧 doing · ✅ done. Tick criteria as they land.
 

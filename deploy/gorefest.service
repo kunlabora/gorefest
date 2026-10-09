@@ -1,6 +1,6 @@
 # /etc/systemd/system/gorefest.service
 [Unit]
-Description=Gorefest game-day matcher
+Description=Boardfest game-day matcher
 After=network-online.target postgresql.service
 Wants=network-online.target
 

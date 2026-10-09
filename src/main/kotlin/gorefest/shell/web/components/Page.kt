@@ -87,7 +87,7 @@ fun HTML.page(
             if (dock != null) div("gf-dock") { dock() }
             footer("gf-footer") {
                 bggCredit()
-                p("gf-credit gf-credit--version") { +"Gorefest v$APP_VERSION" }
+                p("gf-credit gf-credit--version") { +"Boardfest v$APP_VERSION" }
             }
         }
     }
@@ -150,7 +150,7 @@ fun FlowContent.wordmark() = span("gf-wordmark") {
     unsafe {
         +"""<svg class="gf-wordmark__logo" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7"/><g><circle cx="10" cy="10" r="2.9"/><circle cx="22" cy="10" r="2.9"/><circle cx="16" cy="16" r="2.9"/><circle cx="10" cy="22" r="2.9"/><circle cx="22" cy="22" r="2.9"/></g></svg>"""
     }
-    +"Gorefest"
+    +"Boardfest"
 }
 
 fun FlowContent.backLink(href: String, label: String) = a(href, classes = "gf-iconbtn") {

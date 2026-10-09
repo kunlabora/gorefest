@@ -34,7 +34,7 @@ class PrivacyTest {
     @Test
     fun `the site address explains itself in a link preview`() = test.webTest { client ->
         val page = client.get("/login").page()
-        page.one("meta[property=og:site_name]").attr("content") shouldBe "Gorefest"
+        page.one("meta[property=og:site_name]").attr("content") shouldBe "Boardfest"
         page.one("meta[property=og:title]").attr("content") shouldContain "board games"
         page.one("meta[property=og:description]").attr("content") shouldContain "board games"
     }

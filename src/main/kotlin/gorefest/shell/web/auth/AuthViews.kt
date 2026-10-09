@@ -19,21 +19,21 @@ private fun HTML.authHero(
     }
 }
 
-private const val TAGLINE = "Gorefest helps your group pick the board games you'll enjoy most on a game day."
+private const val TAGLINE = "Boardfest helps your group pick the board games you'll enjoy most on a game day."
 
-/** What a chat app shows when someone pastes the bare site address (anonymous visitors land on this page): "Gorefest" alone says nothing. */
+/** What a chat app shows when someone pastes the bare site address (anonymous visitors land on this page): "Boardfest" alone says nothing. */
 private fun HEAD.sitePreview() {
     meta(name = "description", content = TAGLINE)
-    openGraph("og:site_name", "Gorefest")
-    openGraph("og:title", "Gorefest: pick board games for your game day")
+    openGraph("og:site_name", "Boardfest")
+    openGraph("og:title", "Boardfest: pick board games for your game day")
     openGraph("og:description", "$TAGLINE Everyone answers a few A-or-B questions, then it suggests what suits the whole table.")
     openGraph("og:type", "website")
 }
 
 private val steps = listOf(
-    Triple("Pick between two games", "A quick round of this-or-that teaches Gorefest your taste.", Illustration.DUEL),
+    Triple("Pick between two games", "A quick round of this-or-that teaches Boardfest your taste.", Illustration.DUEL),
     Triple("Join a game day", "Your host sends an invite link. Everyone adds the games they're bringing.", Illustration.INVITE),
-    Triple("Get three suggestions", "Tick who's at the table and Gorefest picks three that suit everyone.", Illustration.SHORTLIST),
+    Triple("Get three suggestions", "Tick who's at the table and Boardfest picks three that suit everyone.", Illustration.SHORTLIST),
 )
 
 private enum class Illustration { DUEL, INVITE, SHORTLIST }
@@ -84,7 +84,7 @@ private fun FlowContent.howItWorks() = div("gf-how-band") {
 fun HTML.emailPage(returnTo: String) {
     val landing = returnTo == "/"
     page(
-        "Sign in · Gorefest",
+        "Sign in · Boardfest",
         appBar = { wordmark() },
         head = { if (landing) sitePreview() },
         mainClasses = "gf-landing",
@@ -94,7 +94,7 @@ fun HTML.emailPage(returnTo: String) {
             div("gf-hero-band__copy") {
                 p("gf-kicker") { +"For board game groups" }
                 h1("gf-h1 gf-h1--landing") { +"Find the game your whole table wants to play." }
-                p("gf-lede gf-muted") { +"Gorefest learns what each player likes, then suggests three games for your next game day." }
+                p("gf-lede gf-muted") { +"Boardfest learns what each player likes, then suggests three games for your next game day." }
                 consumer.emailForm(returnTo)
             }
             if (landing) sampleSuggestions()
@@ -118,7 +118,7 @@ fun HTML.codePage(attempt: Uuid, email: String, returnTo: String, dev: Boolean) 
 private fun FlowContent.mailCard() = div("gf-card gf-mailcard") {
     attributes["aria-hidden"] = "true"
     p("gf-kicker") { +"Inbox · just now" }
-    h3("gf-mailcard__subject") { +"Your Gorefest code: 482913" }
+    h3("gf-mailcard__subject") { +"Your Boardfest code: 482913" }
     p("gf-mailcard__code") { +"482913" }
     p("gf-muted gf-small") { +"Type it in the app, or tap the button. It works once, for 15 minutes." }
     span("gf-mailcard__link") { +"Log me in" }
@@ -138,7 +138,7 @@ fun HTML.deadLinkPage() = authHero("Link expired", "Sign in", "This link has exp
     div("gf-signin") { linkButton("/login", "Send me a new code", ButtonStyle.PRIMARY, ButtonSize.LARGE) }
 }
 
-fun HTML.welcomePage(returnTo: String, name: String) = authHero("Welcome", "Welcome to Gorefest", "What should we call you?") {
+fun HTML.welcomePage(returnTo: String, name: String) = authHero("Welcome", "Welcome to Boardfest", "What should we call you?") {
     p("gf-lede gf-muted") { +"Your friends see this on game days." }
     consumer.nameForm(returnTo, name)
 }
@@ -230,7 +230,7 @@ private fun TagConsumer<*>.singleFieldForm(
 
 /** Signed in and named, but the admin hasn't approved the account yet. [returnTo] is where they were headed. */
 fun HTML.pendingPage(name: String, returnTo: String) = authHero("Waiting for approval", "Almost there, $name", "Waiting for a thumbs up") {
-    p("gf-lede gf-muted") { +"Gorefest is a private group, so a person lets every new account in by hand. You'll get an email as soon as it's done." }
+    p("gf-lede gf-muted") { +"Boardfest is a private group, so a person lets every new account in by hand. You'll get an email as soon as it's done." }
     div("gf-signin") {
         linkButton(returnTo, "Check again", ButtonStyle.SECONDARY, ButtonSize.LARGE)
     }

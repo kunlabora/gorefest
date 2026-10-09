@@ -82,7 +82,7 @@ class ApprovalRoutesTest {
             admin.post(id).location shouldBe "/admin/approvals"
             admin.get("/admin/approvals").page().texts(".gf-row__title") shouldNotContain "Fresh"
         }
-        test.mailbox.latestTo("fresh@example.com")!!.subject shouldContain "in on Gorefest"
+        test.mailbox.latestTo("fresh@example.com")!!.subject shouldContain "in on Boardfest"
         test.webTest { client ->
             client.signUp("fresh@example.com", "Fresh")
             (client.get("/").location ?: "") shouldNotStartWith "/pending"

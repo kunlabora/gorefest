@@ -27,12 +27,12 @@ private val sat = LocalDate.of(2026, 10, 10)
 private val sun = LocalDate.of(2026, 10, 11)
 
 private fun created(host: PlayerId = anna, dates: List<LocalDate> = listOf(fri, sat, sun)) =
-    DatePollCreated(poll, host, "Gorefest #8", "Anna's place", dates, "Europe/Brussels")
+    DatePollCreated(poll, host, "Boardfest #8", "Anna's place", dates, "Europe/Brussels")
 
 private val open = arrayOf(created(), DatePollJoined(poll, anna))
 
 class CreateDatePollTest {
-    private val create = CreateDatePoll(poll, anna, " Gorefest #8 ", " Anna's place ", listOf(sun, fri, sat, fri), "Europe/Brussels", today)
+    private val create = CreateDatePoll(poll, anna, " Boardfest #8 ", " Anna's place ", listOf(sun, fri, sat, fri), "Europe/Brussels", today)
 
     @Test
     fun `a poll starts with the host in it, dates tidied up`() {
@@ -118,7 +118,7 @@ class PickDateTest {
     fun `picking a date closes the poll and creates the game day with everyone who can make it`() {
         PickDateDecider.given(*answered).whenever(pick).thenEmits(
             DatePollClosed(poll, sat, gameDay),
-            GameDayCreated(gameDay, anna, "Gorefest #8", sat, "Anna's place", "Europe/Brussels"),
+            GameDayCreated(gameDay, anna, "Boardfest #8", sat, "Anna's place", "Europe/Brussels"),
             PlayerJoined(gameDay, anna),
             PlayerJoined(gameDay, bram),
         )
@@ -128,7 +128,7 @@ class PickDateTest {
     fun `a later answer replaces an earlier one when deciding who comes`() {
         PickDateDecider.given(*answered, DatePollAnswered(poll, bram, listOf(sun))).whenever(pick).thenEmits(
             DatePollClosed(poll, sat, gameDay),
-            GameDayCreated(gameDay, anna, "Gorefest #8", sat, "Anna's place", "Europe/Brussels"),
+            GameDayCreated(gameDay, anna, "Boardfest #8", sat, "Anna's place", "Europe/Brussels"),
             PlayerJoined(gameDay, anna),
         )
     }

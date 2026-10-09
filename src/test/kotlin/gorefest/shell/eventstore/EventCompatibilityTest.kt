@@ -63,14 +63,14 @@ class EventCompatibilityTest {
             BggAccountLinked(player(p1), "Anna"),
         """{"type":"GameDayCreated","gameDay":"$d1","host":"$p1","title":"Gorefest #7","date":"2026-10-03","place":"Tim's","timeZone":"Europe/Brussels"}""" to
             GameDayCreated(gameDay, player(p1), "Gorefest #7", LocalDate.parse("2026-10-03"), "Tim's", "Europe/Brussels"),
-        """{"type":"GameDayDetailsChanged","gameDay":"$d1","title":"Gorefest #8","date":"2026-10-04","place":"Anna's"}""" to
-            GameDayDetailsChanged(gameDay, "Gorefest #8", LocalDate.parse("2026-10-04"), "Anna's"),
+        """{"type":"GameDayDetailsChanged","gameDay":"$d1","title":"Boardfest #8","date":"2026-10-04","place":"Anna's"}""" to
+            GameDayDetailsChanged(gameDay, "Boardfest #8", LocalDate.parse("2026-10-04"), "Anna's"),
         """{"type":"InviteLinkRotated","gameDay":"$d1","version":2}""" to
             InviteLinkRotated(gameDay, 2),
         """{"type":"PlayerJoined","gameDay":"$d1","player":"$p2"}""" to
             PlayerJoined(gameDay, player(p2)),
-        """{"type":"DatePollCreated","poll":"$d1","host":"$p1","title":"Gorefest #9","place":"Tim's","dates":["2026-10-09","2026-10-10"],"timeZone":"Europe/Brussels"}""" to
-            DatePollCreated(poll, player(p1), "Gorefest #9", "Tim's", listOf(LocalDate.parse("2026-10-09"), LocalDate.parse("2026-10-10")), "Europe/Brussels"),
+        """{"type":"DatePollCreated","poll":"$d1","host":"$p1","title":"Boardfest #9","place":"Tim's","dates":["2026-10-09","2026-10-10"],"timeZone":"Europe/Brussels"}""" to
+            DatePollCreated(poll, player(p1), "Boardfest #9", "Tim's", listOf(LocalDate.parse("2026-10-09"), LocalDate.parse("2026-10-10")), "Europe/Brussels"),
         """{"type":"DatePollJoined","poll":"$d1","player":"$p2"}""" to
             DatePollJoined(poll, player(p2)),
         """{"type":"DatePollAnswered","poll":"$d1","player":"$p2","available":["2026-10-10"]}""" to

@@ -1,4 +1,4 @@
-# Gorefest
+# Boardfest
 
 Helps a group of boardgamers pick the games they'll enjoy most at a game day. Everyone answers a handful of quick "which would you rather play?" questions, the app learns a taste profile per player, and then suggests the three best games for the people actually at a table.
 

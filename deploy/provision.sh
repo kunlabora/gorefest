@@ -61,7 +61,7 @@ if [ ! -f /etc/gorefest/env ]; then
   sed -e "s|^BASE_URL=.*|BASE_URL=https://$domain|" \
       -e "s|^SECRET_KEY=.*|SECRET_KEY=$(openssl rand -base64 48 | tr -d '\n')|" \
       -e "s|^DATABASE_PASSWORD=.*|DATABASE_PASSWORD=$db_password|" \
-      -e "s|^MAIL_FROM=.*|MAIL_FROM=Gorefest <hello@$domain>|" \
+      -e "s|^MAIL_FROM=.*|MAIL_FROM=Boardfest <hello@$domain>|" \
       -e "s|PASSWORD@localhost|$db_password@localhost|" \
       "$here/env.example" > /etc/gorefest/env
   chown root:gorefest /etc/gorefest/env && chmod 640 /etc/gorefest/env

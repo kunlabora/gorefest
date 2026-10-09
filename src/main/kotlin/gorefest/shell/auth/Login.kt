@@ -82,7 +82,7 @@ class Login(
         mailer.send(
             Mail(
                 to = email,
-                subject = "Your Gorefest code: $code",
+                subject = "Your Boardfest code: $code",
                 text = """
                     |Your code is $code.
                     |
@@ -140,7 +140,7 @@ class Login(
         mailer.send(
             Mail(
                 to = admin,
-                subject = "${newcomer.name} wants into Gorefest",
+                subject = "${newcomer.name} wants into Boardfest",
                 text = "${newcomer.name} (${newcomer.email}) signed up and is waiting for your approval:\n${config.baseUrl}/admin/approvals\n",
                 sentAt = clock.instant(),
             ),
@@ -154,7 +154,7 @@ class Login(
     suspend fun approve(id: PlayerId): Boolean {
         val (done, player) = db.transaction { players.approve(id) to players.find(id) }
         if (done && player != null) {
-            mailer.send(Mail(player.email, "You're in on Gorefest", "Welcome, ${player.name}. Your account is approved:\n${config.baseUrl}/\n", clock.instant()))
+            mailer.send(Mail(player.email, "You're in on Boardfest", "Welcome, ${player.name}. Your account is approved:\n${config.baseUrl}/\n", clock.instant()))
         }
         return done
     }
@@ -163,7 +163,7 @@ class Login(
     suspend fun reject(id: PlayerId): Boolean {
         val (done, player) = db.transaction { players.find(id).let { found -> players.deleteUnapproved(id) to found } }
         if (done && player != null) {
-            mailer.send(Mail(player.email, "About your Gorefest account", "Sorry, your Gorefest sign-up wasn't approved. This is a private group, so it's by invitation only.\n", clock.instant()))
+            mailer.send(Mail(player.email, "About your Boardfest account", "Sorry, your Boardfest sign-up wasn't approved. This is a private group, so it's by invitation only.\n", clock.instant()))
         }
         return done
     }

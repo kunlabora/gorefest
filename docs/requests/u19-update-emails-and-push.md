@@ -2,7 +2,7 @@
 
 Source: user testing, 2026-10-06. Status: 📋
 
-**Feedback:** Email when people have added their games to a game day, to get updates? What could be a good guesstimate (our last Gorefest had 9 people, we organise it about 4 times a year)? If too expensive, is push with another service cheaper?
+**Feedback:** Email when people have added their games to a game day, to get updates? What could be a good guesstimate (our last Boardfest had 9 people, we organise it about 4 times a year)? If too expensive, is push with another service cheaper?
 
 **Decision (2026-10-06):** record only, with the estimate.
 

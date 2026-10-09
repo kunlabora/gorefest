@@ -52,7 +52,7 @@ If the data matters, install `postgresql-18` from the PostgreSQL repository next
    ```bash
    sudo cp deploy/gorefest.service deploy/gorefest-backup.service deploy/gorefest-backup.timer /etc/systemd/system/
    sudo systemctl daemon-reload && sudo systemctl enable gorefest gorefest-backup.timer
-   echo 'GOREFEST_DOMAIN=gorefest.example.org' | sudo tee -a /etc/default/caddy
+   echo 'GOREFEST_DOMAIN=boardfest.be' | sudo tee -a /etc/default/caddy
    sudo cp deploy/Caddyfile /etc/caddy/Caddyfile && sudo systemctl reload caddy
    ```
 6. **Deploy user sudo**: the `deploy` user from step 2 may run `sudo systemctl restart gorefest` (and nothing else) without a password:

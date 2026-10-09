@@ -2,11 +2,11 @@
 
 Everything in one Scaleway project: an Instance (the server), Transactional Email (login mail) and Object Storage (backups). The console steps are yours; the server setup is `provision.sh`.
 
-Replace `gorefest.example.org` with your (sub)domain and `IP` with the instance's address throughout.
+Replace `boardfest.be` with your (sub)domain and `IP` with the instance's address throughout.
 
 ## 1. Project
 
-In the console, create a project (e.g. `gorefest`), or use the default one. Copy its **Project ID** (Project settings); it goes into `SCW_PROJECT_ID`.
+In the console, create a project (e.g. `boardfest`), or use the default one. Copy its **Project ID** (Project settings); it goes into `SCW_PROJECT_ID`.
 
 Use region **Paris (fr-par)** for everything: Transactional Email only exists there.
 
@@ -32,9 +32,9 @@ Once it's running, note the **public IPv4**. Security group: the default one let
 
 ## 4. DNS
 
-At your DNS provider, add an **A record**: `gorefest.example.org → IP` (and AAAA if you enabled IPv6). If the domain lives with someone else (e.g. Route 53 at your company), ask them to delegate the subdomain to Scaleway (NS records to `ns0.dom.scw.cloud` and `ns1.dom.scw.cloud`), then add the record in Scaleway under Network → Domains and DNS. Check it before going on, since Caddy needs it to get a certificate:
+At your DNS provider, add an **A record**: `boardfest.be → IP` (and AAAA if you enabled IPv6). If the domain lives with someone else (e.g. Route 53 at your company), ask them to delegate the subdomain to Scaleway (NS records to `ns0.dom.scw.cloud` and `ns1.dom.scw.cloud`), then add the record in Scaleway under Network → Domains and DNS. Check it before going on, since Caddy needs it to get a certificate:
 ```bash
-dig +short gorefest.example.org
+dig +short boardfest.be
 ```
 
 ## 5. Provision the server
@@ -44,13 +44,13 @@ From the repository:
 scp -r deploy root@IP:/root/
 ```
 ```bash
-ssh root@IP "bash /root/deploy/provision.sh gorefest.example.org '$(cat ~/.ssh/gorefest_deploy.pub)'"
+ssh root@IP "bash /root/deploy/provision.sh boardfest.be '$(cat ~/.ssh/gorefest_deploy.pub)'"
 ```
 This installs Java 25, PostgreSQL 18 (from the PostgreSQL apt repository, as Ubuntu ships 16), Caddy and rclone, creates the `gorefest` (app) and `deploy` (CI) users, the database, the systemd units, the firewall and automatic security updates. It also writes `/etc/gorefest/env` with a fresh `SECRET_KEY` and database password.
 
 ## 6. Transactional Email
 
-Transactional Email → Add a domain: `gorefest.example.org`. Scaleway then shows DNS records to add at your DNS provider:
+Transactional Email → Add a domain: `boardfest.be`. Scaleway then shows DNS records to add at your DNS provider:
 - **SPF** (TXT) and **DKIM** (TXT): required, or mail won't be sent.
 - **MX** and **DMARC**: recommended, so mail lands in inboxes rather than spam.
 
@@ -66,7 +66,7 @@ Then Applications → `gorefest-server` → API keys → Generate. You get an **
 
 ## 8. Backup bucket
 
-Object Storage → Create bucket in fr-par, **private**. Bucket names are unique across all of Scaleway, so a plain `gorefest-backups` is probably taken: use something like `<company>-<you>-gorefest-backups` and put it in `BACKUP_REMOTE` below. Leave versioning and object lock off (the nightly job deletes dumps older than 30 days), and you don't need a bucket policy: the key's IAM policy is enough.
+Object Storage → Create bucket in fr-par, **private**. Bucket names are unique across all of Scaleway, so a plain `gorefest-backups` is probably taken: use something like `<you>-boardfest-backups` and put it in `BACKUP_REMOTE` below. Leave versioning and object lock off (the nightly job deletes dumps older than 30 days), and you don't need a bucket policy: the key's IAM policy is enough.
 
 ## 9. Fill in the config and deploy
 
@@ -85,7 +85,7 @@ If `nano` says `cannot initialize terminal type` (e.g. Ghostty's `xterm-ghostty`
 
 Empty `RCLONE_CONFIG_SCALEWAY_…` keys make rclone connect anonymously and the backup fails with a 403.
 
-`MAIL_FROM` already says `hello@gorefest.example.org`; it must be on the domain you verified in step 6.
+`MAIL_FROM` already says `hello@boardfest.be`; it must be on the domain you verified in step 6.
 
 First deploy, by hand from your machine:
 ```bash
@@ -100,7 +100,7 @@ ssh deploy@IP bash /tmp/deploy.sh /tmp/gorefest.jar
 
 ## 10. Check it
 
-- `https://gorefest.example.org/health` says `ok` (Caddy fetches the certificate on the first request; give it a few seconds).
+- `https://boardfest.be/health` says `ok` (Caddy fetches the certificate on the first request; give it a few seconds).
 - Log in with your own email: the mail should arrive with the code in the subject.
 - Invite yourself from a second account on your phone, via WhatsApp or Signal, to check the preview and the in-app browser login.
 - Backups:

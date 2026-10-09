@@ -133,8 +133,8 @@ private fun FlowContent.whatHappensNext(loggedIn: Boolean) = div("gf-stack gf-in
         listOf(
             (if (loggedIn) "Join the guest list" else "Sign in with your email") to
                 (if (loggedIn) "One tap and you're on the guest list." else "One tap, no password. You're on the guest list straight away."),
-            "Pick between two games" to "A two-minute round of this-or-that teaches Gorefest your taste.",
-            "Bring games, get suggestions" to "Tick what you're bringing. On the day, Gorefest picks what suits the table.",
+            "Pick between two games" to "A two-minute round of this-or-that teaches Boardfest your taste.",
+            "Bring games, get suggestions" to "Tick what you're bringing. On the day, Boardfest picks what suits the table.",
         ).forEachIndexed { i, (title, text) -> step(i + 1, title, { +text }, StepTone.SOFT) }
     }
 }
