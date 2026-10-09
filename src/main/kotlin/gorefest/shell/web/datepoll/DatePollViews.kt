@@ -4,6 +4,8 @@ import gorefest.core.PlayerId
 import gorefest.core.datepoll.DatePollSummary
 import gorefest.core.datepoll.MIN_POLL_DATES
 import gorefest.core.gameday.GameDaySummary
+import gorefest.core.gameday.MAX_PLACE_LENGTH
+import gorefest.core.gameday.MAX_TITLE_LENGTH
 import gorefest.shell.web.CurrentPlayer
 import gorefest.shell.web.components.*
 import io.ktor.http.Parameters
@@ -33,10 +35,10 @@ fun TagConsumer<*>.datePollForm(error: String? = null, values: Parameters = Para
         hx("swap", "outerHTML")
         if (error != null) errorNotice(error)
         field("title", "Title", hint = "Whatever your group calls it.") {
-            input(InputType.text, name = "title", classes = "gf-input") { id = "title"; placeholder = "Gorefest #7"; required = true; value = values["title"].orEmpty() }
+            input(InputType.text, name = "title", classes = "gf-input") { id = "title"; placeholder = "Gorefest #7"; required = true; maxLength = MAX_TITLE_LENGTH.toString(); value = values["title"].orEmpty() }
         }
         field("place", "Where", hint = "Shown on the invite. Leave out the house number if you like.") {
-            input(InputType.text, name = "place", classes = "gf-input") { id = "place"; value = values["place"].orEmpty() }
+            input(InputType.text, name = "place", classes = "gf-input") { id = "place"; maxLength = MAX_PLACE_LENGTH.toString(); value = values["place"].orEmpty() }
         }
         div("gf-section") {
             h2("gf-h2") { +"Which dates could work?" }

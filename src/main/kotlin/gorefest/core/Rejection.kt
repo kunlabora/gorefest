@@ -18,6 +18,11 @@ sealed interface Rejection {
     data object GameDayAlreadyExists : Rejection
     data object TitleMissing : Rejection
     data object DateInPast : Rejection
+
+    /** No date came with the request, or one that isn't a date. */
+    data object DateMissing : Rejection
+    data object TitleTooLong : Rejection
+    data object PlaceTooLong : Rejection
     data object UnknownTimeZone : Rejection
     data object OnlyHostCanEdit : Rejection
     data object OnlyHostCanRotateInvite : Rejection

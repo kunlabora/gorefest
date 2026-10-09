@@ -21,6 +21,9 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.response.header
 import io.ktor.server.application.Application
+import io.ktor.server.plugins.BadRequestException
+import io.ktor.server.plugins.ContentTransformationException
+import io.ktor.server.plugins.UnsupportedMediaTypeException
 import io.ktor.server.application.createApplicationPlugin
 import io.ktor.server.application.install
 import io.ktor.server.http.content.staticResources
@@ -52,6 +55,17 @@ fun Application.web(app: App) {
     // Private by design: no search engine or archive should list this site, so nobody finds it by accident.
     install(NoIndex)
     install(StatusPages) {
+        // A malformed request is the client's problem: no error log, no stack trace.
+        exception<UnsupportedMediaTypeException> { call, _ ->
+            call.respondText("Unsupported media type", status = HttpStatusCode.UnsupportedMediaType)
+        }
+        exception<ContentTransformationException> { call, _ ->
+            call.respondText("Bad request", status = HttpStatusCode.BadRequest)
+        }
+        exception<BadRequestException> { call, cause ->
+            log.warn("Bad request on ${call.request.local.uri}: ${cause.message}")
+            call.respondText("Bad request", status = HttpStatusCode.BadRequest)
+        }
         exception<Throwable> { call, cause ->
             log.error("Unhandled error on ${call.request.local.uri}", cause)
             call.respondText("Something went wrong", status = HttpStatusCode.InternalServerError)

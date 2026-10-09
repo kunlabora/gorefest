@@ -110,8 +110,12 @@ object OgImage {
         }
         val size = sizes.last()
         g.font = Font(Font.SANS_SERIF, Font.BOLD, size)
-        val lines = wrap(g, text, maxWidth).take(maxLines)
-        return size to lines.mapIndexed { i, l -> if (i == maxLines - 1) ellipsize(g, l, maxWidth) else l }
+        val all = wrap(g, text, maxWidth)
+        val lines = all.take(maxLines)
+        // Cut anything wider than the canvas (one long word), and mark the last line when text was dropped.
+        return size to lines.mapIndexed { i, l ->
+            if (i == maxLines - 1 && all.size > maxLines) ellipsize(g, "$l…", maxWidth) else ellipsize(g, l, maxWidth)
+        }
     }
 
     private fun wrap(g: Graphics2D, text: String, maxWidth: Int): List<String> = text.split(' ').fold(mutableListOf<String>()) { lines, word ->

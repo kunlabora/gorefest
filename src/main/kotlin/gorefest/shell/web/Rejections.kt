@@ -3,6 +3,8 @@ package gorefest.shell.web
 import gorefest.core.Rejection
 import gorefest.core.datepoll.MAX_POLL_DATES
 import gorefest.core.gameday.MAX_BRING_REQUESTS
+import gorefest.core.gameday.MAX_PLACE_LENGTH
+import gorefest.core.gameday.MAX_TITLE_LENGTH
 import gorefest.core.gameday.MAX_WISHES
 
 /** The sentence a person sees for a decider's rejection: one place for all of them. */
@@ -15,6 +17,9 @@ fun Rejection.message(): String = when (this) {
     Rejection.GameDayAlreadyExists -> "Game day already exists"
     Rejection.TitleMissing -> "Give the game day a title"
     Rejection.DateInPast -> "That date is in the past"
+    Rejection.DateMissing -> "Pick a date"
+    Rejection.TitleTooLong -> "That title is a bit long. Keep it under $MAX_TITLE_LENGTH characters"
+    Rejection.PlaceTooLong -> "That place is a bit long. Keep it under $MAX_PLACE_LENGTH characters"
     Rejection.UnknownTimeZone -> "Unknown time zone"
     Rejection.OnlyHostCanEdit -> "Only the host can change this game day"
     Rejection.OnlyHostCanRotateInvite -> "Only the host can make a new invite link"

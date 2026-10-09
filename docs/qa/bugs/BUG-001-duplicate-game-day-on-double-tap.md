@@ -29,3 +29,7 @@ No screenshot (nothing visual to show but two identical rows).
 
 ## Suspected cause (guess)
 No form uses `hx-disabled-elt` or `hx-sync` (`grep -rn "disabled-elt\|hx-sync" src/main/kotlin` finds nothing). htmx's default is to queue the last trigger while a request is in flight, so the second submit fires right after the first answered, before the `HX-Redirect` navigation lands. `POST /gamedays` has no idempotency check either (`GameDayRoutes.kt`, `post("/gamedays")` mints a fresh id per request). Slower networks may hide it, but the queued request should still fire.
+
+## Status
+
+Status: fixed. A global htmx hook in `htmx-config.js` drops a second request from an element that is in flight or already got an `HX-Redirect` (a browser-only fix, so no automated test); commit a84b760.

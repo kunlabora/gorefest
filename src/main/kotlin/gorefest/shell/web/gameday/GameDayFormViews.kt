@@ -1,5 +1,7 @@
 package gorefest.shell.web.gameday
 
+import gorefest.core.gameday.MAX_PLACE_LENGTH
+import gorefest.core.gameday.MAX_TITLE_LENGTH
 import gorefest.shell.web.CurrentPlayer
 import gorefest.shell.web.components.*
 import io.ktor.http.Parameters
@@ -82,7 +84,7 @@ fun TagConsumer<*>.gameDayForm(view: GameDayFormView, error: String? = null, val
                 input(InputType.date, name = "date", classes = "gf-input") { id = "date"; required = true; value = values["date"].orEmpty() }
             }
             field("place", "Where") {
-                input(InputType.text, name = "place", classes = "gf-input") { id = "place"; value = values["place"].orEmpty() }
+                input(InputType.text, name = "place", classes = "gf-input") { id = "place"; maxLength = MAX_PLACE_LENGTH.toString(); value = values["place"].orEmpty() }
             }
         }
         p("gf-hint gf-newform__hint") { +"Shown on the invite. Leave out the house number if you like." }
@@ -97,7 +99,7 @@ fun TagConsumer<*>.titleField(value: String, reroll: Boolean) = div { id = "titl
 
 private fun FlowContent.titleFieldContent(value: String, reroll: Boolean) = div("gf-titlerow") {
     field("title", "Title") {
-        input(InputType.text, name = "title", classes = "gf-input") { id = "title"; placeholder = "Gorefest #7"; required = true; this.value = value }
+        input(InputType.text, name = "title", classes = "gf-input") { id = "title"; placeholder = "Gorefest #7"; required = true; maxLength = MAX_TITLE_LENGTH.toString(); this.value = value }
     }
     if (reroll) button(type = ButtonType.button, classes = buttonClasses(ButtonStyle.SECONDARY)) {
         attributes["aria-label"] = "Another title"

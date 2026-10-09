@@ -24,3 +24,7 @@ A sensible maximum (the welcome name already caps at 40) with an error in the fo
 
 ## Suspected cause (guess)
 `core/gameday/CreateGameDay.kt` / `EditGameDay.kt` only check `title.isBlank()`; no max length for title or place (same in `CreateDatePoll`). `invite/OgImage.kt` wraps on spaces only and does not clip title overflow/ellipsise the title like it does for the place.
+
+## Status
+
+Status: fixed. Title and place are capped at 80 characters in the deciders (`TitleTooLong`/`PlaceTooLong`, also for date polls) and by `maxlength` on the inputs, and the OG image now ellipsises overlong lines and cuts a single endless word. Commit: see the "BUG-006, 007, 015, 019" commit on this branch.

@@ -19,6 +19,7 @@ import gorefest.shell.gameday.TitleGenerator
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldNotBe
+import io.kotest.matchers.collections.shouldBeIn
 import gorefest.shell.web.page
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
@@ -28,7 +29,9 @@ import io.kotest.matchers.string.shouldContain
 import io.ktor.client.HttpClient
 import io.ktor.client.request.forms.submitForm
 import io.ktor.client.request.get
+import io.ktor.client.request.header
 import io.ktor.client.request.post
+import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.Parameters
@@ -71,6 +74,39 @@ class GameDayRoutesTest {
 
         response.status shouldBe HttpStatusCode.NoContent
         response.headers["HX-Redirect"] shouldBe "/gamedays/00000000-0000-0000-0000-000000000001"
+    }
+
+    @Test
+    fun `a missing or garbled date asks for a date, not a later one`() = webTest { client ->
+        val noDate = parameters { append("title", "T"); append("place", "x") }
+        client.htmxPost("/gamedays", noDate).fragment().one("[role=alert]").text() shouldContain "Pick a date"
+        client.htmxPost("/gamedays", parameters { append("title", "T"); append("date", "garbage") }).fragment().one("[role=alert]").text() shouldContain "Pick a date"
+    }
+
+    @Test
+    fun `a title or place that is too long is refused in the form`() = webTest { client ->
+        val long = Parameters.build { appendAll(validForm); set("title", "A".repeat(5000)) }
+        client.htmxPost("/gamedays", long).fragment().one("[role=alert]").text() shouldContain "title is a bit long"
+        val longPlace = Parameters.build { appendAll(validForm); set("place", "A".repeat(5000)) }
+        client.htmxPost("/gamedays", longPlace).fragment().one("[role=alert]").text() shouldContain "place is a bit long"
+        client.get("/gamedays/new").page().one("input#title").attr("maxlength") shouldBe "80"
+    }
+
+    @Test
+    fun `a rejected plain form post answers with a full page, not a bare form`() = webTest { client ->
+        val page = client.submitForm("/gamedays", Parameters.Empty).page()
+
+        page.select("link[rel=stylesheet]").shouldHaveSize(2)
+        page.one("form[action=/gamedays] [role=alert]")
+    }
+
+    @Test
+    fun `a post without a form body is a bad request, not a server error`() = webTest { client ->
+        client.post("/gamedays").status shouldBe HttpStatusCode.BadRequest
+        client.post("/gamedays") {
+            header("Content-Type", "application/json")
+            setBody("{}")
+        }.status.value shouldBeIn listOf(400, 415)
     }
 
     @Test

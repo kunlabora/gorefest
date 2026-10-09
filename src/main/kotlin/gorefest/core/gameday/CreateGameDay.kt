@@ -16,6 +16,10 @@ import gorefest.core.typeName
 import java.time.LocalDate
 import java.time.ZoneId
 
+/** What fits on a card and in the invite preview. */
+const val MAX_TITLE_LENGTH = 80
+const val MAX_PLACE_LENGTH = 80
+
 data class CreateGameDay(
     val gameDay: GameDayId,
     val host: PlayerId,
@@ -40,6 +44,8 @@ object CreateGameDayDecider : Decider<CreateGameDay, Boolean, Event> {
     override fun decide(command: CreateGameDay, state: Boolean): Decision<Event> = when {
         state -> Rejected(Rejection.GameDayAlreadyExists)
         command.title.isBlank() -> Rejected(Rejection.TitleMissing)
+        command.title.trim().length > MAX_TITLE_LENGTH -> Rejected(Rejection.TitleTooLong)
+        command.place.trim().length > MAX_PLACE_LENGTH -> Rejected(Rejection.PlaceTooLong)
         command.date < command.today -> Rejected(Rejection.DateInPast)
         runCatching { ZoneId.of(command.timeZone) }.isFailure -> Rejected(Rejection.UnknownTimeZone)
         else -> with(command) {

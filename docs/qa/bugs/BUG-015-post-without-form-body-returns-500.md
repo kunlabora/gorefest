@@ -26,3 +26,7 @@ Something went wrong
 
 ## Suspected cause (guess)
 `Server.kt` installs `StatusPages { exception<Throwable> { ... 500 } }`. The server log shows each probe as `ERROR gorefest.web - Unhandled error on /login` with `io.ktor.server.plugins.CannotTransformContentToTypeException: Cannot transform this request's content to io.ktor.http.Parameters`. Map that exception (and `BadRequestException`/`UnsupportedMediaTypeException`) to 400/415 before the `Throwable` handler.
+
+## Status
+
+Status: fixed. `StatusPages` maps `UnsupportedMediaTypeException` to 415 and `ContentTransformationException`/`BadRequestException` to 400, without the ERROR stack trace. Commit: see the "BUG-006, 007, 015, 019" commit on this branch.

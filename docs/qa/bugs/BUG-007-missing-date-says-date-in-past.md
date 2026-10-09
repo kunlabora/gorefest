@@ -22,3 +22,7 @@ Both answer `That date is in the past` (also when editing, same parser).
 
 ## Suspected cause (guess)
 `GameDayRoutes.kt` line ~201: `private fun Parameters.date()` falls back to `LocalDate.MIN`, which the decider then rejects as `DateInPast`. Needs its own rejection (or a null date) so the sentence is truthful.
+
+## Status
+
+Status: fixed. A missing or unparseable date now has its own rejection (`DateMissing`, "Pick a date") instead of falling back to `LocalDate.MIN`. Commit: see the "BUG-006, 007, 015, 019" commit on this branch.

@@ -17,6 +17,8 @@ import gorefest.core.eventsourcing.Decision
 import gorefest.core.eventsourcing.Decision.Accepted
 import gorefest.core.eventsourcing.Decision.Rejected
 import gorefest.core.eventsourcing.Query
+import gorefest.core.gameday.MAX_PLACE_LENGTH
+import gorefest.core.gameday.MAX_TITLE_LENGTH
 import gorefest.core.typeName
 import java.time.LocalDate
 import java.time.ZoneId
@@ -55,6 +57,8 @@ object CreateDatePollDecider : Decider<CreateDatePoll, Boolean, Event> {
         return when {
             state -> Rejected(Rejection.DatePollAlreadyExists)
             command.title.isBlank() -> Rejected(Rejection.TitleMissing)
+            command.title.trim().length > MAX_TITLE_LENGTH -> Rejected(Rejection.TitleTooLong)
+            command.place.trim().length > MAX_PLACE_LENGTH -> Rejected(Rejection.PlaceTooLong)
             dates.size < MIN_POLL_DATES -> Rejected(Rejection.TooFewDates)
             dates.size > MAX_POLL_DATES -> Rejected(Rejection.TooManyDates)
             dates.any { it < command.today } -> Rejected(Rejection.DateInPast)

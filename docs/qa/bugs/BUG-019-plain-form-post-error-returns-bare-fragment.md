@@ -25,3 +25,7 @@ Content-Type: text/html; charset=UTF-8
 
 ## Suspected cause (guess)
 `web/Responses.kt` `respondFragment` never looks at the `HX-Request` header. Success paths use `redirect()` which does branch (302 vs `HX-Redirect`), the error paths do not.
+
+## Status
+
+Status: fixed. `respondFragment` wraps the fragment in a full styled page for a plain (non-htmx) form POST; htmx requests and GET fragments are unchanged. Commit: see the "BUG-006, 007, 015, 019" commit on this branch.

@@ -1,6 +1,7 @@
 package gorefest.core.gameday
 
 import gorefest.core.Rejection
+import gorefest.core.GameDayCreated
 import gorefest.core.PlayerJoined
 import gorefest.core.eventsourcing.given
 import org.junit.jupiter.api.Test
@@ -40,6 +41,16 @@ class CreateGameDayTest {
     @Test
     fun `title is required`() {
         CreateGameDayDecider.given().whenever(create.copy(title = " ")).thenRejects(Rejection.TitleMissing)
+    }
+
+    @Test
+    fun `title and place have a maximum length`() {
+        CreateGameDayDecider.given().whenever(create.copy(title = "A".repeat(MAX_TITLE_LENGTH + 1))).thenRejects(Rejection.TitleTooLong)
+        CreateGameDayDecider.given().whenever(create.copy(place = "A".repeat(MAX_PLACE_LENGTH + 1))).thenRejects(Rejection.PlaceTooLong)
+        CreateGameDayDecider.given().whenever(create.copy(title = " " + "A".repeat(MAX_TITLE_LENGTH))).thenEmits(
+            GameDayCreated(gorefest7, anna, "A".repeat(MAX_TITLE_LENGTH), today.plusDays(3), "Anna's place", "Europe/Brussels"),
+            PlayerJoined(gorefest7, anna),
+        )
     }
 
     @Test

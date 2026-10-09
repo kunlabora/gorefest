@@ -1,6 +1,7 @@
 package gorefest.shell.web.gameday
 
 import gorefest.core.GameDayId
+import gorefest.core.Rejection
 import gorefest.core.eventsourcing.Decision
 import gorefest.core.gameday.CancelGameDay
 import gorefest.core.gameday.CancelGameDayDecider
@@ -80,11 +81,12 @@ fun Route.gameDayRoutes(app: App) {
     post("/gamedays") {
         authenticated {
             val form = call.receiveParameters()
+            val date = form.date() ?: return@authenticated respondFragment { gameDayForm(createForm, Rejection.DateMissing.message(), form) }
             val command = CreateGameDay(
                 gameDay = GameDayId(ids.next()),
                 host = contextOf<CurrentPlayer>().id,
                 title = form["title"].orEmpty(),
-                date = form.date(),
+                date = date,
                 place = form["place"].orEmpty(),
                 timeZone = form["timeZone"] ?: DEFAULT_TIME_ZONE,
                 today = clock.todayIn(form["timeZone"]),
@@ -113,11 +115,12 @@ fun Route.gameDayRoutes(app: App) {
         authenticated {
             val gameDay = memberGameDay(app, contextOf<CurrentPlayer>()) ?: return@authenticated call.respond(HttpStatusCode.NotFound)
             val form = call.receiveParameters()
+            val date = form.date() ?: return@authenticated respondFragment { gameDayForm(editForm(gameDay), Rejection.DateMissing.message(), form) }
             val command = EditGameDay(
                 gameDay = gameDay.id,
                 editor = contextOf<CurrentPlayer>().id,
                 title = form["title"].orEmpty(),
-                date = form.date(),
+                date = date,
                 place = form["place"].orEmpty(),
                 today = clock.todayIn(gameDay.timeZone),
             )
@@ -205,4 +208,4 @@ private fun inviteLink(app: App, gameDay: GameDaySummary) = "${config.baseUrl}/i
 private fun RoutingContext.gameDayFromPath(app: App): GameDaySummary? =
     call.parameters["id"]?.let { runCatching { GameDayId.parse(it) }.getOrNull() }?.let(app.gameDaysById::get)
 
-private fun Parameters.date(): LocalDate = this["date"]?.let { runCatching { LocalDate.parse(it) }.getOrNull() } ?: LocalDate.MIN
+private fun Parameters.date(): LocalDate? = this["date"]?.let { runCatching { LocalDate.parse(it) }.getOrNull() }
