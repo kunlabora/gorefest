@@ -255,3 +255,20 @@ Follow-ups, not blocking:
 ## User testing feedback, 2026-10-06
 
 One request file per item in [`docs/requests/`](requests/); each has its own criteria. Decisions: U16 cancels silently; U9, U11 and U19 are recorded only; U17 needs BGG's permission before any work.
+
+---
+
+## GDPR, 2026-10-09
+
+Analysis in [`gdpr.md`](gdpr.md); one request file per story. G2 is the hard one (rewriting the immutable log); G1, G4, G5 and G8 are independent and small.
+
+| #   | Story | Status | Depends on |
+|-----|-------|--------|------------|
+| G1 | [Privacy notice and processing register](requests/g1-privacy-notice.md) | 📋 |  |
+| G2 | [Erase my account: the event log](requests/g2-erasure-event-log.md) | 📋 |  |
+| G3 | [Erase my account: the screen](requests/g3-erasure-ui.md) | 📋 | G2 |
+| G4 | [Download my data](requests/g4-data-export.md) | 📋 |  |
+| G5 | [Don't show the place to non-members](requests/g5-invite-place.md) | 📋 |  |
+| G6 | [Change email, unlink BGG](requests/g6-rectification.md) | 📋 | G2 |
+| G7 | [Retention, backups and restore](requests/g7-retention-backups.md) | 📋 | G2 |
+| G8 | [Logs and URLs: no secrets, short retention](requests/g8-logs.md) | 📋 |  |
