@@ -217,6 +217,30 @@ class TasteRoutesTest {
     }
 
     @Test
+    fun `reloading mid-round carries on where it was, and the payoff counts every answer`() = test.webTest(session = kim) { client ->
+        var wizard = client.get(taste).page().one("#wizard")
+        val answered = mutableSetOf<Set<String>>()
+        repeat(3) {
+            answered += setOf(wizard.one("input[name=a]").`val`(), wizard.one("input[name=b]").`val`())
+            wizard = client.answer(wizard, "A").fragment()
+        }
+
+        val reloaded = client.get(taste).page().one("#wizard")
+        reloaded.one(".gf-progress__count").text() shouldBe "4 / 15"
+        (setOf(reloaded.one("input[name=a]").`val`(), reloaded.one("input[name=b]").`val`()) in answered) shouldBe false
+
+        val redirect = client.finishRound("A")
+        redirect shouldBe "/gamedays/$gorefest7/favourites?answers=${app.tastes.of(kimId).comparisons.size}"
+    }
+
+    @Test
+    fun `the payoff says one answer in the singular`() = test.webTest(session = kim) { client ->
+        client.get("/gamedays/$gorefest7/favourites?answers=1").page().one(".gf-kicker").text() shouldBe "Round done · 1 answer"
+        client.get("/gamedays/$gorefest7/favourites?answers=12").page().one(".gf-kicker").text() shouldBe "Round done · 12 answers"
+        client.get("/gamedays/$gorefest7/favourites?answers=-5").page().select(".gf-kicker") shouldHaveSize 0
+    }
+
+    @Test
     fun `going back mid-round and answering a stale pair again doesn't derail the round`() = test.webTest(session = kim) { client ->
         val first = client.get(taste).page().one("#wizard")
         val second = client.answer(first, "A").fragment()
