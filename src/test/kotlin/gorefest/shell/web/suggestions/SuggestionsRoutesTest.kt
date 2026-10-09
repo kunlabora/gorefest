@@ -19,6 +19,7 @@ import gorefest.shell.web.shouldReplace
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.string.shouldNotContain
 import io.ktor.client.request.get
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -59,6 +60,15 @@ class SuggestionsRoutesTest {
         page.one("input[name=time][checked]").`val`() shouldBe "Any"
         page.select("#suggestions article") shouldHaveSize 3
         page.select("#suggestions article .gf-game__meta").first()!!.text() shouldContain "for the 2 of you"
+    }
+
+    @Test
+    fun `a table of one is not "the 1 of you"`() = test.webTest(session = kim) { client ->
+        val picks = client.get("/gamedays/$gorefest7/suggestions?players=$kimId").fragment()
+        picks.select("#suggestions article .gf-game__meta, article .gf-game__meta").map { it.text() }.forEach {
+            it shouldContain "for you"
+            it shouldNotContain "of you"
+        }
     }
 
     @Test
