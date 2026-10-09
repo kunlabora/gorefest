@@ -50,8 +50,9 @@ class Wizard(
         pool: List<Game>, anchors: List<Game>, player: PlayerGames, round: RoundState, now: Instant,
         mustInclude: Set<BggId>? = null,
     ): WizardPair? {
-        val games = pool.distinctBy { it.id }.take(poolSize)
-        val extra = anchors.filter { a -> games.none { it.id == a.id } }.take(poolSize)
+        // Games they said they haven't played (and never compared) stay out of the round: asking again is nagging.
+        val games = pool.distinctBy { it.id }.filterNot { player.isUnknownToThem(it.id) }.take(poolSize)
+        val extra = anchors.filter { a -> games.none { it.id == a.id } && !player.isUnknownToThem(a.id) }.take(poolSize)
         // Spaced by pairs asked, not steps: "haven't played" answers don't advance the step but must not pin the round on an anchor turn.
         val anchorTurn = (round.asked.size % anchorEvery == anchorEvery - 1 && extra.isNotEmpty()) || games.size < 2
         val candidates = games + extra

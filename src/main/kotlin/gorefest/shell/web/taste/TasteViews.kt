@@ -92,6 +92,7 @@ fun HTML.favouritesPage(me: CurrentPlayer, view: Payoff) {
     page("Your likely favourites", site = SiteBar(me, Nav.GAME_DAYS), mainClasses = "gf-fav-page gf-wrap") {
         split("gf-pay") {
             div("gf-split__copy") {
+                crumb("/gamedays/${gameDay.id}", gameDay.title)
                 if (view.answers != null) p("gf-kicker") { +"Round done · ${view.answers} ${if (view.answers == 1) "answer" else "answers"}" }
                 h1("gf-h1 gf-h1--landing") { +if (view.shelfEmpty) "Nice taste. Now we need games." else "Your likely favourites today" }
                 if (view.favourites.isNotEmpty() && !view.shelfEmpty) p("gf-lede") { +"Based on how you picked, these are the games from ${gameDay.title}'s shelf that should suit you best." }
