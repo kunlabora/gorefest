@@ -77,6 +77,20 @@ class DatePollRoutesTest {
     }
 
     @Test
+    fun `add another date stops at the most dates a poll takes`() = test.webTest(session = anna) { client ->
+        client.get("/polls/new").page().one("button[hx-get]").hasAttr("disabled") shouldBe false
+        // The button also disables itself once the form it has grown has that many fields.
+        client.get("/polls/new").page().one("button[hx-get]").attr("_") shouldContain "length >= 14"
+
+        val tooMany = client.htmxPost("/polls", parameters {
+            append("title", "Gorefest #8"); append("timeZone", "Europe/Brussels")
+            repeat(15) { append("dates", fri.plusDays(it.toLong()).toString()) }
+        }).fragment()
+        tooMany.select("input[name=dates]") shouldHaveSize 15
+        tooMany.one("button[hx-get]").hasAttr("disabled") shouldBe true
+    }
+
+    @Test
     fun `starting a poll puts the host in it, with the dates in order`() = test.webTest(session = anna) { client ->
         val response = client.htmxPost("/polls", parameters {
             append("title", "Gorefest #8"); append("place", "Anna's place"); append("timeZone", "Europe/Brussels")

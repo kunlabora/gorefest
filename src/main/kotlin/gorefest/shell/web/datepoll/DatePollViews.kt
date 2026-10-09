@@ -2,6 +2,7 @@ package gorefest.shell.web.datepoll
 
 import gorefest.core.PlayerId
 import gorefest.core.datepoll.DatePollSummary
+import gorefest.core.datepoll.MAX_POLL_DATES
 import gorefest.core.datepoll.MIN_POLL_DATES
 import gorefest.core.gameday.GameDaySummary
 import gorefest.shell.web.CurrentPlayer
@@ -40,15 +41,18 @@ fun TagConsumer<*>.datePollForm(error: String? = null, values: Parameters = Para
         }
         div("gf-section") {
             h2("gf-h2") { +"Which dates could work?" }
+            val given = values.getAll("dates").orEmpty()
             div("gf-stack") {
                 id = "poll-dates"
-                val given = values.getAll("dates").orEmpty()
                 (given + List((MIN_POLL_DATES + 1 - given.size).coerceAtLeast(0)) { "" }).forEach { dateField(it) }
             }
             button(type = ButtonType.button, classes = buttonClasses(ButtonStyle.GHOST, ButtonSize.SMALL)) {
                 hx("get", "/polls/new/date")
                 hx("target", "#poll-dates")
                 hx("swap", "beforeend")
+                // The server only allows MAX_POLL_DATES: stop offering more once the form has that many fields.
+                disabled = given.size >= MAX_POLL_DATES
+                hyperscript("on htmx:afterRequest if #poll-dates.querySelectorAll('input').length >= $MAX_POLL_DATES set my.disabled to true")
                 icon("plus")
                 +"Add another date"
             }
