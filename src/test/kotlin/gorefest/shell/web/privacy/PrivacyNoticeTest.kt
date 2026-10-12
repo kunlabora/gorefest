@@ -34,7 +34,9 @@ class PrivacyNoticeTest {
 
     @Test
     fun `the contact comes from the admin address in config`() = test.webTest { client ->
-        val link = client.get("/privacy").page().one("#who a")
+        val page = client.get("/privacy").page()
+        page.one("#who a[href=/account]").text() shouldBe "your account page"
+        val link = page.one("#who a[href^=mailto]")
         link.attr("href") shouldBe "mailto:tim@example.com"
         link.text() shouldBe "tim@example.com"
     }
@@ -53,7 +55,7 @@ class PrivacyNoticeTest {
         kotlinx.coroutines.runBlocking { bare.reset() }
         bare.webTest { client ->
             val page = client.get("/privacy").page()
-            page.select("#who a").size shouldBe 0
+            page.select("#who a[href^=mailto]").size shouldBe 0
             page.one("#who").text() shouldContain "ask whoever invited you"
             page.one("#others").text() shouldContain "no mail provider"
         }
