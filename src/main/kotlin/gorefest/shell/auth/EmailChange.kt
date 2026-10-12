@@ -25,7 +25,7 @@ class EmailChange(
     private val db: Database,
     private val players: Players,
     private val mailer: Mailer,
-    config: AppConfig,
+    private val config: AppConfig,
     private val clock: Clock,
 ) {
     private val secrets = Secrets(config.secretKey)
@@ -37,6 +37,9 @@ class EmailChange(
         data object Invalid : Requested
         data object SameAsNow : Requested
         data object TooMany : Requested
+
+        /** The admin is known by this address (`ADMIN_EMAIL`): changing it here would lock them out. */
+        data object IsAdminAddress : Requested
     }
 
     sealed interface Confirmed {
@@ -51,6 +54,7 @@ class EmailChange(
         val email = typed.trim().lowercase()
         if (!EMAIL.matches(email) || email.length > MAX_EMAIL_LENGTH) return Requested.Invalid
         if (email == player.email) return Requested.SameAsNow
+        if (config.isAdmin(player.email)) return Requested.IsAdminAddress
         if (!perPlayer.tryAcquire(player.id.toString())) return Requested.TooMany
         val code = secrets.code()
         val taken = db.transaction {

@@ -4,7 +4,7 @@ package gorefest.shell
  * Settings from the environment. `GOREFEST_ENV=dev` (the default until S1 adds production)
  * enables the dev mailbox and allows a built-in secret key.
  */
-data class AppConfig(val baseUrl: String, val secretKey: String, val dev: Boolean, val adminEmail: String? = null, val mailProvider: String? = null, val inactiveAccountMonths: Int = 24) {
+data class AppConfig(val baseUrl: String, val secretKey: String, val dev: Boolean, val adminEmail: String? = null, val mailProvider: String? = null, val inactiveAccountMonths: Int = 24, val discordNotifications: Boolean = false) {
     val secureCookies get() = baseUrl.startsWith("https://")
 
     /** New accounts wait for the admin's approval. Off only in dev without `ADMIN_EMAIL`, where everyone is let in. */
@@ -22,6 +22,7 @@ data class AppConfig(val baseUrl: String, val secretKey: String, val dev: Boolea
                 secretKey = env("SECRET_KEY") ?: if (dev) DEV_SECRET else error("SECRET_KEY is required outside dev"),
                 dev = dev,
                 mailProvider = env("MAIL_PROVIDER")?.trim()?.lowercase(),
+                discordNotifications = !env("NOTIFY_DISCORD_WEBHOOK").isNullOrBlank(),
                 inactiveAccountMonths = env("INACTIVE_ACCOUNT_MONTHS")?.trim()?.let { it.toIntOrNull()?.takeIf { months -> months >= 0 } ?: error("INACTIVE_ACCOUNT_MONTHS must be a number of months, 0 to switch it off") } ?: 24,
                 adminEmail = env("ADMIN_EMAIL")?.trim()?.lowercase() ?: if (dev) null else error("ADMIN_EMAIL is required outside dev: the person who approves new accounts"),
             )

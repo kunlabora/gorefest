@@ -31,11 +31,7 @@ fun Route.accountRoutes(app: App) {
         authenticated {
             val me = contextOf<gorefest.shell.web.CurrentPlayer>()
             val player = login.players.let { app.db.transaction { it.find(me.id) } }
-            val today = app.clock.instant()
-            val hosting = app.gameDaysById.values
-                .filter { it.host == me.id && !it.closed && !it.date.isBefore(java.time.LocalDate.ofInstant(today, java.time.ZoneId.of(it.timeZone))) }
-                .sortedBy { it.date }.map { it.title }
-            val view = AccountView(me.name, player?.email.orEmpty(), app.accountRequests.pending(me.id), hosting, emailChanged = call.parameters["emailChanged"] == "1")
+            val view = AccountView(me.name, player?.email.orEmpty(), app.accountRequests.pending(me.id), hostedUpcoming(app, me.id), emailChanged = call.parameters["emailChanged"] == "1")
             call.respondHtml { accountPage(view) }
         }
     }
@@ -57,9 +53,10 @@ fun Route.accountRoutes(app: App) {
                 EmailChange.Requested.Invalid -> "That doesn't look like an email address."
                 EmailChange.Requested.SameAsNow -> "That's the address you have already."
                 EmailChange.Requested.TooMany -> "That's a lot of codes. Wait a bit, then try again."
+                EmailChange.Requested.IsAdminAddress -> "This is the admin address. Change ADMIN_EMAIL on the server first, then change it here."
             }
             val asked = app.accountRequests.pending(me.id)
-            call.respondHtml { accountPage(AccountView(me.name, player.email, asked, emptyList(), emailError = error)) }
+            call.respondHtml { accountPage(AccountView(me.name, player.email, asked, hostedUpcoming(app, me.id), emailError = error)) }
         }
     }
 
@@ -70,7 +67,7 @@ fun Route.accountRoutes(app: App) {
                 EmailChange.Confirmed.Changed -> redirect("/account?emailChanged=1")
                 is EmailChange.Confirmed.WrongCode -> {
                     val pending = app.emailChange.pending(me.id).orEmpty()
-                    call.respondHtml { emailCodePage(pending, "That code isn't right. ${confirmed.triesLeft} tries left.") }
+                    call.respondHtml { emailCodePage(pending, "That code isn't right. ${confirmed.triesLeft} ${if (confirmed.triesLeft == 1) "try" else "tries"} left.") }
                 }
                 EmailChange.Confirmed.Failed -> {
                     val pending = app.emailChange.pending(me.id).orEmpty()
@@ -122,4 +119,12 @@ fun Route.accountRoutes(app: App) {
             redirect("/admin/requests")
         }
     }
+}
+
+/** Titles of the game days this player hosts that are still to come. */
+private fun hostedUpcoming(app: App, me: PlayerId): List<String> {
+    val now = app.clock.instant()
+    return app.gameDaysById.values
+        .filter { it.host == me && !it.closed && !it.date.isBefore(java.time.LocalDate.ofInstant(now, java.time.ZoneId.of(it.timeZone))) }
+        .sortedBy { it.date }.map { it.title }
 }

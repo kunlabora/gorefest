@@ -12,6 +12,7 @@ import io.ktor.client.HttpClient
 import io.ktor.client.request.forms.submitForm
 import io.ktor.client.request.get
 import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpHeaders
 import io.ktor.http.parameters
 import kotlinx.coroutines.runBlocking
@@ -91,5 +92,26 @@ class EmailChangeRoutesTest {
     fun `the change page needs a pending change, and a login`() {
         test.webTest(session = kim) { it.get("/account/email").location shouldBe "/account" }
         test.webTest { it.get("/account/email").location shouldStartWith "/login" }
+    }
+
+    @Test
+    fun `the admin can't change the address the admin is known by`() {
+        val tim = runBlocking { test.loggedIn("Tim") }
+        val before = test.mailbox.all.size
+        test.webTest(session = tim) { client ->
+            val page = client.ask("tim2@example.com").bodyAsText()
+            page shouldContain "This is the admin address"
+        }
+        test.mailbox.all.size shouldBe before
+    }
+
+    @Test
+    fun `the last try is worded in the singular`() = test.webTest(session = kim) { client ->
+        client.ask("kim.new@example.com")
+        val right = codeFor("kim.new@example.com")
+        val wrong = if (right == "000000") "111111" else "000000"
+        repeat(3) { client.confirm(wrong) }
+
+        runBlocking { client.confirm(wrong).let { it.bodyAsText() } } shouldContain "1 try left"
     }
 }

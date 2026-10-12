@@ -12,6 +12,7 @@ import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -54,7 +55,7 @@ class PrivacyNoticeTest {
         val page = client.get("/privacy").page()
         page.one("#ask").text() shouldContain "change your email address yourself"
         page.one("#ask").text() shouldContain "unlink your BGG account"
-        page.one("#others").text() shouldContain "only its number"
+        page.one("#others").text() shouldContain "I get a mail"
         page.one("#long").text() shouldContain "two years"
     }
 
@@ -81,5 +82,14 @@ class PrivacyNoticeTest {
         val text = client.get("/privacy").page().text()
         text shouldContain "no banner"
         text shouldNotContain "Gegevensbeschermingsautoriteit"
+    }
+
+    @Test
+    fun `with a Discord webhook the notice names the channel, without one it says mail`() {
+        val withDiscord = TestApp(AppConfig.dev().copy(adminEmail = "tim@example.com", discordNotifications = true))
+        runBlocking { withDiscord.reset() }
+        withDiscord.webTest { client ->
+            client.get("/privacy").page().one("#others").text() shouldContain "only its number"
+        }
     }
 }

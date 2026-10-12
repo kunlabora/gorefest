@@ -39,9 +39,6 @@ private val PREVIEW_SYNC = """
       set t to #title's value
       if t is empty then set t to 'Your game day' end
       put t into #pv-title
-      set p to #place's value
-      put p into #pv-place
-      set #pv-place-row's hidden to (p is empty)
       set d to #date's value
       if d is empty
         put 'Pick a date' into #pv-date
@@ -56,7 +53,6 @@ private fun FlowContent.invitePreview(host: String, values: Parameters) = div("g
     attributes["aria-hidden"] = "true"
     val title = values["title"].orEmpty().ifBlank { "Your game day" }
     val date = values["date"]?.let { runCatching { LocalDate.parse(it).full() }.getOrNull() } ?: "Pick a date"
-    val place = values["place"].orEmpty()
     p("gf-kicker") { +"What your friends see" }
     article("gf-card gf-pv") {
         id = "invite-preview"
@@ -65,7 +61,6 @@ private fun FlowContent.invitePreview(host: String, values: Parameters) = div("g
         h3("gf-pv__title") { id = "pv-title"; +title }
         ul("gf-pv__facts") {
             li { icon("calendar"); span { id = "pv-date"; +date } }
-            li { id = "pv-place-row"; hidden = place.isBlank(); icon("pin"); span { id = "pv-place"; +place } }
             li { icon("users"); +"Hosted by $host" }
         }
     }
@@ -87,7 +82,7 @@ fun TagConsumer<*>.gameDayForm(view: GameDayFormView, error: String? = null, val
                 input(InputType.text, name = "place", classes = "gf-input") { id = "place"; maxLength = MAX_PLACE_LENGTH.toString(); value = values["place"].orEmpty() }
             }
         }
-        p("gf-hint gf-newform__hint") { +"Shown on the invite. Leave out the house number if you like." }
+        p("gf-hint gf-newform__hint") { +"Only people who have joined see it, not the invite or its preview. Leave out the house number if you like." }
         if (!view.editing) browserTimeZone()
         button(type = ButtonType.submit, classes = buttonClasses(ButtonStyle.PRIMARY, ButtonSize.LARGE)) { spinner(); +view.submitLabel }
     }

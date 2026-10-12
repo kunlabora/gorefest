@@ -17,7 +17,7 @@ import kotlinx.html.section
 import kotlinx.html.ul
 
 /** What the notice says about itself: how to reach me, and who sends the mail. Built from config in [privacyRoutes]. */
-data class PrivacyView(val contactEmail: String?, val mailProvider: MailProvider)
+data class PrivacyView(val contactEmail: String?, val mailProvider: MailProvider, val discord: Boolean = false)
 
 /** The mail provider in use, named and placed, so the notice never claims one that isn't. */
 enum class MailProvider(val label: String, val where: String) {
@@ -82,7 +82,8 @@ fun HTML.privacyPage(view: PrivacyView) = page("Privacy", appBar = { wordmark() 
                     if (view.mailProvider.where.isNotEmpty()) +", ${view.mailProvider.where}"
                     +", sends the mail."
                 }
-                li { +"A Discord channel only I can read gets a short message when someone signs up or asks to have their data or account handled. It holds a name and a link, never an email address. When an account is deleted, the message holds only its number, so I can delete it again if I ever have to restore a backup." }
+                if (view.discord) li { +"A Discord channel only I can read gets a short message when someone signs up or asks to have their data or account handled. It holds a name and a link, never an email address. When an account is deleted, the message holds only its number, so I can delete it again if I ever have to restore a backup." }
+                else li { +"When someone signs up or asks to have their data or account handled, I get a mail with their name and a link." }
             }
         }
 

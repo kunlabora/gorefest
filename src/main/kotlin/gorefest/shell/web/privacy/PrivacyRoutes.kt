@@ -9,6 +9,6 @@ import io.ktor.server.routing.get
 context(config: AppConfig)
 fun Route.privacyRoutes() {
     get("/privacy") {
-        call.respondHtml { privacyPage(PrivacyView(contactEmail = config.adminEmail, mailProvider = MailProvider.of(config.mailProvider))) }
+        call.respondHtml { privacyPage(PrivacyView(contactEmail = config.adminEmail, mailProvider = MailProvider.of(config.mailProvider), discord = config.discordNotifications)) }
     }
 }

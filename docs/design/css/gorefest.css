@@ -734,3 +734,7 @@ div.gf-tile { cursor: default; }
 /* The avatar in the app bar is a link to the account page. */
 .gf-appbar__account { display: inline-flex; border-radius: 50%; text-decoration: none; }
 .gf-appbar__account:focus-visible { outline: 2px solid var(--focus, currentColor); outline-offset: 2px; }
+
+/* Account page: each request is a card with room inside, and the cards have a gap between them. */
+.gf-account-request { padding: 16px 20px; display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
+.gf-account-request > * { margin: 0; }

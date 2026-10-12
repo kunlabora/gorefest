@@ -213,7 +213,8 @@ class GameDayRoutesTest {
         form.attr("_") shouldContain "put t into #pv-title"
         page.one("#pv-title").text() shouldBe page.one("#title").`val`()
         page.one("#pv-date").text() shouldBe "Pick a date"
-        page.one("#pv-place-row").hasAttr("hidden") shouldBe true
+        page.select("#pv-place-row").size shouldBe 0
+        page.one(".gf-newform__hint").text() shouldContain "Only people who have joined see it"
         page.one(".gf-pv").parents().any { it.hasClass("gf-desk-only") } shouldBe true
     }
 
