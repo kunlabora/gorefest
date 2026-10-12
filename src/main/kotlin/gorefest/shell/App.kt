@@ -21,6 +21,7 @@ import gorefest.core.taste.TasteModel
 import gorefest.core.taste.Tastes
 import gorefest.core.taste.Wizard
 import gorefest.shell.account.AccountRequests
+import gorefest.shell.account.InactiveAccounts
 import gorefest.shell.account.PersonalDataExport
 import gorefest.shell.auth.AccountEraser
 import gorefest.shell.auth.AdminNotifier
@@ -98,7 +99,11 @@ class App(
     private val admin: AdminNotifier = MailAdminNotifier(mailer, config, clock).let { mail -> adminNotifier?.let { FallbackNotifier(it, mail) } ?: mail }
 
     val login = Login(db, commands, mailer, config, clock, ids, admin = admin)
-    val accountEraser = AccountEraser(db, commands, login.players)
+    val accountEraser = AccountEraser(db, commands, admin, login.players)
+    val inactiveAccounts = InactiveAccounts(
+        db, login.players, accountEraser, mailer, config, clock,
+        hostsUpcomingGameDay = { player -> gameDaysById.values.any { it.host == player && !it.closed } },
+    )
     val emailChange = EmailChange(db, login.players, mailer, config, clock)
     val accountRequests = AccountRequests(db, login.players, admin, accountEraser, mailer, config, clock)
     val invites = InviteLinks(config.secretKey)
@@ -134,6 +139,7 @@ class App(
         collectionSync.startRefreshing()
         closer.start()
         login.startPurging(scope)
+        inactiveAccounts.start(scope)
     }
 
     fun stop() = scope.cancel()

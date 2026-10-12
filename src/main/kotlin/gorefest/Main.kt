@@ -43,6 +43,11 @@ fun main() {
         // The fake catalog is code, but the metadata cache outlives runs: don't let it serve last week's art.
         if (bggApi is FakeBggApi) app.catalog.refreshCached(devGames, app.clock.instant())
     }
+    // After restoring a backup: erase again whoever was erased since it was taken (deploy/README.md). Safe to leave set.
+    AppConfig.setting("REAPPLY_ERASURES")?.let { list ->
+        val ids = list.split(',', ' ', '\n').filter { it.isNotBlank() }.map { gorefest.core.PlayerId(kotlin.uuid.Uuid.parse(it.trim())) }
+        LoggerFactory.getLogger("gorefest").info("Re-applied {} of {} erasures", runBlocking { app.accountEraser.reapply(ids) }, ids.size)
+    }
     app.startBackgroundJobs()
 
     // systemd stops us with SIGTERM: stop the background jobs and release the pool.

@@ -194,6 +194,7 @@ class Login(
                 return@transaction null to LoginResult.Failed(verification.check, stored.email, stored.returnTo)
             }
             val player = players.findOrCreate(stored.email, PlayerId(ids.next()), approved = !config.approvalRequired || config.isAdmin(stored.email))
+            players.touchLogin(player.id, clock.instant())
             // The admin may have signed up before being configured as one.
             if (config.isAdmin(stored.email) && !player.approved) players.approve(player.id)
             val token = secrets.token()

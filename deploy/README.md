@@ -89,6 +89,16 @@ sudo rm /tmp/restore.dump
 ```
 The projections rebuild from the event log on start, so nothing else needs restoring. Test this once on a scratch database (point `-d` at it) and write down how long it took.
 
+**After a restore, erase again whoever was erased since that backup**, or they come back. Every erasure is posted to the admin's Discord channel as "Account erased" with the player id (the database can't hold that list: a restore replaces it). Collect the ids from the channel since the backup's date, then:
+```bash
+sudo sh -c 'echo "REAPPLY_ERASURES=id1,id2" >> /etc/gorefest/env'
+sudo systemctl restart gorefest        # the log says "Re-applied N of M erasures"
+sudo sed -i '/^REAPPLY_ERASURES=/d' /etc/gorefest/env
+```
+Ids that no longer exist are skipped, and leaving the line set does no harm, only the restart is slower. Don't open the site to people before this is done. The same goes for any account deletion you handled by hand since the backup (the "Your Boardfest account is deleted" mails are the other record).
+
+**Retention.** Backups are kept 30 days and no longer: `backup.sh` prunes before dumping and the unit ends failed if anything older than 30 days is still in the bucket (so leave bucket versioning and object lock off). Erased data therefore leaves the backups within 30 days. Accounts nobody has signed in to for `INACTIVE_ACCOUNT_MONTHS` (default 24) get a warning mail and are erased 30 days later; the admin and hosts of a game day still to come are left alone.
+
 ## Logs
 
 The app writes to journald, which `provision.sh` limits to 14 days (`/etc/systemd/journald.conf.d/retention.conf`, `MaxRetentionSec=14d`). Request lines hold the method, status and a scrubbed path only: no query string, and invite and poll links show as `/i/{token}` and `/p/{token}` (`loggable()`). No code logs an email address or an IP, apart from the dev mailbox, which only runs in dev. Caddy's access log stays off (`Caddyfile`): keep it that way, since it would record the links. On a server provisioned before this, run `provision.sh` again or create the drop-in by hand and restart `systemd-journald`.

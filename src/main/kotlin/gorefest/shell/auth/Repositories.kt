@@ -56,6 +56,45 @@ class Players {
             it.executeUpdate() > 0
         }
 
+    /** Sets the last sign-in, and forgets any inactivity warning: they're back. */
+    context(tx: Tx)
+    fun touchLogin(id: PlayerId, at: Instant) {
+        tx.connection.prepareStatement("update players set last_login_at = ?, inactive_warned_at = null where id = ?").use {
+            it.setTimestamp(1, Timestamp.from(at))
+            it.setObject(2, id.value.toJavaUuid())
+            it.executeUpdate()
+        }
+    }
+
+    /** Accounts that haven't signed in since [cutoff] and haven't been warned yet. */
+    context(tx: Tx)
+    fun toWarn(cutoff: Instant): List<Player> =
+        tx.connection.prepareStatement(
+            "select id, email, name, approved_at is not null as approved from players where last_login_at < ? and inactive_warned_at is null order by last_login_at",
+        ).use {
+            it.setTimestamp(1, Timestamp.from(cutoff))
+            it.executeQuery().use { rs -> buildList { while (rs.next()) add(rs.toPlayer()) } }
+        }
+
+    context(tx: Tx)
+    fun markWarned(id: PlayerId, at: Instant) {
+        tx.connection.prepareStatement("update players set inactive_warned_at = ? where id = ?").use {
+            it.setTimestamp(1, Timestamp.from(at))
+            it.setObject(2, id.value.toJavaUuid())
+            it.executeUpdate()
+        }
+    }
+
+    /** Accounts warned before [cutoff] that haven't signed in since the warning. */
+    context(tx: Tx)
+    fun toErase(cutoff: Instant): List<Player> =
+        tx.connection.prepareStatement(
+            "select id, email, name, approved_at is not null as approved from players where inactive_warned_at < ? and last_login_at < inactive_warned_at order by inactive_warned_at",
+        ).use {
+            it.setTimestamp(1, Timestamp.from(cutoff))
+            it.executeQuery().use { rs -> buildList { while (rs.next()) add(rs.toPlayer()) } }
+        }
+
     /** When the account was made, for the file of someone's data. */
     context(tx: Tx)
     fun createdAt(id: PlayerId): Instant? =
