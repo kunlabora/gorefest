@@ -17,5 +17,14 @@ class BggVerification(secretKey: String) {
         return "GORE-" + (0 until 6).map { alphabet[(mac[it].toInt() and 0xff) % alphabet.length] }.joinToString("")
     }
 
+    /**
+     * What the log stores in place of a username: a keyed hash of the lowercased name, so the log can tell that two
+     * links are the same account without holding the name. Rotating `SECRET_KEY` changes every key, so an account could
+     * then be linked a second time; the invite links and codes break on a rotation anyway.
+     */
+    fun usernameKey(username: String): String =
+        Mac.getInstance("HmacSHA256").apply { init(key) }.doFinal("username:${username.lowercase()}".toByteArray())
+            .joinToString("") { "%02x".format(it) }
+
     fun isOnProfile(user: BggUser, code: String) = user.profileText.contains(code, ignoreCase = true)
 }

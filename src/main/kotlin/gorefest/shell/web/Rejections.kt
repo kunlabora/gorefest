@@ -36,7 +36,7 @@ fun Rejection.message(): String = when (this) {
     Rejection.PlayersNotAtGameDay -> "Only players at this game day can be in a log"
     Rejection.ImplausibleDuration -> "That doesn't look like a real duration"
     Rejection.SameGameTwice -> "Compare two different games"
-    is Rejection.AlreadyLinked -> "You've already linked $username"
+    Rejection.AlreadyLinked -> "You've already linked a BGG account"
     Rejection.BggAccountTaken -> "That BGG account is already linked to another player"
     Rejection.NoSuchPlayer -> "No such player"
     Rejection.NoSuchDatePoll -> "No such date poll"

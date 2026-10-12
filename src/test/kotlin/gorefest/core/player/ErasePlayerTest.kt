@@ -1,6 +1,7 @@
 package gorefest.core.player
 
 import gorefest.core.BggAccountLinked
+import gorefest.core.BggAccountLinkedHashed
 import gorefest.core.GameDayCancelled
 import gorefest.core.GameDayEnded
 import gorefest.core.LoggedIn
@@ -36,19 +37,18 @@ class ErasePlayerTest {
     @Test
     fun `an erased player's BGG username can be linked by someone else`() {
         LinkBggAccountDecider
-            .given(BggAccountLinked(bram, "BramPlays"), PlayerErased(bram))
-            .whenever(LinkBggAccount(anna, "bramplays"))
-            .thenEmits(BggAccountLinked(anna, "bramplays"))
+            .given(BggAccountLinkedHashed(bram, "key-of-bramplays"), PlayerErased(bram))
+            .whenever(LinkBggAccount(anna, "bramplays", "key-of-bramplays"))
+            .thenEmits(BggAccountLinkedHashed(anna, "key-of-bramplays"))
     }
 
     @Test
     fun `an erased player's link is gone from the BGG accounts`() {
-        val state = listOf(BggAccountLinked(anna, "AnnaPlays"), BggAccountLinked(bram, "BramPlays"), PlayerErased(anna))
+        val state = listOf(BggAccountLinked(anna, "AnnaPlays"), BggAccountLinkedHashed(bram, "key-of-bramplays"), PlayerErased(anna))
             .fold(BggAccounts.initialState, BggAccounts::evolve)
 
         state.isLinked(anna) shouldBe false
-        state.usernameOf(anna) shouldBe null
-        state.usernameOf(bram) shouldBe "BramPlays"
+        state.isLinked(bram) shouldBe true
     }
 
     @Test

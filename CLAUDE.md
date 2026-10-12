@@ -33,11 +33,11 @@ Helps a group of boardgamers pick the games they'll enjoy most at a game day, us
 - **Projections**: in-memory, rebuilt on startup by replaying the log.
   - Each projection's state is a read-model class in `core` that owns its queries and their defaults (`GameDayShelves.of(gameDay)`, `PlayerTastes.of(player)`, `GameDayPlays.on(gameDay)`, `LinkedBggAccounts.isLinked(player)`). Callers never see a raw `Map` or repeat `?: default`. `App` exposes them as `shelves`, `tastes`, `plays`, `bggAccounts` (and `gameDaysById`); nothing outside `App` touches `Projector.state`. A new query goes on the read-model class.
 - **Not events** (plain tables): BGG metadata cache (`fetched_at`), players (email, name), login attempts, sessions.
-- **Erasure is anonymisation, not a rewrite.** The log is never edited. Events carry only player ids, and the email and name live in `players`, so `AccountEraser` (`shell.auth`) deletes that row (sessions, collection and sync rows cascade), the login attempts for the email, and appends `PlayerErased`. The ids left in the log point at nobody. `PlayerErased` frees the BGG username and takes the player off game days still to be played. Known residue: older `BggAccountLinked` events hold the username, and free-text game day places stay (`docs/gdpr.md`).
+- **Erasure is anonymisation, not a rewrite.** The log is never edited. Events carry only player ids, and the email and name live in `players`, so `AccountEraser` (`shell.auth`) deletes that row (sessions, collection and sync rows cascade), the login attempts for the email, and appends `PlayerErased`. The ids left in the log point at nobody. `PlayerErased` frees the BGG username and takes the player off game days still to be played. Known residue: older `BggAccountLinked` events hold the username, and free-text game day places stay (`docs/gdpr.md`). New events keep identifying data (names, emails, usernames, addresses) out: that belongs in the plain tables.
 
 ### Events (initial)
 
-`PlayerRegistered`, `PlayerErased`, `LoggedIn`, `BggAccountLinked`, `GameDayCreated`, `GameDayDetailsChanged`, `InviteLinkRotated`, `PlayerJoined`, `GameBrought`, `GameUnbrought`, `PlayWishChanged`, `ComparisonRecorded(player, a, b, result, basis, at)`, `GamePlayStatusDeclared`, `PlayLogged(gameday, game, players, minutes)`, `GameDayCancelled`, `GameDayEnded`, for bring requests `BringRequested`, `BringRequestWithdrawn`, `BringRequestDeclined` (answered is implied by the owner's `GameBrought`) and `BringRequestsAllowedChanged(player, allowed)` (the opt-out), and for date polls `DatePollCreated`, `DatePollJoined`, `DatePollAnswered`, `DatePollClosed`. `core/Event.kt` is the authoritative list.
+`PlayerRegistered`, `PlayerErased`, `LoggedIn`, `BggAccountLinkedHashed` (the log holds a keyed hash of the BGG username, never the name; the old `BggAccountLinked` is no longer written but still replays), `GameDayCreated`, `GameDayDetailsChanged`, `InviteLinkRotated`, `PlayerJoined`, `GameBrought`, `GameUnbrought`, `PlayWishChanged`, `ComparisonRecorded(player, a, b, result, basis, at)`, `GamePlayStatusDeclared`, `PlayLogged(gameday, game, players, minutes)`, `GameDayCancelled`, `GameDayEnded`, for bring requests `BringRequested`, `BringRequestWithdrawn`, `BringRequestDeclined` (answered is implied by the owner's `GameBrought`) and `BringRequestsAllowedChanged(player, allowed)` (the opt-out), and for date polls `DatePollCreated`, `DatePollJoined`, `DatePollAnswered`, `DatePollClosed`. `core/Event.kt` is the authoritative list.
 
 Tag convention: `player:{id}`, `gameday:{id}`, `game:{bggId}`, `datepoll:{id}`.
 
@@ -71,6 +71,7 @@ Tag convention: `player:{id}`, `gameday:{id}`, `game:{bggId}`, `datepoll:{id}`.
 - **Design:** `docs/design/` holds the design system (tokens, `gorefest.css` components, brand book, microcopy) and HTML mockups of every screen. Fonts are self-hosted (`docs/design/fonts`, served from `/static/fonts` with a one-year immutable cache): no page may call a third party for fonts, and a font file is never replaced under the same name. Build pages from those class names and follow the brand book's voice.
 - **Logs:** nothing that is a bearer token or an address goes to a log. Request lines come from `CallLogging` with `loggable()` (`web/LogSafety.kt`): no query, `/i/{token}`, `/p/{token}`. Anything new that logs a URL uses it; `LogSafetyTest` captures the log. journald keeps 14 days (`provision.sh`).
 - **Backlog:** `docs/backlog.md`. Update story status and tick criteria as work lands.
+- **After a story is done**, run the `privacy-check` agent (`.claude/agents/privacy-check.md`): it checks whether the GDPR and privacy notes (`docs/gdpr.md`, `docs/processing-register.md`, the `/privacy` notice) still say what the code does, and updates them.
 
 ### Dev commands
 
@@ -90,6 +91,7 @@ Tag convention: `player:{id}`, `gameday:{id}`, `game:{bggId}`, `datepoll:{id}`.
 - Search the local metadata cache first; fall back to the BGG search endpoint.
 - Fetch metadata once per game globally, not per user.
 - Refresh BGG top-ranked list monthly (not the "hot" list) for wizard anchors.
+- The linked username is stored in `collection_syncs` (erased with the account); the log keeps only `BggVerification.usernameKey(username)`, so rotating `SECRET_KEY` would let an account be linked twice.
 - BGG has no OAuth: link by username plus a verification step (e.g. code placed in the BGG profile).
 
 ## Auth

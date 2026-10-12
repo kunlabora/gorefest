@@ -59,7 +59,7 @@ sealed interface Rejection {
     data object SameGameTwice : Rejection
 
     /** The player linked another BGG account already. */
-    data class AlreadyLinked(val username: String) : Rejection
+    data object AlreadyLinked : Rejection
 
     /** Another player linked this BGG account. */
     data object BggAccountTaken : Rejection

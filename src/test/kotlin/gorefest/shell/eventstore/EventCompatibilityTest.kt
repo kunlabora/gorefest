@@ -2,6 +2,7 @@ package gorefest.shell.eventstore
 
 import gorefest.core.Basis
 import gorefest.core.BggAccountLinked
+import gorefest.core.BggAccountLinkedHashed
 import gorefest.core.BggId
 import gorefest.core.ComparisonRecorded
 import gorefest.core.ComparisonResult
@@ -64,6 +65,8 @@ class EventCompatibilityTest {
             PlayerErased(player(p1)),
         """{"type":"BggAccountLinked","player":"$p1","username":"Anna"}""" to
             BggAccountLinked(player(p1), "Anna"),
+        """{"type":"BggAccountLinkedHashed","player":"$p1","usernameKey":"ab12"}""" to
+            BggAccountLinkedHashed(player(p1), "ab12"),
         """{"type":"GameDayCreated","gameDay":"$d1","host":"$p1","title":"Gorefest #7","date":"2026-10-03","place":"Tim's","timeZone":"Europe/Brussels"}""" to
             GameDayCreated(gameDay, player(p1), "Gorefest #7", LocalDate.parse("2026-10-03"), "Tim's", "Europe/Brussels"),
         """{"type":"GameDayDetailsChanged","gameDay":"$d1","title":"Boardfest #8","date":"2026-10-04","place":"Anna's"}""" to

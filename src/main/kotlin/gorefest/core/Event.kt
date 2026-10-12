@@ -24,6 +24,9 @@ object Tags {
 
     /** A BGG username, case-insensitive like BGG itself. */
     fun bggUser(username: String) = Tag("bgg:${username.lowercase()}")
+
+    /** The same, as a keyed hash of the lowercased username: the log never holds the name itself. */
+    fun bggUserKey(key: String) = Tag("bggkey:$key")
 }
 
 /** The stored type name of an event class, for use in queries. */
@@ -60,6 +63,17 @@ data class LoggedIn(val player: PlayerId) : Event {
 @SerialName("BggAccountLinked")
 data class BggAccountLinked(val player: PlayerId, val username: String) : Event {
     override val tags get() = setOf(Tags.player(player), Tags.bggUser(username))
+}
+
+/**
+ * Like [BggAccountLinked], but the log holds only [usernameKey], a keyed hash of the lowercased username: enough to
+ * keep one account per player and one player per account, not enough to read the name. The readable name lives in
+ * the collection sync table, which goes when the account does. [BggAccountLinked] is no longer written, but old rows still count.
+ */
+@Serializable
+@SerialName("BggAccountLinkedHashed")
+data class BggAccountLinkedHashed(val player: PlayerId, val usernameKey: String) : Event {
+    override val tags get() = setOf(Tags.player(player), Tags.bggUserKey(usernameKey))
 }
 
 @Serializable

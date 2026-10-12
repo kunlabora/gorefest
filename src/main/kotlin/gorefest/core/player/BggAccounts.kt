@@ -1,24 +1,22 @@
 package gorefest.core.player
 
 import gorefest.core.BggAccountLinked
+import gorefest.core.BggAccountLinkedHashed
 import gorefest.core.Event
 import gorefest.core.PlayerErased
 import gorefest.core.PlayerId
 import gorefest.core.eventsourcing.Projection
 
-/** Which BGG username each player linked. */
-class LinkedBggAccounts private constructor(private val byPlayer: Map<PlayerId, String>) {
-    /** The BGG username [player] linked, or null if they haven't. */
-    fun usernameOf(player: PlayerId): String? = byPlayer[player]
+/** Which players linked a BGG account. The username itself isn't here: the log doesn't hold it (the collection sync does). */
+class LinkedBggAccounts private constructor(private val players: Set<PlayerId>) {
+    fun isLinked(player: PlayerId): Boolean = player in players
 
-    fun isLinked(player: PlayerId): Boolean = player in byPlayer
+    internal fun linked(player: PlayerId) = LinkedBggAccounts(players + player)
 
-    internal fun linked(player: PlayerId, username: String) = LinkedBggAccounts(byPlayer + (player to username))
-
-    internal fun erased(player: PlayerId) = LinkedBggAccounts(byPlayer - player)
+    internal fun erased(player: PlayerId) = LinkedBggAccounts(players - player)
 
     companion object {
-        val none = LinkedBggAccounts(emptyMap())
+        val none = LinkedBggAccounts(emptySet())
     }
 }
 
@@ -27,7 +25,8 @@ object BggAccounts : Projection<LinkedBggAccounts> {
 
     override fun evolve(state: LinkedBggAccounts, event: Event) =
         when (event) {
-            is BggAccountLinked -> state.linked(event.player, event.username)
+            is BggAccountLinked -> state.linked(event.player)
+            is BggAccountLinkedHashed -> state.linked(event.player)
             is PlayerErased -> state.erased(event.player)
             else -> state
         }

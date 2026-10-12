@@ -35,7 +35,7 @@ class RejectionsTest {
             Rejection.PlayersNotAtGameDay to "Only players at this game day can be in a log",
             Rejection.ImplausibleDuration to "That doesn't look like a real duration",
             Rejection.SameGameTwice to "Compare two different games",
-            Rejection.AlreadyLinked("AnnaPlays") to "You've already linked AnnaPlays",
+            Rejection.AlreadyLinked to "You've already linked a BGG account",
             Rejection.BggAccountTaken to "That BGG account is already linked to another player",
             Rejection.NoSuchDatePoll to "No such date poll",
             Rejection.DatePollAlreadyExists to "That date poll already exists",

@@ -14,11 +14,12 @@ Source: GDPR analysis, 2026-10-09 ([`docs/gdpr.md`](../gdpr.md)). Status: ✅ (a
 - [x] Old events still decode; CLAUDE.md event list and architecture note updated; `docs/gdpr.md` finding 1 marked fixed
 
 **Residue we accept for now** (the log still holds it)
-- `BggAccountLinked` events written so far hold the BGG username (a public handle).
+- `BggAccountLinked` events written before 2026-10-12 hold the BGG username (a public handle). New links store a keyed hash (`BggAccountLinkedHashed`).
 - Free-text `place` and `title` in `GameDayCreated`, `GameDayDetailsChanged` and `DatePollCreated`.
 - Other projections (shelf, tastes, plays, bring requests, date polls) still list the erased id: it shows as "someone" and counts as before. Their data is pseudonymous and the taste model keeps learning from it.
 
-**Follow-ups, if we want them (b)**
-- Keep the BGG username out of new events: a new event carrying an HMAC of the username (key: `SECRET_KEY`) as the uniqueness tag; the readable name lives only in `collection_syncs`, which the shell reads where it now reads `bggAccounts.usernameOf`. `Rejection.AlreadyLinked(username)` loses its name or the shell fills it in.
-- Keep the place out of new events: a plain table for `place` per game day and date poll, written by the shell, deleted with the host. Costs the pure read model its `place`; every view that shows it looks it up.
+**Done 2026-10-12 (b, username):** new links write `BggAccountLinkedHashed` (HMAC of the lowercased username, key `SECRET_KEY`, used as the uniqueness tag; the decider also still honours old plain links). The readable name is read from `collection_syncs`. `Rejection.AlreadyLinked` no longer carries a name.
+
+**Follow-ups, if we want them**
+- Keep the place out of new events (decided to leave it for now): a plain table for `place` per game day and date poll, written by the shell, deleted with the host. Costs the pure read model its `place`; every view that shows it looks it up.
 - A way to run it: G3 wires the admin to `AccountEraser`.

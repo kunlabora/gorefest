@@ -50,7 +50,7 @@ fun Route.collectionRoutes(app: App) {
     post("/collection/sync") {
         authenticated {
             val me = contextOf<CurrentPlayer>()
-            val username = app.bggAccounts.usernameOf(me.id) ?: return@authenticated redirect("/bgg?returnTo=%2Fcollection")
+            val username = app.collectionSync.status(me.id)?.username ?: return@authenticated redirect("/bgg?returnTo=%2Fcollection")
             app.collectionSync.request(me.id, username, BggPriority.LINK)
             respondFragment { collection(CollectionView(CollectionSyncState(username, SyncStatus.QUEUED, "Asking BGG for your collection", null), emptyList())) }
         }

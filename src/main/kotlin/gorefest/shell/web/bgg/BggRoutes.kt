@@ -25,7 +25,8 @@ context(login: Login)
 fun Route.bggRoutes(app: App) {
     get("/bgg") {
         authenticated {
-            call.respondHtml { bggPage(safeReturnTo(call.parameters["returnTo"]), app.bggAccounts.usernameOf(contextOf<CurrentPlayer>().id), contextOf<CurrentPlayer>()) }
+            val linkedAs = app.collectionSync.status(contextOf<CurrentPlayer>().id)?.username
+            call.respondHtml { bggPage(safeReturnTo(call.parameters["returnTo"]), linkedAs, contextOf<CurrentPlayer>()) }
         }
     }
 
@@ -63,7 +64,7 @@ fun Route.bggRoutes(app: App) {
                     codeStep(returnTo, username, code, dev, "We can't see the code on your profile yet. Saved it? Then try again in a minute.")
                 }
             }
-            when (val decision = app.commands.handle(LinkBggAccountDecider, LinkBggAccount(me.id, user.name))) {
+            when (val decision = app.commands.handle(LinkBggAccountDecider, LinkBggAccount(me.id, user.name, app.bggVerification.usernameKey(user.name)))) {
                 is Decision.Accepted -> {
                     app.collectionSync.request(me.id, user.name, BggPriority.LINK)
                     // Back to where the player was heading (bringing games, say): the collection page offers the way on.

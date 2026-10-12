@@ -1,6 +1,7 @@
 package gorefest.shell.web.bgg
 
 import gorefest.core.BggAccountLinked
+import gorefest.core.BggAccountLinkedHashed
 import gorefest.core.PlayerId
 import gorefest.core.gameday.bram
 import gorefest.shell.web.TestApp
@@ -88,7 +89,7 @@ class BggRoutesTest {
     fun `verifying before the code is on the profile says so`() = test.webTest(session = kim) { client ->
         client.verify("KimPlays").fragment().one(".gf-error").text() shouldBe
             "We can't see the code on your profile yet. Saved it? Then try again in a minute."
-        app.bggAccounts.usernameOf(kimId) shouldBe null
+        app.bggAccounts.isLinked(kimId) shouldBe false
     }
 
     @Test
@@ -97,8 +98,33 @@ class BggRoutesTest {
 
         client.verify("KimPlays").headers["HX-Redirect"] shouldBe "/collection?returnTo=%2Fgamedays%2Fnew"
 
-        app.bggAccounts.usernameOf(kimId) shouldBe "KimPlays"
+        app.bggAccounts.isLinked(kimId) shouldBe true
         client.get("/bgg").page().one("h1").text() shouldBe "You're linked"
+    }
+
+    @Test
+    fun `the log holds a hash of the username, never the name`() = test.webTest(session = kim) { client ->
+        test.bgg.putInProfile("KimPlays", code)
+
+        client.verify("KimPlays")
+
+        val log = app.db.transaction {
+            contextOf<gorefest.shell.db.Tx>().connection.createStatement().use { st ->
+                st.executeQuery("select string_agg(data::text || tags::text, ' ') from events").use { rs -> rs.next(); rs.getString(1) }
+            }
+        }
+        log.lowercase().contains("kimplays") shouldBe false
+        log.contains(app.bggVerification.usernameKey("kimplays")) shouldBe true
+        client.get("/collection/status").status shouldBe io.ktor.http.HttpStatusCode.OK
+        client.get("/collection").page().text().contains("KimPlays") shouldBe true
+    }
+
+    @Test
+    fun `an account linked under a hash can't be taken by someone else either`() = test.webTest(session = kim) { client ->
+        app.db.transaction { app.store.append(listOf(BggAccountLinkedHashed(bram, app.bggVerification.usernameKey("kimplays")))) }
+        test.bgg.putInProfile("KimPlays", code)
+
+        client.verify("KimPlays").fragment().one(".gf-error").text() shouldBe "That BGG account is already linked to another player"
     }
 
     @Test
