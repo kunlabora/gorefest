@@ -55,6 +55,10 @@ fun HTML.privacyPage(view: PrivacyView) = page("Privacy", appBar = { wordmark() 
             }
         }
 
+        privacySection("ask", "What you can ask for") {
+            p { +"On your account page you can ask me to send you everything Boardfest holds about you, or to delete your account. I do it by hand and send the file to your own address, so allow a few days. The file names the games and game days, never other people." }
+        }
+
         privacySection("keep", "What it keeps") {
             ul {
                 li { +"Your email address and the name you picked. The email is only used to sign you in and to send you the mails you'd expect (login codes, a recap after a game day)." }

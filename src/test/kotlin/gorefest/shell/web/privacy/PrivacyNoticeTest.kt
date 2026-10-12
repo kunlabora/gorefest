@@ -29,7 +29,7 @@ class PrivacyNoticeTest {
 
         val page = response.bodyAsText().let { org.jsoup.Jsoup.parse(it) }
         page.select("meta[name=robots]").attr("content") shouldContain "noindex"
-        page.texts(".gf-privacy__section h2") shouldBe listOf("Who runs it", "What it keeps", "Who sees what", "Who else handles it", "Cookies", "How long")
+        page.texts(".gf-privacy__section h2") shouldBe listOf("Who runs it", "What you can ask for", "What it keeps", "Who sees what", "Who else handles it", "Cookies", "How long")
     }
 
     @Test
