@@ -20,6 +20,7 @@ import io.ktor.client.request.forms.submitForm
 import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.Parameters
@@ -110,6 +111,23 @@ class AccountRoutesTest {
         test.mailbox.latestTo("kim@example.com")!!.subject shouldBe "Your Boardfest account is deleted"
         test.webTest(session = kim) { it.get("/account").location shouldStartWith "/login" }
         runBlocking { app.login.players.let { app.db.transaction { it.find(kimId) } } shouldBe null }
+    }
+
+    @Test
+    fun `the admin downloads the person's data as a file, nobody else can`() {
+        test.webTest(session = kim) { it.submitForm("/account/export", Parameters.Empty) }
+
+        test.webTest(session = tim) { admin ->
+            val response = admin.get("/admin/requests/$kimId/export")
+            response.status shouldBe HttpStatusCode.OK
+            response.headers[HttpHeaders.ContentDisposition]!! shouldContain "attachment"
+            response.headers[HttpHeaders.CacheControl] shouldBe "no-store"
+            val text = runBlocking { response.bodyAsText() }
+            text shouldContain "kim@example.com"
+            text shouldNotContain "tim@example.com"
+            admin.get("/admin/requests/${Uuid.random()}/export").status shouldBe HttpStatusCode.NotFound
+        }
+        test.webTest(session = kim) { it.get("/admin/requests/$kimId/export").status shouldBe HttpStatusCode.NotFound }
     }
 
     @Test

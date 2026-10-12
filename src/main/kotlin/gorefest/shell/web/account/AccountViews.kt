@@ -92,8 +92,11 @@ private fun UL.row(request: OpenRequest) = li("gf-row gf-row--approval") {
                 hyperscript("on submit if not confirm('Delete ${player.name.orEmpty().replace("'", "")}\\'s account for good?') halt the event")
                 button(type = ButtonType.submit, classes = buttonClasses(ButtonStyle.PRIMARY, ButtonSize.NORMAL)) { +"Delete account" }
             }
-            RequestKind.EXPORT -> form(action = "$base/export/done", method = FormMethod.post) {
-                button(type = ButtonType.submit, classes = buttonClasses(ButtonStyle.GHOST, ButtonSize.NORMAL)) { +"Sent it" }
+            RequestKind.EXPORT -> {
+                a("$base/export", classes = buttonClasses(ButtonStyle.PRIMARY, ButtonSize.NORMAL)) { +"Download their data" }
+                form(action = "$base/export/done", method = FormMethod.post) {
+                    button(type = ButtonType.submit, classes = buttonClasses(ButtonStyle.GHOST, ButtonSize.NORMAL)) { +"Sent it" }
+                }
             }
         }
     }

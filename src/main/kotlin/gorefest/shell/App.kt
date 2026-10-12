@@ -21,6 +21,7 @@ import gorefest.core.taste.TasteModel
 import gorefest.core.taste.Tastes
 import gorefest.core.taste.Wizard
 import gorefest.shell.account.AccountRequests
+import gorefest.shell.account.PersonalDataExport
 import gorefest.shell.auth.AccountEraser
 import gorefest.shell.auth.AdminNotifier
 import gorefest.shell.auth.Login
@@ -105,6 +106,7 @@ class App(
     val catalog = Catalog(db)
     val collectionSync = CollectionSync(db, bgg, catalog, clock, scope, bggRetry)
     val gameSearch = GameSearch(catalog, bgg, clock)
+    val personalData = PersonalDataExport(db, store, login.players, collectionSync, catalog, gameDays = { gameDaysById }, datePolls = { datePolls })
 
     /** The taste model in use: v1 (features) since it beat v0 on replay. Swap here to compare versions. */
     val tasteModel: TasteModel = FeatureModel(catalog::get)

@@ -8,7 +8,15 @@ import gorefest.shell.auth.Login
 import gorefest.shell.web.admin
 import gorefest.shell.web.authenticated
 import gorefest.shell.web.redirect
+import io.ktor.http.ContentDisposition
+import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpStatusCode
+import io.ktor.http.withCharset
 import io.ktor.server.html.respondHtml
+import io.ktor.server.response.header
+import io.ktor.server.response.respond
+import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
@@ -52,6 +60,16 @@ fun Route.accountRoutes(app: App) {
             val id = call.parameters["id"]?.let { runCatching { Uuid.parse(it) }.getOrNull() }?.let(::PlayerId)
             if (id != null) app.accountRequests.erase(id)
             redirect("/admin/requests")
+        }
+    }
+
+    get("/admin/requests/{id}/export") {
+        admin {
+            val id = call.parameters["id"]?.let { runCatching { Uuid.parse(it) }.getOrNull() }?.let(::PlayerId)
+            val file = id?.let { app.personalData.of(it) } ?: return@admin call.respond(HttpStatusCode.NotFound)
+            call.response.header(HttpHeaders.ContentDisposition, ContentDisposition.Attachment.withParameter(ContentDisposition.Parameters.FileName, "boardfest-my-data.json").toString())
+            call.response.header(HttpHeaders.CacheControl, "no-store")
+            call.respondText(file, ContentType.Application.Json)
         }
     }
 

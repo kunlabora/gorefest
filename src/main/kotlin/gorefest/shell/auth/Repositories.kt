@@ -38,6 +38,14 @@ class Players {
             it.executeQuery().use { rs -> if (rs.next()) rs.toPlayer() else null }
         }
 
+    /** When the account was made, for the file of someone's data. */
+    context(tx: Tx)
+    fun createdAt(id: PlayerId): Instant? =
+        tx.connection.prepareStatement("select created_at from players where id = ?").use {
+            it.setObject(1, id.value.toJavaUuid())
+            it.executeQuery().use { rs -> if (rs.next()) rs.getTimestamp(1).toInstant() else null }
+        }
+
     /** Named accounts still waiting for approval, oldest first. */
     context(tx: Tx)
     fun waiting(): List<Player> =
