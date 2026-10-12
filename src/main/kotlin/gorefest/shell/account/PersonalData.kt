@@ -2,6 +2,7 @@ package gorefest.shell.account
 
 import gorefest.core.BggAccountLinked
 import gorefest.core.BggAccountLinkedHashed
+import gorefest.core.BggAccountUnlinked
 import gorefest.core.BggId
 import gorefest.core.BringRequestDeclined
 import gorefest.core.BringRequestWithdrawn
@@ -77,6 +78,7 @@ object PersonalData {
         is PlayerRegistered -> entry("Signed up")
         is BggAccountLinked -> entry("Linked a BGG account", "username" to event.username)
         is BggAccountLinkedHashed -> entry("Linked a BGG account")
+        is BggAccountUnlinked -> entry("Unlinked your BGG account")
         is GameDayCreated -> entry("Hosted a game day", "title" to event.title, "date" to event.date.toString(), "place" to event.place)
         is PlayerJoined -> entry("Joined a game day", "gameDay" to l.gameDay(event.gameDay))
         is GameBrought -> entry("Said you bring a game", "game" to l.game(event.game), "gameDay" to l.gameDay(event.gameDay))

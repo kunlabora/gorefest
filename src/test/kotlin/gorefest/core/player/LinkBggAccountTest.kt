@@ -2,6 +2,7 @@ package gorefest.core.player
 
 import gorefest.core.BggAccountLinked
 import gorefest.core.BggAccountLinkedHashed
+import gorefest.core.BggAccountUnlinked
 import gorefest.core.Rejection
 import gorefest.core.eventsourcing.given
 import gorefest.core.gameday.anna
@@ -46,5 +47,33 @@ class LinkBggAccountTest {
             .given(BggAccountLinkedHashed(bram, "key-of-bramplays"))
             .whenever(link(anna, "AnnaPlays"))
             .thenEmits(BggAccountLinkedHashed(anna, "key-of-annaplays"))
+    }
+
+    @Test
+    fun `unlinking is recorded once, and does nothing without a link`() {
+        UnlinkBggAccountDecider.given(BggAccountLinkedHashed(anna, "key-of-annaplays")).whenever(UnlinkBggAccount(anna)).thenEmits(BggAccountUnlinked(anna))
+        UnlinkBggAccountDecider.given(BggAccountLinked(anna, "AnnaPlays")).whenever(UnlinkBggAccount(anna)).thenEmits(BggAccountUnlinked(anna))
+        UnlinkBggAccountDecider.given(BggAccountLinkedHashed(anna, "k"), BggAccountUnlinked(anna)).whenever(UnlinkBggAccount(anna)).thenEmitsNothing()
+        UnlinkBggAccountDecider.given().whenever(UnlinkBggAccount(anna)).thenEmitsNothing()
+    }
+
+    @Test
+    fun `after unlinking, the username is free and the player can link another`() {
+        LinkBggAccountDecider
+            .given(BggAccountLinkedHashed(bram, "key-of-bramplays"), BggAccountUnlinked(bram))
+            .whenever(link(anna, "BramPlays"))
+            .thenEmits(BggAccountLinkedHashed(anna, "key-of-bramplays"))
+        LinkBggAccountDecider
+            .given(BggAccountLinkedHashed(anna, "key-of-annaplays"), BggAccountUnlinked(anna))
+            .whenever(link(anna, "Other"))
+            .thenEmits(BggAccountLinkedHashed(anna, "key-of-other"))
+    }
+
+    @Test
+    fun `linking again after an unlink counts the new link, not the old one`() {
+        LinkBggAccountDecider
+            .given(BggAccountLinkedHashed(anna, "key-of-annaplays"), BggAccountUnlinked(anna), BggAccountLinkedHashed(anna, "key-of-other"))
+            .whenever(link(anna, "AnnaPlays"))
+            .thenRejects(Rejection.AlreadyLinked)
     }
 }

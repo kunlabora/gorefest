@@ -16,6 +16,10 @@ fun HTML.bggPage(returnTo: String, linked: String?, me: CurrentPlayer) = page("L
                 h1("gf-h1 gf-h1--landing") { +"You're linked" }
                 p("gf-lede gf-muted") { +"Your BGG account is "; strong { +linked }; +". Your collection comes from there." }
                 linkButton(returnTo, "Back", size = ButtonSize.LARGE)
+                form(action = "/bgg/unlink", method = FormMethod.post, classes = "gf-bgg__unlink") {
+                    hyperscript("on submit if not confirm('Unlink your BGG account? Your collection here is deleted.') halt the event")
+                    p("gf-hint") { +"Linked the wrong one? "; button(type = ButtonType.submit, classes = "gf-link") { +"Unlink my BGG account" } }
+                }
             }
         } else {
             consumer.usernameStep(returnTo)

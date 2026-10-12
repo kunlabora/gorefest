@@ -2,6 +2,7 @@ package gorefest.core.player
 
 import gorefest.core.BggAccountLinked
 import gorefest.core.BggAccountLinkedHashed
+import gorefest.core.BggAccountUnlinked
 import gorefest.core.Event
 import gorefest.core.PlayerErased
 import gorefest.core.PlayerId
@@ -26,36 +27,60 @@ data class LinkBggAccount(val player: PlayerId, val username: String, val userna
  * hashed one). So two players racing for the same username conflict, and nobody else does.
  */
 object LinkBggAccountDecider : Decider<LinkBggAccount, List<Event>, BggAccountLinkedHashed> {
-    /** State: every link inside the boundary, and every erasure (an erased player's link no longer holds the name). */
+    /** State: every link, unlink and erasure inside the boundary, in order. */
     override val initialState = emptyList<Event>()
 
     override fun query(command: LinkBggAccount) = Query.of(
-        Query.Item(setOf(typeName<BggAccountLinked>(), typeName<BggAccountLinkedHashed>()), setOf(Tags.player(command.player))),
+        Query.Item(setOf(typeName<BggAccountLinked>(), typeName<BggAccountLinkedHashed>(), typeName<BggAccountUnlinked>()), setOf(Tags.player(command.player))),
         Query.Item(setOf(typeName<BggAccountLinked>()), setOf(Tags.bggUser(command.username))),
         Query.Item(setOf(typeName<BggAccountLinkedHashed>()), setOf(Tags.bggUserKey(command.usernameKey))),
-        Query.Item(setOf(typeName<PlayerErased>()), emptySet()),
+        // Anyone's unlink or erasure frees their username.
+        Query.Item(setOf(typeName<PlayerErased>(), typeName<BggAccountUnlinked>()), emptySet()),
     )
 
     override fun evolve(state: List<Event>, event: Event) =
-        if (event is BggAccountLinked || event is BggAccountLinkedHashed || event is PlayerErased) state + event else state
+        if (event is BggAccountLinked || event is BggAccountLinkedHashed || event is BggAccountUnlinked || event is PlayerErased) state + event else state
 
     override fun decide(command: LinkBggAccount, state: List<Event>): Decision<BggAccountLinkedHashed> {
-        val erased = state.filterIsInstance<PlayerErased>().map { it.player }.toSet()
-        // Each link as (who, is it this account?), whichever way it was written.
-        val links = state.mapNotNull { event ->
+        // Whose link still holds: the latest one per player, until they unlink or are erased. Each as "is it this account?".
+        val active = mutableMapOf<PlayerId, Boolean>()
+        state.forEach { event ->
             when (event) {
-                is BggAccountLinked -> event.player to event.username.equals(command.username, ignoreCase = true)
-                is BggAccountLinkedHashed -> event.player to (event.usernameKey == command.usernameKey)
-                else -> null
+                is BggAccountLinked -> active[event.player] = event.username.equals(command.username, ignoreCase = true)
+                is BggAccountLinkedHashed -> active[event.player] = event.usernameKey == command.usernameKey
+                is BggAccountUnlinked -> active.remove(event.player)
+                is PlayerErased -> active.remove(event.player)
+                else -> Unit
             }
-        }.filter { (player, _) -> player !in erased }
-        val mine = links.firstOrNull { (player, _) -> player == command.player }
-        val taken = links.any { (player, same) -> player != command.player && same }
+        }
+        val mine = active[command.player]
+        val taken = active.any { (player, same) -> player != command.player && same }
         return when {
-            mine != null && mine.second -> Accepted()
-            mine != null -> Rejected(Rejection.AlreadyLinked)
+            mine == true -> Accepted()
+            mine == false -> Rejected(Rejection.AlreadyLinked)
             taken -> Rejected(Rejection.BggAccountTaken)
             else -> Accepted(BggAccountLinkedHashed(command.player, command.usernameKey))
         }
     }
+}
+
+/** The shell deletes the collection and sync rows once this is recorded. */
+data class UnlinkBggAccount(val player: PlayerId)
+
+object UnlinkBggAccountDecider : Decider<UnlinkBggAccount, Boolean, BggAccountUnlinked> {
+    /** State: does the player have a link? */
+    override val initialState = false
+
+    override fun query(command: UnlinkBggAccount) = Query.of(
+        Query.Item(setOf(typeName<BggAccountLinked>(), typeName<BggAccountLinkedHashed>(), typeName<BggAccountUnlinked>()), setOf(Tags.player(command.player))),
+    )
+
+    override fun evolve(state: Boolean, event: Event) = when (event) {
+        is BggAccountLinked, is BggAccountLinkedHashed -> true
+        is BggAccountUnlinked -> false
+        else -> state
+    }
+
+    override fun decide(command: UnlinkBggAccount, state: Boolean): Decision<BggAccountUnlinked> =
+        if (state) Accepted(BggAccountUnlinked(command.player)) else Accepted()
 }

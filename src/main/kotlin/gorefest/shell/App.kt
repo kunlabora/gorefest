@@ -24,6 +24,7 @@ import gorefest.shell.account.AccountRequests
 import gorefest.shell.account.PersonalDataExport
 import gorefest.shell.auth.AccountEraser
 import gorefest.shell.auth.AdminNotifier
+import gorefest.shell.auth.EmailChange
 import gorefest.shell.auth.Login
 import gorefest.shell.auth.MailAdminNotifier
 import gorefest.shell.auth.FallbackNotifier
@@ -98,6 +99,7 @@ class App(
 
     val login = Login(db, commands, mailer, config, clock, ids, admin = admin)
     val accountEraser = AccountEraser(db, commands, login.players)
+    val emailChange = EmailChange(db, login.players, mailer, config, clock)
     val accountRequests = AccountRequests(db, login.players, admin, accountEraser, mailer, config, clock)
     val invites = InviteLinks(config.secretKey)
     val titles = TitleGenerator(random)

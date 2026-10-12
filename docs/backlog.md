@@ -269,7 +269,7 @@ Analysis in [`gdpr.md`](gdpr.md); one request file per story. G2 is the hard one
 | G3 | [Erase my account: the screen](requests/g3-erasure-ui.md) | ✅ | G2 |
 | G4 | [Download my data](requests/g4-data-export.md) | ✅ |  |
 | G5 | [Don't show the place to non-members](requests/g5-invite-place.md) | ✅ |  |
-| G6 | [Change email, unlink BGG](requests/g6-rectification.md) | 📋 | G2 |
+| G6 | [Change email, unlink BGG](requests/g6-rectification.md) | ✅ | G2 |
 | G7 | [Retention, backups and restore](requests/g7-retention-backups.md) | 📋 | G2 |
 | G8 | [Logs and URLs: no secrets, short retention](requests/g8-logs.md) | ✅ |  |
 | G9 | Manual approval of new accounts: `/pending`, `/admin/approvals`, `ADMIN_EMAIL` (supports the household-exemption argument; see `gdpr.md`) | ✅ | |

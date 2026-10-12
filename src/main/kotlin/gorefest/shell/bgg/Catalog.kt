@@ -80,6 +80,17 @@ class Collections {
         }
     }
 
+    /** The collection and the sync state (which holds the username). */
+    context(tx: Tx)
+    fun forget(player: PlayerId) {
+        listOf("collections", "collection_syncs").forEach { table ->
+            tx.connection.prepareStatement("delete from $table where player_id = ?").use {
+                it.setObject(1, player.value.toJavaUuid())
+                it.executeUpdate()
+            }
+        }
+    }
+
     context(tx: Tx)
     fun of(player: PlayerId): Set<BggId> =
         tx.connection.prepareStatement("select bgg_id from collections where player_id = ?").use {

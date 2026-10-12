@@ -14,6 +14,9 @@ import gorefest.shell.web.shouldReplace
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
+import io.ktor.client.request.forms.submitForm
+import io.ktor.http.Parameters
 import io.kotest.matchers.string.shouldMatch
 import io.ktor.client.request.get
 import io.ktor.http.parameters
@@ -117,6 +120,24 @@ class BggRoutesTest {
         log.contains(app.bggVerification.usernameKey("kimplays")) shouldBe true
         client.get("/collection/status").status shouldBe io.ktor.http.HttpStatusCode.OK
         client.get("/collection").page().text().contains("KimPlays") shouldBe true
+    }
+
+    @Test
+    fun `unlinking forgets the account and the collection, and frees the username`() = test.webTest(session = kim) { client ->
+        test.bgg.putInProfile("KimPlays", code)
+        client.verify("KimPlays")
+        kotlinx.coroutines.withTimeout(5000) { while (app.collectionSync.status(kimId) == null) kotlinx.coroutines.delay(20) }
+
+        client.get("/bgg").page().select("form[action=/bgg/unlink]").size shouldBe 1
+        client.submitForm("/bgg/unlink", Parameters.Empty).headers["Location"] shouldBe "/bgg"
+
+        app.bggAccounts.isLinked(kimId) shouldBe false
+        app.collectionSync.collection(kimId).isEmpty() shouldBe true
+        app.collectionSync.status(kimId) shouldBe null
+        client.get("/bgg").page().select("form#username-step, input[name=username]").size shouldBe 1
+        client.get("/collection").headers["Location"] shouldBe "/bgg?returnTo=%2Fcollection"
+        // Free again, for Kim and for anyone else.
+        client.verify("KimPlays").headers["HX-Redirect"] shouldNotBe null
     }
 
     @Test

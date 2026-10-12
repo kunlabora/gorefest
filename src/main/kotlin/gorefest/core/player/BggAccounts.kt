@@ -2,6 +2,7 @@ package gorefest.core.player
 
 import gorefest.core.BggAccountLinked
 import gorefest.core.BggAccountLinkedHashed
+import gorefest.core.BggAccountUnlinked
 import gorefest.core.Event
 import gorefest.core.PlayerErased
 import gorefest.core.PlayerId
@@ -27,6 +28,7 @@ object BggAccounts : Projection<LinkedBggAccounts> {
         when (event) {
             is BggAccountLinked -> state.linked(event.player)
             is BggAccountLinkedHashed -> state.linked(event.player)
+            is BggAccountUnlinked -> state.erased(event.player)
             is PlayerErased -> state.erased(event.player)
             else -> state
         }

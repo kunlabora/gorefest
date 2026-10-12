@@ -76,6 +76,13 @@ data class BggAccountLinkedHashed(val player: PlayerId, val usernameKey: String)
     override val tags get() = setOf(Tags.player(player), Tags.bggUserKey(usernameKey))
 }
 
+/** The player took their BGG account off: its username can be linked by anyone again, and the collection is gone. */
+@Serializable
+@SerialName("BggAccountUnlinked")
+data class BggAccountUnlinked(val player: PlayerId) : Event {
+    override val tags get() = setOf(Tags.player(player))
+}
+
 @Serializable
 @SerialName("GameDayCreated")
 data class GameDayCreated(

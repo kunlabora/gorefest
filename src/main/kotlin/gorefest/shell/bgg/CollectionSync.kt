@@ -63,6 +63,12 @@ class CollectionSync(
         job
     }
 
+    /** Stops any sync and deletes the collection and sync rows: the player took their BGG account off. */
+    suspend fun forget(player: PlayerId) {
+        running.remove(player)?.job?.cancelAndJoin()
+        db.transaction { collections.forget(player) }
+    }
+
     suspend fun status(player: PlayerId): CollectionSyncState? = db.transaction { collections.status(player) }
 
     suspend fun collection(player: PlayerId) = db.transaction { collections.of(player) }

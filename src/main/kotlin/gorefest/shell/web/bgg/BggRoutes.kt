@@ -3,6 +3,8 @@ package gorefest.shell.web.bgg
 import gorefest.core.eventsourcing.Decision
 import gorefest.core.player.LinkBggAccount
 import gorefest.core.player.LinkBggAccountDecider
+import gorefest.core.player.UnlinkBggAccount
+import gorefest.core.player.UnlinkBggAccountDecider
 import gorefest.shell.App
 import gorefest.shell.auth.Login
 import gorefest.shell.bgg.BggPriority
@@ -25,8 +27,18 @@ context(login: Login)
 fun Route.bggRoutes(app: App) {
     get("/bgg") {
         authenticated {
-            val linkedAs = app.collectionSync.status(contextOf<CurrentPlayer>().id)?.username
+            val me = contextOf<CurrentPlayer>().id
+            val linkedAs = app.collectionSync.status(me)?.username ?: "your account".takeIf { app.bggAccounts.isLinked(me) }
             call.respondHtml { bggPage(safeReturnTo(call.parameters["returnTo"]), linkedAs, contextOf<CurrentPlayer>()) }
+        }
+    }
+
+    post("/bgg/unlink") {
+        authenticated {
+            val me = contextOf<CurrentPlayer>()
+            app.commands.handle(UnlinkBggAccountDecider, UnlinkBggAccount(me.id))
+            app.collectionSync.forget(me.id)
+            redirect("/bgg")
         }
     }
 

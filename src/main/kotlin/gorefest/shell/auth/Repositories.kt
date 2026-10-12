@@ -38,6 +38,24 @@ class Players {
             it.executeQuery().use { rs -> if (rs.next()) rs.toPlayer() else null }
         }
 
+    context(tx: Tx)
+    fun findByEmail(email: String): Player? =
+        tx.connection.prepareStatement("select id, email, name, approved_at is not null as approved from players where email = ?").use {
+            it.setString(1, email)
+            it.executeQuery().use { rs -> if (rs.next()) rs.toPlayer() else null }
+        }
+
+    /** Replaces the address unless another account has it. True if it changed. */
+    context(tx: Tx)
+    fun changeEmail(id: PlayerId, email: String): Boolean =
+        tx.connection.prepareStatement("update players set email = ? where id = ? and not exists (select 1 from players where email = ? and id <> ?)").use {
+            it.setString(1, email)
+            it.setObject(2, id.value.toJavaUuid())
+            it.setString(3, email)
+            it.setObject(4, id.value.toJavaUuid())
+            it.executeUpdate() > 0
+        }
+
     /** When the account was made, for the file of someone's data. */
     context(tx: Tx)
     fun createdAt(id: PlayerId): Instant? =
