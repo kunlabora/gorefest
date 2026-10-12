@@ -417,6 +417,7 @@ div.gf-tile { cursor: default; }
 /* ---------- Per-screen CSS slots: one block per redesign item, so parallel work doesn't collide. Keep your rules inside your block. ---------- */
 /* ==== R1 home ==== */
 .gf-home .gf-card { background: var(--surface-raised); border: 2px solid var(--line); border-radius: var(--radius-lg); box-shadow: var(--shadow-edge); }
+.gf-home__kicker { margin: 0 0 14px; }
 .gf-home__hero { display: grid; gap: 28px; }
 .gf-home__main { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
 .gf-home__aside { display: grid; gap: 14px; align-content: start; }

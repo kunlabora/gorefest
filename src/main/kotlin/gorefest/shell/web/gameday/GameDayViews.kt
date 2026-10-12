@@ -100,9 +100,10 @@ fun HTML.homePage(view: HomeView) = page(
     val nothingYet = view.next == null && view.later.isEmpty() && view.past.isEmpty() && view.polls.isEmpty()
     wrap {
         h1("gf-vh") { +"Your game days" }
+        // Above both columns, so the next game day's card and the action tiles start on the same line.
+        p("gf-kicker gf-home__kicker") { +(if (view.next != null) "Hi ${me.name.substringBefore(' ')} · next up" else "Hi ${me.name.substringBefore(' ')}") }
         div("gf-home__hero") {
             div("gf-home__main") {
-                p("gf-kicker") { +(if (view.next != null) "Hi ${me.name.substringBefore(' ')} · next up" else "Hi ${me.name.substringBefore(' ')}") }
                 if (view.next != null) nextGameDay(view.next, view.today)
                 else if (nothingYet) emptyState("No game days yet", "Got an invite? Tap the link in your group chat. Or host one yourself, or ask your group which date works.")
             }
