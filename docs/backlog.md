@@ -1,6 +1,6 @@
 # Backlog
 
-Status: 📋 todo · 🚧 doing · ✅ done. Move a story by changing its status here; tick acceptance criteria in its section as they land.
+Status: 📋 todo · ⏭ next up · 🚧 doing · ✅ done. Move a story by changing its status here; tick acceptance criteria in its section as they land.
 A story is done when every criterion is ticked and covered by a test (decider given/when/then where there's a decision, a web test where there's a page).
 
 | #   | Story                                             | Status | Depends on |
@@ -268,7 +268,7 @@ Analysis in [`gdpr.md`](gdpr.md); one request file per story. G2 is the hard one
 | G2 | [Erase my account: the event log](requests/g2-erasure-event-log.md) | 📋 |  |
 | G3 | [Erase my account: the screen](requests/g3-erasure-ui.md) | 📋 | G2 |
 | G4 | [Download my data](requests/g4-data-export.md) | 📋 |  |
-| G5 | [Don't show the place to non-members](requests/g5-invite-place.md) | 📋 |  |
+| G5 | [Don't show the place to non-members](requests/g5-invite-place.md) | ⏭ |  |
 | G6 | [Change email, unlink BGG](requests/g6-rectification.md) | 📋 | G2 |
 | G7 | [Retention, backups and restore](requests/g7-retention-backups.md) | 📋 | G2 |
 | G8 | [Logs and URLs: no secrets, short retention](requests/g8-logs.md) | 📋 |  |
