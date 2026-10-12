@@ -46,6 +46,8 @@ fun HTML.privacyPage(view: PrivacyView) = page("Privacy", appBar = { wordmark() 
                 if (view.contactEmail != null) {
                     +"To ask a question, see your data, or have your account deleted, write to "
                     a("mailto:${view.contactEmail}") { +view.contactEmail }
+                    +", or ask from "
+                    a("/account") { +"your account page" }
                     +"."
                 } else {
                     +"To ask a question, see your data, or have your account deleted, ask whoever invited you."

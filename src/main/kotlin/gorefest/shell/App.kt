@@ -20,6 +20,7 @@ import gorefest.core.taste.PlayerTastes
 import gorefest.core.taste.TasteModel
 import gorefest.core.taste.Tastes
 import gorefest.core.taste.Wizard
+import gorefest.shell.account.AccountRequests
 import gorefest.shell.auth.AccountEraser
 import gorefest.shell.auth.AdminNotifier
 import gorefest.shell.auth.Login
@@ -91,11 +92,12 @@ class App(
 
     val commands = CommandHandler(db, store, afterAppend = { catchUp() })
 
-    val login = Login(
-        db, commands, mailer, config, clock, ids,
-        admin = MailAdminNotifier(mailer, config, clock).let { mail -> adminNotifier?.let { FallbackNotifier(it, mail) } ?: mail },
-    )
+    /** How the admin hears things: the chat webhook if there is one, else mail. */
+    private val admin: AdminNotifier = MailAdminNotifier(mailer, config, clock).let { mail -> adminNotifier?.let { FallbackNotifier(it, mail) } ?: mail }
+
+    val login = Login(db, commands, mailer, config, clock, ids, admin = admin)
     val accountEraser = AccountEraser(db, commands, login.players)
+    val accountRequests = AccountRequests(db, login.players, admin, accountEraser, mailer, config, clock)
     val invites = InviteLinks(config.secretKey)
     val titles = TitleGenerator(random)
     val bgg = BggGateway(bggApi, bggInterval)

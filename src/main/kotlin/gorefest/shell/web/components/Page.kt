@@ -128,7 +128,10 @@ private fun FlowContent.siteBar(site: SiteBar, actions: FlowContent.() -> Unit) 
     }
     span("gf-appbar__end gf-appbar__actions") {
         actions()
-        avatar(site.me.id, site.me.name)
+        a("/account", classes = "gf-appbar__account") {
+            attributes["aria-label"] = "Your account"
+            avatar(site.me.id, site.me.name)
+        }
         themeToggle()
     }
 }

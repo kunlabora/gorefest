@@ -6,6 +6,7 @@ An internal list of where personal data lives, kept short because the household 
 |---|---|---|---|---|
 | `players` | Email, display name, signup and approval time | Sign-in, mail, showing names to the group | Admin; names to people on the same game day | Until the account is deleted (`AccountEraser`; G3 wires it to the admin channel) |
 | `login_attempts` | Email, hashed code and token, return path | Magic-link and code login | Nobody (hashed) | 1 day (`ATTEMPT_RETENTION`) |
+| `account_requests` | Who asked to delete their account or get their data, and when | Handling those requests | Admin | Until handled; goes with the account |
 | `sessions` | Hashed session token, player id, expiry | Staying signed in | Nobody | Until expiry |
 | `collection_syncs`, `collections` | BGG username (the only readable copy), collection, sync status | Choosing games to bring | Co-members on the ask screen (the collection) | Until the account is deleted |
 | `events` (the log) | Taste answers, "haven't played", wishes, attendance, shelves, plays, bring requests, date-poll answers, game day title, date and place, a keyed hash of the linked BGG username (the older events hold the name itself) | Everything the app does | Members of the same game day, as shown on its pages; the place only after joining | Kept; after an erasure the player ids in it point at nobody (the log is not rewritten); backups 30 days |

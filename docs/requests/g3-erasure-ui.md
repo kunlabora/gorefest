@@ -1,6 +1,6 @@
 # G3 Erase my account: the screen
 
-Source: GDPR analysis, 2026-10-09 ([`docs/gdpr.md`](../gdpr.md)). Status: 📋
+Source: GDPR analysis, 2026-10-09 ([`docs/gdpr.md`](../gdpr.md)). Status: ✅ (as the request-to-admin version)
 
 **Why:** Art. 17 needs a way to ask. Depends on [G2](g2-erasure-event-log.md), which is done: `AccountEraser.erase(player)` (`shell.auth`, `App.accountEraser`) anonymises an account. This story is the button and the way the admin runs it.
 
@@ -16,3 +16,5 @@ Source: GDPR analysis, 2026-10-09 ([`docs/gdpr.md`](../gdpr.md)). Status: 📋
 - [ ] A host is warned that their upcoming game days stay and what changes for the guests
 - [ ] Copy follows the brand book's voice; page is mobile-first, theme toggle present
 - [ ] Linked from the privacy notice ([G1](g1-privacy-notice.md))
+
+**Built 2026-10-12 (the Discord version):** `/account` (the avatar in the app bar links to it) shows name and email and offers "Send me my data" and "Delete my account". Each posts to the admin through `AdminNotifier` (a name and a link, no email address; mail as the fallback) and is stored in `account_requests` (one open request per person and kind, so a second click doesn't send a second message). The admin works them at `/admin/requests`: "Delete account" runs `AccountEraser` and mails the person that it's done; "Sent it" closes a data request. A host is told on the page that upcoming game days stay. Tests: `AccountRoutesTest`. G4 adds the data file.

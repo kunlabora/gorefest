@@ -730,3 +730,7 @@ div.gf-tile { cursor: default; }
 .gf-privacy__section > div > p, .gf-privacy__section > div > ul { margin: 8px 0 0; }
 .gf-privacy__section ul { padding-left: 1.2em; }
 .gf-privacy__section li + li { margin-top: 6px; }
+
+/* The avatar in the app bar is a link to the account page. */
+.gf-appbar__account { display: inline-flex; border-radius: 50%; text-decoration: none; }
+.gf-appbar__account:focus-visible { outline: 2px solid var(--focus, currentColor); outline-offset: 2px; }
