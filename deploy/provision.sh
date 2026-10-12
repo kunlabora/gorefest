@@ -77,6 +77,14 @@ sudo -u postgres psql -qc "create role gorefest login password '$db_password'" 2
   || sudo -u postgres psql -qc "alter role gorefest password '$db_password'"
 sudo -u postgres createdb --owner gorefest gorefest 2>/dev/null || true
 
+echo "== Swap"
+# On a small box (1 GB) the JVM, Postgres and apt can touch the limit together: a swap file turns an OOM kill into a slow moment.
+if [ "$(awk '/MemTotal/ {print int($2/1024)}' /proc/meminfo)" -lt 1800 ] && ! swapon --show | grep -q .; then
+  fallocate -l 2G /swapfile && chmod 600 /swapfile && mkswap /swapfile >/dev/null && swapon /swapfile
+  grep -q '^/swapfile' /etc/fstab || echo '/swapfile none swap sw 0 0' >> /etc/fstab
+  echo 'vm.swappiness=10' > /etc/sysctl.d/99-swappiness.conf && sysctl -q -p /etc/sysctl.d/99-swappiness.conf
+fi
+
 echo "== Services"
 install -m 644 "$here/gorefest.service" "$here/gorefest-backup.service" "$here/gorefest-backup.timer" /etc/systemd/system/
 systemctl daemon-reload
