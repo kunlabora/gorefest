@@ -71,6 +71,16 @@ class AuthRoutesTest {
     }
 
     @Test
+    fun `the landing offers a log in button and says sign-up is the same step`() = test.webTest { client ->
+        val page = client.get("/login?returnTo=%2F").page()
+
+        page.select(".gf-appbar a[href=#email]").text() shouldBe "Log in"
+        page.one(".gf-hero-band__copy .gf-kicker").text() shouldContain "Log in or sign up"
+        page.one("#email-form .gf-hint").text() shouldContain "approved by hand"
+        client.get("/login?returnTo=%2Fgamedays%2Fnew").page().select(".gf-appbar a[href=#email]") shouldHaveSize 0
+    }
+
+    @Test
     fun `htmx requests go to login from the page they were made on`() = test.webTest { client ->
         val response = client.htmxPost("/gamedays/abc/invite", currentUrl = "http://localhost/gamedays/abc")
 

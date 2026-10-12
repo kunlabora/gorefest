@@ -85,14 +85,14 @@ fun HTML.emailPage(returnTo: String) {
     val landing = returnTo == "/"
     page(
         "Sign in · Boardfest",
-        appBar = { wordmark() },
+        appBar = { wordmark(); if (landing) appBarAction("#email", "Log in") },
         head = { if (landing) sitePreview() },
         mainClasses = "gf-landing",
         wide = true,
     ) {
         div("gf-hero-band") {
             div("gf-hero-band__copy") {
-                p("gf-kicker") { +"For board game groups" }
+                p("gf-kicker") { +(if (landing) "For board game groups · Log in or sign up" else "For board game groups") }
                 h1("gf-h1 gf-h1--landing") { +"Find the game your whole table wants to play." }
                 p("gf-lede gf-muted") { +"Boardfest learns what each player likes, then suggests three games for your next game day." }
                 consumer.emailForm(returnTo)
@@ -180,7 +180,7 @@ fun TagConsumer<*>.emailForm(returnTo: String, email: String = "", error: String
             button(type = ButtonType.submit, classes = buttonClasses(ButtonStyle.PRIMARY, ButtonSize.LARGE)) { spinner(); +submitLabel }
         }
         if (error != null) fieldError(error)
-        p("gf-hint") { +"We'll email a sign-in link and a 6-digit code. No password." }
+        p("gf-hint") { +"Log in or sign up with the same step: we email a sign-in link and a 6-digit code. No password. New accounts are approved by hand, so a first sign-in may have to wait a little." }
     }
 
 /** The big code field with the button directly under it; htmx re-renders the form in place when the server rejects the code. */

@@ -65,6 +65,11 @@ class ShelfRoutesTest {
     private val bringPage = "/gamedays/$gorefest7/bring"
 
     @Test
+    fun `a linked player is told where to sync their collection`() = test.webTest(session = kim) { client ->
+        client.get(bringPage).page().select(".gf-bring__head a[href=/collection]").text() shouldBe "Sync your BGG collection"
+    }
+
+    @Test
     fun `the collection count leaves out games found by search`() = test.webTest(session = kim) { client ->
         val wingspan = BggId(266192)
         given(GameBrought(gorefest7, kimId, wingspan))

@@ -39,6 +39,11 @@ fun HTML.bringPage(
                 +"Link your BGG account to pick from your collection. "
                 a("/bgg?returnTo=${"/gamedays/${gameDay.id}/bring".urlEncoded()}", classes = "gf-link") { +"Link BGG" }
             }
+            if (linked && !gameDay.closed) p("gf-small gf-muted") {
+                +"Bought something new? "
+                a("/collection", classes = "gf-link") { +"Sync your BGG collection" }
+                +" on the collection page."
+            }
             if (gameDay.closed) p("gf-muted") { +if (gameDay.cancelled) "This game day was cancelled, so the shelf is final." else "This game day has ended, so the shelf is final." }
             else div("gf-bring__search") {
                 searchField(
@@ -52,7 +57,7 @@ fun HTML.bringPage(
                 if (!gameDay.closed) consumer.searchResults(gameDay, emptyList(), bggUnavailable = false)
                 if (!gameDay.closed) consumer.bringRequests(gameDay, requests)
                 consumer.bringList(gameDay, rows, linked)
-                if (rows.isEmpty() && linked) emptyState("Your collection is empty", "Mark games as owned on BGG, or search for them.")
+                if (rows.isEmpty() && linked) emptyState("Your collection is empty", "Mark games as owned on BGG, sync them on the collection page, or search for them.")
             }
             aside("gf-bring__side") {
                 consumer.bringSummary(gameDay, summary)
