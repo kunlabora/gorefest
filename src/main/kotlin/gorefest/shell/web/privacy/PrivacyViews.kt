@@ -57,6 +57,7 @@ fun HTML.privacyPage(view: PrivacyView) = page("Privacy", appBar = { wordmark() 
 
         privacySection("ask", "What you can ask for") {
             p { +"On your account page you can ask me to send you everything Boardfest holds about you, or to delete your account. I do it by hand and send the file to your own address, so allow a few days. The file names the games and game days, never other people." }
+            p { +"You can change your email address yourself (a code goes to the new address first), and unlink your BGG account, which removes your collection." }
         }
 
         privacySection("keep", "What it keeps") {
@@ -81,7 +82,7 @@ fun HTML.privacyPage(view: PrivacyView) = page("Privacy", appBar = { wordmark() 
                     if (view.mailProvider.where.isNotEmpty()) +", ${view.mailProvider.where}"
                     +", sends the mail."
                 }
-                li { +"A Discord channel only I can read gets a short message when someone signs up or asks to have their data or account handled. It holds a name and a link, never an email address." }
+                li { +"A Discord channel only I can read gets a short message when someone signs up or asks to have their data or account handled. It holds a name and a link, never an email address. When an account is deleted, the message holds only its number, so I can delete it again if I ever have to restore a backup." }
             }
         }
 

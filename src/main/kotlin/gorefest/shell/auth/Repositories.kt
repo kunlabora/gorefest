@@ -233,6 +233,14 @@ class LoginAttempts {
             it.executeUpdate()
         }
 
+    /** Pending email changes hold the typed address in clear; once expired for a day they are of no use. */
+    context(tx: Tx)
+    fun purgeEmailChangesBefore(before: Instant): Int =
+        tx.connection.prepareStatement("delete from email_changes where expires_at < ?").use {
+            it.setTimestamp(1, Timestamp.from(before))
+            it.executeUpdate()
+        }
+
     /** Plain read, for checks that don't use the attempt up. */
     context(tx: Tx)
     fun findById(id: Uuid): StoredLoginAttempt? = select("id = ?", lock = false) { it.setObject(1, id.toJavaUuid()) }

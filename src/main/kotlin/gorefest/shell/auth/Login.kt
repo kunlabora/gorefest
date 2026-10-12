@@ -172,9 +172,10 @@ class Login(
 
     suspend fun names(ids: Collection<PlayerId>): Map<PlayerId, String> = db.transaction { players.names(ids) }
 
-    /** Drops expired sessions and login attempts older than a day. */
+    /** Drops expired sessions, and login attempts and email-change codes older than a day. */
     suspend fun purge(): Int = db.transaction {
-        sessions.purgeExpired(clock.instant()) + attempts.purgeBefore(clock.instant() - ATTEMPT_RETENTION)
+        sessions.purgeExpired(clock.instant()) + attempts.purgeBefore(clock.instant() - ATTEMPT_RETENTION) +
+            attempts.purgeEmailChangesBefore(clock.instant() - ATTEMPT_RETENTION)
     }
 
     /** Runs [purge] every [every] until [scope] is cancelled. */

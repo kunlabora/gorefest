@@ -50,6 +50,15 @@ class PrivacyNoticeTest {
     }
 
     @Test
+    fun `the notice says what you can change yourself and what the admin channel gets`() = test.webTest { client ->
+        val page = client.get("/privacy").page()
+        page.one("#ask").text() shouldContain "change your email address yourself"
+        page.one("#ask").text() shouldContain "unlink your BGG account"
+        page.one("#others").text() shouldContain "only its number"
+        page.one("#long").text() shouldContain "two years"
+    }
+
+    @Test
     fun `without an admin address it says to ask whoever invited you`() {
         val bare = TestApp()
         kotlinx.coroutines.runBlocking { bare.reset() }
