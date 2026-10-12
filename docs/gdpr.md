@@ -24,7 +24,7 @@ The app is private by design (invite-only, `noindex`), small, hosted in the EU (
 
 - **Scaleway** (hosting, TEM, Object Storage), all fr-par: EU, DPA via the Scaleway account terms. Good.
 - **Postmark / Resend** (selectable via `MAIL_PROVIDER`): US companies, so a transfer needing SCCs/DPF. Keep TEM the documented default.
-- **BGG** (boardgamegeek.com): we send the linked username to their API. They are a separate controller, not our processor. Mention it in the notice. The user puts a verification code on their own BGG profile, which is their own act.
+- **BGG** (boardgamegeek.com): not a recipient of our data. It's the other way round: we read BGG's public data (collection, game metadata) for the username the person links; the only thing sent is that username, in the request. Not a processor. The notice says where the collection comes from. The user puts a verification code on their own BGG profile, which is their own act.
 - **GitHub Actions**: sees code and deploy secrets, no personal data.
 
 ## Findings
