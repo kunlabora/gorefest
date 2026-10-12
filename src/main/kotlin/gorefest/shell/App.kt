@@ -20,7 +20,10 @@ import gorefest.core.taste.PlayerTastes
 import gorefest.core.taste.TasteModel
 import gorefest.core.taste.Tastes
 import gorefest.core.taste.Wizard
+import gorefest.shell.auth.AdminNotifier
 import gorefest.shell.auth.Login
+import gorefest.shell.auth.MailAdminNotifier
+import gorefest.shell.auth.FallbackNotifier
 import gorefest.shell.auth.Mailer
 import gorefest.shell.bgg.BggApi
 import gorefest.shell.bgg.BggGateway
@@ -57,6 +60,8 @@ class App(
     bggInterval: Duration = Duration.ofSeconds(5),
     bggRetry: Duration = Duration.ofSeconds(5),
     random: Random = Random.Default,
+    /** Where news for the admin goes first (a chat webhook); the admin's mail is the fallback and the default. */
+    adminNotifier: AdminNotifier? = null,
 ) {
     /** Background work (the BGG worker); cancelled by [stop]. */
     val scope = CoroutineScope(
@@ -85,7 +90,10 @@ class App(
 
     val commands = CommandHandler(db, store, afterAppend = { catchUp() })
 
-    val login = Login(db, commands, mailer, config, clock, ids)
+    val login = Login(
+        db, commands, mailer, config, clock, ids,
+        admin = MailAdminNotifier(mailer, config, clock).let { mail -> adminNotifier?.let { FallbackNotifier(it, mail) } ?: mail },
+    )
     val invites = InviteLinks(config.secretKey)
     val titles = TitleGenerator(random)
     val bgg = BggGateway(bggApi, bggInterval)

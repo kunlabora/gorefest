@@ -18,6 +18,7 @@ import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.slf4j.LoggerFactory
 import java.time.Clock
 import java.time.Duration
 import kotlin.uuid.Uuid
@@ -37,7 +38,9 @@ class Login(
     private val config: AppConfig,
     private val clock: Clock,
     private val ids: IdGenerator,
+    private val admin: AdminNotifier = MailAdminNotifier(mailer, config, clock),
 ) {
+    private val log = LoggerFactory.getLogger(Login::class.java)
     private val secrets = Secrets(config.secretKey)
     val players = Players()
     private val attempts = LoginAttempts()
@@ -135,16 +138,15 @@ class Login(
         if (before?.name == null && after != null && !after.approved) notifyAdmin(after)
     }
 
+    /** Never lets a notification problem get in the way of someone signing up. */
     private suspend fun notifyAdmin(newcomer: Player) {
-        val admin = config.adminEmail ?: return
-        mailer.send(
-            Mail(
-                to = admin,
-                subject = "${newcomer.name} wants into Boardfest",
-                text = "${newcomer.name} (${newcomer.email}) signed up and is waiting for your approval:\n${config.baseUrl}/admin/approvals\n",
-                sentAt = clock.instant(),
-            ),
-        )
+        try {
+            admin.notify("${newcomer.name} wants into Boardfest", "Waiting for your approval: ${config.baseUrl}/admin/approvals")
+        } catch (e: kotlin.coroutines.cancellation.CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            log.error("Could not tell the admin about a new sign-up", e)
+        }
     }
 
     /** Accounts waiting for the admin, oldest first. */

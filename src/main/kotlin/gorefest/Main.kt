@@ -3,6 +3,7 @@ package gorefest
 import gorefest.shell.App
 import gorefest.shell.AppConfig
 import gorefest.shell.auth.DevMailbox
+import gorefest.shell.auth.DiscordWebhook
 import gorefest.shell.auth.HttpMailer
 import gorefest.shell.bgg.DevCatalog
 import gorefest.shell.bgg.FakeBggApi
@@ -36,7 +37,7 @@ fun main() {
     // and production runs with BGG switched off until the token arrives.
     val bggApi = AppConfig.setting("BGG_TOKEN")?.let(::XmlBggApi)
         ?: if (config.dev) FakeBggApi(devGames) else UnavailableBggApi.also { LoggerFactory.getLogger("gorefest").warn("No BGG_TOKEN: BGG features are off") }
-    val app = App(db, Clock.systemUTC(), config = config, mailer = mailer, bggApi = bggApi)
+    val app = App(db, Clock.systemUTC(), config = config, mailer = mailer, bggApi = bggApi, adminNotifier = DiscordWebhook.fromEnv())
     runBlocking {
         app.start()
         // The fake catalog is code, but the metadata cache outlives runs: don't let it serve last week's art.
