@@ -39,6 +39,16 @@ data class PlayerRegistered(val player: PlayerId) : Event {
     override val tags get() = setOf(Tags.player(player))
 }
 
+/**
+ * The player's account was erased: their email, name, sessions and collection are gone from the plain tables.
+ * The ids in older events stay, but point at nobody (the log is never rewritten); this records that it happened.
+ */
+@Serializable
+@SerialName("PlayerErased")
+data class PlayerErased(val player: PlayerId) : Event {
+    override val tags get() = setOf(Tags.player(player))
+}
+
 @Serializable
 @SerialName("LoggedIn")
 data class LoggedIn(val player: PlayerId) : Event {

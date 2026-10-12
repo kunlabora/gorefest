@@ -61,6 +61,14 @@ class Players {
             it.executeUpdate() > 0
         }
 
+    /** Removes the account whatever its state (sessions, collection and sync rows go with it). True if there was one. */
+    context(tx: Tx)
+    fun delete(id: PlayerId): Boolean =
+        tx.connection.prepareStatement("delete from players where id = ?").use {
+            it.setObject(1, id.value.toJavaUuid())
+            it.executeUpdate() > 0
+        }
+
     context(tx: Tx)
     fun rename(id: PlayerId, name: String) {
         tx.connection.prepareStatement("update players set name = ? where id = ?").use {
@@ -143,6 +151,14 @@ class LoginAttempts {
             it.executeUpdate()
         }
     }
+
+    /** Login attempts hold the email in clear: an erased account leaves none behind. */
+    context(tx: Tx)
+    fun deleteForEmail(email: String): Int =
+        tx.connection.prepareStatement("delete from login_attempts where email = ?").use {
+            it.setString(1, email)
+            it.executeUpdate()
+        }
 
     /** Drops attempts created before [before]: they no longer count for rate limiting, and they hold emails. */
     context(tx: Tx)

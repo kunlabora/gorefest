@@ -38,6 +38,7 @@ fun Rejection.message(): String = when (this) {
     Rejection.SameGameTwice -> "Compare two different games"
     is Rejection.AlreadyLinked -> "You've already linked $username"
     Rejection.BggAccountTaken -> "That BGG account is already linked to another player"
+    Rejection.NoSuchPlayer -> "No such player"
     Rejection.NoSuchDatePoll -> "No such date poll"
     Rejection.DatePollAlreadyExists -> "That date poll already exists"
     Rejection.DatePollClosed -> "The date is already picked"

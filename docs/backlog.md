@@ -265,7 +265,7 @@ Analysis in [`gdpr.md`](gdpr.md); one request file per story. G2 is the hard one
 | #   | Story | Status | Depends on |
 |-----|-------|--------|------------|
 | G1 | [Privacy notice and processing register](requests/g1-privacy-notice.md) | ✅ |  |
-| G2 | [Erase my account: the event log](requests/g2-erasure-event-log.md) | 📋 |  |
+| G2 | [Erase my account: the event log](requests/g2-erasure-event-log.md) | ✅ |  |
 | G3 | [Erase my account: the screen](requests/g3-erasure-ui.md) | 📋 | G2 |
 | G4 | [Download my data](requests/g4-data-export.md) | 📋 |  |
 | G5 | [Don't show the place to non-members](requests/g5-invite-place.md) | ✅ |  |

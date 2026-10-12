@@ -20,6 +20,7 @@ import gorefest.core.taste.PlayerTastes
 import gorefest.core.taste.TasteModel
 import gorefest.core.taste.Tastes
 import gorefest.core.taste.Wizard
+import gorefest.shell.auth.AccountEraser
 import gorefest.shell.auth.AdminNotifier
 import gorefest.shell.auth.Login
 import gorefest.shell.auth.MailAdminNotifier
@@ -94,6 +95,7 @@ class App(
         db, commands, mailer, config, clock, ids,
         admin = MailAdminNotifier(mailer, config, clock).let { mail -> adminNotifier?.let { FallbackNotifier(it, mail) } ?: mail },
     )
+    val accountEraser = AccountEraser(db, commands, login.players)
     val invites = InviteLinks(config.secretKey)
     val titles = TitleGenerator(random)
     val bgg = BggGateway(bggApi, bggInterval)

@@ -2,7 +2,7 @@
 
 Source: GDPR analysis, 2026-10-09 ([`docs/gdpr.md`](../gdpr.md)). Status: 📋
 
-**Why:** Art. 17 needs a way to ask. Depends on [G2](g2-erasure-event-log.md).
+**Why:** Art. 17 needs a way to ask. Depends on [G2](g2-erasure-event-log.md), which is done: `AccountEraser.erase(player)` (`shell.auth`, `App.accountEraser`) anonymises an account. This story is the button and the way the admin runs it.
 
 **Decided 2026-10-12:** the button doesn't delete by itself. It posts a request to the admin's Discord channel (`AdminNotifier`: name and link, no email address; mail as the fallback, like the sign-up notice) and tells the person it was sent. The admin runs the erasure after G2. A self-serve delete can replace this later.
 

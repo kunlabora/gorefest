@@ -29,6 +29,7 @@ import gorefest.core.PlayLogged
 import gorefest.core.PlayWishChanged
 import gorefest.core.PlayerId
 import gorefest.core.PlayerJoined
+import gorefest.core.PlayerErased
 import gorefest.core.PlayerRegistered
 import gorefest.core.type
 import io.kotest.matchers.collections.shouldBeEmpty
@@ -59,6 +60,8 @@ class EventCompatibilityTest {
             PlayerRegistered(player(p1)),
         """{"type":"LoggedIn","player":"$p1"}""" to
             LoggedIn(player(p1)),
+        """{"type":"PlayerErased","player":"$p1"}""" to
+            PlayerErased(player(p1)),
         """{"type":"BggAccountLinked","player":"$p1","username":"Anna"}""" to
             BggAccountLinked(player(p1), "Anna"),
         """{"type":"GameDayCreated","gameDay":"$d1","host":"$p1","title":"Gorefest #7","date":"2026-10-03","place":"Tim's","timeZone":"Europe/Brussels"}""" to

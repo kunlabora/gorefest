@@ -7,6 +7,7 @@ import gorefest.core.GameDayCancelled
 import gorefest.core.GameDayEnded
 import gorefest.core.GameDayId
 import gorefest.core.InviteLinkRotated
+import gorefest.core.PlayerErased
 import gorefest.core.PlayerId
 import gorefest.core.PlayerJoined
 import gorefest.core.eventsourcing.Projection
@@ -42,6 +43,8 @@ object GameDays : Projection<Map<GameDayId, GameDaySummary>> {
         is PlayerJoined -> state.update(event.gameDay) { it.copy(players = it.players + event.player) }
         is GameDayCancelled -> state.update(event.gameDay) { it.copy(cancelled = true) }
         is GameDayEnded -> state.update(event.gameDay) { it.copy(ended = true) }
+        // Gone from tables that are still to be played; over or called-off ones keep their head count, now without a name.
+        is PlayerErased -> state.mapValues { (_, day) -> if (day.closed) day else day.copy(players = day.players - event.player) }
         else -> state
     }
 

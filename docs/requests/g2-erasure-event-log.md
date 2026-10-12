@@ -1,21 +1,24 @@
 # G2 Erase my account: the event log
 
-Source: GDPR analysis, 2026-10-09 ([`docs/gdpr.md`](../gdpr.md)). Status: 📋
+Source: GDPR analysis, 2026-10-09 ([`docs/gdpr.md`](../gdpr.md)). Status: ✅ (anonymisation); the follow-ups below are open.
 
-**Why:** Art. 17. The player's id and BGG username are all over the immutable log (finding 1). This is the core, with no UI yet (G3 adds it).
+**Why:** Art. 17. The player's id is all over the immutable log (finding 1).
 
-**Design (decided, change only with reason):**
-- A new event `PlayerErased(player)` (never rename it; add with `@SerialName("PlayerErased")`). It is the *record* that an erasure happened, not a way to hide data: projections drop everything about that player on `evolve`.
-- In one transaction, under the same `pg_advisory_xact_lock` as appends, `EventErasure.erase(player)` in `shell.eventstore`: (a) delete the player's own taste events (`ComparisonRecorded`, `GamePlayStatusDeclared`, `PlayWishChanged`, `BggAccountLinked`, `BringRequestsAllowedChanged`, `LoggedIn`, `PlayerRegistered`); (b) in every other event, replace the player's UUID with the fixed tombstone id `PlayerId.ERASED` in `data` **and** in `tags` (GIN index, so rebuild the `tags` array too); (c) delete `players`, `sessions`, `collections`, `collection_syncs`, `login_attempts` rows for that email/id; (d) append `PlayerErased`.
-- Games hosted by the erased player: the game day stays for the others, host shown as "A former player". Free-text `place` in the erased host's `GameDayCreated`/`GameDayDetailsChanged`/`DatePollCreated` is blanked.
-- Keep a plain table `erasures(player_id uuid, erased_at)` (no email) so a restore from backup can re-apply (see G7).
+**Decided 2026-10-12: anonymise, don't rewrite.** Events only carry player ids; the email and name live in `players`. Erasing deletes that link, so the ids left in the log point at nobody. The log is never edited.
 
-**Criteria**
-- [ ] Decider `ErasePlayerDecider` given/when/then (idempotent; unknown player rejected with a typed `Rejection`)
-- [ ] `EventErasure` integration test on Testcontainers: after erasure no event row, tag or table row contains the player's id, email or BGG username (assert with a text search over `data::text` and `tags`)
-- [ ] Replay test: the log replays on startup with tombstoned ids; `GameDayShelves`, `PlayerTastes`, `GameDayPlays`, `LinkedBggAccounts` and bring requests all handle `PlayerId.ERASED` (no crash, no "ghost" player in counts, matcher ignores them; a play logged with the erased player still counts toward the group's speed)
-- [ ] Old events still decode (CLAUDE.md event evolution rules); `core/Event.kt` list and the CLAUDE.md event list updated
-- [ ] Other players' data is untouched (test with two players on one game day)
-- [ ] `docs/gdpr.md` finding 1 marked fixed
+**Done**
+- [x] `PlayerErased(player)` event; `ErasePlayerDecider` (idempotent; a player who never registered is rejected with `Rejection.NoSuchPlayer`)
+- [x] `AccountEraser.erase(player)` in `shell.auth`: records the event first, then deletes the `players` row (sessions, collection and sync rows cascade) and the login attempts for the email. Safe to run again after a failure halfway
+- [x] Projections: `GameDays` drops the player from tables still to be played (over and cancelled ones keep their head count); `LinkedBggAccounts` forgets the link; `LinkBggAccountDecider` no longer counts an erased player's link, so the BGG username is free again
+- [x] Tests: decider given/when/then; integration test on Testcontainers (no email or name left in the plain tables, other players untouched, the log only grows by one event, erasing twice changes nothing, the same email can sign up again as a new person); `EventCompatibilityTest` has a sample
+- [x] Old events still decode; CLAUDE.md event list and architecture note updated; `docs/gdpr.md` finding 1 marked fixed
 
-**Agent notes:** the hard part is the rewrite being atomic with the lock; do it in a single transaction and add a test that a concurrent append waits. Read `EventStore`, `CommandHandler` and `Projector` first. Don't add UI.
+**Residue we accept for now** (the log still holds it)
+- `BggAccountLinked` events written so far hold the BGG username (a public handle).
+- Free-text `place` and `title` in `GameDayCreated`, `GameDayDetailsChanged` and `DatePollCreated`.
+- Other projections (shelf, tastes, plays, bring requests, date polls) still list the erased id: it shows as "someone" and counts as before. Their data is pseudonymous and the taste model keeps learning from it.
+
+**Follow-ups, if we want them (b)**
+- Keep the BGG username out of new events: a new event carrying an HMAC of the username (key: `SECRET_KEY`) as the uniqueness tag; the readable name lives only in `collection_syncs`, which the shell reads where it now reads `bggAccounts.usernameOf`. `Rejection.AlreadyLinked(username)` loses its name or the shell fills it in.
+- Keep the place out of new events: a plain table for `place` per game day and date poll, written by the shell, deleted with the host. Costs the pure read model its `place`; every view that shows it looks it up.
+- A way to run it: G3 wires the admin to `AccountEraser`.
