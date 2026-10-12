@@ -136,7 +136,7 @@ Follow-ups, not blocking:
 
 - [x] The game day page has a copyable invite link (signed token, valid until the game day ends), for everyone who joined
 - [x] The host can rotate the link (`InviteLinkRotated`); the old link stops working
-- [x] The link has Open Graph tags and a rendered 1200×630 image: title, date, place, going, shelf size (shelf count comes with S7; checked in real chat apps in S1)
+- [x] The link has Open Graph tags and a rendered 1200×630 image: title, date, going, shelf size, not the place, which only members see (G5; shelf count comes with S7; checked in real chat apps in S1)
 - [x] Opening the link shows a landing page (host, date, place, who's going) without logging in
 - [x] "Join" goes through login if needed, then emits `PlayerJoined` and lands me on the game day
 - [x] An ended game day's link shows "this game day has ended"
@@ -268,7 +268,7 @@ Analysis in [`gdpr.md`](gdpr.md); one request file per story. G2 is the hard one
 | G2 | [Erase my account: the event log](requests/g2-erasure-event-log.md) | 📋 |  |
 | G3 | [Erase my account: the screen](requests/g3-erasure-ui.md) | 📋 | G2 |
 | G4 | [Download my data](requests/g4-data-export.md) | 📋 |  |
-| G5 | [Don't show the place to non-members](requests/g5-invite-place.md) | ⏭ |  |
+| G5 | [Don't show the place to non-members](requests/g5-invite-place.md) | ✅ |  |
 | G6 | [Change email, unlink BGG](requests/g6-rectification.md) | 📋 | G2 |
 | G7 | [Retention, backups and restore](requests/g7-retention-backups.md) | 📋 | G2 |
 | G8 | [Logs and URLs: no secrets, short retention](requests/g8-logs.md) | ⏭ |  |

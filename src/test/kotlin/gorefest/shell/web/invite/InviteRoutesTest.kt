@@ -24,6 +24,7 @@ import gorefest.shell.web.urlEncoded
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import io.kotest.matchers.string.shouldNotContain
 import io.kotest.matchers.string.shouldStartWith
 import io.ktor.client.request.forms.submitForm
 import io.ktor.client.request.get
@@ -66,7 +67,15 @@ class InviteRoutesTest {
 
         page.one("main .gf-muted strong").text() shouldBe "Anna"
         page.one("h1").text() shouldBe "Gorefest #7"
-        page.select(".gf-facts li").map { it.ownText() } shouldBe listOf("Sunday 27 September", "Anna's place", "1 player going")
+        page.select(".gf-facts li").map { it.ownText() } shouldBe listOf("Sunday 27 September", "1 player going")
+    }
+
+    @Test
+    fun `the place stays off the landing page, the preview text and the image until you have joined`() = test.webTest { client ->
+        val page = client.get(link).page()
+
+        page.text() shouldNotContain "Anna's place"
+        page.select("meta[property^=og:], meta[name^=twitter:]").joinToString { it.attr("content") } shouldNotContain "Anna's place"
     }
 
     @Test
@@ -110,7 +119,7 @@ class InviteRoutesTest {
         fun og(property: String) = page.one("meta[property=og:$property]").attr("content")
 
         og("title") shouldBe "Gorefest #7"
-        og("description") shouldBe "Sunday 27 September · Anna's place · 1 going · 0 games on the shelf"
+        og("description") shouldBe "Sunday 27 September · 1 going · 0 games on the shelf"
         og("image") shouldBe "http://localhost:8080$link/og.png"
 
         val image = client.get("$link/og.png")

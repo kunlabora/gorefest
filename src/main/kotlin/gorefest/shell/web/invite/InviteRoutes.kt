@@ -116,4 +116,4 @@ fun Route.inviteRoutes(app: App, invites: InviteLinks) {
 }
 
 private fun GameDaySummary.preview(host: String, shelf: Int) =
-    InvitePreview(host, title, date.full(), place, going = players.size, shelf = shelf)
+    InvitePreview(host, title, date.full(), going = players.size, shelf = shelf)

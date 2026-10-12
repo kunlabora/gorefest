@@ -38,7 +38,7 @@ fun TagConsumer<*>.datePollForm(error: String? = null, values: Parameters = Para
         field("title", "Title", hint = "Whatever your group calls it.") {
             input(InputType.text, name = "title", classes = "gf-input") { id = "title"; placeholder = "Gorefest #7"; required = true; maxLength = MAX_TITLE_LENGTH.toString(); value = values["title"].orEmpty() }
         }
-        field("place", "Where", hint = "Shown on the invite. Leave out the house number if you like.") {
+        field("place", "Where", hint = "Only people who have joined see it. Leave out the house number if you like.") {
             input(InputType.text, name = "place", classes = "gf-input") { id = "place"; maxLength = MAX_PLACE_LENGTH.toString(); value = values["place"].orEmpty() }
         }
         div("gf-section") {
@@ -206,7 +206,6 @@ fun HTML.pollInvitePage(view: PollInviteView) {
                     inviterLine(poll.host, view.names[poll.host], "wants to find a date for a game day")
                     h1("gf-h1 gf-h1--landing") { +poll.title }
                     ul("gf-facts") {
-                        if (poll.place.isNotBlank()) li { icon("pin"); +poll.place }
                         li { icon("calendar"); +"${poll.dates.size.of("date")} to choose from" }
                         li { icon("users"); avatarStack(poll.participants, view.names); +"${poll.participants.size.of("person", "people")} in" }
                     }

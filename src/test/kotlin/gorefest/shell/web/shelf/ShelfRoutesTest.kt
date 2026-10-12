@@ -231,7 +231,7 @@ class ShelfRoutesTest {
         val page = client.get(link).page()
 
         page.select(".gf-fan .gf-art").size shouldBe 2
-        page.one("meta[property=og:description]").attr("content") shouldBe "Sunday 27 September · Anna's place · 2 going · 2 games on the shelf"
+        page.one("meta[property=og:description]").attr("content") shouldBe "Sunday 27 September · 2 going · 2 games on the shelf"
     }
 
     @Test

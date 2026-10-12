@@ -55,7 +55,6 @@ fun HTML.invitePage(view: InviteLanding) {
                     h1("gf-h1 gf-h1--landing") { +gameDay.title }
                     ul("gf-facts") {
                         li { icon("calendar"); +gameDay.date.full() }
-                        if (gameDay.place.isNotBlank()) li { icon("pin"); +gameDay.place }
                         li {
                             icon("users")
                             avatarStack(gameDay.players, view.names)
@@ -140,7 +139,7 @@ private fun FlowContent.whatHappensNext(loggedIn: Boolean) = div("gf-stack gf-in
 }
 
 fun InvitePreview.description() =
-    listOf(date, place, "$going going", "${shelf.of("game")} on the shelf").filter { it.isNotBlank() }.joinToString(" · ")
+    listOf(date, "$going going", "${shelf.of("game")} on the shelf").filter { it.isNotBlank() }.joinToString(" · ")
 
 /** Dead, cancelled and ended invites share one hero: what happened, what to do, the way back. */
 private fun HTML.statusPage(title: String, kicker: String?, heading: String, text: String, action: (FlowContent.() -> Unit)? = null) =

@@ -16,6 +16,7 @@ import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.string.shouldNotContain
 import io.kotest.matchers.string.shouldStartWith
 import io.ktor.client.request.forms.submitForm
 import io.ktor.client.request.get
@@ -147,6 +148,7 @@ class DatePollRoutesTest {
 
         val landing = client.get("/p/${token()}").page()
         landing.one("h1").text() shouldBe "Boardfest #8"
+        landing.text() shouldNotContain "Anna's place"
         landing.select(".gf-list li").map { it.text() } shouldContainExactly listOf("Fri 9 Oct", "Sat 10 Oct", "Sun 11 Oct")
         landing.one(".gf-narrow form").attr("action") shouldBe "/p/${token()}/join"
 

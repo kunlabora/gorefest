@@ -133,9 +133,9 @@ Tag convention: `player:{id}`, `gameday:{id}`, `game:{bggId}`, `datepoll:{id}`.
 
 ## User journeys
 
-**Host**: sign up → link BGG → wizard on own collection → create game day → share invite link (Open Graph preview: title, date, place, shelf size) → tick games bringing → readiness view (who joined, thin profiles with one-tap nudge, shelf size, gaps like "nothing plays well at 6") → on the day same as participants. Only the host edits the game day.
+**Host**: sign up → link BGG → wizard on own collection → create game day → share invite link (Open Graph preview: title, date, going, shelf size; the place stays hidden until they join) → tick games bringing → readiness view (who joined, thin profiles with one-tap nudge, shelf size, gaps like "nothing plays well at 6") → on the day same as participants. Only the host edits the game day.
 
-**Participant**: tap invite → landing page (host, date, place, shelf) → email → magic link or code → optional BGG link → wizard seeded from shelf → payoff screen → optionally tick games bringing.
+**Participant**: tap invite → landing page (host, date, shelf; no place until they join) → email → magic link or code → optional BGG link → wizard seeded from shelf → payoff screen → optionally tick games bringing.
 
 **On the day**: tick who's at the table → suggestions. At each checkpoint: "what did you play, who, how long?" + one comparison → new suggestions. Game day auto-closes at midnight; summary to everyone.
 

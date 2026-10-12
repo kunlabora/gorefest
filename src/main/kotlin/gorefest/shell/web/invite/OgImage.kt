@@ -13,7 +13,7 @@ import java.io.ByteArrayOutputStream
 import javax.imageio.ImageIO
 
 /** What the invite preview in WhatsApp/Signal shows. */
-data class InvitePreview(val host: String, val title: String, val date: String, val place: String, val going: Int, val shelf: Int)
+data class InvitePreview(val host: String, val title: String, val date: String, val going: Int, val shelf: Int)
 
 /**
  * Renders the 1200×630 Open Graph image from the design (docs/design/mockups/screen-open-graph.html)
@@ -52,10 +52,6 @@ object OgImage {
         g.font = Font(Font.SANS_SERIF, Font.PLAIN, 36)
         y += 64
         g.drawString(ellipsize(g, preview.date, 640), 72, y)
-        if (preview.place.isNotBlank()) {
-            y += 48
-            g.drawString(ellipsize(g, preview.place, 640), 72, y)
-        }
 
         g.font = Font(Font.SANS_SERIF, Font.BOLD, 34)
         val chip = "${preview.shelf} ${if (preview.shelf == 1) "game" else "games"}"
