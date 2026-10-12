@@ -15,6 +15,7 @@ Source: GDPR analysis, 2026-10-09 ([`docs/gdpr.md`](../gdpr.md)). Status: 📋
 - [ ] The contact the notice shows follows the admin notifier: Discord wording with a webhook, the `ADMIN_EMAIL` address without; tested with fake values
 - [ ] `docs/processing-register.md`: a short list, one row per data store in the inventory (what, why, who sees it, how long)
 - [ ] The notice names the mail provider in use (`MAIL_PROVIDER`), not a fixed one
+- [ ] The notice says server logs are kept 14 days and hold no links or email addresses (from [G8](g8-logs.md)); then tick G8's last criterion and mark G8 ✅
 - [ ] Tick G1 in the backlog
 
 **Not in scope:** a cookie banner (nothing needs consent).

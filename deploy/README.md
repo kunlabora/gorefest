@@ -89,6 +89,10 @@ sudo rm /tmp/restore.dump
 ```
 The projections rebuild from the event log on start, so nothing else needs restoring. Test this once on a scratch database (point `-d` at it) and write down how long it took.
 
+## Logs
+
+The app writes to journald, which `provision.sh` limits to 14 days (`/etc/systemd/journald.conf.d/retention.conf`, `MaxRetentionSec=14d`). Request lines hold the method, status and a scrubbed path only: no query string, and invite and poll links show as `/i/{token}` and `/p/{token}` (`loggable()`). No code logs an email address or an IP, apart from the dev mailbox, which only runs in dev. Caddy's access log stays off (`Caddyfile`): keep it that way, since it would record the links. On a server provisioned before this, run `provision.sh` again or create the drop-in by hand and restart `systemd-journald`.
+
 ## After a deploy
 
 The units are hardened (`ProtectHome`, `PrivateDevices`, `RestrictAddressFamilies`, `MemoryMax=1G` and more). After the first deploy with new unit files, or after changing them, check:

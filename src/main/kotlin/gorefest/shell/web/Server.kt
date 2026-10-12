@@ -32,6 +32,8 @@ import io.ktor.server.http.content.staticResources
 import io.ktor.server.plugins.autohead.AutoHeadResponse
 import io.ktor.server.plugins.conditionalheaders.ConditionalHeaders
 import io.ktor.server.plugins.calllogging.CallLogging
+import io.ktor.server.request.httpMethod
+import io.ktor.server.request.uri
 import io.ktor.server.plugins.forwardedheaders.XForwardedHeaders
 import io.ktor.server.plugins.statuspages.StatusPages
 import io.ktor.http.ContentType
@@ -75,7 +77,10 @@ private val NotFoundPage = createApplicationPlugin("NotFoundPage") {
 }
 
 fun Application.web(app: App) {
-    install(CallLogging)
+    // Links carry bearer tokens in the path and query: log the method, the status and a scrubbed path, nothing else.
+    install(CallLogging) {
+        format { call -> "${call.response.status()}: ${call.request.httpMethod.value} ${call.request.uri.loggable()}" }
+    }
     // Caddy in front sets X-Forwarded-For. Safe to trust only because the app listens on localhost.
     install(XForwardedHeaders)
     install(Webjars)
@@ -94,11 +99,11 @@ fun Application.web(app: App) {
             call.respondText("Bad request", status = HttpStatusCode.BadRequest)
         }
         exception<BadRequestException> { call, cause ->
-            log.warn("Bad request on ${call.request.local.uri}: ${cause.message}")
+            log.warn("Bad request on ${call.request.local.uri.loggable()}: ${cause.message}")
             call.respondText("Bad request", status = HttpStatusCode.BadRequest)
         }
         exception<Throwable> { call, cause ->
-            log.error("Unhandled error on ${call.request.local.uri}", cause)
+            log.error("Unhandled error on ${call.request.local.uri.loggable()}", cause)
             call.respondText("Something went wrong", status = HttpStatusCode.InternalServerError)
         }
     }

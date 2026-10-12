@@ -85,6 +85,12 @@ if [ "$(awk '/MemTotal/ {print int($2/1024)}' /proc/meminfo)" -lt 1800 ] && ! sw
   echo 'vm.swappiness=10' > /etc/sysctl.d/99-swappiness.conf && sysctl -q -p /etc/sysctl.d/99-swappiness.conf
 fi
 
+echo "== Log retention"
+# The app logs request lines (method, status, a scrubbed path: no tokens) and errors. journald would keep them for months: keep two weeks.
+mkdir -p /etc/systemd/journald.conf.d
+printf '[Journal]\nMaxRetentionSec=14d\n' > /etc/systemd/journald.conf.d/retention.conf
+systemctl restart systemd-journald
+
 echo "== Services"
 install -m 644 "$here/gorefest.service" "$here/gorefest-backup.service" "$here/gorefest-backup.timer" /etc/systemd/system/
 systemctl daemon-reload
