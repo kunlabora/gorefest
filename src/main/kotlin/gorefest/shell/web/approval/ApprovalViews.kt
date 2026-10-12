@@ -22,16 +22,19 @@ fun HTML.approvalsPage(waiting: List<Player>) = page("New accounts", site = Site
     }
 }
 
-private fun UL.row(player: Player) = li("gf-row") {
+/** The email can be long: the buttons get their own line on a phone, and the address breaks where it must. */
+private fun UL.row(player: Player) = li("gf-row gf-row--approval") {
     avatar(player.id, player.name)
     span("gf-row__main") {
         span("gf-row__title") { +player.name.orEmpty() }
         span("gf-row__sub") { +player.email }
     }
-    form(action = "/admin/approvals/${player.id.value}/approve", method = FormMethod.post) {
-        button(type = ButtonType.submit, classes = buttonClasses(ButtonStyle.PRIMARY, ButtonSize.NORMAL)) { +"Approve" }
-    }
-    form(action = "/admin/approvals/${player.id.value}/reject", method = FormMethod.post) {
-        button(type = ButtonType.submit, classes = buttonClasses(ButtonStyle.GHOST, ButtonSize.NORMAL)) { +"Reject" }
+    div("gf-row__actions") {
+        form(action = "/admin/approvals/${player.id.value}/approve", method = FormMethod.post) {
+            button(type = ButtonType.submit, classes = buttonClasses(ButtonStyle.PRIMARY, ButtonSize.NORMAL)) { +"Approve" }
+        }
+        form(action = "/admin/approvals/${player.id.value}/reject", method = FormMethod.post) {
+            button(type = ButtonType.submit, classes = buttonClasses(ButtonStyle.GHOST, ButtonSize.NORMAL)) { +"Reject" }
+        }
     }
 }
