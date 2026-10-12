@@ -51,6 +51,7 @@ New accounts are approved by hand by the admin (`ADMIN_EMAIL`) before they can d
 ## Open questions (need a human)
 
 - Who is the controller, and does the household/personal-activity exemption apply to a group of friends? If it grows beyond that, assume it doesn't.
+  - **Decided (2026-10-12):** we apply the household/personal-activity exemption. The privacy notice (G1) says so, and still keeps the transparency, erasure and export promises. If the circle grows beyond friends, revisit.
 - Legal basis: Art. 6(1)(b) (the service the person asked for) fits the account and game-day data; taste profiling is arguably the service itself, not a separate consent. Confirm.
 - Is a records-of-processing entry (Art. 30) required at this size? Cheap to keep anyway: G1 produces it.
 
