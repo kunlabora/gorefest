@@ -87,6 +87,7 @@ fun HTML.page(
             if (dock != null) div("gf-dock") { dock() }
             footer("gf-footer") {
                 bggCredit()
+                p("gf-credit") { a("/privacy") { +"Privacy" } }
                 p("gf-credit gf-credit--version") { +"Boardfest v$APP_VERSION" }
             }
         }

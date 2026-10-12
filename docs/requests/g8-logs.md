@@ -1,6 +1,6 @@
 # G8 Logs and URLs: no secrets, short retention
 
-Source: GDPR analysis, 2026-10-09 ([`docs/gdpr.md`](../gdpr.md)). Status: 🚧 (code and deploy done; the last criterion lands with G1)
+Source: GDPR analysis, 2026-10-09 ([`docs/gdpr.md`](../gdpr.md)). Status: ✅
 
 **Why:** finding 8. Bearer tokens travel in `/login/link?token=…` and `/i/{token}`; `CallLogging` (Server.kt) logs request lines; journald keeps them by default for a long time. Caddy's access log is off (`deploy/Caddyfile`): keep it off.
 
@@ -13,4 +13,4 @@ Source: GDPR analysis, 2026-10-09 ([`docs/gdpr.md`](../gdpr.md)). Status: 🚧 (
 - [x] Log-capture test as above, red before / green after
 - [x] No token, email or code in captured logs
 - [x] journald retention in `provision.sh` and `deploy/README.md`
-- [ ] Mention log retention in the notice ([G1](g1-privacy-notice.md))
+- [x] Mention log retention in the notice ([G1](g1-privacy-notice.md))
