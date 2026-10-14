@@ -49,10 +49,10 @@ class CollectionSync(
             } catch (e: kotlinx.coroutines.CancellationException) {
                 throw e
             } catch (e: BggUnauthorized) {
-                log.error("Collection sync for {} stopped: {}", username, e.message)
+                log.error("Collection sync for player {} stopped: {}", player, e.message)
                 runCatching { setStatus(player, username, SyncStatus.FAILED, "We can't reach BGG right now. We'll try again later.") }
             } catch (e: Exception) {
-                log.error("Collection sync for {} failed", username, e)
+                log.error("Collection sync for player {} failed", player, e)
                 runCatching { setStatus(player, username, SyncStatus.FAILED, "Something went wrong. We'll try again later.") }
             } finally {
                 running.computeIfPresent(player) { _, r -> if (r.job === me) null else r }
@@ -91,7 +91,7 @@ class CollectionSync(
             } catch (e: BggUnauthorized) {
                 throw e
             } catch (e: BggUnavailable) {
-                log.info("BGG unavailable for {} (try {}): {}", username, attempt + 1, e.message)
+                log.info("BGG unavailable for player {} (try {}): {}", player, attempt + 1, e.message)
                 CollectionResult.Queued
             }
             when (result) {

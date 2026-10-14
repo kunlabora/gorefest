@@ -21,7 +21,8 @@ abstract class HttpMailer(private val http: HttpClient = HttpClient.newBuilder()
 
     override suspend fun send(mail: Mail) {
         val response = withContext(Dispatchers.IO) { http.send(request(mail), HttpResponse.BodyHandlers.ofString()) }
-        check(response.statusCode() in 200..299) { "Mail provider answered ${response.statusCode()}: ${response.body().take(200)}" }
+        // Only the status: error bodies often echo the recipient, and this message ends up in the log.
+        check(response.statusCode() in 200..299) { "Mail provider answered ${response.statusCode()}" }
     }
 
     companion object {

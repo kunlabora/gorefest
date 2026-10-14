@@ -11,4 +11,4 @@
 Over a full run (about 450 requests, logins by code and by link, invites, polls, og.png, bad tokens, query strings) the access log contained only `METHOD /path` with `/i/{token}`, `/p/{token}`, no query strings, no `/login/link` token, no tokens or codes outside the `DevMailbox` lines, and no WARN/ERROR lines.
 
 ## Status
-Status: open.
+Status: fixed. `DevMailbox` logs only that a mail arrived; a refused mail's message is "Mail provider answered <status>"; while at it, BGG sync logs name the player id instead of the BGG username, and a BGG error names the endpoint without its query (which can hold a username). Pinned by `LogSafetyTest` and `HttpMailerTest`.

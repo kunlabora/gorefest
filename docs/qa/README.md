@@ -51,7 +51,7 @@ Method: same as round 1 (curl with cookie jars for Tim as admin, Anna, Bram, Car
 | [BUG-023](bugs/BUG-023-privacy-notice-claims-discord-even-without-webhook.md) | Privacy notice always claims a Discord channel, even with no webhook | cosmetic | /privacy | fixed |
 | [BUG-024](bugs/BUG-024-email-change-copy-and-error-page-details.md) | "1 tries left"; an email error on /account drops the host warning | cosmetic | Email change | fixed |
 | [BUG-025](bugs/BUG-025-erased-players-leave-orphans-and-inconsistent-placeholders.md) | After erasure: shelf games and open requests of the erased stay; "?" vs "Someone" | minor | Erasure (partly by design, G2) | open |
-| [BUG-026](bugs/BUG-026-mail-and-log-leak-risks.md) | Logs can still carry an address/code (DevMailbox verified; provider error body read from code) | minor | Logs (G8) | open |
+| [BUG-026](bugs/BUG-026-mail-and-log-leak-risks.md) | Logs can still carry an address/code (DevMailbox verified; provider error body read from code) | minor | Logs (G8) | fixed |
 
 Blocking: none found. Nothing in the places where the new features could leak data (place on the invite, other players in the data export, tokens in logs, non-admin access to /admin/requests) failed.
 

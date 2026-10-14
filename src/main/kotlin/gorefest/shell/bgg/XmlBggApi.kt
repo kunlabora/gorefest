@@ -48,7 +48,7 @@ class XmlBggApi(
     private suspend fun get(path: String): Document? {
         val (status, body) = fetch(path)
         if (status == 404) return null
-        if (status != 200) throw BggUnavailable("BGG answered $status for $path")
+        if (status != 200) throw BggUnavailable("BGG answered $status for ${path.substringBefore('?')}") // the query can hold a username
         return BggXml.parse(body)
     }
 

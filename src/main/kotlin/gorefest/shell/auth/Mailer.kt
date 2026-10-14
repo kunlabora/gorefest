@@ -17,7 +17,8 @@ class DevMailbox : Mailer {
 
     override suspend fun send(mail: Mail) {
         mails += mail
-        log.info("Mail to {}: {}", mail.to, mail.subject)
+        // No address and no subject: the subject carries the login code. The mail itself is on /dev/mailbox.
+        log.info("Mail delivered to the dev mailbox")
     }
 
     /** Newest first. */

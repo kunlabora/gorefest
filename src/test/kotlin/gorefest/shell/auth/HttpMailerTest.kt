@@ -1,5 +1,6 @@
 package gorefest.shell.auth
 
+import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlinx.serialization.json.Json
@@ -78,5 +79,29 @@ class HttpMailerTest {
         })
         done.await()
         return Json.parseToJsonElement(bytes.toString(Charsets.UTF_8)) as JsonObject
+    }
+
+    @Test
+    fun `a refused mail names the status, not what the provider echoed back`() {
+        val server = com.sun.net.httpserver.HttpServer.create(java.net.InetSocketAddress("127.0.0.1", 0), 0)
+        server.createContext("/") { exchange ->
+            val body = """{"message":"Recipient nina@example.com is on the suppression list"}""".toByteArray()
+            exchange.sendResponseHeaders(422, body.size.toLong())
+            exchange.responseBody.use { it.write(body) }
+        }
+        server.start()
+        try {
+            val mailer = object : HttpMailer() {
+                override fun request(mail: Mail) = HttpRequest.newBuilder(java.net.URI("http://127.0.0.1:${server.address.port}/send"))
+                    .POST(HttpRequest.BodyPublishers.noBody()).build()
+            }
+            val failure = runCatching {
+                kotlinx.coroutines.runBlocking { mailer.send(Mail("nina@example.com", "Hi", "Hi", Instant.EPOCH)) }
+            }.exceptionOrNull()
+
+            failure.shouldNotBeNull().message shouldBe "Mail provider answered 422"
+        } finally {
+            server.stop(0)
+        }
     }
 }

@@ -55,4 +55,23 @@ class LogSafetyTest {
             log shouldNotContain "123456"
         }
     }
+
+    @Test
+    fun `a login mail leaves neither the address nor the code in the log`() = test.webTest { client ->
+        val captured = ListAppender<ILoggingEvent>().also { it.start() }
+        val root = LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME) as Logger
+        root.addAppender(captured)
+        try {
+            client.submitForm("/login", Parameters.build { append("email", "nina@example.com"); append("returnTo", "/") })
+        } finally {
+            root.detachAppender(captured)
+        }
+
+        val code = Regex("\\d{6}").find(test.mailbox.latestTo("nina@example.com")!!.subject)!!.value
+        captured.list.joinToString("\n") { it.formattedMessage }.let { log ->
+            log shouldContain "dev mailbox"
+            log shouldNotContain "nina@example.com"
+            log shouldNotContain code
+        }
+    }
 }
