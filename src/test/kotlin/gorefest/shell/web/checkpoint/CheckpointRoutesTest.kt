@@ -336,5 +336,25 @@ class CheckpointRoutesTest {
         client.submitForm("$watched/compare", parameters { append("a", azul.toString()); append("b", cascadia.toString()); append("answer", "A") })
         app.tastes.of(kimId).comparisons.shouldBeEmpty()
     }
+
+    @Test
+    fun `a game you only own isn't something you played, so it's not held against the watched one`() = test.webTest(session = kim) { client ->
+        app.db.transaction { gorefest.shell.bgg.Collections().replace(kimId, setOf(cascadia)) }
+
+        client.get("$watched/compare?game=$azul").page().one(".gf-empty").text() shouldContain "Nothing to compare yet"
+    }
+
+    @Test
+    fun `a watched answer only counts for a known game you haven't played, against one you have`() = test.webTest(session = kim) { client ->
+        given(GamePlayStatusDeclared(kimId, cascadia, played = true))
+        suspend fun answer(a: String, b: String) = client.submitForm("$watched/compare", parameters { append("a", a); append("b", b); append("answer", "A") })
+
+        answer("-7", "99999999")
+        answer(cascadia.toString(), azul.toString())  // the other way round: Cascadia you played, Azul you didn't
+        app.tastes.of(kimId).comparisons.shouldBeEmpty()
+
+        answer(azul.toString(), cascadia.toString())
+        app.tastes.of(kimId).comparisons.single().let { (it.a to it.b) shouldBe (azul to cascadia) }
+    }
 }
 

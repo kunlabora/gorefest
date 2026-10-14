@@ -194,6 +194,13 @@ fun HTMLTag.hyperscript(script: String) {
     attributes["_"] = script
 }
 
+/**
+ * Asks [message] before the form submits, and stops it on "Cancel". The message goes into a single-quoted hyperscript
+ * string, so backslashes and quotes are escaped: any text, a player's name included, stays text (BUG-032).
+ */
+fun HTMLTag.confirmOnSubmit(message: String) =
+    hyperscript("on submit if not confirm('${message.replace("\\", "\\\\").replace("'", "\\'")}') halt the event")
+
 /** An Open Graph `<meta>` for the link preview of a page that is shared (an invite). */
 fun HEAD.openGraph(property: String, value: String) = meta {
     attributes["property"] = property

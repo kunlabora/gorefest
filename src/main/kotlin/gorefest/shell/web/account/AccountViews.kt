@@ -82,7 +82,7 @@ private fun FlowContent.request(
         notice("check", NoticeKind.GOOD) { +"Asked. I'll get back to you." }
     } else {
         form(action = "/account/${kind.name.lowercase()}", method = FormMethod.post) {
-            if (confirm != null) hyperscript("on submit if not confirm('$confirm') halt the event")
+            if (confirm != null) confirmOnSubmit(confirm)
             button(type = ButtonType.submit, classes = buttonClasses(if (danger) ButtonStyle.SECONDARY else ButtonStyle.PRIMARY, ButtonSize.NORMAL)) { +label }
         }
     }
@@ -116,7 +116,7 @@ private fun UL.row(request: OpenRequest) = li("gf-row gf-row--approval") {
         val base = "/admin/requests/${player.id.value}"
         when (request.kind) {
             RequestKind.DELETE -> form(action = "$base/erase", method = FormMethod.post) {
-                hyperscript("on submit if not confirm('Delete ${player.name.orEmpty().replace("'", "")}\\'s account for good?') halt the event")
+                confirmOnSubmit("Delete ${player.name ?: "this"}'s account for good?")
                 button(type = ButtonType.submit, classes = buttonClasses(ButtonStyle.PRIMARY, ButtonSize.NORMAL)) { +"Delete account" }
             }
             RequestKind.EXPORT -> {

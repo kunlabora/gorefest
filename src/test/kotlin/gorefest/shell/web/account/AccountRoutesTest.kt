@@ -114,6 +114,19 @@ class AccountRoutesTest {
     }
 
     @Test
+    fun `the delete confirm keeps any name as text, a backslash and a quote included`() {
+        val zedId = PlayerId(Uuid.random())
+        val zed = runBlocking { test.loggedIn("Zed\\", id = zedId) }
+        runBlocking { app.db.transaction { app.login.players.rename(zedId, "Z'ed\\") } }
+        test.webTest(session = zed) { it.submitForm("/account/delete", Parameters.Empty) }
+
+        test.webTest(session = tim) { admin ->
+            val form = admin.get("/admin/requests").page().one("form[action=/admin/requests/$zedId/erase]")
+            form.attr("_") shouldBe "on submit if not confirm('Delete Z\\'ed\\\\\\'s account for good?') halt the event"
+        }
+    }
+
+    @Test
     fun `the admin downloads the person's data as a file, nobody else can`() {
         test.webTest(session = kim) { it.submitForm("/account/export", Parameters.Empty) }
 

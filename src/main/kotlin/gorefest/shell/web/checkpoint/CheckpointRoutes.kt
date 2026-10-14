@@ -170,7 +170,7 @@ private fun Route.watchedRoutes(app: App) {
             if (!watchOpen(app, gameDay)) return@authenticated redirect(hub)
             val game = call.parameters["game"]?.toIntOrNull()?.let(::BggId)?.let(app.catalog::get) ?: return@authenticated redirect("$hub/watched")
             val player = PlayerGames(app.tastes.of(me.id), app.collectionSync.collection(me.id))
-            val candidates = (player.history.played.filterValues { it }.keys + player.owned + player.history.comparedGames).mapNotNull(app.catalog::get)
+            val candidates = reallyPlayed(app, me).mapNotNull(app.catalog::get)
             // Nothing you've played to hold it against: there's no question to ask yet.
             val other = app.wizard.partner(player, game.id, candidates, app.clock.instant())
                 ?: return@authenticated call.respondHtml { watchedNothingPage(gameDay, game, me) }
@@ -186,7 +186,9 @@ private fun Route.watchedRoutes(app: App) {
             val a = form["a"]?.toIntOrNull()?.let(::BggId)
             val b = form["b"]?.toIntOrNull()?.let(::BggId)
             val answer = form["answer"]
-            if (watchOpen(app, gameDay) && a != null && b != null && answer in WATCHED_ANSWERS)
+            // Only what the page could have offered: a game we know that you haven't played, against one you have (BUG-031).
+            val offered = a != null && b != null && app.catalog[a] != null && app.tastes.of(me.id).played[a] != true && b in reallyPlayed(app, me)
+            if (watchOpen(app, gameDay) && offered && answer in WATCHED_ANSWERS)
                 app.commands.handle(RecordComparisonDecider, ComparisonRecorded(me.id, a, b, ComparisonResult.valueOf(answer!!), Basis.WATCHED, app.clock.instant()))
             redirect("/gamedays/${gameDay.id}")
         }
@@ -194,6 +196,17 @@ private fun Route.watchedRoutes(app: App) {
 }
 
 private val WATCHED_ANSWERS = setOf("A", "B", "BOTH_GREAT", "BOTH_MEH")
+
+/**
+ * Games [me] really played: logged, said so, or compared as played. Owning a game, or having a vibe about it, isn't
+ * playing it (BUG-030), so the watched question never holds a game against one you don't know either.
+ */
+private fun reallyPlayed(app: App, me: CurrentPlayer): Set<BggId> {
+    val history = app.tastes.of(me.id)
+    return history.played.filterValues { it }.keys +
+        history.comparisons.filter { it.basis == Basis.PLAYED }.flatMap { listOf(it.a, it.b) }
+            .filter { history.played[it] != false }
+}
 
 /** Shelf games not logged yet today come first: that's likeliest what was just played. */
 private fun logChoices(app: App, gameDay: GameDaySummary): List<Game> {

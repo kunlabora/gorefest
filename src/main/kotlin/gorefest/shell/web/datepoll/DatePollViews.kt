@@ -268,7 +268,7 @@ private fun FlowContent.pollGameCard(view: DatePollView, row: PollGameRow) = art
     fun who(ids: List<PlayerId>) = ids.map { if (it == view.me) "you" else view.names[it] ?: "someone" }
     gameRow(row.game) {
         if (view.me == poll.host && poll.open) form(action = "$base/remove", method = FormMethod.post) {
-            hyperscript("on submit if not confirm('Take ${row.game.name.replace("'", "")} off the poll? Its answers go with it.') halt the event")
+            confirmOnSubmit("Take ${row.game.name} off the poll? Its answers go with it.")
             button(type = ButtonType.submit, classes = buttonClasses(ButtonStyle.GHOST, ButtonSize.SMALL)) { +"Take off" }
         }
     }
