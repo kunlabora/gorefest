@@ -29,4 +29,4 @@ The criteria (`docs/requests/u11-...`, "Erasure: an erased player leaves the gam
 `DatePolls`/`DatePollSummary.after` and the deciders' `evolvePoll` never see `PlayerErased` (it isn't tagged with the poll, and no projection case handles it), so `coming()`, `planFor()` and `yesFor()` still include the erased id at pick time. `GameNights` only applies erasure to nights that exist when `PlayerErased` arrives, and `GameDays` re-adds the player through the `PlayerJoined` the pick emits.
 
 ## Status
-Status: open
+Status: fixed. An erased participant leaves open polls with their dates, game answers and offers (`DatePollSummary.after(PlayerErased)`); a poll whose host is erased is over (`hostGone`: no pick, join or answers, its link answers 410 "This poll is over"). The pick, answer and join deciders take erasures into their boundary. Tests: `PollGamesTest`, `PollGamesRoutesTest`.

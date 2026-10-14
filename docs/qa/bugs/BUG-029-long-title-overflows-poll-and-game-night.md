@@ -22,4 +22,4 @@ The title wraps or breaks inside its column, as on the game day hub (BUG-006 fix
 `gf-h1--landing` (used by the poll and game night pages) has no `overflow-wrap: anywhere`/`hyphens`, unlike the hub's h1 after BUG-006. The plain poll page probably had this before round 3; the game night page is new.
 
 ## Status
-Status: open
+Status: fixed. `.gf-h1--landing` wraps a long word (`overflow-wrap: anywhere`); poll and game night pages measured 371px wide in a 375px frame.

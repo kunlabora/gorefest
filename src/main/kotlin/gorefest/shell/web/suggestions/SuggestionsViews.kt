@@ -137,4 +137,3 @@ private fun FlowContent.unknownTaste(unknown: List<PlayerId>, tableSize: Int, ev
     if (me in unknown && event.tasteRound != null) linkButton(event.tasteRound, "Take the 2-minute taste round", ButtonStyle.SECONDARY)
 }
 
-private fun List<String>.joinAnd(): String = if (size < 2) joinToString() else dropLast(1).joinToString(", ") + " and " + last()

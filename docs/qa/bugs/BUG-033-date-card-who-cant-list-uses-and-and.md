@@ -20,4 +20,4 @@ Poll page text: `Wednesday 28 October | Nobody can · Tim and Anna and Cara and 
 Line 397 of `DatePollViews.kt` uses `declined.joinToString(" and ")` (from 2026-10-08, so the plain poll had it before round 3) instead of `joinAnd()`; the fallback name there is a lowercase "someone" rather than `SOMEONE`.
 
 ## Status
-Status: open
+Status: fixed. Date cards use the shared `joinAnd()` ("Anna, Bram and Ruben can't") and the "Someone" placeholder.

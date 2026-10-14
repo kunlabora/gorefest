@@ -293,7 +293,7 @@ object AnswerPollGameDecider : Decider<AnswerPollGame, DatePollSummary?, DatePol
         val previous = state!!.gameAnswers[command.player]?.get(command.game)
         return when {
             previous == command.yes -> Accepted()
-            command.yes && state.yesCount(command.player) >= MAX_WISHES -> Rejected(Rejection.TooManyWishes)
+            command.yes && state.yesCount(command.player) >= MAX_WISHES -> Rejected(Rejection.TooManyPollYeses)
             else -> with(command) { Accepted(DatePollGameAnswered(poll, player, game, yes)) }
         }
     }

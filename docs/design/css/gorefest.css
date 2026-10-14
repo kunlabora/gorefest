@@ -316,7 +316,7 @@ div.gf-tile { cursor: default; }
 .gf-landing { padding: 0; gap: 0; }
 .gf-hero-band { width: 100%; max-width: 1080px; margin-inline: auto; padding: var(--space-2) var(--space-4) var(--space-6); display: grid; gap: var(--space-6); }
 .gf-hero-band__copy { display: flex; flex-direction: column; gap: 14px; }
-.gf-h1--landing { font-size: 34px; line-height: 35px; letter-spacing: -.03em; }
+.gf-h1--landing { font-size: 34px; line-height: 35px; letter-spacing: -.03em; overflow-wrap: anywhere; } /* a long single-word title wraps instead of pushing the page sideways (BUG-029) */
 .gf-hero-band .gf-lede { font-size: 17px; }
 .gf-signin { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
 .gf-signin__row { display: flex; flex-direction: column; gap: 10px; }

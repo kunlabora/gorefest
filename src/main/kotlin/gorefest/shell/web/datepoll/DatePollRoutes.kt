@@ -65,6 +65,7 @@ fun Route.datePollRoutes(app: App) {
         gameDay = poll.picked?.gameDay?.let { app.gameDaysById[it] },
         gameNight = poll.picked?.gameNight?.let(app.gameNights::of),
         games = if (poll.asksAboutGames) pollGames(app, poll, me, gamesError) else null,
+        error = gamesError.takeIf { !poll.asksAboutGames },
     )
 
     get("/polls/new") {

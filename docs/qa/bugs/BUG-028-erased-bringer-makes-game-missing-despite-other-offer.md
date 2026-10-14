@@ -22,4 +22,4 @@ Game night page as Tim after the erasure: `The plan · 1 | Dixit … | Nobody ca
 `PlannedGame` stores only the first bringer, so `erased()` has nobody to fall back on and moves the game to `missing`. The other offers live in the poll, not on the night.
 
 ## Status
-Status: open
+Status: fixed. `PlannedGame.others` keeps the others coming who offered, and erasing the bringer hands the game to the next one (`GameNightSummary.erased`).

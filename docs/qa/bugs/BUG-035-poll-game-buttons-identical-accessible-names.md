@@ -17,4 +17,4 @@ Five "I'd play this", five "Not for me", five "I'll bring it", five "Not this ti
 `find "I'd play this"` on `/polls/{id}` returns 5 identical matches; the card markup has `<button … name="yes" value="true"><span>I'd play this</span></button>` with no label.
 
 ## Status
-Status: open
+Status: fixed. Every button on a poll game card carries the game in its accessible name ("I'd play Azul", "Take Azul off the poll", ...).

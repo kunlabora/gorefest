@@ -27,7 +27,7 @@ Source: user testing, 2026-10-06. Status: ✅
 
 **The poll asks about games**
 - [x] When starting a date poll, the host can switch on "Ask about games as well" (`DatePollCreated.asksAboutGames`). Without it, the poll works and makes a game day exactly as today.
-- [x] The host proposes games while the poll is open: from their own collection, from the collections of people who joined (unless they switched bring requests off), or by BGG search for any game (`DatePollGameProposed`). The host can take one back (`DatePollGameWithdrawn`), which drops its answers and offers. Only the host adds or removes games; at most `MAX_POLL_GAMES` (12).
+- [x] The host proposes games while the poll is open: ticked on the poll form from their own collection (likely favourites first) or found by BGG search, and later on the poll page from the same two; friends' collections stay theirs (changed 2026-10-14) (`DatePollGameProposed`). The host can take one back (`DatePollGameWithdrawn`), which drops its answers and offers. Only the host adds or removes games; at most `MAX_POLL_GAMES` (12).
 - [x] Everyone in the poll answers yes or no per game and can change it until the pick (`DatePollGameAnswered`). At most 3 yeses per person (`MAX_WISHES`): a fourth is refused with the reason.
 - [x] Per game anyone in the poll can say "I'll bring it" and take it back, whether or not it's in their collection (`DatePollBringAnswered`).
 - [x] Someone with a proposed game in their linked collection is asked once per game: "You have Humanity. Bring it if we play?", with "I'll bring it" and "Not this time" (both answer it).

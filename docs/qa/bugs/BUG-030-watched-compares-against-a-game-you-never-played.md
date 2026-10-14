@@ -20,4 +20,4 @@ U9: "One question … against a game you played; with nothing played to compare,
 The watched route reuses the play-log candidates `player.history.played + player.owned + player.history.comparedGames`; "owned" and "compared" (vibe) games aren't games you played.
 
 ## Status
-Status: open
+Status: fixed. The partner is a game you really played (logged, declared, or compared as PLAYED), not one you own (`reallyPlayed` in `CheckpointRoutes`).

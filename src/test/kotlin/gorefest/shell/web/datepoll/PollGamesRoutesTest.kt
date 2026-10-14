@@ -191,7 +191,7 @@ class PollGamesRoutesTest {
         val refused = client.submitForm("$pollPage/games/${games[3]}/answer", parameters { append("yes", "true") })
 
         refused.status shouldBe HttpStatusCode.Conflict
-        refused.page().one("#poll-games [role=alert]").text() shouldContain "take one off first"
+        refused.page().one("#poll-games [role=alert]").text() shouldBe "You can say yes to 3 games: take one back first"
     }
 
     @Test
@@ -309,6 +309,50 @@ class PollGamesRoutesTest {
         }
         test.webTest(session = test.app.let { kotlinx.coroutines.runBlocking { test.loggedIn("Kim") } }) { client ->
             client.get("/p/${app.invites.token(poll)}").status shouldBe HttpStatusCode.Gone
+        }
+    }
+
+    @Test
+    fun `each game card's buttons say which game they're about`() = test.webTest(session = anna) { client ->
+        given(DatePollGameProposed(poll, azul), DatePollGameProposed(poll, brass))
+
+        val labels = client.get(pollPage).page().select("#poll-games .gf-pollgame button").map { it.attr("aria-label") }
+
+        labels shouldContain "I'd play Azul"
+        labels shouldContain "I'll bring Brass: Birmingham"
+        labels shouldContain "Take Azul off the poll"
+        labels.toSet().size shouldBe labels.size
+    }
+
+    @Test
+    fun `date cards list who can't in a sentence, and the top says when the date is picked`() = test.webTest(session = anna) { client ->
+        given(DatePollAnswered(poll, annaId, emptyList()), DatePollAnswered(poll, bramId, emptyList()), DatePollAnswered(poll, rubenId, listOf(sat)))
+
+        client.get(pollPage).page().select("#poll-results .gf-opt")[0].one(".gf-who").text() shouldContain "Anna, Bram and Ruben can't"
+
+        client.htmxPost("$pollPage/pick", parameters { append("date", sat.toString()) })
+        client.get(pollPage).page().one(".gf-poll-copy .gf-kicker").text() shouldBe "Date picked · Sat 10 Oct"
+    }
+
+    @Test
+    fun `a game change on a poll without games says why it was refused`() = test.webTest(session = anna) { client ->
+        val plain = DatePollId(Uuid.random())
+        given(DatePollCreated(plain, annaId, "Plain", "", listOf(fri, sat), "Europe/Brussels"), DatePollJoined(plain, annaId))
+
+        val refused = client.submitForm("/polls/$plain/games", parameters { append("game", azul.toString()) })
+
+        refused.status shouldBe HttpStatusCode.Conflict
+        refused.page().one("[role=alert]").text() shouldBe "This poll doesn't ask about games"
+    }
+
+    @Test
+    fun `the poll form stops at 12 ticked games, and the invite says game night`() {
+        test.webTest(session = anna) { client ->
+            client.get("/polls/new").page().one(".gf-poll-form__gamepick").attr("_") shouldContain "length > 12 set target.checked to false"
+        }
+        // Signed out: someone already in the poll goes straight to it.
+        test.webTest { client ->
+            client.get("/p/${app.invites.token(poll)}").page().body().text() shouldContain "wants to find a date and games for a game night"
         }
     }
 }

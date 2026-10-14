@@ -50,7 +50,8 @@ fun Rejection.message(): String = when (this) {
     Rejection.TooFewDates -> "Give at least two dates to choose from"
     Rejection.TooManyDates -> "That's a lot of dates: keep it to ${MAX_POLL_DATES}"
     Rejection.PollAsksNoGames -> "This poll doesn't ask about games"
-    Rejection.OnlyHostProposesGames -> "Only the host adds games"
+    Rejection.OnlyHostProposesGames -> "Only the host changes the games"
     Rejection.NotInPoll -> "That game isn't in the poll anymore"
     Rejection.TooManyPollGames -> "That's a lot of games: keep it to $MAX_POLL_GAMES"
+    Rejection.TooManyPollYeses -> "You can say yes to $MAX_WISHES games: take one back first"
 }

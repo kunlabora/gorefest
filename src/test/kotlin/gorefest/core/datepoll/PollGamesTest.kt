@@ -84,7 +84,7 @@ class PollGamesTest {
     @Test
     fun `a yes is a wish, three at most, and a game taken off frees its yes`() {
         val three = arrayOf(*withGames, DatePollGameProposed(poll, catan), DatePollGameAnswered(poll, bram, brass, true), DatePollGameAnswered(poll, bram, humanity, true), DatePollGameAnswered(poll, bram, azul, true))
-        AnswerPollGameDecider.given(*three).whenever(AnswerPollGame(poll, bram, catan, yes = true)).thenRejects(Rejection.TooManyWishes)
+        AnswerPollGameDecider.given(*three).whenever(AnswerPollGame(poll, bram, catan, yes = true)).thenRejects(Rejection.TooManyPollYeses)
         AnswerPollGameDecider.given(*three).whenever(AnswerPollGame(poll, bram, catan, yes = false)).thenEmits(DatePollGameAnswered(poll, bram, catan, false))
         AnswerPollGameDecider.given(*three, DatePollGameWithdrawn(poll, azul)).whenever(AnswerPollGame(poll, bram, catan, yes = true))
             .thenEmits(DatePollGameAnswered(poll, bram, catan, true))

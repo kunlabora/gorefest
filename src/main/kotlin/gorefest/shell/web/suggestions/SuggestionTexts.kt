@@ -1,6 +1,7 @@
 package gorefest.shell.web.suggestions
 
 import gorefest.core.matching.SuggestionReason
+import gorefest.shell.web.components.joinAnd
 import gorefest.core.matching.Suggestions
 import gorefest.shell.web.components.asDuration
 import gorefest.shell.web.components.inWords
@@ -42,4 +43,3 @@ fun Suggestions.NothingFits.text(): String = when (this) {
     is Suggestions.NothingFits.NoGameInTime -> "Everything on the shelf takes longer. Loosen the time:"
 }
 
-private fun List<String>.joinAnd(): String = if (size < 2) joinToString() else dropLast(1).joinToString(", ") + " and " + last()

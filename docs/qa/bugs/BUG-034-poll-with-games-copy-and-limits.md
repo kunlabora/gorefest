@@ -17,4 +17,4 @@ A client-side stop at 12 ticks (or a counter); "game night" wherever the poll as
 curl/DOM text quoted above; the form has no script on the game checkboxes besides moving ticked tiles to `#poll-form-picked`.
 
 ## Status
-Status: open
+Status: fixed. The form stops a 13th tick in the browser; the form lede no longer says game day; the invite says "a date and games for a game night"; a 4th yes says "You can say yes to 3 games: take one back first" (`TooManyPollYeses`); a non-host change says "Only the host changes the games".

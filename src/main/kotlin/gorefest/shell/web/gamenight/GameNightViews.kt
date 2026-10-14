@@ -89,4 +89,3 @@ fun FlowContent.gameNightCard(night: GameNightSummary, today: LocalDate) = dayCa
     meta = listOf("Game night", night.place, "${night.players.size} coming").filter { it.isNotBlank() }.joinToString(" · "),
 )
 
-private fun List<String>.joinAnd(): String = if (size < 2) joinToString() else dropLast(1).joinToString(", ") + " and " + last()

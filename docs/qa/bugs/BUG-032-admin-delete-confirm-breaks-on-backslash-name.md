@@ -20,4 +20,4 @@ The button's script is `on submit if not confirm('Delete Zed\\'s account for goo
 The name is put into a single-quoted hyperscript string with only `'` removed (`replace("'", "")`); a backslash isn't escaped. The poll's "Take CATAN off the poll?" confirm uses the same pattern with game names (only a problem for a name with a backslash).
 
 ## Status
-Status: open
+Status: fixed. `confirmOnSubmit` escapes backslashes and quotes; used for the admin delete, account requests, BGG unlink and the poll's "Take off". Checked in the browser: `Z'ed\` gives "Delete Z'ed\'s account for good?" and Cancel stops the submit.

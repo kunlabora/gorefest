@@ -34,3 +34,6 @@ fun Int.asDuration(): String = when {
     this % 60 == 0 -> "${this / 60} hours"
     else -> "${this / 60} h ${this % 60} min"
 }
+
+/** "Anna", "Anna and Bram", "Anna, Bram and Cara": the one way the app lists names or games in a sentence. */
+fun List<String>.joinAnd(): String = if (size < 2) joinToString() else dropLast(1).joinToString(", ") + " and " + last()

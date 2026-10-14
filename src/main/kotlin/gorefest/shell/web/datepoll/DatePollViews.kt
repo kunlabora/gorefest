@@ -40,7 +40,7 @@ fun HTML.datePollFormPage(site: SiteBar, values: Parameters = Parameters.Empty, 
                     crumb("/", "All game days")
                     p("gf-kicker") { +"Find a date" }
                     h1("gf-h1 gf-h1--landing") { +"Find a date" }
-                    p("gf-lede gf-muted") { +"Pick a few dates that could work, share the link, and see who can make which. You choose the winner; the game day is made for you." }
+                    p("gf-lede gf-muted") { +"Pick a few dates that could work, share the link, and see who can make which. You choose the winner, and the evening is set up for you." }
                 }
                 consumer.datePollForm(values = values, picks = picks)
             }
@@ -96,8 +96,11 @@ fun TagConsumer<*>.datePollForm(error: String? = null, values: Parameters = Para
 
 /** Shown once "Ask about games as well" is on (CSS, no round trip): the host's games to tick, likely favourites first, and a BGG search. */
 private fun FlowContent.pollFormGamePicker(picks: PollFormGames) = div("gf-poll-form__gamepick") {
+    // Attributes go before any child (the HTML streams). Stops a 13th tick here, so the limit isn't only news after "Start the poll" (BUG-034).
+    hyperscript("on change[target.name == 'game' and target.checked] if (<input[name='game']:checked/> in me).length > $MAX_POLL_GAMES set target.checked to false then put 'That makes more than $MAX_POLL_GAMES: untick one first.' into #poll-form-games-limit else put '' into #poll-form-games-limit end")
     h2("gf-h2") { +"Which games could you play?" }
     p("gf-small gf-muted") { +"Tick a few to put to the group, up to $MAX_POLL_GAMES. You can add more once the poll is up." }
+    p("gf-small gf-error") { id = "poll-form-games-limit"; attributes["aria-live"] = "polite" }
     val (shown, rest) = picks.suggested.withIndex().partition { (i, game) -> i < SUGGESTED_SHOWN || game.id in picks.ticked }.let { (a, b) -> a.map { it.value } to b.map { it.value } }
     // Without any taste answers the order is only alphabetical: don't claim favourites.
     if (picks.suggested.isNotEmpty()) h3("gf-label") { +if (picks.tasteKnown) "Your games, likely favourites first" else "Your games" }
@@ -148,6 +151,8 @@ data class DatePollView(
     val gameDay: GameDaySummary?,
     val gameNight: GameNightSummary? = null,
     val games: PollGamesView? = null,
+    /** A refused change shown at the top, for a poll with no games section to show it in. */
+    val error: String? = null,
 ) {
     val me: PlayerId get() = viewer.id
     val gameNames: Map<BggId, String> get() = games?.rows.orEmpty().associate { it.game.id to it.game.name }
@@ -176,7 +181,13 @@ fun HTML.datePollPage(view: DatePollView) {
             split("gf-split--poll") {
                 div("gf-split__copy gf-poll-copy") {
                     crumb("/", "All game days")
-                    p("gf-kicker") { +"${if (poll.asksAboutGames) "Finding a date and games" else "Finding a date"} · ${poll.answers.size} of ${poll.participants.size} answered" }
+                    p("gf-kicker") {
+                        +when {
+                            poll.hostGone -> "Poll over"
+                            poll.picked != null -> "Date picked · ${poll.picked.date.short()}"
+                            else -> "${if (poll.asksAboutGames) "Finding a date and games" else "Finding a date"} · ${poll.answers.size} of ${poll.participants.size} answered"
+                        }
+                    }
                     h1("gf-h1 gf-h1--landing") { +poll.title }
                     if (poll.place.isNotBlank()) ul("gf-facts") { li { icon("pin"); +poll.place } }
                     p("gf-lede gf-muted") {
@@ -187,6 +198,7 @@ fun HTML.datePollPage(view: DatePollView) {
                             else -> "Tick every date you can make. ${host ?: "The host"} picks the winner and the game day appears."
                         }
                     }
+                    if (view.error != null) errorNotice(view.error)
                     if (poll.hostGone) notice("alert") { +"This poll is over: the host is no longer on Boardfest, so nobody can pick a date." }
                     poll.picked?.let { picked ->
                         notice("check", NoticeKind.GOOD) { +"The host picked "; strong { +picked.date.full() }; +"." }
@@ -265,11 +277,11 @@ private fun FlowContent.pollGameCard(view: DatePollView, row: PollGameRow) = art
     id = "poll-game-${row.game.id}"
     val poll = view.poll
     val base = "/polls/${poll.id}/games/${row.game.id}"
-    fun who(ids: List<PlayerId>) = ids.map { if (it == view.me) "you" else view.names[it] ?: "someone" }
+    fun who(ids: List<PlayerId>) = ids.map { if (it == view.me) "you" else view.names[it] ?: SOMEONE }
     gameRow(row.game) {
         if (view.me == poll.host && poll.open) form(action = "$base/remove", method = FormMethod.post) {
             confirmOnSubmit("Take ${row.game.name} off the poll? Its answers go with it.")
-            button(type = ButtonType.submit, classes = buttonClasses(ButtonStyle.GHOST, ButtonSize.SMALL)) { +"Take off" }
+            button(type = ButtonType.submit, classes = buttonClasses(ButtonStyle.GHOST, ButtonSize.SMALL)) { attributes["aria-label"] = "Take ${row.game.name} off the poll"; +"Take off" }
         }
     }
     ul("gf-pollgame__facts") {
@@ -293,13 +305,15 @@ private fun FlowContent.pollGameCard(view: DatePollView, row: PollGameRow) = art
     }
     div("gf-pollgame__actions") {
         form(action = "$base/answer", method = FormMethod.post, classes = "gf-chips") {
-            chipButton("yes", "true", pressed = row.myAnswer == true, icon = "heart", label = "I'd play this")
-            chipButton("yes", "false", pressed = row.myAnswer == false, label = "Not for me")
+            chipButton("yes", "true", pressed = row.myAnswer == true, icon = "heart", label = "I'd play this", name = "I'd play ${row.game.name}")
+            chipButton("yes", "false", pressed = row.myAnswer == false, label = "Not for me", name = "${row.game.name}: not for me")
         }
         form(action = "$base/bring", method = FormMethod.post, classes = "gf-chips") {
             // Pressed means "I bring it": pressing again takes it back.
-            chipButton("bringing", (row.myBring != true).toString(), pressed = row.myBring == true, icon = "check", label = "I'll bring it")
-            if (row.inMyCollection && row.myBring == null) button(type = ButtonType.submit, classes = buttonClasses(ButtonStyle.GHOST, ButtonSize.SMALL)) { name = "bringing"; value = "false"; +"Not this time" }
+            chipButton("bringing", (row.myBring != true).toString(), pressed = row.myBring == true, icon = "check", label = "I'll bring it", name = "I'll bring ${row.game.name}")
+            if (row.inMyCollection && row.myBring == null) button(type = ButtonType.submit, classes = buttonClasses(ButtonStyle.GHOST, ButtonSize.SMALL)) {
+                name = "bringing"; value = "false"; attributes["aria-label"] = "Not bringing ${row.game.name} this time"; +"Not this time"
+            }
         }
     }
 }
@@ -313,11 +327,15 @@ private fun FlowContent.addGameButton(label: String) = a("#$ADD_GAME_SEARCH", cl
     +label
 }
 
-/** A toggle chip that submits [name]=[value]; [pressed] shows the answer you gave, like the bring page's heart. */
-private fun FlowContent.chipButton(name: String, value: String, pressed: Boolean, label: String, icon: String? = null) =
+/**
+ * A toggle chip that submits [field]=[value]; [pressed] shows the answer you gave, like the bring page's heart. [name] is what a screen
+ * reader says: the game is in it, since every card has the same chips (BUG-035).
+ */
+private fun FlowContent.chipButton(field: String, value: String, pressed: Boolean, label: String, icon: String? = null, name: String = label) =
     button(type = ButtonType.submit, classes = "gf-chip gf-chip--text" + if (icon != null && icon != "heart") " gf-chip--outline-icon" else "") {
-        this.name = name
+        this.name = field
         this.value = value
+        attributes["aria-label"] = name
         attributes["aria-pressed"] = pressed.toString()
         if (icon != null) icon(icon)
         span { +label }
@@ -357,7 +375,6 @@ fun TagConsumer<*>.pollGameSearchResults(poll: DatePollSummary, mine: List<Game>
     }
 }
 
-private fun List<String>.joinAnd(): String = if (size < 2) joinToString() else dropLast(1).joinToString(", ") + " and " + last()
 
 /** One card per date: how many can, who can't, and (for the host) the button to pick it. This is what answering swaps. */
 fun TagConsumer<*>.datePollResults(view: DatePollView, error: String? = null) = div("gf-opts") {
@@ -368,7 +385,7 @@ fun TagConsumer<*>.datePollResults(view: DatePollView, error: String? = null) = 
     h2("gf-vh") { +"How it looks" }
     if (error != null) errorNotice(error)
     poll.tallies().forEach { tally ->
-        val declined = poll.answers.filter { (_, dates) -> tally.date !in dates }.keys.map { view.names[it] ?: "someone" }
+        val declined = poll.answers.filter { (_, dates) -> tally.date !in dates }.keys.map { view.names[it] ?: SOMEONE }
         val unanswered = poll.waitingOn.size
         article("gf-card gf-opt" + if (tally.date == best) " gf-opt--best" else "") {
             div("gf-opt__top") {
@@ -395,7 +412,7 @@ fun TagConsumer<*>.datePollResults(view: DatePollView, error: String? = null) = 
                         declined.isNotEmpty() -> "Nobody can"
                         else -> "Nobody yet"
                     }
-                    if (declined.isNotEmpty()) +" · ${declined.joinToString(" and ")} can't"
+                    if (declined.isNotEmpty()) +" · ${declined.joinAnd()} can't"
                     if (poll.open && unanswered > 0 && tally.available.isNotEmpty()) +" · $unanswered haven't answered"
                 }
             }
@@ -406,7 +423,7 @@ fun TagConsumer<*>.datePollResults(view: DatePollView, error: String? = null) = 
                 if (missing.isEmpty()) p("gf-small gf-opt__games") { icon("check"); +"Someone brings every game" }
                 lost.forEach { game ->
                     p("gf-small gf-opt__games gf-opt__games--missing") {
-                        +"No ${view.gameNames[game] ?: "game"}: ${poll.bringers(game).map { view.names[it] ?: "someone" }.joinAnd()} can't come"
+                        +"No ${view.gameNames[game] ?: "game"}: ${poll.bringers(game).map { view.names[it] ?: SOMEONE }.joinAnd()} can't come"
                     }
                 }
             }
@@ -423,7 +440,7 @@ fun TagConsumer<*>.datePollResults(view: DatePollView, error: String? = null) = 
             }
         }
     }
-    val waiting = poll.waitingOn.map { view.names[it] ?: "someone" }
+    val waiting = poll.waitingOn.map { view.names[it] ?: SOMEONE }
     if (poll.open && waiting.isNotEmpty()) p("gf-small gf-muted") { +"Still to answer: ${waiting.joinToString(", ")}." }
 }
 
@@ -448,7 +465,7 @@ fun HTML.pollInvitePage(view: PollInviteView) {
         wrap {
             split {
                 div("gf-split__copy") {
-                    inviterLine(poll.host, view.names[poll.host], "wants to find a date for a game day")
+                    inviterLine(poll.host, view.names[poll.host], if (poll.asksAboutGames) "wants to find a date and games for a game night" else "wants to find a date for a game day")
                     h1("gf-h1 gf-h1--landing") { +poll.title }
                     ul("gf-facts") {
                         li { icon("calendar"); +"${poll.dates.size.of("date")} to choose from" }

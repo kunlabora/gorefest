@@ -23,4 +23,4 @@ Both are recorded as `ComparisonRecorded(basis = WATCHED)`: `{"a": -7, "b": 9999
 The POST handler only checks `watchOpen`, that `a`/`b` parse as ints and the answer; it doesn't check the ids against the catalog, the watched list, or the partner.
 
 ## Status
-Status: open
+Status: fixed. A watched answer is recorded only for a known game you haven't played against one you have; other ids are ignored (`CheckpointRoutesTest`).

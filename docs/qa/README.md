@@ -82,15 +82,15 @@ Method: same as rounds 1 and 2. Build at `9baff67` (v2.1.1 plus static ETags, th
 
 | id | title | severity | area | status |
 |---|---|---|---|---|
-| [BUG-027](bugs/BUG-027-erasure-does-not-reach-date-polls.md) | Erasing someone doesn't take them out of open date polls, so they end up on the game night (or game day) made from the pick | major | Erasure x date polls, game nights | open |
-| [BUG-028](bugs/BUG-028-erased-bringer-makes-game-missing-despite-other-offer.md) | When a game night's bringer is erased, the game becomes "missing" though someone else coming offered to bring it | minor | Game night erasure | open |
-| [BUG-029](bugs/BUG-029-long-title-overflows-poll-and-game-night.md) | A long single-word title overflows the poll and game night pages (sideways scroll at 375px) | minor | Poll / game night CSS | open |
-| [BUG-030](bugs/BUG-030-watched-compares-against-a-game-you-never-played.md) | "Now that you've seen it" can compare the watched game with a game you never played | minor | U9 watched | open |
-| [BUG-031](bugs/BUG-031-watched-compare-accepts-any-game-ids.md) | The watched answer accepts any pair of game ids, including games that don't exist | minor | U9 watched | open |
-| [BUG-032](bugs/BUG-032-admin-delete-confirm-breaks-on-backslash-name.md) | A name ending in a backslash breaks the admin's "Delete account" confirm: one click erases | minor | /admin/requests | open |
-| [BUG-033](bugs/BUG-033-date-card-who-cant-list-uses-and-and.md) | Date cards say "Tim and Anna and Cara and Dan and Eve can't" | cosmetic | Date poll results | open |
-| [BUG-034](bugs/BUG-034-poll-with-games-copy-and-limits.md) | Poll with games: no cap on ticked games before submit; copy still says "game day" / "favourites" | cosmetic | U11 form, landing, answers | open |
-| [BUG-035](bugs/BUG-035-poll-game-buttons-identical-accessible-names.md) | Every poll game card has buttons with the same accessible names | minor | U11 poll page, accessibility | open |
+| [BUG-027](bugs/BUG-027-erasure-does-not-reach-date-polls.md) | Erasing someone doesn't take them out of open date polls, so they end up on the game night (or game day) made from the pick | major | Erasure x date polls, game nights | fixed |
+| [BUG-028](bugs/BUG-028-erased-bringer-makes-game-missing-despite-other-offer.md) | When a game night's bringer is erased, the game becomes "missing" though someone else coming offered to bring it | minor | Game night erasure | fixed |
+| [BUG-029](bugs/BUG-029-long-title-overflows-poll-and-game-night.md) | A long single-word title overflows the poll and game night pages (sideways scroll at 375px) | minor | Poll / game night CSS | fixed |
+| [BUG-030](bugs/BUG-030-watched-compares-against-a-game-you-never-played.md) | "Now that you've seen it" can compare the watched game with a game you never played | minor | U9 watched | fixed |
+| [BUG-031](bugs/BUG-031-watched-compare-accepts-any-game-ids.md) | The watched answer accepts any pair of game ids, including games that don't exist | minor | U9 watched | fixed |
+| [BUG-032](bugs/BUG-032-admin-delete-confirm-breaks-on-backslash-name.md) | A name ending in a backslash breaks the admin's "Delete account" confirm: one click erases | minor | /admin/requests | fixed |
+| [BUG-033](bugs/BUG-033-date-card-who-cant-list-uses-and-and.md) | Date cards say "Tim and Anna and Cara and Dan and Eve can't" | cosmetic | Date poll results | fixed |
+| [BUG-034](bugs/BUG-034-poll-with-games-copy-and-limits.md) | Poll with games: no cap on ticked games before submit; copy still says "game day" / "favourites" | cosmetic | U11 form, landing, answers | fixed |
+| [BUG-035](bugs/BUG-035-poll-game-buttons-identical-accessible-names.md) | Every poll game card has buttons with the same accessible names | minor | U11 poll page, accessibility | fixed |
 
 Blocking: none of these stops the release on its own, but BUG-027 should be fixed before people rely on game nights: someone deleted while a poll is open is put on the night and "brings" a game, which the privacy notice says can't happen. No leaks found: a poll host sees only their own collection (in the pool, the search and the "You have X" prompt, which goes to the owner only), "no" answers reach the host only, exports hold no other player, the place stays off the poll link, and the log holds no tokens, codes, addresses or BGG usernames.
 

@@ -92,4 +92,7 @@ sealed interface Rejection {
     /** The game isn't (or no longer) one of the poll's games. */
     data object NotInPoll : Rejection
     data object TooManyPollGames : Rejection
+
+    /** A yes in a poll is a wish, so the same cap; said in the poll's own words. */
+    data object TooManyPollYeses : Rejection
 }
