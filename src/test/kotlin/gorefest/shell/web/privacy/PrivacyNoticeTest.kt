@@ -58,6 +58,9 @@ class PrivacyNoticeTest {
         page.one("#others").text() shouldContain "I get a mail"
         page.one("#long").text() shouldContain "two years"
         page.one("#long").text() shouldContain "leave game days still to come"
+        page.one("#long").text() shouldContain "you leave every game night"
+        page.one("#sees").text() shouldContain "the host of a date poll you joined"
+        page.one("#sees").text() shouldContain "One switch on your collection page turns both off"
     }
 
     @Test
