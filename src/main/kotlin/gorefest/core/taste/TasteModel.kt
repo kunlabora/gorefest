@@ -56,7 +56,7 @@ class BradleyTerry(
     private data class Outcome(val i: BggId?, val j: BggId?, val y: Double, val w: Double)
 
     override fun fit(comparisons: List<ComparisonRecorded>, basis: Basis, now: Instant): Scores {
-        val outcomes = comparisons.filter { it.basis == basis }.flatMap { c ->
+        val outcomes = comparisons.filter { it.basis.model == basis }.flatMap { c ->
             val w = decay(c.at, now)
             when (c.result) {
                 ComparisonResult.A -> listOf(Outcome(c.a, c.b, 1.0, w))

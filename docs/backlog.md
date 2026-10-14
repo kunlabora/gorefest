@@ -32,7 +32,7 @@ A story is done when every criterion is ticked and covered by a test (decider gi
 | U6 | ["We haven't learned your taste" shown right after a taste test](requests/u6-taste-not-learned-bug.md) | ✅ | |
 | U7 | [Log plays during the game day, not only after it](requests/u7-log-plays-during-game-day.md) | ✅ | |
 | U8 | [Does logging a play influence the matching?](requests/u8-does-play-log-influence-matching.md) | ✅ | |
-| U9 | [Having seen a table play a game helps form an opinion](requests/u9-seen-it-played.md) | 📋 | |
+| U9 | [Having seen a table play a game helps form an opinion](requests/u9-seen-it-played.md) | ✅ | |
 | U10 | [Indicate which shelf game you really want to play](requests/u10-want-to-play-pick.md) | ✅ | |
 | U11 | [Organise a small game evening from people's libraries](requests/u11-small-evening-from-library.md) | 📋 | |
 | U12 | [Player avatar circles have bad contrast with list items](requests/u12-avatar-contrast.md) | ✅ | |
@@ -254,7 +254,7 @@ Follow-ups, not blocking:
 
 ## User testing feedback, 2026-10-06
 
-One request file per item in [`docs/requests/`](requests/); each has its own criteria. Decisions: U16 cancels silently; U9 and U11 are being shaped (2026-10-14); U17 and U19 won't be done (2026-10-14).
+One request file per item in [`docs/requests/`](requests/); each has its own criteria. Decisions: U16 cancels silently; U9 is done and U11 is being shaped (2026-10-14); U17 and U19 won't be done (2026-10-14).
 
 ---
 

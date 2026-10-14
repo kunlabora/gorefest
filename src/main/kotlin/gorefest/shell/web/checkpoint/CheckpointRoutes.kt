@@ -26,6 +26,7 @@ import gorefest.shell.web.redirect
 import gorefest.shell.web.zone
 import gorefest.shell.web.respondFragment
 import gorefest.shell.web.safeReturnTo
+import gorefest.shell.web.todayIn
 import gorefest.shell.web.urlEncoded
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.html.respondHtml
@@ -126,7 +127,73 @@ fun Route.checkpointRoutes(app: App) {
             redirect(next)
         }
     }
+
+    watchedRoutes(app)
 }
+
+/** Watching a table play (U9) can be told from the day itself until the game day closes, like logging a play. */
+private fun watchOpen(app: App, gameDay: GameDaySummary) = !gameDay.closed && gameDay.date <= app.clock.todayIn(gameDay.timeZone)
+
+/** The whole shelf, minus what you've played yourself: the log may not be filled in yet, so we don't guess who watched what. */
+private fun watchChoices(app: App, gameDay: GameDaySummary, me: CurrentPlayer): List<Game> {
+    val played = app.tastes.of(me.id).played
+    return app.shelves.of(gameDay.id).mapNotNull { app.catalog[it.game] }.filter { played[it.id] != true }
+}
+
+context(login: Login)
+private fun Route.watchedRoutes(app: App) {
+    get("/gamedays/{id}/watched") {
+        authenticated {
+            val me = contextOf<CurrentPlayer>()
+            val gameDay = memberGameDay(app, me) ?: return@authenticated call.respond(HttpStatusCode.NotFound)
+            if (!watchOpen(app, gameDay)) return@authenticated redirect("/gamedays/${gameDay.id}")
+            call.respondHtml { watchedPage(WatchedView(gameDay, watchChoices(app, gameDay, me)), checkpointLabel(gameDay, app.clock), me) }
+        }
+    }
+
+    get("/gamedays/{id}/watched/search") {
+        authenticated {
+            val me = contextOf<CurrentPlayer>()
+            val gameDay = memberGameDay(app, me) ?: return@authenticated call.respond(HttpStatusCode.NotFound)
+            val query = call.parameters["q"].orEmpty()
+            val result = app.gameSearch.search(query)
+            val onShelf = watchChoices(app, gameDay, me).map { it.id }.toSet()
+            respondFragment { logSearchResults(result.games.filter { it.id !in onShelf }, result.bggUnavailable, result.nothingFor(query), id = WATCHED_RESULTS) }
+        }
+    }
+
+    get("/gamedays/{id}/watched/compare") {
+        authenticated {
+            val me = contextOf<CurrentPlayer>()
+            val gameDay = memberGameDay(app, me) ?: return@authenticated call.respond(HttpStatusCode.NotFound)
+            val hub = "/gamedays/${gameDay.id}"
+            if (!watchOpen(app, gameDay)) return@authenticated redirect(hub)
+            val game = call.parameters["game"]?.toIntOrNull()?.let(::BggId)?.let(app.catalog::get) ?: return@authenticated redirect("$hub/watched")
+            val player = PlayerGames(app.tastes.of(me.id), app.collectionSync.collection(me.id))
+            val candidates = (player.history.played.filterValues { it }.keys + player.owned + player.history.comparedGames).mapNotNull(app.catalog::get)
+            // Nothing you've played to hold it against: there's no question to ask yet.
+            val other = app.wizard.partner(player, game.id, candidates, app.clock.instant())
+                ?: return@authenticated call.respondHtml { watchedNothingPage(gameDay, game, me) }
+            call.respondHtml { watchedComparePage(WatchedCompareView(gameDay, game, other), me) }
+        }
+    }
+
+    post("/gamedays/{id}/watched/compare") {
+        authenticated {
+            val me = contextOf<CurrentPlayer>()
+            val gameDay = memberGameDay(app, me) ?: return@authenticated call.respond(HttpStatusCode.NotFound)
+            val form = call.receiveParameters()
+            val a = form["a"]?.toIntOrNull()?.let(::BggId)
+            val b = form["b"]?.toIntOrNull()?.let(::BggId)
+            val answer = form["answer"]
+            if (watchOpen(app, gameDay) && a != null && b != null && answer in WATCHED_ANSWERS)
+                app.commands.handle(RecordComparisonDecider, ComparisonRecorded(me.id, a, b, ComparisonResult.valueOf(answer!!), Basis.WATCHED, app.clock.instant()))
+            redirect("/gamedays/${gameDay.id}")
+        }
+    }
+}
+
+private val WATCHED_ANSWERS = setOf("A", "B", "BOTH_GREAT", "BOTH_MEH")
 
 /** Shelf games not logged yet today come first: that's likeliest what was just played. */
 private fun logChoices(app: App, gameDay: GameDaySummary): List<Game> {

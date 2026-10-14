@@ -4,6 +4,7 @@ import gorefest.core.Basis
 import gorefest.core.ComparisonRecorded
 import gorefest.core.ComparisonResult
 import gorefest.core.GameBrought
+import gorefest.core.GameDayEnded
 import gorefest.core.GamePlayStatusDeclared
 import gorefest.core.PlayLogged
 import gorefest.core.PlayerErased
@@ -26,9 +27,11 @@ import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.string.shouldStartWith
 import io.ktor.client.request.forms.submitForm
 import io.ktor.client.request.get
+import io.ktor.client.request.header
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.parameters
 import org.junit.jupiter.api.BeforeEach
@@ -264,4 +267,74 @@ class CheckpointRoutesTest {
         app.plays.on(gorefest7) shouldHaveSize 0
         client.get("/gamedays/$gorefest7").page().select(".gf-next a[href=$log]").size shouldBe 0
     }
+
+    // Watched a table play (U9)
+
+    private val watched = "/gamedays/$gorefest7/watched"
+
+    @Test
+    fun `on the day the hub offers to tell what you watched`() = test.webTest(session = kim) { client ->
+        client.get("/gamedays/$gorefest7").page().one("a[href=$watched]").text() shouldBe "Watched a game?"
+    }
+
+    @Test
+    fun `the watched page shows the whole shelf except what you played, and a search`() = test.webTest(session = kim) { client ->
+        given(GamePlayStatusDeclared(kimId, cascadia, played = true))
+
+        val page = client.get(watched).page()
+
+        page.select("#watched-form .gf-tiles .gf-tile__name").map { it.text() } shouldBe listOf("Azul")
+        page.one("#watched-form").attr("action") shouldBe "$watched/compare"
+        page.one("input[type=search]").attr("hx-get") shouldBe "$watched/search"
+    }
+
+    @Test
+    fun `a game that isn't on the shelf can be found by search`() = test.webTest(session = kim) { client ->
+        val results = client.get("$watched/search?q=Brass") { header("HX-Request", "true") }.fragment()
+
+        results shouldReplace "watched-search-results"
+        results.select(".gf-tile__name").map { it.text() } shouldContain "Brass: Birmingham"
+        results.select("input[name=game]").map { it.`val`() }.contains(azul.toString()) shouldBe false
+    }
+
+    @Test
+    fun `a watched game is held against one you played, and counts for taste without making it played`() = test.webTest(session = kim) { client ->
+        given(GamePlayStatusDeclared(kimId, cascadia, played = true))
+
+        val page = client.get("$watched/compare?game=$azul").page()
+        page.one("h1").text() shouldBe "Now that you've seen it, which would you rather play?"
+        page.select(".gf-pick__name").map { it.text() } shouldBe listOf("Azul", "Cascadia")
+
+        val done = client.submitForm("$watched/compare", parameters {
+            page.select("form input[type=hidden]").forEach { append(it.attr("name"), it.`val`()) }
+            append("answer", "A")
+        })
+
+        done.headers["Location"] shouldBe "/gamedays/$gorefest7"
+        app.tastes.of(kimId).comparisons.single().let { (it.basis to it.a to it.b) shouldBe (Basis.WATCHED to azul to cascadia) }
+        app.tastes.of(kimId).played[azul] shouldBe null
+    }
+
+    @Test
+    fun `can't tell yet records nothing`() = test.webTest(session = kim) { client ->
+        client.submitForm("$watched/compare", parameters { append("a", azul.toString()); append("b", cascadia.toString()); append("answer", "UNPLAYED") })
+
+        app.tastes.of(kimId).comparisons.shouldBeEmpty()
+        app.tastes.of(kimId).played shouldBe emptyMap()
+    }
+
+    @Test
+    fun `with nothing you played to compare against, it says so`() = test.webTest(session = kim) { client ->
+        client.get("$watched/compare?game=$azul").page().one(".gf-empty").text() shouldContain "Nothing to compare yet"
+    }
+
+    @Test
+    fun `after the game day nothing can be told anymore`() = test.webTest(session = kim) { client ->
+        given(GamePlayStatusDeclared(kimId, cascadia, played = true), GameDayEnded(gorefest7))
+
+        client.get(watched).headers["Location"] shouldBe "/gamedays/$gorefest7"
+        client.submitForm("$watched/compare", parameters { append("a", azul.toString()); append("b", cascadia.toString()); append("answer", "A") })
+        app.tastes.of(kimId).comparisons.shouldBeEmpty()
+    }
 }
+

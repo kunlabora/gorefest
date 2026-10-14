@@ -113,8 +113,8 @@ fun TagConsumer<*>.logForm(view: LogFormView, me: CurrentPlayer, values: Paramet
     }
 
 /** Games found by the search above the form: more tiles in the same radio group. */
-fun TagConsumer<*>.logSearchResults(games: List<Game>, bggUnavailable: Boolean, nothingFor: String? = null) = div {
-    id = "log-search-results"
+fun TagConsumer<*>.logSearchResults(games: List<Game>, bggUnavailable: Boolean, nothingFor: String? = null, id: String = "log-search-results") = div {
+    this.id = id
     if (bggUnavailable) p("gf-small gf-muted") { +"BGG isn't answering right now, so these are only games we already know." }
     if (games.isNotEmpty()) div("gf-tiles") { games.forEach { gameTileChoice(it, "game", checked = false) } }
     else if (nothingFor != null) p("gf-small gf-muted gf-search-empty") { +"Nothing found for \u201c$nothingFor\u201d. Try another spelling." }
@@ -144,3 +144,66 @@ fun HTML.logComparePage(view: LogCompareView, me: CurrentPlayer) = page(
         }
     }
 }
+
+/** Where the watched page's search puts its tiles. */
+const val WATCHED_RESULTS = "watched-search-results"
+
+/** Watched a table play (U9): which game. The whole shelf, minus what you've played. */
+data class WatchedView(val gameDay: GameDaySummary, val games: List<Game>)
+
+fun HTML.watchedPage(view: WatchedView, checkpoint: String, me: CurrentPlayer) = page("What did you watch?", site = SiteBar(me, Nav.GAME_DAYS)) {
+    wrap {
+        div("gf-log__head") {
+            crumb("/gamedays/${view.gameDay.id}", view.gameDay.title)
+            p("gf-kicker") { +checkpoint }
+            h1("gf-h1 gf-h1--landing") { +"What did you watch?" }
+            p("gf-lede") { +"Seen a table play something you haven't? Pick it, and one question tells us what you made of it. It counts as if you'd played it." }
+        }
+        form(action = "/gamedays/${view.gameDay.id}/watched/compare", method = FormMethod.get, classes = "gf-stack") {
+            id = "watched-form"
+            if (view.games.isEmpty()) p("gf-muted") { +"Nothing on the shelf you haven't played. Search for the game you watched." }
+            div("gf-tiles") { view.games.forEachIndexed { i, game -> gameTileChoice(game, "game", checked = i == 0) } }
+            div("gf-log__search") {
+                h3("gf-log__sub") { +"Watched something else?" }
+                // Enter would submit the form from here.
+                searchField("Search BGG", "Search for the game you watched", "/gamedays/${view.gameDay.id}/watched/search", "#$WATCHED_RESULTS") {
+                    hyperscript("on keydown[key=='Enter'] halt the event")
+                }
+                consumer.logSearchResults(emptyList(), bggUnavailable = false, id = WATCHED_RESULTS)
+            }
+            div("gf-continue") { primaryButton("Next") }
+        }
+    }
+}
+
+/** One WATCHED comparison: the game you watched against one you've played. */
+data class WatchedCompareView(val gameDay: GameDaySummary, val watched: Game, val other: Game)
+
+fun HTML.watchedComparePage(view: WatchedCompareView, me: CurrentPlayer) = page(
+    "One quick question",
+    appBar = { appBarAction("/gamedays/${view.gameDay.id}", "Skip") },
+    mainClasses = "gf-wizard",
+    site = SiteBar(me, Nav.GAME_DAYS),
+) {
+    wrap("gf-log__compare") {
+        div("gf-stack") {
+            p("gf-kicker") { +"You watched ${view.watched.name}" }
+            h1("gf-h1") { +"Now that you've seen it, which would you rather play?" }
+        }
+        form(action = "/gamedays/${view.gameDay.id}/watched/compare", method = FormMethod.post, classes = "gf-wizard__form") {
+            hiddenInput("a", view.watched.id.toString())
+            hiddenInput("b", view.other.id.toString())
+            duel(view.watched, view.other)
+            duelAnswers(firstLabel = "Can't tell yet")
+        }
+    }
+}
+
+/** Watched a game, but there's nothing you've played to hold it against yet. */
+fun HTML.watchedNothingPage(gameDay: GameDaySummary, watched: Game, me: CurrentPlayer) = page("Nothing to compare yet", site = SiteBar(me, Nav.GAME_DAYS)) {
+    wrap {
+        crumb("/gamedays/${gameDay.id}", gameDay.title)
+        emptyState("Nothing to compare yet", "We'd ask you to hold ${watched.name} up against a game you've played, and we don't know any yet. Log a game you played, or do a taste round first.")
+    }
+}
+

@@ -84,7 +84,8 @@ fun Route.tasteRoutes(app: App) {
             val a = form["a"]?.toIntOrNull()?.let(::BggId)?.let(app.catalog::get)
             val b = form["b"]?.toIntOrNull()?.let(::BggId)?.let(app.catalog::get)
             if (a == null || b == null) return@authenticated redirect("/gamedays/${gameDay.id}/taste")
-            val basis = runCatching { Basis.valueOf(form["basis"].orEmpty()) }.getOrDefault(Basis.VIBE)
+            // The wizard asks VIBE or PLAYED; WATCHED only comes from the watched step.
+            val basis = runCatching { Basis.valueOf(form["basis"].orEmpty()) }.getOrNull()?.takeIf { it != Basis.WATCHED } ?: Basis.VIBE
             val now = app.clock.instant()
 
             val answer = form["answer"]

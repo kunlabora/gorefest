@@ -53,7 +53,7 @@ class FeatureModel(
     }
 
     override fun fit(comparisons: List<ComparisonRecorded>, basis: Basis, now: Instant): Scores {
-        val outcomes = comparisons.filter { it.basis == basis }.flatMap { c ->
+        val outcomes = comparisons.filter { it.basis.model == basis }.flatMap { c ->
             val w = Math.pow(0.5, Duration.between(c.at, now).toHours().coerceAtLeast(0) / 24.0 / halfLife.toDays())
             when (c.result) {
                 ComparisonResult.A -> listOf(Outcome(c.a, c.b, 1.0, w))
@@ -113,7 +113,7 @@ class FeatureModel(
  * spot on), starting at 0.5 with no evidence.
  */
 fun vibeTrust(history: TasteHistory, model: TasteModel, now: Instant): Double {
-    val played = history.comparisons.filter { it.basis == Basis.PLAYED && (it.result == ComparisonResult.A || it.result == ComparisonResult.B) }
+    val played = history.comparisons.filter { it.basis.model == Basis.PLAYED && (it.result == ComparisonResult.A || it.result == ComparisonResult.B) }
     if (played.isEmpty()) return 0.5
     val vibe = history.scores(model, Basis.VIBE, now)
     // A prediction of (nearly) 0.5 says nothing: it counts neither as right nor wrong.

@@ -234,6 +234,8 @@ fun HTML.gameDayPage(hub: GameDayHub) {
                     if (open && hub.shelf.isNotEmpty()) linkButton("$base/table", "Pick a game for my table", ButtonStyle.SECONDARY, ButtonSize.LARGE, icon = "dice")
                     // On the day, someone still doing their taste round can log a play from here too.
                     if (open && hub.logOffered && hub.next !is NextStep.Checkpoint) linkButton("$base/log", "Log a game", ButtonStyle.GHOST, ButtonSize.SMALL)
+                    // Watched a table play something (U9): tell us what you made of it.
+                    if (open && hub.logOffered && hub.shelf.isNotEmpty()) linkButton("$base/watched", "Watched a game?", ButtonStyle.GHOST, ButtonSize.SMALL)
                 }
                 hub.next?.let { nextStepCard(gameDay, it) }
             }

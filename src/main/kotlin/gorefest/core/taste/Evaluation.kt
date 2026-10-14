@@ -21,7 +21,7 @@ object Evaluation {
         events.filterIsInstance<ComparisonRecorded>().sortedBy { it.at }.forEach { c ->
             val history = seen.getOrPut(c.player) { mutableListOf() }
             if (c.result == ComparisonResult.A || c.result == ComparisonResult.B) {
-                val pA = model.fit(history, c.basis, c.at).pPrefers(c.a, c.b).coerceIn(1e-6, 1 - 1e-6)
+                val pA = model.fit(history, c.basis.model, c.at).pPrefers(c.a, c.b).coerceIn(1e-6, 1 - 1e-6)
                 val aWon = c.result == ComparisonResult.A
                 n++
                 if ((pA > 0.5) == aWon) correct++

@@ -35,6 +35,25 @@ class TasteModelTest {
     private fun fit(vararg cs: ComparisonRecorded, basis: Basis = Basis.VIBE) = model.fit(cs.toList(), basis, now)
 
     @Test
+    fun `a watched answer teaches the enjoyment model, not the vibe model, in both models`() {
+        val watched = arrayOf(c(brass, azul, A, Basis.WATCHED), c(brass, azul, A, Basis.WATCHED))
+        val features = FeatureModel(games = { null })
+
+        for (m in listOf(model, features)) {
+            m.fit(watched.toList(), Basis.PLAYED, now).pPrefers(brass, azul) shouldBeGreaterThan 0.5
+            m.fit(watched.toList(), Basis.VIBE, now).pPrefers(brass, azul) shouldBe (0.5 plusOrMinus 1e-9)
+        }
+    }
+
+    @Test
+    fun `watching a game doesn't make it played`() {
+        val history = listOf<Event>(c(brass, azul, A, Basis.WATCHED)).fold(Tastes.initialState, Tastes::evolve).of(anna)
+
+        history.played shouldBe emptyMap()
+        PlayerGames(history, emptySet()).hasPlayed(brass) shouldBe false
+    }
+
+    @Test
     fun `the winner scores higher, and is predicted to win again`() {
         val scores = fit(c(brass, azul, A), c(brass, azul, A), c(azul, brass, B))
 

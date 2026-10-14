@@ -140,6 +140,20 @@ class MatcherTest {
     }
 
     @Test
+    fun `a game you watched but never played gets an enjoyment guess and keeps its novelty`() {
+        val id = PlayerId(Uuid.random())
+        // Kim said they hadn't played Codenames, then watched a table play it and liked it better than Azul, which they played.
+        val watched = List(Matcher.KNOWN_AFTER) { ComparisonRecorded(id, codenames.id, azul.id, ComparisonResult.A, Basis.WATCHED, now) }
+        val kim = TablePlayer(id, "Kim", PlayerGames(TasteHistory(watched, mapOf(codenames.id to false, azul.id to true)), emptySet()))
+
+        val result = matcher.suggest(listOf(kim, player("Bram")), shelf(codenames), null, now) as Suggestions.Found
+
+        // More than the novelty bonus alone (0.3), and still new: nobody at the table has played it.
+        (result.top.single().score > 0.3) shouldBe true
+        result.top.single().reason shouldBe SuggestionReason.NewAndLiked
+    }
+
+    @Test
     fun `a game a player said they haven't played is no more than a novelty, whatever its features say`() {
         val featureMatcher = Matcher(Predictor(FeatureModel(games = { id -> DevCatalog.games.firstOrNull { it.id == id } })))
         val cascadia = g("Cascadia") // shares its mechanics with Azul

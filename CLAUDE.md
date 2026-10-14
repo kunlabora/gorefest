@@ -11,7 +11,7 @@ Helps a group of boardgamers pick the games they'll enjoy most at a game day, us
 - **Bring request**: one player on a game day asking another to bring one game from their collection (U20). *Open* until the owner brings it (*answered*), says "not this time" (*declined*), or the asker takes it back (*withdrawn*). At most 3 standing per asker and 5 per owner per game day; withdrawn ones don't count.
 - **Candidates**: shelf games that fit a table (player count, time budget).
 - **Suggestions**: top-ranked candidates shown to a table (top 3, each with a one-line reason).
-- **Comparison**: a pairwise answer, with basis `VIBE` (unplayed, "which would you rather try?") or `PLAYED` ("which did you enjoy more?").
+- **Comparison**: a pairwise answer, with basis `VIBE` (unplayed, "which would you rather try?"), `PLAYED` ("which did you enjoy more?") or `WATCHED` (after watching a table play it, U9; trains the enjoyment model like `PLAYED` but doesn't make the game played).
 - **Checkpoint**: morning / lunch / evening moments when people open the app.
 - **Play log**: what was played, by whom, how long.
 

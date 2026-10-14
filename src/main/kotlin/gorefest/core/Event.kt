@@ -169,8 +169,16 @@ data class BringRequestsAllowedChanged(val player: PlayerId, val allowed: Boolea
     override val tags get() = setOf(Tags.player(player))
 }
 
-/** VIBE: "which would you rather try?" (unplayed). PLAYED: "which did you enjoy more?". */
-enum class Basis { VIBE, PLAYED }
+/**
+ * VIBE: "which would you rather try?" (unplayed). PLAYED: "which did you enjoy more?".
+ * WATCHED: "now that you've seen it, which would you rather play?", after watching a table play the game (U9).
+ */
+enum class Basis {
+    VIBE, PLAYED, WATCHED;
+
+    /** The model an answer trains: watching a table play counts as having played it, for taste only (it doesn't make the game "played"). */
+    val model: Basis get() = if (this == WATCHED) PLAYED else this
+}
 
 /** Both great / both meh say something absolute about the pair, not just which one wins. */
 enum class ComparisonResult { A, B, BOTH_GREAT, BOTH_MEH }
