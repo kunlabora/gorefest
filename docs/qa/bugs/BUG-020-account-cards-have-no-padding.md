@@ -22,3 +22,6 @@ Screenshots: `../screenshots/BUG-020-account-cards-have-no-padding-mobile-dark.p
 
 ## Status
 Status: fixed.
+
+## Follow-up (2026-10-14)
+The CSS fix didn't reach browsers that had the page cached: they kept the old `gorefest.css`. Every file in the fat jar carries the same 1980 timestamp, so a browser's `If-Modified-Since` always matched and Ktor answered 304 even though the ETag had changed. `/static` and `/webjars` now validate by ETag only (`EtagOnlyAssets` in `Server.kt`; `PrivacyTest` pins it). This affected every CSS/JS change since the switch to `no-cache` plus ETag, not just this one.

@@ -39,7 +39,10 @@ import io.ktor.server.request.uri
 import io.ktor.server.plugins.forwardedheaders.XForwardedHeaders
 import io.ktor.server.plugins.statuspages.StatusPages
 import io.ktor.http.ContentType
+import io.ktor.http.content.LastModifiedVersion
+import io.ktor.http.content.OutgoingContent
 import io.ktor.http.content.TextContent
+import io.ktor.http.content.versions
 import io.ktor.http.withCharset
 import kotlinx.html.html
 import kotlinx.html.stream.createHTML
@@ -69,6 +72,19 @@ private val NoStorePages = createApplicationPlugin("NoStorePages") {
     }
 }
 
+/**
+ * Assets are validated by ETag alone. Every file in the jar carries the same 1980 timestamp, so with a Last-Modified the
+ * browser's If-Modified-Since always matched and answered 304 with the old file after a deploy (the old CSS stayed).
+ * Runs before [ConditionalHeaders], which decides the 304.
+ */
+private val EtagOnlyAssets = createApplicationPlugin("EtagOnlyAssets") {
+    onCallRespond { call, body ->
+        val path = call.request.local.uri
+        val isAsset = path.startsWith("/static/") || path.startsWith("/webjars/")
+        if (isAsset && body is OutgoingContent) body.versions = body.versions.filterNot { it is LastModifiedVersion }
+    }
+}
+
 /** A 404 with nothing to say (the routes' `respond(NotFound)`, or no route at all) gets the on-brand page. Pages that answer 404 with their own body, like a dead invite, are left alone. */
 private val NotFoundPage = createApplicationPlugin("NotFoundPage") {
     onCallRespond { _, body ->
@@ -90,6 +106,7 @@ fun Application.web(app: App) {
     install(NoIndex)
     install(NoStorePages)
     install(AutoHeadResponse)
+    install(EtagOnlyAssets)
     install(ConditionalHeaders)
     install(NotFoundPage)
     install(StatusPages) {

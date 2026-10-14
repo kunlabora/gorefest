@@ -67,7 +67,7 @@ class PrivacyNoticeTest {
             val page = client.get("/privacy").page()
             page.select("#who a[href^=mailto]").size shouldBe 0
             page.one("#who").text() shouldContain "ask whoever invited you"
-            page.one("#others").text() shouldContain "no mail provider"
+            page.one("#others").text() shouldContain "No mail goes out: this is a development copy"
         }
     }
 

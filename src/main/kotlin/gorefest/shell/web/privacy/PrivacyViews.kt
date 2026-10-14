@@ -24,7 +24,7 @@ enum class MailProvider(val label: String, val where: String) {
     SCALEWAY("Scaleway Transactional Email", "in the EU"),
     POSTMARK("Postmark", "in the US"),
     RESEND("Resend", "in the US"),
-    NONE("no mail provider (this is a development copy; mail stays on this machine)", "");
+    NONE("No mail provider", "");
 
     companion object {
         fun of(setting: String?) = entries.firstOrNull { it.name.equals(setting, ignoreCase = true) && it != NONE } ?: NONE
@@ -45,9 +45,9 @@ fun HTML.privacyPage(view: PrivacyView) = page("Privacy", appBar = { wordmark() 
                 +"I do, a friend in the group. "
                 if (view.contactEmail != null) {
                     +"To ask a question, see your data, or have your account deleted, write to "
-                    a("mailto:${view.contactEmail}") { +view.contactEmail }
+                    a("mailto:${view.contactEmail}", classes = "gf-link") { +view.contactEmail }
                     +", or ask from "
-                    a("/account") { +"your account page" }
+                    a("/account", classes = "gf-link") { +"your account page" }
                     +"."
                 } else {
                     +"To ask a question, see your data, or have your account deleted, ask whoever invited you."
@@ -78,9 +78,8 @@ fun HTML.privacyPage(view: PrivacyView) = page("Privacy", appBar = { wordmark() 
             ul {
                 li { +"Scaleway, in France, hosts the site and keeps the nightly backups." }
                 li {
-                    +"${view.mailProvider.label}"
-                    if (view.mailProvider.where.isNotEmpty()) +", ${view.mailProvider.where}"
-                    +", sends the mail."
+                    if (view.mailProvider == MailProvider.NONE) +"No mail goes out: this is a development copy, and mail stays on this machine."
+                    else +"${view.mailProvider.label}, ${view.mailProvider.where}, sends the mail."
                 }
                 if (view.discord) li { +"A Discord channel only I can read gets a short message when someone signs up or asks to have their data or account handled. It holds a name and a link, never an email address. When an account is deleted, the message holds only its number, so I can delete it again if I ever have to restore a backup." }
                 else li { +"When someone signs up or asks to have their data or account handled, I get a mail with their name and a link." }

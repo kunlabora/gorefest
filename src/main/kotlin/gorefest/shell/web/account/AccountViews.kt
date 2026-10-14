@@ -48,7 +48,7 @@ fun HTML.accountPage(view: AccountView) = page("Your account", site = SiteBar(me
     band(sunk = true) {
         div("gf-stack") {
             h2("gf-h2") { +"Your data" }
-            p("gf-muted") { +"Both of these go to me by message, and I do them by hand. See what's kept on the "; a("/privacy") { +"privacy page" }; +"." }
+            p("gf-muted") { +"Both of these go to me by message, and I do them by hand. See what's kept on the "; a("/privacy", classes = "gf-link") { +"privacy page" }; +"." }
             request(RequestKind.EXPORT, "Send me my data", "I'll mail you a file with everything Boardfest has about you.", view.pending)
             request(
                 RequestKind.DELETE, "Delete my account",
