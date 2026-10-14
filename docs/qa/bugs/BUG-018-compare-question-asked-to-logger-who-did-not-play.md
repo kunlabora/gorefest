@@ -25,3 +25,6 @@ GET  that location as Tim ->  "Which did you enjoy more? A Carcassonne ... or B 
 
 ## Suspected cause (guess)
 `CheckpointRoutes.kt`, `get("/gamedays/{id}/log/compare")` filters `players` by game day membership but never checks that `me.id` is in them before building the `LogCompareView`; `post("/gamedays/{id}/log/compare")` records the comparison unconditionally with `Basis.PLAYED`.
+
+## Status
+Status: fixed. The compare page sends you to the table when you weren't among the players, and the answer is only recorded for a game you were logged as playing that day (`CheckpointRoutesTest`).

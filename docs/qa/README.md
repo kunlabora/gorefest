@@ -21,7 +21,7 @@ Method: curl with cookie jars for ~12 players (Tim, Anna, Bram, Cara, Dan, Eve, 
 | [BUG-015](bugs/BUG-015-post-without-form-body-returns-500.md) | POSTing without a form body (or with JSON) answers HTTP 500 instead of 400/415 | minor | Web layer, every route that calls `call.receiveParameters | fixed |
 | [BUG-016](bugs/BUG-016-solo-table-says-the-1-of-you.md) | A one-person table gets "~30 min for the 1 of you" | cosmetic | Suggestions | fixed |
 | [BUG-017](bugs/BUG-017-round-done-1-answers.md) | Payoff kicker says "Round done · 1 answers" | cosmetic | Taste wizard payoff | fixed |
-| [BUG-018](bugs/BUG-018-compare-question-asked-to-logger-who-did-not-play.md) | After logging a play, the logger is asked "Which did you enjoy more?" even when they weren't one of the players | minor | Play log / checkpoint | open |
+| [BUG-018](bugs/BUG-018-compare-question-asked-to-logger-who-did-not-play.md) | After logging a play, the logger is asked "Which did you enjoy more?" even when they weren't one of the players | minor | Play log / checkpoint | fixed |
 | [BUG-019](bugs/BUG-019-plain-form-post-error-returns-bare-fragment.md) | A validation error on a plain (non-htmx) form post returns a bare `<form>` fragment, not a page | minor | Web layer | fixed |
 
 ## Verified working (no bug)

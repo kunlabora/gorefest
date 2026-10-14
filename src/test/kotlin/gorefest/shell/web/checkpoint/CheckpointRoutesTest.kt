@@ -28,6 +28,7 @@ import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldStartWith
 import io.ktor.client.request.forms.submitForm
 import io.ktor.client.request.get
+import io.ktor.http.HttpStatusCode
 import io.ktor.http.parameters
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -171,6 +172,21 @@ class CheckpointRoutesTest {
         })
         done.headers["Location"] shouldBe "/gamedays/$gorefest7/table?players=$kimId&players=$anna"
         app.tastes.of(kimId).comparisons.single().let { (it.basis to it.a) shouldBe (Basis.PLAYED to azul) }
+    }
+
+    @Test
+    fun `logging a table you weren't at asks you nothing and records nothing`() = test.webTest(session = kim) { client ->
+        given(GamePlayStatusDeclared(kimId, cascadia, played = true))
+
+        val compare = client.htmxPost(log, parameters { append("game", azul.toString()); append("players", anna.toString()); append("duration", "45m") })
+            .headers["HX-Redirect"]!!
+        client.get(compare).headers["Location"] shouldBe "/gamedays/$gorefest7/table?players=$anna"
+
+        // A hand-made answer for a game you didn't play is ignored too.
+        client.submitForm("/gamedays/$gorefest7/log/compare", parameters {
+            append("a", azul.toString()); append("b", cascadia.toString()); append("answer", "A")
+        }).status shouldBe HttpStatusCode.Found
+        app.tastes.of(kimId).comparisons shouldHaveSize 0
     }
 
     @Test

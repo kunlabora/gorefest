@@ -100,6 +100,8 @@ fun Route.checkpointRoutes(app: App) {
                 .mapNotNull { runCatching { PlayerId(Uuid.parse(it)) }.getOrNull() }.filter { it in gameDay.players }.distinct()
             val minutes = call.parameters["minutes"]?.toIntOrNull()?.takeIf { it in 0..MAX_MINUTES } ?: 0
             val tableLink = "/gamedays/${gameDay.id}/table?" + players.joinToString("&") { "players=${it.toString().urlEncoded()}" }
+            // "Which did you enjoy more?" is about your own play: logging someone else's table asks nothing.
+            if (me.id !in players) return@authenticated redirect(tableLink)
             val player = PlayerGames(app.tastes.of(me.id), app.collectionSync.collection(me.id))
             val candidates = (player.history.played.filterValues { it }.keys + player.owned + player.history.comparedGames).mapNotNull(app.catalog::get)
             val other = app.wizard.partner(player, game.id, candidates, app.clock.instant()) ?: return@authenticated redirect(tableLink)
@@ -115,7 +117,8 @@ fun Route.checkpointRoutes(app: App) {
             val a = form["a"]?.toIntOrNull()?.let(::BggId)
             val b = form["b"]?.toIntOrNull()?.let(::BggId)
             val next = safeReturnTo(form["next"]).takeIf { it.startsWith("/gamedays/${gameDay.id}/") } ?: "/gamedays/${gameDay.id}"
-            if (a != null && b != null) when (val answer = form["answer"]) {
+            val playedIt = a != null && app.plays.on(gameDay.id).any { it.game == a && me.id in it.players }
+            if (a != null && b != null && playedIt) when (val answer = form["answer"]) {
                 "A", "B", "BOTH_GREAT", "BOTH_MEH" ->
                     app.commands.handle(RecordComparisonDecider, ComparisonRecorded(me.id, a, b, ComparisonResult.valueOf(answer), Basis.PLAYED, app.clock.instant()))
                 "UNPLAYED" -> app.commands.handle(DeclarePlayStatusDecider, GamePlayStatusDeclared(me.id, b, played = false))
