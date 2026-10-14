@@ -51,9 +51,10 @@ class TestApp(config: AppConfig = AppConfig.dev()) {
 
     /**
      * Runs [block] against the app. The client keeps cookies and doesn't follow redirects;
-     * with [session] every request carries that session cookie.
+     * with [session] every request carries that session cookie. A [classLoader] serves `/static` from somewhere else, like a jar.
      */
-    fun webTest(session: String? = null, block: suspend ApplicationTestBuilder.(HttpClient) -> Unit) = testApplication {
+    fun webTest(session: String? = null, classLoader: ClassLoader? = null, block: suspend ApplicationTestBuilder.(HttpClient) -> Unit) = testApplication {
+        if (classLoader != null) environment { this.classLoader = classLoader }
         application { web(app) }
         block(createClient {
             followRedirects = false

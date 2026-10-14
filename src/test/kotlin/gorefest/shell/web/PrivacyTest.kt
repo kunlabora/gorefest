@@ -95,13 +95,6 @@ class PrivacyTest {
 
         client.get("/static/css/gorefest.css") { header(HttpHeaders.IfNoneMatch, etag) }.status shouldBe HttpStatusCode.NotModified
 
-        // Jar entries all share one timestamp, so a date must never stand in for a changed file after a deploy.
-        first.headers[HttpHeaders.LastModified] shouldBe null
-        client.get("/static/css/gorefest.css") {
-            header(HttpHeaders.IfNoneMatch, "\"from-the-last-deploy\"")
-            header(HttpHeaders.IfModifiedSince, "Thu, 31 Jan 1980 23:00:00 GMT")
-        }.status shouldBe HttpStatusCode.OK
-
         val head = client.head("/static/css/gorefest.css")
         head.status shouldBe HttpStatusCode.OK
         head.bodyAsText() shouldBe ""
