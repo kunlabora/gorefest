@@ -57,6 +57,7 @@ class PrivacyNoticeTest {
         page.one("#ask").text() shouldContain "unlink your BGG account"
         page.one("#others").text() shouldContain "I get a mail"
         page.one("#long").text() shouldContain "two years"
+        page.one("#long").text() shouldContain "leave game days still to come"
     }
 
     @Test

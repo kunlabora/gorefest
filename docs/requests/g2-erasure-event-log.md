@@ -16,7 +16,7 @@ Source: GDPR analysis, 2026-10-09 ([`docs/gdpr.md`](../gdpr.md)). Status: ✅ (a
 **Residue we accept for now** (the log still holds it)
 - `BggAccountLinked` events written before 2026-10-12 hold the BGG username (a public handle). New links store a keyed hash (`BggAccountLinkedHashed`).
 - Free-text `place` and `title` in `GameDayCreated`, `GameDayDetailsChanged` and `DatePollCreated`.
-- Other projections (shelf, tastes, plays, bring requests, date polls) still list the erased id: it shows as "someone" and counts as before. Their data is pseudonymous and the taste model keeps learning from it.
+- Other projections (tastes, plays, date polls, and the shelf and bring requests of closed game days) still list the erased id: it shows as "Someone" and counts as before. Their data is pseudonymous and the taste model keeps learning from it. On game days still to be played, the shelf drops the erased player's games and wishes and their open bring requests both ways (BUG-025, 2026-10-14).
 
 **Done 2026-10-12 (b, username):** new links write `BggAccountLinkedHashed` (HMAC of the lowercased username, key `SECRET_KEY`, used as the uniqueness tag; the decider also still honours old plain links). The readable name is read from `collection_syncs`. `Rejection.AlreadyLinked` no longer carries a name.
 

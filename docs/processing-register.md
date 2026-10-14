@@ -15,5 +15,5 @@ An internal list of where personal data lives, kept short because the household 
 | Discord channel (`NOTIFY_DISCORD_WEBHOOK`) | Name and a link for sign-ups and requests; for an erasure only the player id (the list to re-apply after a restore); no email | Telling the admin | Admin only | Discord's own |
 | The data file (`/admin/requests/{id}/export`) | Everything about one person, in words; no other person's name or id | Answering a request for one's data | Admin, at download (`no-store`); then whoever the admin sends it to (the person) | Not stored by the app; made on demand |
 | Backups | Nightly `pg_dump` of everything above, Scaleway Object Storage fr-par | Restore | Admin | 30 days |
-| Server logs (journald) | Time, method, status, scrubbed path; no tokens, emails or IPs | Operations | Admin | 14 days (`provision.sh`) |
+| Server logs (journald) | Time, method, status, scrubbed path; errors name a player by id; no tokens, codes, emails, IPs or BGG usernames | Operations | Admin | 14 days (`provision.sh`) |
 | Cookies | `gf_session` (sign-in), `gf_theme` (light/dark, set in the browser) | Working at all | — | Session, one year |
