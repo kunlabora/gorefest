@@ -16,6 +16,7 @@ import gorefest.core.GameDayCreated
 import gorefest.core.GameDayId
 import gorefest.core.GameNightCreated
 import gorefest.core.GameNightId
+import gorefest.core.PlayerErased
 import gorefest.core.PlayerId
 import gorefest.core.PlayerJoined
 import gorefest.core.Rejection
@@ -41,6 +42,9 @@ const val MAX_POLL_GAMES = 12
 
 private fun pollLifecycle(poll: DatePollId) =
     Query.Item(setOf(typeName<DatePollCreated>(), typeName<DatePollClosed>(), typeName<DatePollPickedForGameNight>()), setOf(Tags.datePoll(poll)))
+
+/** Erasures are rare and carry no poll tag: a decision that reads the whole poll takes them all in (BUG-027). */
+private val erasures = Query.Item(setOf(typeName<PlayerErased>()), emptySet())
 
 private fun playerIn(poll: DatePollId, player: PlayerId, type: String) =
     Query.Item(setOf(type), setOf(Tags.datePoll(poll), Tags.player(player)))
@@ -97,24 +101,28 @@ data class JoinDatePoll(val poll: DatePollId, val player: PlayerId)
 object JoinDatePollDecider : Decider<JoinDatePoll, JoinDatePollDecider.State, DatePollJoined> {
     sealed interface State {
         data object Unknown : State
-        data class Open(val joined: Boolean) : State
+        data class Open(val host: PlayerId, val joined: Boolean) : State
         data object Closed : State
+        /** The host's account was erased: nobody can pick a date anymore. */
+        data object HostGone : State
     }
 
     override val initialState: State = State.Unknown
 
-    override fun query(command: JoinDatePoll) = Query.of(pollLifecycle(command.poll), playerIn(command.poll, command.player, typeName<DatePollJoined>()))
+    override fun query(command: JoinDatePoll) = Query.of(pollLifecycle(command.poll), playerIn(command.poll, command.player, typeName<DatePollJoined>()), erasures)
 
     override fun evolve(state: State, event: Event): State = when (event) {
-        is DatePollCreated -> State.Open(joined = false)
-        is DatePollJoined -> if (state is State.Open) State.Open(joined = true) else state
+        is DatePollCreated -> State.Open(event.host, joined = false)
+        is DatePollJoined -> if (state is State.Open) state.copy(joined = true) else state
         is DatePollClosed, is DatePollPickedForGameNight -> State.Closed
+        is PlayerErased -> if (state is State.Open && event.player == state.host) State.HostGone else state
         else -> state
     }
 
     override fun decide(command: JoinDatePoll, state: State): Decision<DatePollJoined> = when (state) {
         State.Unknown -> Rejected(Rejection.NoSuchDatePoll)
         State.Closed -> Rejected(Rejection.DatePollClosed)
+        State.HostGone -> Rejected(Rejection.DatePollHostGone)
         is State.Open -> if (state.joined) Accepted() else Accepted(DatePollJoined(command.poll, command.player))
     }
 }
@@ -188,12 +196,13 @@ private fun evolvePoll(state: DatePollSummary?, event: Event): DatePollSummary? 
 object PickDateDecider : Decider<PickDate, DatePollSummary?, Event> {
     override val initialState: DatePollSummary? = null
 
-    override fun query(command: PickDate) = Query.of(Query.Item(pollTypes, setOf(Tags.datePoll(command.poll))))
+    override fun query(command: PickDate) = Query.of(Query.Item(pollTypes, setOf(Tags.datePoll(command.poll))), erasures)
 
     override fun evolve(state: DatePollSummary?, event: Event) = evolvePoll(state, event)
 
     override fun decide(command: PickDate, state: DatePollSummary?): Decision<Event> = when {
         state == null -> Rejected(Rejection.NoSuchDatePoll)
+        state.hostGone -> Rejected(Rejection.DatePollHostGone)
         !state.open -> Rejected(Rejection.DatePollClosed)
         command.host != state.host -> Rejected(Rejection.OnlyHostCanPickDate)
         command.date !in state.dates -> Rejected(Rejection.NotAnOption)
@@ -231,12 +240,14 @@ object ProposePollGameDecider : Decider<ProposePollGame, DatePollSummary?, Event
     override fun query(command: ProposePollGame) = Query.of(
         pollLifecycle(command.poll),
         Query.Item(setOf(typeName<DatePollGameProposed>(), typeName<DatePollGameWithdrawn>()), setOf(Tags.datePoll(command.poll))),
+        erasures,
     )
 
     override fun evolve(state: DatePollSummary?, event: Event) = evolvePoll(state, event)
 
     override fun decide(command: ProposePollGame, state: DatePollSummary?): Decision<Event> = when {
         state == null -> Rejected(Rejection.NoSuchDatePoll)
+        state.hostGone -> Rejected(Rejection.DatePollHostGone)
         !state.open -> Rejected(Rejection.DatePollClosed)
         !state.asksAboutGames -> Rejected(Rejection.PollAsksNoGames)
         command.host != state.host -> Rejected(Rejection.OnlyHostProposesGames)
@@ -259,10 +270,12 @@ private fun playerGameQuery(poll: DatePollId, player: PlayerId, answerType: Stri
     Query.Item(setOf(typeName<DatePollGameProposed>(), typeName<DatePollGameWithdrawn>()), setOf(Tags.datePoll(poll))),
     playerIn(poll, player, typeName<DatePollJoined>()),
     playerIn(poll, player, answerType),
+    erasures,
 )
 
 private fun DatePollSummary?.cantAnswer(player: PlayerId, game: BggId): Rejection? = when {
     this == null -> Rejection.NoSuchDatePoll
+    hostGone -> Rejection.DatePollHostGone
     !open -> Rejection.DatePollClosed
     player !in participants -> Rejection.NotInDatePoll
     game !in proposals -> Rejection.NotInPoll

@@ -317,9 +317,9 @@ data class DatePollPickedForGameNight(
     override val tags get() = setOf(Tags.datePoll(poll), Tags.gameNight(gameNight))
 }
 
-/** One game on a game night's plan: who brings it and who said they'd play it. */
+/** One game on a game night's plan: who brings it, who said they'd play it, and [others] coming who offered too, first offer first. */
 @Serializable
-data class PlannedGame(val game: BggId, val bringer: PlayerId, val wantedBy: List<PlayerId> = emptyList())
+data class PlannedGame(val game: BggId, val bringer: PlayerId, val wantedBy: List<PlayerId> = emptyList(), val others: List<PlayerId> = emptyList())
 
 /**
  * A game night (U11), made whole when its poll's date is picked: the [players] who can come (host first), the [plan] of

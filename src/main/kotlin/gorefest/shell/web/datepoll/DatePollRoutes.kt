@@ -235,7 +235,7 @@ fun Route.datePollRoutes(app: App) {
         val me = sessionPlayer()
         // Someone already in the poll goes to it, picked or not: that's where the result (and the game day) is.
         if (me != null && me.id in poll.participants) return@get redirect("/polls/${poll.id}")
-        if (!poll.open) return@get call.respondHtml(HttpStatusCode.Gone) { deadInvitePage("The host already picked a date") }
+        if (!poll.open) return@get call.respondHtml(HttpStatusCode.Gone) { deadInvitePage(if (poll.hostGone) "This poll is over" else "The host already picked a date") }
         // Back from signing up or logging in for this invite: join without asking again.
         if (me?.name != null && app.invites.isJoinMarker(call.parameters["join"], me.id, "/p/${call.parameters["token"]}")) {
             return@get if (me.approved) join(poll, me) else redirect("/pending?returnTo=${"/p/${call.parameters["token"]}".urlEncoded()}")

@@ -299,4 +299,17 @@ class PollGamesRoutesTest {
             client.get(pollPage).page().body().text() shouldContain "You weren't down as available that day"
         }
     }
+
+    @Test
+    fun `a poll whose host's account was deleted says it's over, and its link takes nobody in`() {
+        kotlinx.coroutines.runBlocking { given(gorefest.core.PlayerErased(annaId)) }
+        test.webTest(session = bram) { client ->
+            client.get(pollPage).page().body().text() shouldContain "This poll is over: the host is no longer on Boardfest"
+            client.get("/").page().select("a.gf-daycard[href=$pollPage]") shouldHaveSize 0
+        }
+        test.webTest(session = test.app.let { kotlinx.coroutines.runBlocking { test.loggedIn("Kim") } }) { client ->
+            client.get("/p/${app.invites.token(poll)}").status shouldBe HttpStatusCode.Gone
+        }
+    }
 }
+

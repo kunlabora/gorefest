@@ -15,6 +15,7 @@ import gorefest.core.Event
 import gorefest.core.GameDayId
 import gorefest.core.GameNightId
 import gorefest.core.PlannedGame
+import gorefest.core.PlayerErased
 import gorefest.core.PlayerId
 import gorefest.core.eventsourcing.Projection
 import java.time.LocalDate
@@ -52,8 +53,10 @@ data class DatePollSummary(
     val bringAnswers: Map<PlayerId, Map<BggId, Boolean>> = emptyMap(),
     /** Who offered to bring each game, in the order they offered. */
     val offers: Map<BggId, List<PlayerId>> = emptyMap(),
+    /** The host's account was erased: nobody can pick, so the poll is over (BUG-027). */
+    val hostGone: Boolean = false,
 ) {
-    val open get() = picked == null
+    val open get() = picked == null && !hostGone
 
     /** Participants who haven't answered yet. */
     val waitingOn: List<PlayerId> get() = participants.filter { it !in answers }
@@ -94,13 +97,26 @@ data class DatePollSummary(
         val coming = coming(date).toSet()
         val (planned, missing) = proposals.partition { game -> bringers(game).any { it in coming } }
         return NightPlan(
-            plan = planned.map { game -> PlannedGame(game, bringers(game).first { it in coming }, yesFor(game).filter { it in coming }) },
+            plan = planned.map { game ->
+                val bringing = bringers(game).filter { it in coming }
+                PlannedGame(game, bringing.first(), yesFor(game).filter { it in coming }, others = bringing.drop(1))
+            },
             missing = missing,
         )
     }
 
     /** This poll after [event]; events about other polls or other things leave it as it is. */
     fun after(event: Event): DatePollSummary = when {
+        // An erased player leaves the poll with everything they said; an erased host ends it (nobody else can pick).
+        event is PlayerErased && event.player == host -> if (picked == null) copy(hostGone = true) else this
+        // Not only `in participants`: the pick's boundary leaves joins out, so its state knows people by their answers.
+        event is PlayerErased -> copy(
+            participants = participants - event.player,
+            answers = answers - event.player,
+            gameAnswers = gameAnswers - event.player,
+            bringAnswers = bringAnswers - event.player,
+            offers = offers.mapValues { (_, who) -> who - event.player },
+        )
         event is DatePollJoined && event.poll == id -> if (event.player in participants) this else copy(participants = participants + event.player)
         event is DatePollAnswered && event.poll == id -> copy(answers = answers + (event.player to event.available.toSet()))
         event is DatePollClosed && event.poll == id -> copy(picked = PickedDate(event.date, gameDay = event.gameDay))
@@ -146,6 +162,8 @@ class DatePollBoard private constructor(private val byId: Map<DatePollId, DatePo
 
     internal fun added(summary: DatePollSummary) = DatePollBoard(byId + (summary.id to summary))
 
+    internal fun all(f: (DatePollSummary) -> DatePollSummary) = DatePollBoard(byId.mapValues { (_, poll) -> f(poll) })
+
     companion object {
         val none = DatePollBoard(emptyMap())
     }
@@ -170,6 +188,7 @@ object DatePolls : Projection<DatePollBoard> {
 
     override fun evolve(state: DatePollBoard, event: Event): DatePollBoard = when (event) {
         is DatePollCreated -> state.added(DatePollSummary.of(event))
+        is PlayerErased -> state.all { it.after(event) }
         else -> event.poll?.let { poll -> state.changed(poll) { it.after(event) } } ?: state
     }
 }

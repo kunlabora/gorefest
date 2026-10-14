@@ -26,16 +26,14 @@ data class GameNightSummary(
     val missing: List<BggId>,
 ) {
     /**
-     * An erased player leaves the night: off the list, their yeses gone, and a game they were to bring becomes missing.
-     * A game night has no end yet, so unlike a game day there's no history to keep.
+     * An erased player leaves the night: off the list and their yeses gone. A game they were to bring goes to the next one
+     * coming who offered, or becomes missing if nobody did. A game night has no end yet, so unlike a game day there's no history to keep.
      */
     internal fun erased(player: PlayerId): GameNightSummary {
-        val (theirs, kept) = plan.partition { it.bringer == player }
-        return copy(
-            players = players - player,
-            plan = kept.map { it.copy(wantedBy = it.wantedBy - player) },
-            missing = missing + theirs.map { it.game },
-        )
+        val after = plan.map { it.copy(wantedBy = it.wantedBy - player, others = it.others - player) }
+            .map { if (it.bringer == player && it.others.isNotEmpty()) it.copy(bringer = it.others.first(), others = it.others.drop(1)) else it }
+        val (gone, kept) = after.partition { it.bringer == player }
+        return copy(players = players - player, plan = kept, missing = missing + gone.map { it.game })
     }
 
     companion object {

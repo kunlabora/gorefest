@@ -206,4 +206,68 @@ class PollGamesTest {
         board.of(night)!!.missing shouldBe listOf(azul, humanity)
         board.forPlayer(ruben) shouldBe emptyList()
     }
+
+    // Erasure before the pick (BUG-027, BUG-028)
+
+    @Test
+    fun `someone erased before the pick isn't on the game night, and their yeses and offers go with them`() {
+        PickDateDecider.given(*answered, PlayerErased(ruben)).whenever(pick).thenEmits(
+            DatePollPickedForGameNight(poll, sat, night),
+            GameNightCreated(
+                night, poll, anna, "Small night", sat, "Anna's", "Europe/Brussels",
+                players = listOf(anna, bram),
+                plan = listOf(PlannedGame(brass, anna, listOf(bram))),
+                missing = listOf(humanity, azul),
+            ),
+        )
+        summary(*answered, PlayerErased(ruben)).let {
+            it.participants shouldBe listOf(anna, bram)
+            it.yesFor(humanity) shouldBe listOf(bram)
+            it.noFor(azul) shouldBe emptyList()
+        }
+    }
+
+    @Test
+    fun `someone erased before the pick of a poll without games isn't on the game day`() {
+        val plain = arrayOf<Event>(created(games = false), DatePollJoined(poll, anna), DatePollJoined(poll, bram), DatePollAnswered(poll, bram, listOf(sat)))
+        val day = GameDayId(Uuid.random())
+        PickDateDecider.given(*plain, PlayerErased(bram)).whenever(PickDate(poll, anna, sat, day, today)).thenEmits(
+            gorefest.core.DatePollClosed(poll, sat, day),
+            gorefest.core.GameDayCreated(day, anna, "Small night", sat, "Anna's", "Europe/Brussels"),
+            gorefest.core.PlayerJoined(day, anna),
+        )
+    }
+
+    @Test
+    fun `a poll whose host was erased is over, with no joining, answering, offering or picking`() {
+        val gone = arrayOf(*answered, PlayerErased(anna))
+        JoinDatePollDecider.given(*gone).whenever(JoinDatePoll(poll, kim)).thenRejects(Rejection.DatePollHostGone)
+        AnswerPollGameDecider.given(*gone).whenever(AnswerPollGame(poll, bram, azul, true)).thenRejects(Rejection.DatePollHostGone)
+        AnswerBringDecider.given(*gone).whenever(AnswerBring(poll, bram, azul, true)).thenRejects(Rejection.DatePollHostGone)
+        PickDateDecider.given(*gone).whenever(pick).thenRejects(Rejection.DatePollHostGone)
+        summary(*gone).open shouldBe false
+        DatePolls.initialState.let { gone.fold(it, DatePolls::evolve) }.forPlayer(bram).single().hostGone shouldBe true
+    }
+
+    @Test
+    fun `the plan remembers who else coming offered, and an erased bringer hands the game on`() {
+        val both = arrayOf(*answered, DatePollBringAnswered(poll, bram, humanity, true))
+        PickDateDecider.given(*both).whenever(pick).thenEmits(
+            DatePollPickedForGameNight(poll, sat, night),
+            GameNightCreated(
+                night, poll, anna, "Small night", sat, "Anna's", "Europe/Brussels",
+                players = listOf(anna, bram, ruben),
+                plan = listOf(PlannedGame(brass, anna, listOf(bram)), PlannedGame(humanity, ruben, listOf(bram, ruben), others = listOf(bram))),
+                missing = listOf(azul),
+            ),
+        )
+        val created = GameNightCreated(
+            night, poll, anna, "Small night", sat, "Anna's", "Europe/Brussels", listOf(anna, bram, ruben),
+            listOf(PlannedGame(humanity, ruben, listOf(bram, ruben), others = listOf(bram))),
+        )
+        val board = listOf(created, PlayerErased(ruben)).fold(GameNights.initialState, GameNights::evolve)
+        board.of(night)!!.plan shouldBe listOf(PlannedGame(humanity, bram, listOf(bram)))
+        board.of(night)!!.missing shouldBe emptyList()
+    }
 }
+

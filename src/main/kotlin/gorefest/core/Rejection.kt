@@ -74,6 +74,9 @@ sealed interface Rejection {
     /** The host already picked a date. */
     data object DatePollClosed : Rejection
     data object NotInDatePoll : Rejection
+
+    /** The host's account was erased, so nobody can pick a date: the poll is over. */
+    data object DatePollHostGone : Rejection
     data object OnlyHostCanPickDate : Rejection
 
     /** The date isn't one of the poll's options. */

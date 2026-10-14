@@ -44,6 +44,7 @@ fun Rejection.message(): String = when (this) {
     Rejection.DatePollAlreadyExists -> "That date poll already exists"
     Rejection.DatePollClosed -> "The date is already picked"
     Rejection.NotInDatePoll -> "Join the poll first"
+    Rejection.DatePollHostGone -> "This poll is over: the host is no longer on Boardfest"
     Rejection.OnlyHostCanPickDate -> "Only the host can pick the date"
     Rejection.NotAnOption -> "That date isn't one of the options"
     Rejection.TooFewDates -> "Give at least two dates to choose from"

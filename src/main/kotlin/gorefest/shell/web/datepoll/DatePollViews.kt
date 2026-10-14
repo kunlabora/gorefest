@@ -187,6 +187,7 @@ fun HTML.datePollPage(view: DatePollView) {
                             else -> "Tick every date you can make. ${host ?: "The host"} picks the winner and the game day appears."
                         }
                     }
+                    if (poll.hostGone) notice("alert") { +"This poll is over: the host is no longer on Boardfest, so nobody can pick a date." }
                     poll.picked?.let { picked ->
                         notice("check", NoticeKind.GOOD) { +"The host picked "; strong { +picked.date.full() }; +"." }
                         if (poll.asksAboutGames) {
