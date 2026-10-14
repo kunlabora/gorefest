@@ -300,12 +300,12 @@ class GameDayRoutesTest {
     }
 
     @Test
-    fun `players without a name show as unknown`() = webTest { client ->
+    fun `players without a name show as someone`() = webTest { client ->
         given(gameDayCreated(host = bram), PlayerJoined(gorefest7, bram), PlayerJoined(gorefest7, timId))
 
         val page = client.get("/gamedays/$gorefest7").page()
 
-        page.players() shouldContainExactly listOf("Unknown player Bringing nothing yet Host", "Tim Bringing nothing yet You")
+        page.players() shouldContainExactly listOf("Someone Bringing nothing yet Host", "Tim Bringing nothing yet You")
         page.select("#players .gf-avatar").first()!!.text() shouldBe "?"
     }
 

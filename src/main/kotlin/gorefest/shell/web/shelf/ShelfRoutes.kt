@@ -1,6 +1,7 @@
 package gorefest.shell.web.shelf
 
 import gorefest.core.BggId
+import gorefest.shell.web.components.SOMEONE
 import gorefest.core.eventsourcing.Decision
 import gorefest.core.game.Game
 import gorefest.core.gameday.BringGame
@@ -124,7 +125,7 @@ private suspend fun summaryFor(app: App, gameDay: GameDaySummary, me: CurrentPla
     val shelf = app.shelves.of(gameDay.id)
     val counts = shelf.flatMap { it.owners }.groupingBy { it }.eachCount()
     val names = login.names(counts.keys)
-    val byPlayer = counts.map { (id, count) -> ShelfOwner(id, names[id] ?: "Someone", count) }
+    val byPlayer = counts.map { (id, count) -> ShelfOwner(id, names[id] ?: SOMEONE, count) }
         .sortedWith(compareByDescending<ShelfOwner> { it.count }.thenBy { it.name })
     val mine = shelf.filter { me.id in it.owners }.mapNotNull { app.catalog[it.game] }
     return ShelfSummary(shelf.size, byPlayer, mine)

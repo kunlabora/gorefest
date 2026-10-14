@@ -10,6 +10,7 @@ import gorefest.core.GameDayEnded
 import gorefest.core.GameDayId
 import gorefest.core.GameUnbrought
 import gorefest.core.PlayWishChanged
+import gorefest.core.PlayerErased
 import gorefest.core.PlayerId
 import gorefest.core.PlayerJoined
 import gorefest.core.Tags
@@ -99,6 +100,8 @@ object SetPlayWishDecider : Decider<SetPlayWish, WishState, PlayWishChanged> {
         Query.Item(setOf(typeName<PlayerJoined>()), setOf(Tags.gameDay(command.gameDay), Tags.player(command.player))),
         Query.Item(setOf(typeName<GameBrought>(), typeName<GameUnbrought>()), setOf(Tags.gameDay(command.gameDay))),
         Query.Item(setOf(typeName<PlayWishChanged>()), setOf(Tags.gameDay(command.gameDay), Tags.player(command.player))),
+        // Rare, and an erased owner's games leave the shelf (see [Shelves]).
+        Query.Item(setOf(typeName<PlayerErased>()), emptySet()),
     )
 
     override fun evolve(state: WishState, event: Event) = when (event) {
@@ -114,6 +117,10 @@ object SetPlayWishDecider : Decider<SetPlayWish, WishState, PlayWishChanged> {
             state.copy(owners = if (left.isEmpty()) state.owners - event.game else state.owners + (event.game to left), wished = wished)
         }
         is PlayWishChanged -> state.copy(wished = if (event.wantsToPlay) state.wished + event.game else state.wished - event.game)
+        is PlayerErased -> {
+            val owners = state.owners.mapValues { (_, who) -> who - event.player }.filterValues { it.isNotEmpty() }
+            state.copy(owners = owners, wished = state.wished.filterTo(mutableSetOf()) { it in owners })
+        }
         else -> state
     }
 
@@ -138,15 +145,26 @@ object SetPlayWishDecider : Decider<SetPlayWish, WishState, PlayWishChanged> {
 data class ShelfGame(val game: BggId, val owners: List<PlayerId>, val eager: Set<PlayerId> = emptySet())
 
 /** The shelf of every game day. */
-class GameDayShelves private constructor(private val byGameDay: Map<GameDayId, List<ShelfGame>>) {
+class GameDayShelves private constructor(private val byGameDay: Map<GameDayId, List<ShelfGame>>, private val closed: Set<GameDayId>) {
     /** The games brought to [gameDay], in the order they were first brought; empty if none. */
     fun of(gameDay: GameDayId): List<ShelfGame> = byGameDay[gameDay].orEmpty()
 
     internal fun changed(gameDay: GameDayId, f: (List<ShelfGame>) -> List<ShelfGame>) =
-        GameDayShelves(byGameDay + (gameDay to f(of(gameDay))))
+        GameDayShelves(byGameDay + (gameDay to f(of(gameDay))), closed)
+
+    internal fun closed(gameDay: GameDayId) = GameDayShelves(byGameDay, closed + gameDay)
+
+    /** An erased player's games leave the shelves of game days still to be played, with their wishes; a closed day's shelf stays as it was. */
+    internal fun erased(player: PlayerId) = GameDayShelves(
+        byGameDay.mapValues { (gameDay, shelf) ->
+            if (gameDay in closed) shelf
+            else shelf.map { it.copy(owners = it.owners - player, eager = it.eager - player) }.filter { it.owners.isNotEmpty() }
+        },
+        closed,
+    )
 
     companion object {
-        val none = GameDayShelves(emptyMap())
+        val none = GameDayShelves(emptyMap(), emptySet())
     }
 }
 
@@ -169,6 +187,9 @@ object Shelves : Projection<GameDayShelves> {
                 else it.copy(eager = if (event.wantsToPlay) it.eager + event.player else it.eager - event.player)
             }
         }
+        is GameDayEnded -> state.closed(event.gameDay)
+        is GameDayCancelled -> state.closed(event.gameDay)
+        is PlayerErased -> state.erased(event.player)
         else -> state
     }
 }

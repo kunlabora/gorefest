@@ -1,6 +1,7 @@
 package gorefest.shell.web.suggestions
 
 import gorefest.core.PlayerId
+import gorefest.shell.web.components.SOMEONE
 import gorefest.core.gameday.GameDaySummary
 import gorefest.core.matching.TablePlayer
 import gorefest.core.taste.PlayerGames
@@ -29,7 +30,7 @@ fun Route.suggestionsRoutes(app: App) {
         val budget = TIMES.firstOrNull { it.first == params["time"] }?.second
         val names = login.names(gameDay.players)
         val table = chosen.map { id ->
-            TablePlayer(id, names[id] ?: "Someone", PlayerGames(app.tastes.of(id), app.collectionSync.collection(id)))
+            TablePlayer(id, names[id] ?: SOMEONE, PlayerGames(app.tastes.of(id), app.collectionSync.collection(id)))
         }
         val shelf = app.shelves.of(gameDay.id).mapNotNull { entry -> app.catalog[entry.game]?.let { it to entry } }
         val suggestions = app.matcher.suggest(table, shelf, budget, app.clock.instant(), speed = app.groupSpeed(chosen))

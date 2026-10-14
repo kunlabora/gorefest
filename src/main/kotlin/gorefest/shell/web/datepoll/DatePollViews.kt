@@ -189,7 +189,7 @@ data class PollInviteView(val poll: DatePollSummary, val names: Map<PlayerId, St
 
 fun HTML.pollInvitePage(view: PollInviteView) {
     val poll = view.poll
-    val host = view.names[poll.host] ?: "Someone"
+    val host = view.names[poll.host] ?: SOMEONE
     page(
         "Find a date: ${poll.title}",
         appBar = { wordmark() },

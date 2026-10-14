@@ -4,6 +4,9 @@ import gorefest.core.PlayerId
 import kotlinx.html.FlowContent
 import kotlinx.html.span
 
+/** What a player without a name is called on screen: they never finished signing up, or their account was erased. */
+const val SOMEONE = "Someone"
+
 /** Initials disc, coloured by player so the same person always gets the same hue. "?" without a name. */
 fun FlowContent.avatar(player: PlayerId, name: String?, size: String = "") = span("gf-avatar $size".trim()) {
     attributes["aria-hidden"] = "true"

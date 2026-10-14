@@ -1,6 +1,7 @@
 package gorefest.shell.web.invite
 
 import gorefest.core.eventsourcing.Decision
+import gorefest.shell.web.components.SOMEONE
 import gorefest.core.gameday.GameDaySummary
 import gorefest.core.gameday.JoinGameDay
 import gorefest.core.gameday.JoinGameDayDecider
@@ -80,7 +81,7 @@ fun Route.inviteRoutes(app: App, invites: InviteLinks) {
             gameDay = gameDay,
             names = names,
             shelf = shelf,
-            preview = gameDay.preview(names[gameDay.host] ?: "Someone", shelf = shelf.size),
+            preview = gameDay.preview(names[gameDay.host] ?: SOMEONE, shelf = shelf.size),
             baseUrl = config.baseUrl,
             path = "/i/$token",
             loggedIn = me != null,
@@ -108,7 +109,7 @@ fun Route.inviteRoutes(app: App, invites: InviteLinks) {
     get("/i/{token}/og.png") {
         val gameDay = (resolve(call.parameters["token"]) as? Invite.Valid)?.gameDay
             ?: return@get call.respond(HttpStatusCode.NotFound)
-        val host = login.names(listOf(gameDay.host))[gameDay.host] ?: "Someone"
+        val host = login.names(listOf(gameDay.host))[gameDay.host] ?: SOMEONE
         call.response.header(HttpHeaders.CacheControl, "public, max-age=300")
         val shelf = app.shelves.of(gameDay.id).size
         call.respondBytes(OgImage.png(gameDay.preview(host, shelf = shelf)), ContentType.Image.PNG)

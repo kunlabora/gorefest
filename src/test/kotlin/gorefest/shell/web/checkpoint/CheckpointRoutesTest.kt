@@ -6,6 +6,7 @@ import gorefest.core.ComparisonResult
 import gorefest.core.GameBrought
 import gorefest.core.GamePlayStatusDeclared
 import gorefest.core.PlayLogged
+import gorefest.core.PlayerErased
 import gorefest.core.PlayerId
 import gorefest.core.PlayerJoined
 import gorefest.core.gameday.anna
@@ -215,6 +216,14 @@ class CheckpointRoutesTest {
 
         rows shouldHaveSize 1
         rows.single().one(".gf-game__meta").text() shouldBe "Kim, Anna · 40 min"
+    }
+
+    @Test
+    fun `a player without a name shows as someone in what was played`() = test.webTest(session = kim) { client ->
+        val erased = PlayerId(Uuid.random())
+        given(PlayLogged(gorefest7, cascadia, listOf(kimId, erased), 40, kimId, test.clock.instant()), PlayerErased(erased))
+
+        client.get("/gamedays/$gorefest7").page().one("section:has(h2:containsOwn(Played today)) .gf-game__meta").text() shouldBe "Kim, Someone · 40 min"
     }
 
     @Test

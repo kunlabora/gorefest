@@ -41,7 +41,7 @@ fun FlowContent.playerChips(
             input(InputType.checkBox, name = name) { value = player.toString(); this.checked = checked(player) }
             avatar(player, names[player], size = "gf-avatar--sm")
             span("gf-chip__check") { attributes["aria-hidden"] = "true"; icon("check") }
-            +(names[player] ?: "Unknown player")
+            +(names[player] ?: SOMEONE)
         }
     }
 }
@@ -126,7 +126,7 @@ fun FlowContent.inviterLine(host: PlayerId, hostName: String?, text: String) = d
     avatar(host, hostName, size = "gf-avatar--lg")
     p("gf-muted") {
         attributes["style"] = "margin: 0"
-        strong { attributes["style"] = "color: var(--ink)"; +(hostName ?: "Someone") }
+        strong { attributes["style"] = "color: var(--ink)"; +(hostName ?: SOMEONE) }
         +" $text"
     }
 }

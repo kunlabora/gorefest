@@ -4,9 +4,11 @@ import gorefest.core.Rejection
 import gorefest.core.BggId
 import gorefest.core.Event
 import gorefest.core.GameBrought
+import gorefest.core.GameDayCancelled
 import gorefest.core.GameDayEnded
 import gorefest.core.GameUnbrought
 import gorefest.core.PlayWishChanged
+import gorefest.core.PlayerErased
 import gorefest.core.PlayerJoined
 import gorefest.core.eventsourcing.given
 import io.kotest.matchers.shouldBe
@@ -132,5 +134,50 @@ class ShelfTest {
 
         (events + GameUnbrought(gorefest7, anna, brass) + GameBrought(gorefest7, anna, brass)).fold(Shelves.initialState, Shelves::evolve).of(gorefest7) shouldBe
             listOf(ShelfGame(brass, owners = listOf(anna)))
+    }
+
+    // Erasure
+
+    @Test
+    fun `an erased player's games and wishes leave a shelf still to be played`() {
+        val events = listOf(
+            *joined, GameBrought(gorefest7, anna, brass), GameBrought(gorefest7, bram, azul), GameBrought(gorefest7, bram, brass),
+            PlayWishChanged(gorefest7, anna, azul, true), PlayWishChanged(gorefest7, anna, brass, true), PlayWishChanged(gorefest7, bram, brass, true),
+            PlayerErased(anna),
+        )
+
+        events.fold(Shelves.initialState, Shelves::evolve).of(gorefest7) shouldBe
+            listOf(ShelfGame(brass, owners = listOf(bram), eager = setOf(bram)), ShelfGame(azul, owners = listOf(bram)))
+    }
+
+    @Test
+    fun `a game only an erased player brought leaves the shelf`() {
+        listOf(*joined, GameBrought(gorefest7, anna, brass), GameBrought(gorefest7, bram, azul), PlayerErased(anna))
+            .fold(Shelves.initialState, Shelves::evolve).of(gorefest7).map { it.game } shouldBe listOf(azul)
+    }
+
+    @Test
+    fun `a closed game day keeps an erased player's games`() {
+        for (closed in listOf(GameDayEnded(gorefest7), GameDayCancelled(gorefest7))) {
+            listOf(*joined, GameBrought(gorefest7, anna, brass), closed, PlayerErased(anna)).fold(Shelves.initialState, Shelves::evolve).of(gorefest7) shouldBe
+                listOf(ShelfGame(brass, owners = listOf(anna)))
+        }
+    }
+
+    @Test
+    fun `a game only an erased player brought can't be wished for`() {
+        SetPlayWishDecider.given(*onShelf, PlayerErased(anna)).whenever(SetPlayWish(gorefest7, bram, brass, true)).thenRejects(Rejection.NotOnShelf)
+    }
+
+    @Test
+    fun `a wish for an erased player's game stops counting against the limit`() {
+        SetPlayWishDecider
+            .given(
+                *joined, GameBrought(gorefest7, anna, brass), GameBrought(gorefest7, anna, azul), GameBrought(gorefest7, anna, catan), GameBrought(gorefest7, bram, ark),
+                PlayWishChanged(gorefest7, bram, brass, true), PlayWishChanged(gorefest7, bram, azul, true), PlayWishChanged(gorefest7, bram, catan, true),
+                PlayerErased(anna),
+            )
+            .whenever(SetPlayWish(gorefest7, bram, ark, true))
+            .thenEmits(PlayWishChanged(gorefest7, bram, ark, true))
     }
 }

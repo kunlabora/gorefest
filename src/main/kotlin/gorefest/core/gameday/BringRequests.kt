@@ -12,6 +12,7 @@ import gorefest.core.GameDayCreated
 import gorefest.core.GameDayEnded
 import gorefest.core.GameDayId
 import gorefest.core.GameUnbrought
+import gorefest.core.PlayerErased
 import gorefest.core.PlayerId
 import gorefest.core.PlayerJoined
 import gorefest.core.Rejection
@@ -56,6 +57,8 @@ private fun List<Standing>.after(event: Event): List<Standing> = when (event) {
     is BringRequestDeclined -> map { if (it.isFor(event.asker, event.owner, event.game)) it.copy(open = false) else it }
     // Answered: the owner ticked the game, by whatever route.
     is GameBrought -> map { if (it.owner == event.player && it.game == event.game) it.copy(open = false) else it }
+    // An erased player's requests, both ways, stop standing: nobody can answer or take them back.
+    is PlayerErased -> filterNot { it.asker == event.player || it.owner == event.player }
     else -> this
 }
 
@@ -95,6 +98,8 @@ object RequestBringDecider : Decider<RequestBring, RequestState, BringRequested>
         Query.Item(requestTypes, setOf(Tags.gameDay(command.gameDay), Tags.player(command.asker))),
         Query.Item(requestTypes, setOf(Tags.gameDay(command.gameDay), Tags.player(command.owner))),
         Query.Item(setOf(typeName<GameBrought>(), typeName<GameUnbrought>()), setOf(Tags.gameDay(command.gameDay), Tags.player(command.owner), Tags.game(command.game))),
+        // Erasures are rare: any of them can free a place under a cap.
+        Query.Item(setOf(typeName<PlayerErased>()), emptySet()),
     )
 
     override fun evolve(state: RequestState, event: Event) = when (event) {
@@ -106,6 +111,7 @@ object RequestBringDecider : Decider<RequestBring, RequestState, BringRequested>
         is GameBrought -> state.copy(bringing = true, standing = state.standing.after(event))
         is GameUnbrought -> state.copy(bringing = false)
         is BringRequested, is BringRequestWithdrawn, is BringRequestDeclined -> state.copy(standing = state.standing.after(event))
+        is PlayerErased -> state.copy(joined = state.joined - event.player, standing = state.standing.after(event))
         else -> state
     }
 
@@ -191,7 +197,11 @@ enum class RequestStatus { OPEN, ANSWERED, DECLINED }
 data class BringRequest(val asker: PlayerId, val owner: PlayerId, val game: BggId, val status: RequestStatus)
 
 /** The bring requests of every game day, and who turned requests off. */
-class GameDayBringRequests private constructor(private val byGameDay: Map<GameDayId, List<BringRequest>>, private val optedOut: Set<PlayerId>) {
+class GameDayBringRequests private constructor(
+    private val byGameDay: Map<GameDayId, List<BringRequest>>,
+    private val optedOut: Set<PlayerId>,
+    private val closed: Set<GameDayId> = emptySet(),
+) {
     /** Every standing request of [gameDay], oldest first. */
     fun on(gameDay: GameDayId): List<BringRequest> = byGameDay[gameDay].orEmpty()
 
@@ -213,10 +223,19 @@ class GameDayBringRequests private constructor(private val byGameDay: Map<GameDa
     fun accepts(player: PlayerId) = player !in optedOut
 
     internal fun changed(gameDay: GameDayId, f: (List<BringRequest>) -> List<BringRequest>) =
-        GameDayBringRequests(byGameDay + (gameDay to f(on(gameDay))), optedOut)
+        GameDayBringRequests(byGameDay + (gameDay to f(on(gameDay))), optedOut, closed)
 
     internal fun allowing(player: PlayerId, allowed: Boolean) =
-        GameDayBringRequests(byGameDay, if (allowed) optedOut - player else optedOut + player)
+        GameDayBringRequests(byGameDay, if (allowed) optedOut - player else optedOut + player, closed)
+
+    internal fun closed(gameDay: GameDayId) = GameDayBringRequests(byGameDay, optedOut, closed + gameDay)
+
+    /** An erased player's requests, asked or asked of them, go from game days still to be played; a closed day keeps its history. */
+    internal fun erased(player: PlayerId) = GameDayBringRequests(
+        byGameDay.mapValues { (gameDay, requests) -> if (gameDay in closed) requests else requests.filterNot { it.asker == player || it.owner == player } },
+        optedOut - player,
+        closed,
+    )
 
     companion object {
         val none = GameDayBringRequests(emptyMap(), emptySet())
@@ -243,6 +262,9 @@ object BringRequests : Projection<GameDayBringRequests> {
             requests.map { if (it.owner == event.player && it.game == event.game && it.status == RequestStatus.OPEN) it.copy(status = RequestStatus.ANSWERED) else it }
         }
         is BringRequestsAllowedChanged -> state.allowing(event.player, event.allowed)
+        is GameDayEnded -> state.closed(event.gameDay)
+        is GameDayCancelled -> state.closed(event.gameDay)
+        is PlayerErased -> state.erased(event.player)
         else -> state
     }
 }

@@ -53,7 +53,7 @@ fun HTML.readinessPage(view: ReadinessView) {
 
 context(me: CurrentPlayer)
 private fun UL.playerRow(p: PlayerReadiness, view: ReadinessView) = li("gf-row") {
-    val name = view.names[p.player] ?: "Unknown player"
+    val name = view.names[p.player] ?: SOMEONE
     avatar(p.player, view.names[p.player])
     span("gf-row__main") {
         span("gf-row__title") { +name }

@@ -1,6 +1,7 @@
 package gorefest.shell.web.gameday
 
 import gorefest.core.PlayLogged
+import gorefest.shell.web.components.SOMEONE
 import gorefest.core.PlayerId
 import gorefest.core.game.Game
 import gorefest.core.datepoll.DatePollSummary
@@ -260,7 +261,7 @@ fun HTML.gameDayPage(hub: GameDayHub) {
                 ul("gf-list") {
                     hub.played.forEach { (game, log) ->
                         li {
-                            gameRow(game, meta = "${log.players.map { hub.names[it] ?: "?" }.joinToString(", ")} · ${log.minutes} min") {
+                            gameRow(game, meta = "${log.players.map { hub.names[it] ?: SOMEONE }.joinToString(", ")} · ${log.minutes} min") {
                                 span("gf-small gf-muted") { +log.at.atZone(zone(gameDay)).toLocalTime().withSecond(0).withNano(0).toString() }
                             }
                         }
@@ -351,7 +352,7 @@ private fun TagConsumer<*>.players(gameDay: GameDaySummary, names: Map<PlayerId,
                 val name = names[player]
                 avatar(player, name)
                 span("gf-row__main") {
-                    span("gf-row__title") { +(name ?: "Unknown player") }
+                    span("gf-row__title") { +(name ?: SOMEONE) }
                     span("gf-row__sub") {
                         val count = broughtBy[player] ?: 0
                         +when (count) { 0 -> "Bringing nothing yet"; 1 -> "Bringing 1 game"; else -> "Bringing $count games" }

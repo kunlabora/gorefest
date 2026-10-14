@@ -10,6 +10,7 @@ import gorefest.core.GameBrought
 import gorefest.core.GameDayCancelled
 import gorefest.core.GameDayEnded
 import gorefest.core.GameUnbrought
+import gorefest.core.PlayerErased
 import gorefest.core.PlayerId
 import gorefest.core.PlayerJoined
 import gorefest.core.Rejection
@@ -263,5 +264,34 @@ class BringRequestsTest {
         off.accepts(anna) shouldBe false
         off.accepts(bram) shouldBe true
         BringRequests.evolve(off, BringRequestsAllowedChanged(anna, true)).accepts(anna) shouldBe true
+    }
+
+    // Erasure
+
+    @Test
+    fun `an erased asker's requests stop counting against the owner`() {
+        RequestBringDecider
+            .given(*joined, *fiveAskedAnna, PlayerErased(caro))
+            .whenever(RequestBring(gorefest7, dirk, anna, BggId(2)))
+            .thenEmits(ask(dirk, anna, BggId(2)))
+    }
+
+    @Test
+    fun `an erased owner can't be asked`() {
+        RequestBringDecider.given(*joined, PlayerErased(anna)).whenever(RequestBring(gorefest7, bram, anna, brass)).thenRejects(Rejection.OwnerNotJoined)
+    }
+
+    @Test
+    fun `an erased player's requests, both ways, leave a game day still to be played`() {
+        val requests = project(ask(bram, anna, brass), ask(caro, bram, azul), ask(caro, anna, catan), PlayerErased(bram))
+
+        requests.on(gorefest7).map { Triple(it.asker, it.owner, it.game) } shouldBe listOf(Triple(caro, anna, catan))
+        requests.count(gorefest7) shouldBe 1
+    }
+
+    @Test
+    fun `a closed game day keeps an erased player's requests as history`() {
+        project(ask(bram, anna, brass), GameDayEnded(gorefest7), PlayerErased(bram)).on(gorefest7).map { it.game } shouldBe listOf(brass)
+        project(ask(bram, anna, brass), GameDayCancelled(gorefest7), PlayerErased(bram)).on(gorefest7).map { it.game } shouldBe listOf(brass)
     }
 }

@@ -1,6 +1,7 @@
 package gorefest.shell.web.request
 
 import gorefest.core.BggId
+import gorefest.shell.web.components.SOMEONE
 import gorefest.core.PlayerId
 import gorefest.core.eventsourcing.Decision
 import gorefest.core.game.Game
@@ -104,7 +105,7 @@ fun Route.requestRoutes(app: App) {
             // Ownership lives in the collection tables, not in the log: it's checked here, before the decider sees the command.
             if (owner == null || game == null || game.id !in app.collectionSync.collection(owner)) return@authenticated call.respond(HttpStatusCode.NotFound)
             val decision = app.commands.handle(RequestBringDecider, RequestBring(gameDay.id, me.id, owner, game.id))
-            val ownerName = login.names(listOf(owner))[owner] ?: "Someone"
+            val ownerName = login.names(listOf(owner))[owner] ?: SOMEONE
             val row = AskRow(game, owner, ownerName, askState(app, gameDay, me, owner, game.id))
             call.response.header("HX-Trigger", REQUESTS_CHANGED)
             respondFragment(if (decision is Decision.Rejected) HttpStatusCode.Conflict else HttpStatusCode.OK) {
@@ -150,7 +151,7 @@ suspend fun ownerRequests(app: App, gameDay: GameDaySummary, me: CurrentPlayer, 
     val open = app.bringRequests.openFor(me.id, gameDay.id)
     val names = login.names(open.map { it.asker }.toSet())
     return open.groupBy { it.game }.mapNotNull { (game, requests) ->
-        app.catalog[game]?.let { OwnerRequest(it, requests.map { r -> r.asker to (names[r.asker] ?: "Someone") }) }
+        app.catalog[game]?.let { OwnerRequest(it, requests.map { r -> r.asker to (names[r.asker] ?: SOMEONE) }) }
     }
 }
 
@@ -162,7 +163,7 @@ private fun playerId(s: String) = runCatching { PlayerId(Uuid.parse(s)) }.getOrN
 private suspend fun members(app: App, gameDay: GameDaySummary, me: CurrentPlayer, login: Login): List<AskMember> {
     val others = gameDay.players.filter { it != me.id && app.bringRequests.accepts(it) }
     val names = login.names(others)
-    return others.map { AskMember(it, names[it] ?: "Unknown player") }.sortedBy { it.name.lowercase() }
+    return others.map { AskMember(it, names[it] ?: SOMEONE) }.sortedBy { it.name.lowercase() }
 }
 
 /** The member in the `{owner}` path parameter, if they can be asked. */
@@ -192,6 +193,6 @@ private suspend fun myRequests(app: App, gameDay: GameDaySummary, me: CurrentPla
     val mine = app.bringRequests.by(me.id, gameDay.id)
     val names = login.names(mine.map { it.owner }.toSet())
     return mine.groupBy { it.owner to it.game }.values.map { it.last() }.mapNotNull { request ->
-        app.catalog[request.game]?.let { MyRequest(it, request.owner, names[request.owner] ?: "Someone", request.status) }
+        app.catalog[request.game]?.let { MyRequest(it, request.owner, names[request.owner] ?: SOMEONE, request.status) }
     }
 }

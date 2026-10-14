@@ -18,4 +18,4 @@
 At least one placeholder ("Someone"); preferably the erased person's open requests are withdrawn/answered and their shelf entries dropped from an upcoming game day (as `GameDays` already drops them from the table).
 
 ## Status
-Status: open (decide: accept per G2, or extend the erasure projections).
+Status: fixed by extending the projections (no new events, the log is untouched). On game days still to be played, `PlayerErased` now drops the erased person's games and wishes from the shelf (`Shelves`) and their open requests both ways (`BringRequests`); closed days keep their history. `RequestBringDecider` and `SetPlayWishDecider` see erasures too, so a deleted person's requests stop counting against the caps and their games can't be wished for. Every nameless player shows as "Someone" (`SOMEONE`, `web/components/Avatars.kt`); the avatar disc still shows "?". Host-less game days still can't be edited or cancelled (as the /account warning says).
