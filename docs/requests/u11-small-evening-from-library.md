@@ -12,5 +12,6 @@ Source: user testing, 2026-10-06. Status: 📋
 
 **Decision (2026-10-14):** a separate concept next to the game day, not a replacement and not an extension. It uses the same matching rules.
 
-**Still open:** whether a friend's "yes" to a proposed game counts as a wish (the matcher's bonus per person who wants it, U10), and whether collections must be linked for everyone.
+**Decided (2026-10-14):** a friend's "yes" to a proposed game is a heart: it counts as a wish (U10) for the matcher, with the same limit of 3 per person.
 
+**Still open:** whether collections must be linked for everyone; what "maybe" and "no" do (likely nothing for "maybe"; "no" ignored or a small minus).

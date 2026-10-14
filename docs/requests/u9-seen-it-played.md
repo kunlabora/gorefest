@@ -12,5 +12,7 @@ Source: user testing, 2026-10-06. Status: 📋
 
 **Decision (2026-10-14):** a watched game counts as if it was played. Don't infer who watched: propose games from the game day's shelf and let the person say whether they watched one.
 
-**Still open:** whether "counts as played" covers only the taste model (enjoyment) or also "has played" (which ends the novelty bonus and the "new to some" reason); and whether to propose the whole shelf or only shelf games logged as played that day by a table you weren't at.
-
+**Decided (2026-10-14):**
+- "Counts as played" is for the taste model only (the enjoyment layer, like a `PLAYED` comparison). Watching doesn't make it "played": the novelty bonus and the "new to some" reason stay.
+- Propose the whole shelf of the game day, not just games logged as played: the log may not be filled in yet when someone marks a game as watched.
+- A game that isn't on the shelf can be found with a BGG search (like bringing a game on the day).
