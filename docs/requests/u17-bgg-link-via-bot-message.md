@@ -1,6 +1,6 @@
 # U17 Link BGG by a message from a Boardfest bot account
 
-Source: user testing, 2026-10-06. Status: 📋
+Source: user testing, 2026-10-06. Status: 🚫
 
 **Feedback:** Change the BGG linking process: have a Boardfest bot account on BGG send a personal message to the person who wants to link, containing a link or code.
 
@@ -9,3 +9,5 @@ Source: user testing, 2026-10-06. Status: 📋
 **Today:** the user pastes a code in their profile's Website/Homepage field (S3, instructions improved 2026-10-06).
 
 **Open questions:** ask BGG whether a bot may send messages; alternative: keep the code flow.
+
+**Decision (2026-10-14):** won't do.

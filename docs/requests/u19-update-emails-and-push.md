@@ -1,6 +1,6 @@
 # U19 Update emails when people add games (and push as an alternative)
 
-Source: user testing, 2026-10-06. Status: 📋
+Source: user testing, 2026-10-06. Status: 🚫
 
 **Feedback:** Email when people have added their games to a game day, to get updates? What could be a good guesstimate (our last Boardfest had 9 people, we organise it about 4 times a year)? If too expensive, is push with another service cheaper?
 
@@ -13,3 +13,5 @@ Source: user testing, 2026-10-06. Status: 📋
 - Recommendation: daily digest mail, opt-out per player, when we build it.
 
 **Open questions:** digest time of day; one mail per game day or one overall; a per-player opt-out setting (plain table, not an event).
+
+**Decision (2026-10-14):** won't do.

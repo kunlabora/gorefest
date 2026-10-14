@@ -1,6 +1,6 @@
 # Backlog
 
-Status: 📋 todo · ⏭ next up · 🚧 doing · ✅ done. Move a story by changing its status here; tick acceptance criteria in its section as they land.
+Status: 📋 todo · ⏭ next up · 🚧 doing · ✅ done · 🚫 won't do. Move a story by changing its status here; tick acceptance criteria in its section as they land.
 A story is done when every criterion is ticked and covered by a test (decider given/when/then where there's a decision, a web test where there's a page).
 
 | #   | Story                                             | Status | Depends on |
@@ -40,9 +40,9 @@ A story is done when every criterion is ticked and covered by a test (decider gi
 | U14 | [Fun default game day titles](requests/u14-game-day-title-generator.md) | ✅ | |
 | U15 | [Loading indicator during active search](requests/u15-search-loading-indicator.md) | ✅ | |
 | U16 | [Cancel a game day](requests/u16-cancel-game-day.md) | ✅ | |
-| U17 | [Link BGG by a message from a Boardfest bot account](requests/u17-bgg-link-via-bot-message.md) | 📋 | |
+| U17 | [Link BGG by a message from a Boardfest bot account](requests/u17-bgg-link-via-bot-message.md) | 🚫 | |
 | U18 | ["Your likely favourites today": pills overlap the bottom after scrolling](requests/u18-favourites-pills-overlap.md) | ✅ | |
-| U19 | [Update emails when people add games (and push as an alternative)](requests/u19-update-emails-and-push.md) | 📋 | |
+| U19 | [Update emails when people add games (and push as an alternative)](requests/u19-update-emails-and-push.md) | 🚫 | |
 | U20 | [Ask someone to bring a game from their collection](requests/u20-ask-someone-to-bring-a-game.md) | ✅ | |
 
 The screen-by-screen visual redesign has its own list: [redesign-backlog.md](redesign-backlog.md).
@@ -254,7 +254,7 @@ Follow-ups, not blocking:
 
 ## User testing feedback, 2026-10-06
 
-One request file per item in [`docs/requests/`](requests/); each has its own criteria. Decisions: U16 cancels silently; U9, U11 and U19 are recorded only; U17 needs BGG's permission before any work.
+One request file per item in [`docs/requests/`](requests/); each has its own criteria. Decisions: U16 cancels silently; U9 and U11 are being shaped (2026-10-14); U17 and U19 won't be done (2026-10-14).
 
 ---
 
