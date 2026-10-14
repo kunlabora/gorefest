@@ -63,6 +63,14 @@ class PollGamesTest {
         ProposePollGameDecider.given(*open, *full).whenever(ProposePollGame(poll, anna, humanity)).thenRejects(Rejection.TooManyPollGames)
     }
 
+    @Test
+    fun `games ticked on the form go into the poll with it, but only when it asks about games`() {
+        val create = CreateDatePoll(poll, anna, "Small night", "Anna's", listOf(fri, sat), "Europe/Brussels", today, asksAboutGames = true, games = listOf(brass, humanity, brass))
+        CreateDatePollDecider.given().whenever(create).thenEmits(created(), DatePollJoined(poll, anna), DatePollGameProposed(poll, brass), DatePollGameProposed(poll, humanity))
+        CreateDatePollDecider.given().whenever(create.copy(asksAboutGames = false)).thenEmits(created(games = false), DatePollJoined(poll, anna))
+        CreateDatePollDecider.given().whenever(create.copy(games = (1..MAX_POLL_GAMES + 1).map { BggId(it) })).thenRejects(Rejection.TooManyPollGames)
+    }
+
     // Answering
 
     @Test

@@ -694,6 +694,10 @@ div.gf-tile { cursor: default; }
 }
 /* U11: a date poll that asks about games too. */
 .gf-poll-form__games { padding: 0; }
+/* The game picker only shows once "Ask about games as well" is on. */
+.gf-poll-form__gamepick { display: none; gap: 12px; }
+.gf-poll-form__gamepick > * { margin: 0; }
+.gf-poll-form:has(input[name=games]:checked) .gf-poll-form__gamepick { display: grid; }
 .gf-opt__games { margin: 0; display: flex; align-items: center; gap: 6px; color: var(--ink-muted); }
 .gf-opt__games .gf-icon { width: 16px; height: 16px; }
 .gf-opt__games--missing { color: var(--ink); }

@@ -315,7 +315,7 @@ class RequestRoutesTest {
         val switch = page.one("#bring-requests-switch input.gf-switch")
         switch.hasAttr("checked") shouldBe true
         page.one("#bring-requests-switch .gf-row__title").text() shouldBe "Let people see my collection to ask for games"
-        page.one("#bring-requests-switch").text() shouldContain "and the host of a date poll you joined"
+        page.one("#bring-requests-switch").text() shouldContain "Only people on a game day you joined see your collection, and only to ask you for a game"
 
         val off = client.htmxPost("/collection/bring-requests", parameters { append("allowed", "false") }).fragment()
 

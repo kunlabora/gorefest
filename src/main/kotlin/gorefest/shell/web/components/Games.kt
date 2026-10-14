@@ -141,9 +141,9 @@ fun FlowContent.gameTile(game: Game, owner: PlayerId?, ownerName: String?) = div
     span("gf-tile__name") { bggNameLink(game) }
 }
 
-/** A game tile that's a radio button, for "which game?" pickers. */
-fun FlowContent.gameTileChoice(game: Game, name: String, checked: Boolean) = label("gf-tile") {
-    input(InputType.radio, name = name) { value = game.id.toString(); this.checked = checked }
+/** A game tile that's a radio button, for "which game?" pickers; with [multiple] a checkbox, for "which games?". */
+fun FlowContent.gameTileChoice(game: Game, name: String, checked: Boolean, multiple: Boolean = false) = label("gf-tile") {
+    input(if (multiple) InputType.checkBox else InputType.radio, name = name) { value = game.id.toString(); this.checked = checked }
     art(game)
     span("gf-tile__name") { +game.name }
 }

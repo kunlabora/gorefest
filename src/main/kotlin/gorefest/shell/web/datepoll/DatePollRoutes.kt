@@ -2,6 +2,7 @@ package gorefest.shell.web.datepoll
 
 import gorefest.core.DatePollId
 import gorefest.core.gameday.MAX_WISHES
+import gorefest.core.taste.PlayerGames
 import gorefest.core.datepoll.ProposePollGameDecider
 import gorefest.core.datepoll.ProposePollGame
 import gorefest.core.datepoll.AnswerPollGameDecider
@@ -67,7 +68,23 @@ fun Route.datePollRoutes(app: App) {
     )
 
     get("/polls/new") {
-        authenticated { call.respondHtml { datePollFormPage(SiteBar(contextOf<CurrentPlayer>(), Nav.GAME_DAYS)) } }
+        authenticated {
+            val me = contextOf<CurrentPlayer>()
+            val picks = formGames(app, me, Parameters.Empty)
+            call.respondHtml { datePollFormPage(SiteBar(me, Nav.GAME_DAYS), picks = picks) }
+        }
+    }
+
+    // On the form, before there is a poll: BGG search for games to put to it.
+    get("/polls/new/games/search") {
+        authenticated {
+            val query = call.parameters["q"].orEmpty().trim()
+            val found = if (query.length < 2) null else app.gameSearch.search(query)
+            // Your own games are tiles on the form already: a second tile for the same game would only confuse.
+            val mine = app.collectionSync.collection(contextOf<CurrentPlayer>().id)
+            val (yours, others) = found?.games.orEmpty().partition { it.id in mine }
+            respondFragment { pollFormSearchResults(others, found?.bggUnavailable == true, found?.nothingFor(query)?.takeIf { yours.isEmpty() }, inYourGames = yours.map { it.name }) }
+        }
     }
 
     get("/polls/new/date") {
@@ -77,6 +94,7 @@ fun Route.datePollRoutes(app: App) {
     post("/polls") {
         authenticated {
             val form = call.receiveParameters()
+            val ticked = form.getAll("game").orEmpty().mapNotNull { it.toIntOrNull()?.let(::BggId) }.filter { app.catalog[it] != null }
             val command = CreateDatePoll(
                 poll = DatePollId(ids.next()),
                 host = contextOf<CurrentPlayer>().id,
@@ -86,10 +104,14 @@ fun Route.datePollRoutes(app: App) {
                 timeZone = form["timeZone"] ?: DEFAULT_TIME_ZONE,
                 today = clock.todayIn(form["timeZone"]),
                 asksAboutGames = form["games"] == "true",
+                games = ticked,
             )
             when (val decision = app.commands.handle(CreateDatePollDecider, command)) {
                 is Decision.Accepted -> redirect("/polls/${command.poll}")
-                is Decision.Rejected -> respondFragment { datePollForm(decision.reason.message(), form) }
+                is Decision.Rejected -> {
+                    val picks = formGames(app, contextOf<CurrentPlayer>(), form)
+                    respondFragment { datePollForm(decision.reason.message(), form, picks) }
+                }
             }
         }
     }
@@ -149,12 +171,11 @@ fun Route.datePollRoutes(app: App) {
             val me = contextOf<CurrentPlayer>()
             val poll = memberPoll(app, me)?.takeIf { it.host == me.id && it.asksAboutGames } ?: return@authenticated call.respond(HttpStatusCode.NotFound)
             val query = call.parameters["q"].orEmpty().trim()
-            val pool = gamePool(app, poll, me).filter { (game, _) -> query.isNotEmpty() && game.name.contains(query, ignoreCase = true) }
+            val mine = gamePool(app, poll, me).filter { query.isNotEmpty() && it.name.contains(query, ignoreCase = true) }
             val found = if (query.length < 2) null else app.gameSearch.search(query)
-            val names = login.names(pool.flatMap { it.second }.distinct())
-            val known = pool.map { it.first.id }.toSet()
+            val known = mine.map { it.id }.toSet()
             respondFragment {
-                pollGameSearchResults(poll, pool, names, found?.games.orEmpty().filter { it.id !in known && it.id !in poll.proposals }, found?.bggUnavailable == true, found?.nothingFor(query))
+                pollGameSearchResults(poll, mine, found?.games.orEmpty().filter { it.id !in known && it.id !in poll.proposals }, found?.bggUnavailable == true, found?.nothingFor(query))
             }
         }
     }
@@ -245,16 +266,24 @@ private fun RoutingContext.memberPoll(app: App, me: CurrentPlayer): DatePollSumm
 private fun Parameters.dates(name: String): List<LocalDate> =
     getAll(name).orEmpty().mapNotNull { runCatching { LocalDate.parse(it) }.getOrNull() }
 
-/**
- * Games the host can put to the poll from people's collections: their own, and those of people in the poll who let
- * others ask them to bring games (the same switch as on a game day's ask screen). Each with who has it.
- */
-private suspend fun gamePool(app: App, poll: DatePollSummary, me: CurrentPlayer): List<Pair<Game, List<PlayerId>>> {
-    if (me.id != poll.host) return emptyList()
-    val owners = poll.participants.filter { it == me.id || app.bringRequests.accepts(it) }
-    val byGame = mutableMapOf<BggId, MutableList<PlayerId>>()
-    owners.forEach { owner -> app.collectionSync.collection(owner).forEach { byGame.getOrPut(it) { mutableListOf() } += owner } }
-    return byGame.filterKeys { it !in poll.proposals }.mapNotNull { (id, who) -> app.catalog[id]?.let { it to who.toList() } }.sortedBy { it.first.name.lowercase() }
+/** The host's own games they can still put to the poll, their likely favourites first. Friends' collections stay theirs. */
+private suspend fun gamePool(app: App, poll: DatePollSummary, me: CurrentPlayer): List<Game> =
+    if (me.id != poll.host) emptyList() else yourGames(app, me).filter { it.id !in poll.proposals }
+
+/** [me]'s collection, ranked by how much they'd likely enjoy each game: the suggestions on the form and on the poll. */
+private suspend fun yourGames(app: App, me: CurrentPlayer): List<Game> {
+    val games = app.collectionSync.collection(me.id).mapNotNull(app.catalog::get)
+    val player = PlayerGames(app.tastes.of(me.id), games.map { it.id }.toSet())
+    val scores = app.predictor.enjoyment(player, games, app.clock.instant())
+    return games.sortedWith(compareByDescending<Game> { scores[it.id]?.mean ?: 0.0 }.thenBy { it.name.lowercase() })
+}
+
+/** What the poll form offers to tick: [me]'s games, plus any game ticked before (found by search) when the form comes back. */
+private suspend fun formGames(app: App, me: CurrentPlayer, values: Parameters): PollFormGames {
+    val suggested = yourGames(app, me)
+    val ticked = values.getAll("game").orEmpty().mapNotNull { it.toIntOrNull()?.let(::BggId) }.toSet()
+    val found = ticked.filter { id -> suggested.none { it.id == id } }.mapNotNull(app.catalog::get)
+    return PollFormGames(suggested, found, ticked, linked = app.bggAccounts.isLinked(me.id), tasteKnown = app.tastes.of(me.id).comparisons.isNotEmpty())
 }
 
 /** The games part of a poll page: each game with its answers and who brings it, and for the host the games they can add. */

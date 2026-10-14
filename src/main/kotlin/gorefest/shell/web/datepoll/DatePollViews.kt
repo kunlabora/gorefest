@@ -4,6 +4,7 @@ import gorefest.core.BggId
 import gorefest.core.PlayerId
 import gorefest.core.datepoll.DatePollSummary
 import gorefest.core.datepoll.MAX_POLL_DATES
+import gorefest.core.datepoll.MAX_POLL_GAMES
 import gorefest.core.datepoll.MIN_POLL_DATES
 import gorefest.core.game.Game
 import gorefest.core.gameday.GameDaySummary
@@ -18,7 +19,20 @@ import kotlinx.html.*
 import java.time.LocalDate
 
 /** The form that starts a poll: a title, a place and a few dates (with "add another"). */
-fun HTML.datePollFormPage(site: SiteBar, values: Parameters = Parameters.Empty) =
+/**
+ * The games the form offers when it asks about games: [suggested] is the host's own collection, likely favourites first;
+ * [found] are games ticked earlier from a search, kept when the form comes back with an error.
+ */
+data class PollFormGames(val suggested: List<Game>, val found: List<Game>, val ticked: Set<BggId>, val linked: Boolean, val tasteKnown: Boolean = false) {
+    companion object {
+        val none = PollFormGames(emptyList(), emptyList(), emptySet(), linked = false)
+    }
+}
+
+/** How many of the host's likeliest favourites show before "All your games". */
+private const val SUGGESTED_SHOWN = 8
+
+fun HTML.datePollFormPage(site: SiteBar, values: Parameters = Parameters.Empty, picks: PollFormGames = PollFormGames.none) =
     page("Find a date", site = site) {
         wrap {
             split("gf-split--pollform") {
@@ -28,12 +42,12 @@ fun HTML.datePollFormPage(site: SiteBar, values: Parameters = Parameters.Empty) 
                     h1("gf-h1 gf-h1--landing") { +"Find a date" }
                     p("gf-lede gf-muted") { +"Pick a few dates that could work, share the link, and see who can make which. You choose the winner; the game day is made for you." }
                 }
-                consumer.datePollForm(values = values)
+                consumer.datePollForm(values = values, picks = picks)
             }
         }
     }
 
-fun TagConsumer<*>.datePollForm(error: String? = null, values: Parameters = Parameters.Empty) =
+fun TagConsumer<*>.datePollForm(error: String? = null, values: Parameters = Parameters.Empty, picks: PollFormGames = PollFormGames.none) =
     form(action = "/polls", method = FormMethod.post, classes = "gf-poll-form") {
         id = "poll-form"
         hx("post", "/polls")
@@ -75,9 +89,48 @@ fun TagConsumer<*>.datePollForm(error: String? = null, values: Parameters = Para
                 checked = values["games"] == "true"
             }
         }
+        pollFormGamePicker(picks)
         browserTimeZone()
         primaryButton("Start the poll")
     }
+
+/** Shown once "Ask about games as well" is on (CSS, no round trip): the host's games to tick, likely favourites first, and a BGG search. */
+private fun FlowContent.pollFormGamePicker(picks: PollFormGames) = div("gf-poll-form__gamepick") {
+    h2("gf-h2") { +"Which games could you play?" }
+    p("gf-small gf-muted") { +"Tick a few to put to the group, up to $MAX_POLL_GAMES. You can add more once the poll is up." }
+    val (shown, rest) = picks.suggested.withIndex().partition { (i, game) -> i < SUGGESTED_SHOWN || game.id in picks.ticked }.let { (a, b) -> a.map { it.value } to b.map { it.value } }
+    // Without any taste answers the order is only alphabetical: don't claim favourites.
+    if (picks.suggested.isNotEmpty()) h3("gf-label") { +if (picks.tasteKnown) "Your games, likely favourites first" else "Your games" }
+    else p("gf-small") {
+        +if (picks.linked) "Your collection is still on its way from BGG. Search for games below." else "Link your BGG account to pick from your own games. Or search below. "
+        if (!picks.linked) a("/bgg?returnTo=%2Fpolls%2Fnew", classes = "gf-link") { +"Link BGG" }
+    }
+    div("gf-tiles") {
+        id = "poll-form-picked"
+        picks.found.forEach { gameTileChoice(it, "game", checked = true, multiple = true) }
+        shown.forEach { gameTileChoice(it, "game", checked = it.id in picks.ticked, multiple = true) }
+    }
+    if (rest.isNotEmpty()) details("gf-pollgames__pool") {
+        summary { +"More of your games (${rest.size})" }
+        div("gf-tiles") { rest.forEach { gameTileChoice(it, "game", checked = false, multiple = true) } }
+    }
+    h3("gf-label") { +"Something else?" }
+    // Enter would submit the whole form from here.
+    searchField("Search BGG", "Search BGG for a game to put to the group", "/polls/new/games/search", "#poll-form-search-results") {
+        hyperscript("on keydown[key=='Enter'] halt the event")
+    }
+    consumer.pollFormSearchResults(emptyList(), bggUnavailable = false, nothingFor = null)
+}
+
+/** BGG results on the poll form: ticking one moves it up with the picked games, so the next search can't wipe it. */
+fun TagConsumer<*>.pollFormSearchResults(games: List<Game>, bggUnavailable: Boolean, nothingFor: String?, inYourGames: List<String> = emptyList()) = div {
+    id = "poll-form-search-results"
+    hyperscript("on change if event.target.checked put event.target.closest('label') at the end of #poll-form-picked end")
+    if (bggUnavailable) p("gf-small gf-muted") { +"BGG isn't answering right now, so these are only games we already know." }
+    if (inYourGames.isNotEmpty()) p("gf-small gf-muted") { +"${inYourGames.joinAnd()} ${if (inYourGames.size == 1) "is" else "are"} in your games above." }
+    if (games.isNotEmpty()) div("gf-tiles") { games.forEach { gameTileChoice(it, "game", checked = false, multiple = true) } }
+    else if (nothingFor != null) p("gf-small gf-muted gf-search-empty") { +"Nothing found for \u201c$nothingFor\u201d. Try another spelling." }
+}
 
 /** One more date input, for the "add another date" button. */
 fun TagConsumer<*>.dateField(value: String = "") = input(InputType.date, name = "dates", classes = "gf-input") {
@@ -111,8 +164,8 @@ data class PollGameRow(
     val inMyCollection: Boolean,
 )
 
-/** The games part of a poll (U11). [pool] is what the host can add from people's collections (empty for anyone else). */
-data class PollGamesView(val rows: List<PollGameRow>, val pool: List<Pair<Game, List<PlayerId>>>, val yesLeft: Int, val error: String? = null)
+/** The games part of a poll (U11). [pool] is what the host can still add from their own collection (empty for anyone else). */
+data class PollGamesView(val rows: List<PollGameRow>, val pool: List<Game>, val yesLeft: Int, val error: String? = null)
 
 fun HTML.datePollPage(view: DatePollView) {
     val poll = view.poll
@@ -176,7 +229,7 @@ private fun FlowContent.gamesSignpost(view: DatePollView, games: PollGamesView) 
     h2("gf-label") { +"Which games would you play?" }
     p("gf-small gf-muted") {
         +when {
-            games.rows.isEmpty() && isHost -> "No games yet. Add a few from your friends' shelves or BGG."
+            games.rows.isEmpty() && isHost -> "No games yet. Add a few from your shelves or BGG."
             games.rows.isEmpty() -> "${view.names[poll.host] ?: "The host"} hasn't added any games yet."
             !poll.open -> "${games.rows.size.of("game")} in the poll."
             else -> "${games.rows.size.of("game")} to choose from · you answered $answered · ${games.yesLeft.of("yes", "yeses")} left"
@@ -202,7 +255,7 @@ private fun FlowContent.pollGames(view: DatePollView, games: PollGamesView) = se
         +"Up to $MAX_WISHES games you'd play: each one counts as a heart on the night. Have one? Say you'll bring it."
     }
     if (games.error != null) errorNotice(games.error)
-    if (games.rows.isEmpty()) emptyState("No games yet", if (isHost) "Search for a few below: in your shelves, your friends' as they join, or anything on BGG." else "${view.names[poll.host] ?: "The host"} hasn't added any games yet.")
+    if (games.rows.isEmpty()) emptyState("No games yet", if (isHost) "Pick a few of yours below, or search BGG for anything." else "${view.names[poll.host] ?: "The host"} hasn't added any games yet.")
     div("gf-pollgames__list") { games.rows.forEach { pollGameCard(view, it) } }
     if (isHost && poll.open) pollGameAdder(view, games)
 }
@@ -269,54 +322,37 @@ private fun FlowContent.chipButton(name: String, value: String, pressed: Boolean
         span { +label }
     }
 
-/** The host's way to add games: search everyone's collections and BGG, or browse the collections. */
+/** The host's way to add games: their own collection, and BGG search for anything else. */
 private fun FlowContent.pollGameAdder(view: DatePollView, games: PollGamesView) = div("gf-card gf-pollgames__add") {
     id = "add-game"
     h3("gf-h3") { +"Add a game" }
-    searchField("Search your friends' games and BGG", "Search for a game to add", "/polls/${view.poll.id}/games/search", "#poll-game-search") { id = ADD_GAME_SEARCH }
+    searchField("Search your games and BGG", "Search for a game to add", "/polls/${view.poll.id}/games/search", "#poll-game-search") { id = ADD_GAME_SEARCH }
     div { id = "poll-game-search" }
     if (games.pool.isNotEmpty()) details("gf-pollgames__pool") {
-        summary { +"Browse everyone's games (${games.pool.size})" }
-        ul("gf-list") { games.pool.forEach { (game, owners) -> li { poolRow(view.poll.id.toString(), game, owners, view.names) } } }
+        summary { +"Your games (${games.pool.size})" }
+        ul("gf-list") { games.pool.forEach { game -> li { addRow(view.poll.id.toString(), game, "In your collection") } } }
     }
-    p("gf-small gf-muted") { +"Only the collections of people who joined, and only of those who let others ask them to bring games." }
 }
 
-private fun FlowContent.poolRow(poll: String, game: Game, owners: List<PlayerId>, names: Map<PlayerId, String>) =
-    gameRow(game, meta = "${owners.map { names[it] ?: "someone" }.joinAnd()} ${if (owners.size == 1) "has" else "have"} it") {
+private fun FlowContent.addRow(poll: String, game: Game, meta: String) =
+    gameRow(game, meta = meta) {
         form(action = "/polls/$poll/games", method = FormMethod.post) {
             hiddenInput("game", game.id.toString())
             button(type = ButtonType.submit, classes = buttonClasses(ButtonStyle.SECONDARY, ButtonSize.SMALL)) { icon("plus"); +"Add" }
         }
     }
 
-/** What the host's search found: games in people's collections first, then BGG. */
-fun TagConsumer<*>.pollGameSearchResults(
-    poll: DatePollSummary,
-    pool: List<Pair<Game, List<PlayerId>>>,
-    names: Map<PlayerId, String>,
-    bgg: List<Game>,
-    bggUnavailable: Boolean,
-    nothingFor: String?,
-) = div {
+/** What the host's search found: their own games first, then BGG. */
+fun TagConsumer<*>.pollGameSearchResults(poll: DatePollSummary, mine: List<Game>, bgg: List<Game>, bggUnavailable: Boolean, nothingFor: String?) = div {
     id = "poll-game-search"
     if (bggUnavailable) p("gf-small gf-muted") { +"BGG isn't answering right now, so these are only games we already know." }
-    if (pool.isEmpty() && bgg.isEmpty()) {
+    if (mine.isEmpty() && bgg.isEmpty()) {
         if (nothingFor != null) p("gf-small gf-muted gf-search-empty") { +"Nothing found for \u201c$nothingFor\u201d. Try another spelling." }
         return@div
     }
     ul("gf-list") {
-        pool.forEach { (game, owners) -> li { poolRow(poll.id.toString(), game, owners, names) } }
-        bgg.forEach { game ->
-            li {
-                gameRow(game, meta = "Not in anyone's collection here: someone can still bring it") {
-                    form(action = "/polls/${poll.id}/games", method = FormMethod.post) {
-                        hiddenInput("game", game.id.toString())
-                        button(type = ButtonType.submit, classes = buttonClasses(ButtonStyle.SECONDARY, ButtonSize.SMALL)) { icon("plus"); +"Add" }
-                    }
-                }
-            }
-        }
+        mine.forEach { li { addRow(poll.id.toString(), it, "In your collection") } }
+        bgg.forEach { li { addRow(poll.id.toString(), it, "From BGG: whoever has it can say they'll bring it") } }
     }
 }
 

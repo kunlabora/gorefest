@@ -70,7 +70,7 @@ One line, about 60 characters, naming people where it helps:
 - States: **Asked** · **Bringing it** · "Anna is bringing it" · a decline reads only **Not this time**, no reason and no blame.
 - Owner's section on the bring page: **People are asking** · "Bram and Caro ask if you can bring Brass: Birmingham" · **Bring it** / **Not this time**. Never "Rejected" or "Declined".
 - Hub next step: kicker **Waiting for you** · "Can you bring Brass: Birmingham?" · "Bram asked you to bring it. One tap to say yes, or not this time." · **See what's asked**. Home tag: **Asked to bring a game**.
-- Switch on the collection page: **Let people see my collection to ask for games** · "Only people on a game day you joined see your collection, to ask you for a game, and the host of a date poll you joined, to put one of your games to the group. You always get to say "Not this time"."
+- Switch on the collection page: **Let people see my collection to ask for games** · "Only people on a game day you joined see your collection, and only to ask you for a game. You always get to say "Not this time"."
 - Rejections: "You've asked for 3 games already: take one back first" · "They've been asked a lot already: leave it to them" · "They'd rather not be asked to bring games" · "They're already bringing that one"
 
 ## Game type and time

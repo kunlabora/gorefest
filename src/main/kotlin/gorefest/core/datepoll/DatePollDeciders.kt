@@ -56,6 +56,8 @@ data class CreateDatePoll(
     val today: LocalDate,
     /** Ask which games people would play too (U11): the pick then makes a game night. */
     val asksAboutGames: Boolean = false,
+    /** The games the host ticked on the form, put to the poll right away (ignored without [asksAboutGames]). */
+    val games: List<BggId> = emptyList(),
 )
 
 object CreateDatePollDecider : Decider<CreateDatePoll, Boolean, Event> {
@@ -68,6 +70,7 @@ object CreateDatePollDecider : Decider<CreateDatePoll, Boolean, Event> {
 
     override fun decide(command: CreateDatePoll, state: Boolean): Decision<Event> {
         val dates = command.dates.distinct().sorted()
+        val games = if (command.asksAboutGames) command.games.distinct() else emptyList()
         return when {
             state -> Rejected(Rejection.DatePollAlreadyExists)
             command.title.isBlank() -> Rejected(Rejection.TitleMissing)
@@ -77,8 +80,12 @@ object CreateDatePollDecider : Decider<CreateDatePoll, Boolean, Event> {
             dates.size > MAX_POLL_DATES -> Rejected(Rejection.TooManyDates)
             dates.any { it < command.today } -> Rejected(Rejection.DateInPast)
             runCatching { ZoneId.of(command.timeZone) }.isFailure -> Rejected(Rejection.UnknownTimeZone)
+            games.size > MAX_POLL_GAMES -> Rejected(Rejection.TooManyPollGames)
             else -> with(command) {
-                Accepted(DatePollCreated(poll, host, title.trim(), place.trim(), dates, timeZone, asksAboutGames), DatePollJoined(poll, host))
+                Accepted(
+                    listOf(DatePollCreated(poll, host, title.trim(), place.trim(), dates, timeZone, asksAboutGames), DatePollJoined(poll, host)) +
+                        games.map { DatePollGameProposed(poll, it) },
+                )
             }
         }
     }

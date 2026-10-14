@@ -1,7 +1,6 @@
 package gorefest.shell.web.datepoll
 
 import gorefest.core.BggId
-import gorefest.core.BringRequestsAllowedChanged
 import gorefest.core.DatePollAnswered
 import gorefest.core.DatePollBringAnswered
 import gorefest.core.DatePollCreated
@@ -20,7 +19,6 @@ import gorefest.shell.web.page
 import gorefest.shell.web.fragment
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldHaveSize
-import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldStartWith
@@ -93,10 +91,9 @@ class PollGamesRoutesTest {
     }
 
     @Test
-    fun `the host adds a game from a friend's collection, or any game by search`() = test.webTest(session = anna) { client ->
+    fun `the host adds one of their own games, or any game by search, and never sees friends' collections`() = test.webTest(session = anna) { client ->
         val page = client.get(pollPage).page()
-        // Everyone's games: Anna's own, and Bram's and Ruben's.
-        page.select(".gf-pollgames__pool .gf-game__name").map { it.text() } shouldContain "Brass: Birmingham"
+        page.select(".gf-pollgames__pool .gf-game__name").map { it.text() } shouldBe listOf("Azul")
 
         val found = client.get("$pollPage/games/search?q=Wingspan") { header("HX-Request", "true") }.fragment()
         found.select(".gf-game__name").map { it.text() } shouldBe listOf("Wingspan")
@@ -106,10 +103,34 @@ class PollGamesRoutesTest {
     }
 
     @Test
-    fun `someone who turned bring requests off keeps their collection from the host`() = test.webTest(session = anna) { client ->
-        given(BringRequestsAllowedChanged(bramId, false))
+    fun `the poll form suggests the host's own games to tick, and the ticked ones go in with the poll`() = test.webTest(session = anna) { client ->
+        val form = client.get("/polls/new").page().one("#poll-form")
+        form.select(".gf-poll-form__gamepick input[name=game][type=checkbox]").map { it.`val`() } shouldBe listOf(azul.toString())
+        form.select(".gf-poll-form__gamepick").text().contains("Brass") shouldBe false
 
-        client.get(pollPage).page().select(".gf-pollgames__pool .gf-game__name").map { it.text() } shouldNotContain "Brass: Birmingham"
+        val found = client.get("/polls/new/games/search?q=Wingspan") { header("HX-Request", "true") }.fragment()
+        found.select("input[name=game][type=checkbox]").map { it.`val`() } shouldBe listOf(humanity.toString())
+        // Anna's own Azul is a tile on the form already: the search points there instead of repeating it.
+        val own = client.get("/polls/new/games/search?q=Azul") { header("HX-Request", "true") }.fragment()
+        own.select("input[name=game]") shouldHaveSize 0
+        own.text() shouldContain "Azul is in your games above."
+
+        client.htmxPost("/polls", parameters {
+            append("title", "Games night"); append("dates", fri.toString()); append("dates", sat.toString()); append("timeZone", "Europe/Brussels")
+            append("games", "true"); append("game", azul.toString()); append("game", humanity.toString())
+        })
+        app.datePolls.forPlayer(annaId).first { it.title == "Games night" }.proposals shouldBe listOf(azul, humanity)
+    }
+
+    @Test
+    fun `a refused form keeps the games ticked, the searched ones too`() = test.webTest(session = anna) { client ->
+        val refused = client.htmxPost("/polls", parameters {
+            append("title", " "); append("dates", fri.toString()); append("dates", sat.toString()); append("timeZone", "Europe/Brussels")
+            append("games", "true"); append("game", humanity.toString())
+        }).fragment()
+
+        refused.select("input[name=game][checked]").map { it.`val`() } shouldBe listOf(humanity.toString())
+        refused.one("input[name=games]").hasAttr("checked") shouldBe true
     }
 
     @Test
