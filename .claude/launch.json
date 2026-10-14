@@ -4,8 +4,24 @@
     {
       "name": "gorefest",
       "runtimeExecutable": "java",
-      "runtimeArgs": ["--sun-misc-unsafe-memory-access=allow", "-jar", "build/libs/gorefest.jar"],
+      "runtimeArgs": [
+        "--sun-misc-unsafe-memory-access=allow",
+        "-jar",
+        "build/libs/gorefest.jar"
+      ],
       "port": 8080
+    },
+    {
+      "name": "docs",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8765",
+        "--bind",
+        "127.0.0.1"
+      ],
+      "port": 8765
     }
   ]
 }

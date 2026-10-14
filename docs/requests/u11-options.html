@@ -1,0 +1,651 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>U11 options</title>
+<link rel="icon" href="../design/icons/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../design/css/tokens.css">
+<link rel="stylesheet" href="../design/css/gorefest.css">
+<style>
+  /* Only the presentation around the mockups lives here (u11-*). The mockups themselves use the app's gf-* classes. */
+  body { margin: 0; background: var(--surface); color: var(--ink); font: 400 16px/24px var(--font-sans); }
+  .u11-doc .gf-body { padding: 0; gap: 0; }
+  .u11-doc h1, .u11-doc h2, .u11-doc h3 { text-wrap: balance; }
+  .u11-intro { display: grid; gap: 14px; max-width: 760px; }
+  .u11-grid2 { display: grid; gap: 16px; }
+  .u11-box { padding: 16px 18px; display: grid; gap: 8px; align-content: start; }
+  .u11-box h3 { margin: 0; font: 700 18px/22px var(--font-display); }
+  .u11-box ul, .u11-box ol { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
+  .u11-box p { margin: 0; }
+  .u11-tabs { position: sticky; top: 0; z-index: 5; background: var(--surface); border-bottom: 1px solid var(--line); }
+  .u11-tabs .gf-wrap { padding-block: 10px; display: flex; flex-wrap: wrap; gap: 8px; }
+  .u11-tabs a.gf-chip { text-decoration: none; }
+  .u11-option { scroll-margin-top: 112px; }
+  .u11-option__head { display: grid; gap: 10px; max-width: 780px; margin-bottom: 28px; }
+  .u11-letter { display: inline-grid; place-items: center; width: 44px; height: 44px; border-radius: 12px; background: var(--ink); color: var(--surface); font: 800 24px/1 var(--font-display); }
+  .u11-titleline { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .u11-pitch { margin: 0; font: 700 22px/28px var(--font-display); }
+  .u11-demo { display: grid; gap: 24px; align-items: start; margin-bottom: 32px; }
+  .u11-demo__side { display: grid; gap: 16px; min-width: 0; }
+  .u11-steps { display: flex; flex-wrap: wrap; gap: 8px; }
+  .u11-steps .gf-chip { min-height: 40px; font-size: 14px; }
+  .u11-steps .gf-chip b { font-family: var(--font-display); }
+  .u11-nav { display: flex; gap: 8px; align-items: center; }
+  .u11-caption { padding: 16px 18px; display: grid; gap: 6px; }
+  .u11-caption p { margin: 0; }
+  .u11-phone { width: min(360px, 100%); height: 720px; margin-inline: auto; border-radius: 40px; border: 9px solid #0e100d; box-shadow: 0 0 0 1px var(--line-strong), var(--shadow-lift); overflow: hidden auto; background: var(--surface); overscroll-behavior: contain; }
+  .u11-phone .gf-screen { min-height: 100%; padding-top: 14px; }
+  .u11-phone .gf-body { padding-top: 4px; }
+  .u11-phone .gf-h1--landing { font-size: 34px; line-height: 36px; }
+  .u11-phone .gf-wordmark { font-size: 19px; }
+  /* The phones sit in a wide page, so undo the 720px+ sizes that would otherwise apply inside them. */
+  .u11-phone .gf-h1--hub { font-size: 34px; line-height: 35px; }
+  .u11-phone .gf-nav { display: none; }
+  .u11-lane { display: grid; gap: 4px; }
+  .u11-lane b { font: 700 13px/18px var(--font-sans); letter-spacing: .06em; text-transform: uppercase; color: var(--ink-muted); }
+  .u11-lane ol { margin: 0; padding-left: 20px; }
+  .u11-size { font: 800 40px/1 var(--font-display); }
+  .u11-table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius-lg); background: var(--surface-raised); }
+  .u11-table { border-collapse: collapse; width: 100%; min-width: 720px; font-size: 15px; line-height: 21px; }
+  .u11-table th, .u11-table td { text-align: left; vertical-align: top; padding: 10px 14px; border-top: 1px solid var(--line); }
+  .u11-table thead th { border-top: 0; font: 700 16px/20px var(--font-display); background: var(--surface-sunk); }
+  .u11-table tbody th { font-weight: 700; color: var(--ink-muted); width: 170px; }
+  .u11-reco { display: grid; gap: 14px; padding: 22px; border: 3px solid var(--brand); border-radius: var(--radius-lg); background: var(--surface-raised); box-shadow: var(--shadow-brand-edge); }
+  .u11-reco p, .u11-reco ul, .u11-reco ol { margin: 0; }
+  .u11-reco ol, .u11-reco ul { padding-left: 20px; display: grid; gap: 6px; }
+  .u11-mini { display: flex; align-items: center; gap: 10px; }
+  .u11-mini .gf-art { width: 48px; flex: none; border-radius: var(--radius-sm); }
+  .u11-mini h3 { margin: 0; font: 700 17px/21px var(--font-display); }
+  .u11-mini p { margin: 0; }
+  .u11-ans { display: flex; gap: 4px; margin: 0 var(--space-4) var(--space-3); }
+  .u11-ans label { min-height: 40px; font-size: 14px; }
+  .u11-dl { display: grid; gap: 10px; margin: 0; }
+  .u11-dl dt { font-weight: 700; }
+  .u11-dl dd { margin: 0; color: var(--ink-muted); }
+  .u11-pros li::marker { content: "+  "; color: var(--olive); font-weight: 700; }
+  .u11-cons li::marker { content: "–  "; color: var(--danger); font-weight: 700; }
+  @media (min-width: 720px) {
+    .u11-grid2 { grid-template-columns: 1fr 1fr; }
+    .u11-grid3 { grid-template-columns: 1fr 1fr 1fr; }
+  }
+  @media (min-width: 940px) {
+    .u11-demo { grid-template-columns: 380px minmax(0, 1fr); }
+    .u11-phone { margin-inline: 0; }
+  }
+  @media (max-width: 420px) {
+    .u11-phone { height: 660px; border-width: 6px; border-radius: 28px; }
+  }
+</style>
+</head>
+<body>
+<div class="gf-screen gf-screen--wide u11-doc">
+  <header class="gf-appbar">
+    <span class="gf-wordmark"><svg class="gf-wordmark__logo" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7"/><g><circle cx="10" cy="10" r="2.9"/><circle cx="22" cy="10" r="2.9"/><circle cx="16" cy="16" r="2.9"/><circle cx="10" cy="22" r="2.9"/><circle cx="22" cy="22" r="2.9"/></g></svg>Boardfest</span>
+    <span class="gf-appbar__end gf-appbar__actions"><span class="gf-tag">U11 · options</span><span data-theme-button></span></span>
+  </header>
+  <main class="gf-body">
+
+    <div class="gf-wrap">
+      <div class="u11-intro">
+        <p class="gf-kicker">U11 · for the product owner · 14 October 2026</p>
+        <h1 class="gf-h1 gf-h1--landing">A small evening from people's shelves: three ways to do it</h1>
+        <p class="gf-lede gf-muted">The feedback: "I see these games in your library and want to play a, b and c." Below are three different shapes for that, each with its screens to click through, what it costs, and how it answers the open questions. A recommendation is at the end.</p>
+        <div class="u11-grid2">
+          <section class="gf-card u11-box">
+            <h3>Already decided</h3>
+            <ul>
+              <li>Its own concept next to the game day: not a replacement, not an extension.</li>
+              <li>Same matching rules: player count, time, taste, wishes.</li>
+              <li>The host invites a few friends and sees the games in their linked collections.</li>
+              <li>A friend's "yes" to a game is a heart (U10): a wish, 3 per person at most.</li>
+            </ul>
+          </section>
+          <section class="gf-card u11-box">
+            <h3>Still open (each option answers them)</h3>
+            <ul>
+              <li>Does everyone need a linked BGG collection?</li>
+              <li>What do "maybe" and "no" do?</li>
+              <li>What is it called?</li>
+              <li>How are friends invited?</li>
+              <li>How does it relate to the date poll?</li>
+            </ul>
+          </section>
+        </div>
+        <p class="gf-small gf-muted">The sample group: Anna hosts; Bram, Caro and Lotte have linked BGG; Jonas hasn't. The phones are real app markup (<code>gf-*</code> classes, the app's copy voice), so they follow your device's theme or the sun/moon button. Box art comes from the app's own covers.</p>
+      </div>
+    </div>
+
+    <nav class="u11-tabs" aria-label="Options">
+      <div class="gf-wrap">
+        <a class="gf-chip gf-chip--text" href="#opt-a">A · Library night</a>
+        <a class="gf-chip gf-chip--text" href="#opt-b">B · Wishes first</a>
+        <a class="gf-chip gf-chip--text" href="#opt-c">C · Date and games poll</a>
+        <a class="gf-chip gf-chip--text" href="#compare">Compare</a>
+        <a class="gf-chip gf-chip--text" href="#reco">Recommendation</a>
+      </div>
+    </nav>
+
+    <!-- ============ OPTION A ============ -->
+    <section class="gf-band u11-option" id="opt-a"><div class="gf-wrap">
+      <div class="u11-option__head">
+        <div class="u11-titleline"><span class="u11-letter">A</span><h2 class="gf-h1">Library night</h2><span class="gf-tag gf-tag--brand">Host picks, friends answer</span></div>
+        <p class="u11-pitch">Anna browses everyone's shelves in one list, puts forward a handful of games, and each friend answers yes, maybe or no per game.</p>
+        <p class="gf-muted" style="margin:0">Vocabulary: a <b>library night</b> is a small event hosted by one player. Its <b>library</b> is every member's collection put together. The host makes <b>proposals</b> (up to 6 games); friends <b>answer</b> each one. Proposing someone's game asks them to bring it.</p>
+      </div>
+      <div class="u11-demo" data-demo="a"></div>
+      <div class="u11-grid2" style="margin-bottom:16px">
+        <section class="gf-card u11-box"><h3>Screen flow</h3>
+          <div class="u11-lane"><b>Host</b><ol><li>Home: <i>Plan a library night</i></li><li>Title, date, place</li><li>Copy the invite link to the group chat</li><li>The library: propose up to 6 games</li><li>Proposals board: who said what</li><li>On the night: pick a game</li></ol></div>
+          <div class="u11-lane"><b>Friend</b><ol><li>Invite link: what, when, which games</li><li>Join (sign in or sign up; new accounts wait for the admin)</li><li>Answer each proposal: yes, maybe, no; bring yours or not</li><li>On the night: pick a game</li></ol></div>
+        </section>
+        <section class="gf-card u11-box"><h3>Open questions, answered</h3>
+          <dl class="u11-dl">
+            <dt>Linked BGG for everyone?</dt><dd>No. The library is whoever has linked; Jonas can join and answer, and sees "Link BGG to add your games". If nobody linked, the host can still search BGG like bring-by-search.</dd>
+            <dt>Maybe and no?</dt><dd>Both shown to the host on the board. Maybe does nothing in the matcher. No is a small minus for that player when they're at the table (the mirror of the wish bonus, smaller), never a veto.</dd>
+            <dt>Name</dt><dd>"Library night" (alternatives: "shelf night", "game night").</dd>
+            <dt>Invite</dt><dd>Its own signed link, exactly like a game day's (<code>/l/{token}</code>, HMAC + version, host can rotate). No email invites; admin approval as today.</dd>
+            <dt>Date poll</dt><dd>Separate. The date is set when the night is made. Follow-up: a poll's "Pick this date" could offer "Make it a library night".</dd>
+          </dl>
+        </section>
+        <section class="gf-card u11-box"><h3>Reuses</h3>
+          <ul><li>Invite links (<code>InviteLinks</code>), joining, account approval</li><li>Collections and BGG sync; bring-by-search for unlinked people</li><li>Wishes: <code>MAX_WISHES</code>, the <code>WantedBy</code> / <code>EagerOwner</code> reasons</li><li>Bring requests' owner answer ("Bring it" / "Not this time") and its opt-out</li><li>The matcher and the pick-a-game screen unchanged, fed a different shelf</li><li>Components: <code>gameRow</code>, <code>segmented</code>, <code>copyBox</code>, <code>nextStep</code>, the poll's <code>gf-opt</code>/<code>gf-meter</code> cards</li></ul>
+        </section>
+        <section class="gf-card u11-box"><h3>New (roughly)</h3>
+          <ul><li>Events: <code>LibraryNightCreated</code>, <code>LibraryNightJoined</code>, <code>GameProposed</code>, <code>ProposalWithdrawn</code>, <code>ProposalAnswered(answer: YES|MAYBE|NO)</code>, <code>LibraryNightCancelled</code>, <code>LibraryNightEnded</code>; bringing as owner yes/not-this-time with a <code>librarynight:{id}</code> tag</li><li>Deciders: propose (cap 6, host only), answer (yes cap 3 via <code>MAX_WISHES</code>), bring</li><li>Read model <code>LibraryNights</code>: proposals, answers, tally, the night's shelf</li><li>Matcher: a small "no" minus; wishes = yes answers</li><li><code>web.librarynight</code>: create, landing, library, answer, board; home card</li><li>Privacy: collections visible to the night's members; <code>PersonalData</code> cases; <code>PlayerErased</code> removes them from nights to come</li></ul>
+        </section>
+        <section class="gf-card u11-box"><h3>Pros</h3>
+          <ul class="u11-pros"><li>Closest to the feedback: "I want to play a, b and c" is literally the host's proposals</li><li>The host gets a clear answer per game, including "no", before the night</li><li>A short list for friends to answer (5 games, not 60)</li></ul>
+        </section>
+        <section class="gf-card u11-box"><h3>Cons</h3>
+          <ul class="u11-cons"><li>Biggest build: a second event type with its own hub, invite, join, answers</li><li>Three answers; "no" in the matcher is new and needs tuning</li><li>All the work sits with the host; friends can't put a game forward</li><li>Next to game days and date polls, a third thing to explain on the home page</li></ul>
+        </section>
+      </div>
+      <div class="gf-card u11-box" style="grid-template-columns:auto 1fr;align-items:center;gap:16px"><span class="u11-size">L</span><p>About the size of S17 (date poll) plus U20 (bring requests) together: new event family, four new screens, one matcher change.</p></div>
+    </div></section>
+
+    <!-- ============ OPTION B ============ -->
+    <section class="gf-band gf-band--sunk u11-option" id="opt-b"><div class="gf-wrap">
+      <div class="u11-option__head">
+        <div class="u11-titleline"><span class="u11-letter">B</span><h2 class="gf-h1">Wishes first</h2><span class="gf-tag gf-tag--brand">Friends heart, host settles</span></div>
+        <p class="u11-pitch">Everybody hearts 3 games from everybody's shelves; the most wanted ones that fit the group become the plan, and their owners bring them.</p>
+        <p class="gf-muted" style="margin:0">Vocabulary: a <b>game night</b> is the small event. Its <b>pool</b> is every member's collection put together. A <b>heart</b> on a pool game is a wish (U10). The host <b>settles the plan</b>: the games that will be there.</p>
+      </div>
+      <div class="u11-demo" data-demo="b"></div>
+      <div class="u11-grid2" style="margin-bottom:16px">
+        <section class="gf-card u11-box"><h3>Screen flow</h3>
+          <div class="u11-lane"><b>Host</b><ol><li>Title, date, place, then the invite link</li><li>Hearts their own 3, like everyone</li><li>Most wanted: the pool ranked by hearts and fit</li><li>Settle the plan (a few games); owners are asked to bring</li><li>On the night: pick a game</li></ol></div>
+          <div class="u11-lane"><b>Friend</b><ol><li>Invite link, join</li><li>The pool, sorted by "fits all of you" and their taste: heart 3</li><li>Owner: "Can you bring Spirit Island?" Bring it / Not this time</li><li>On the night: pick a game</li></ol></div>
+        </section>
+        <section class="gf-card u11-box"><h3>Open questions, answered</h3>
+          <dl class="u11-dl">
+            <dt>Linked BGG for everyone?</dt><dd>No, but at least one person must, or the pool is empty. Unlinked people heart other people's games and see "Your games aren't in the pool yet: link BGG".</dd>
+            <dt>Maybe and no?</dt><dd>They don't exist. You heart 3 or you don't; not hearting says enough. Nothing new in the matcher.</dd>
+            <dt>Name</dt><dd>"Game night" (it reads as the small sibling of a game day).</dd>
+            <dt>Invite</dt><dd>Signed link like a game day. No email invites; admin approval as today.</dd>
+            <dt>Date poll</dt><dd>Separate; date set up front. The pool could later outlive one night (a standing group), which is the "game-day series" idea from the Later list.</dd>
+          </dl>
+        </section>
+        <section class="gf-card u11-box"><h3>Reuses</h3>
+          <ul><li>Wishes almost as-is: <code>SetPlayWishDecider</code>'s rules and cap, applied to the pool instead of the shelf</li><li>Bring requests (U20) for "settle the plan": the host's pick is a request to each owner</li><li>The matcher twice: to rank the pool ("Most wanted", using its hard filter for player count and time) and on the night</li><li>Invite links, joining, approval; collections; <code>gf-wish</code> heart chips</li></ul>
+        </section>
+        <section class="gf-card u11-box"><h3>New (roughly)</h3>
+          <ul><li>Events: <code>GameNightCreated</code>, <code>GameNightJoined</code>, <code>PoolWishChanged</code>, <code>GamePlanned</code> / <code>GameUnplanned</code>, cancelled, ended; bring requests tagged <code>gamenight:{id}</code></li><li>Read models <code>GameNightPools</code> (pool, hearts, plan)</li><li>A pool ranking: hearts × fit, from the matcher's candidates</li><li><code>web.gamenight</code>: create, landing, pool, most wanted, owner's bring</li><li>Privacy: the whole collection is visible to members (bigger exposure than A or C)</li></ul>
+        </section>
+        <section class="gf-card u11-box"><h3>Pros</h3>
+          <ul class="u11-pros"><li>Most democratic: friends find the games they love on other shelves</li><li>No new answer types, no matcher change: hearts already work</li><li>The host does the least: the ranking does the sorting</li></ul>
+        </section>
+        <section class="gf-card u11-box"><h3>Cons</h3>
+          <ul class="u11-cons"><li>Choice overload: 61 games to scroll for 3 hearts (sorting helps, but it's still browsing)</li><li>Further from the feedback: the host's "a, b and c" is only their own 3 hearts</li><li>Hearts spread thin in a group of 5: 15 hearts over 61 games can leave no clear winner</li><li>Shows every member's whole collection to the group</li></ul>
+        </section>
+      </div>
+      <div class="gf-card u11-box" style="grid-template-columns:auto 1fr;align-items:center;gap:16px"><span class="u11-size">M</span><p>A new event family again, but no new answer type or matcher rule; most of the behaviour is wishes plus bring requests with a different tag.</p></div>
+    </div></section>
+
+    <!-- ============ OPTION C ============ -->
+    <section class="gf-band u11-option" id="opt-c"><div class="gf-wrap">
+      <div class="u11-option__head">
+        <div class="u11-titleline"><span class="u11-letter">C</span><h2 class="gf-h1">Date and games poll</h2><span class="gf-tag gf-tag--brand">One link, two questions</span></div>
+        <p class="u11-pitch">The date poll learns a second question: "which of these games would you play?" Picking the date makes a game night with the people who can come and the games they said yes to.</p>
+        <p class="gf-muted" style="margin:0">Vocabulary: a <b>date poll</b> can <b>ask about games</b> too (a switch on the form). When the host picks, it makes a <b>game night</b>: the small event, with a <b>plan</b> (the games people said yes to) instead of an open shelf.</p>
+      </div>
+      <div class="u11-demo" data-demo="c"></div>
+      <div class="u11-grid2" style="margin-bottom:16px">
+        <section class="gf-card u11-box"><h3>Screen flow</h3>
+          <div class="u11-lane"><b>Host</b><ol><li>Home: <i>Find a date</i></li><li>Dates, plus "Ask about games as well": pick games from their shelf</li><li>Share the poll link; add friends' games as they join</li><li>Results: date cards and game cards; pick the date</li><li>The game night is made; on the night, pick a game</li></ol></div>
+          <div class="u11-lane"><b>Friend</b><ol><li>Poll link, join</li><li>One page: tick dates, yes or no per game</li><li>See the picked date and the plan</li><li>On the night: pick a game</li></ol></div>
+        </section>
+        <section class="gf-card u11-box"><h3>Open questions, answered</h3>
+          <dl class="u11-dl">
+            <dt>Linked BGG for everyone?</dt><dd>No. The host starts from their own collection (or BGG search); a friend who links adds their shelf, and the host can add from it while the poll is open.</dd>
+            <dt>Maybe and no?</dt><dd>No maybe, to match the dates (yes/no). No is shown to the host only; the matcher ignores it.</dd>
+            <dt>Name</dt><dd>No new word for the poll. The result is a "game night".</dd>
+            <dt>Invite</dt><dd>The poll's existing link (<code>/p/{token}</code>). Those who can make the date go straight into the game night; no second link.</dd>
+            <dt>Date poll</dt><dd>It is the date poll. Without the games switch, nothing changes and a game day is made as today.</dd>
+          </dl>
+        </section>
+        <section class="gf-card u11-box"><h3>Reuses</h3>
+          <ul><li>The whole date poll: form, link, join, results cards, "Pick this date"</li><li>Wishes: a yes becomes a wish when the night is made (<code>MAX_WISHES</code>)</li><li>Bring requests for games whose owner is coming</li><li>The matcher and the pick-a-game screen</li></ul>
+        </section>
+        <section class="gf-card u11-box"><h3>New (roughly)</h3>
+          <ul><li>Events: <code>DatePollGameProposed</code>, <code>DatePollGameAnswered(yes|no)</code>; <code>GameNightCreated</code> (from <code>DatePollClosed</code>) with the plan; the night's join/wish/bring events</li><li><code>DatePollSummary</code> gains games and tallies</li><li>Poll form: a games section; results: game cards</li><li>A small game night page (plan, people, pick a game)</li></ul>
+        </section>
+        <section class="gf-card u11-box"><h3>Pros</h3>
+          <ul class="u11-pros"><li>One link, one round of answering: groups usually settle the date first anyway</li><li>Builds on a shipped feature people already know</li><li>Fewest new screens</li></ul>
+        </section>
+        <section class="gf-card u11-box"><h3>Cons</h3>
+          <ul class="u11-cons"><li>Friends' shelves only show up after they join, so the first proposals come from the host alone</li><li>Mixes two decisions: someone who can't make it still answers the games</li><li>A game drops out when its owner can't come on the picked date</li><li>The date poll gets heavier, and the "game night" it makes still needs its own page</li></ul>
+        </section>
+      </div>
+      <div class="gf-card u11-box" style="grid-template-columns:auto 1fr;align-items:center;gap:16px"><span class="u11-size">M</span><p>Extends one aggregate-free decider family (the poll) and adds a light game night. Cheapest if the game night stays small; grows to L if it needs everything a game day has.</p></div>
+    </div></section>
+
+    <!-- ============ COMPARE ============ -->
+    <section class="gf-band gf-band--sunk u11-option" id="compare"><div class="gf-wrap" style="display:grid;gap:20px">
+      <div class="u11-option__head" style="margin:0"><p class="gf-kicker">Side by side</p><h2 class="gf-h1">How they compare</h2></div>
+      <div class="u11-table-wrap">
+        <table class="u11-table">
+          <thead><tr><th></th><th>A · Library night</th><th>B · Wishes first</th><th>C · Date and games poll</th></tr></thead>
+          <tbody>
+            <tr><th>Who leads</th><td>The host proposes</td><td>Everyone hearts; the host settles</td><td>The host proposes, with the dates</td></tr>
+            <tr><th>Answers per game</th><td>Yes · maybe · no</td><td>Heart or nothing</td><td>Yes · no</td></tr>
+            <tr><th>"Yes" is a heart</th><td>Yes, 3 max</td><td>The heart is the answer</td><td>Yes, 3 max, once the night is made</td></tr>
+            <tr><th>"No" in the matcher</th><td>Small minus</td><td>Doesn't exist</td><td>Ignored</td></tr>
+            <tr><th>Needs BGG linked</th><td>Nobody must; unlinked friends answer</td><td>At least one person</td><td>Nobody must; host starts from their shelf</td></tr>
+            <tr><th>Date</th><td>Set up front</td><td>Set up front</td><td>Polled</td></tr>
+            <tr><th>Invite</th><td>Own signed link</td><td>Own signed link</td><td>The poll's link</td></tr>
+            <tr><th>Friend effort</th><td>Answer ~5 games</td><td>Browse the pool, heart 3</td><td>Dates and ~5 games, one page</td></tr>
+            <tr><th>Host effort</th><td>Highest: browse, propose, chase</td><td>Lowest: settle the top</td><td>Medium: propose, add as people join</td></tr>
+            <tr><th>Fits the feedback</th><td>Best</td><td>Partly</td><td>Well</td></tr>
+            <tr><th>Collection exposure</th><td>Whole library to the host's members</td><td>Whole pool to everyone</td><td>Proposed games plus the host's picker</td></tr>
+            <tr><th>Size</th><td><b>L</b></td><td><b>M</b></td><td><b>M</b> (L if the game night grows)</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div></section>
+
+    <!-- ============ RECOMMENDATION ============ -->
+    <section class="gf-band u11-option" id="reco"><div class="gf-wrap">
+      <div class="u11-reco">
+        <div class="u11-titleline"><span class="gf-tag gf-tag--solid">Recommendation</span><span class="gf-small gf-muted">Our advice, not a decision</span></div>
+        <h2 class="gf-h1">Build A, the library night, in two slices, and borrow one idea each from B and C</h2>
+        <p>A answers the feedback in its own words: the host sees the shelves and says "a, b and c". Friends answer a short list instead of browsing 60 games, and the host knows before the night what will be there.</p>
+        <ol>
+          <li><b>Slice 1 (M):</b> library night with a fixed date, its own invite link, proposals (6 max), yes / maybe / no. Yes is a heart (3 max). Maybe and no are shown to the host only: no matcher change yet. Proposing someone's game asks them to bring it (U20's owner answer).</li>
+          <li><b>Slice 2 (S–M):</b> decide on "no" as a small minus once we've seen real answers; let a date poll's pick make a library night (C's best part).</li>
+          <li><b>From B:</b> sort the library by "fits all of you" and by what the host will likely enjoy, using the matcher's filter, so the host isn't scrolling 60 games blind.</li>
+        </ol>
+        <p class="gf-small gf-muted">Go for B instead if you'd rather the friends drive and the host do little; go for C if the dates are the real pain for small evenings.</p>
+      </div>
+      <section class="gf-card u11-box" style="margin-top:20px"><h3>Not sure about</h3>
+        <ul>
+          <li>How much of the game day the new concept copies: checkpoints, play log, closing at midnight, the recap mail. All three options need at least "pick a game" on the night; the rest could come later.</li>
+          <li>Whether the U20 opt-out ("Let people on my game days ask me to bring games") also covers showing your collection to a library night, or needs its own line on join.</li>
+          <li>The caps: 6 proposals, 3 yeses. With 5 people that's 15 hearts over 6 games, which is plenty; with 3 people it may be thin.</li>
+          <li>Whether a library night can grow into a game day later, or stays small for good (5–6 people?).</li>
+        </ul>
+      </section>
+    </div></section>
+
+  </main>
+  <footer class="gf-footer"><p class="gf-credit gf-small gf-muted">Mockups only: no app code changed. Box art from <code>src/main/resources/static/covers</code>.</p></footer>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  // Absolute, because a url() inside a custom property resolves against gorefest.css, not this page.
+  var COV = new URL('../../src/main/resources/static/covers/', location.href).href;
+  var PATHS = {
+    heart: '<path d="M12 20s-7.5-4.4-7.5-10A4.3 4.3 0 0112 7.3 4.3 4.3 0 0119.5 10c0 5.6-7.5 10-7.5 10z"/>',
+    calendar: '<rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
+    pin: '<path d="M12 21s-6.5-5.8-6.5-11a6.5 6.5 0 0113 0c0 5.2-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/>',
+    users: '<circle cx="9" cy="8.5" r="3.5"/><path d="M2.5 19.5c.6-3.4 3.2-5.5 6.5-5.5s5.9 2.1 6.5 5.5"/><path d="M15.5 5.2a3.5 3.5 0 010 6.6M18 14.4c2 .8 3.2 2.6 3.5 5.1"/>',
+    check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+    plus: '<path d="M12 5v14M5 12h14"/>',
+    clock: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
+    spark: '<path d="M12 3c.6 4.6 3.9 8 8.5 8.5-4.6.6-7.9 3.9-8.5 8.5-.6-4.6-3.9-7.9-8.5-8.5C8.1 11 11.4 7.6 12 3z"/>',
+    moon: '<path d="M19.5 14.5A8 8 0 019.5 4.5a8 8 0 1010 10z"/>',
+    sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/>',
+    back: '<path d="M15 5l-7 7 7 7"/>',
+    search: '<circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/>',
+    alert: '<path d="M12 4l9 16H3z"/><path d="M12 10v4.5M12 17.2h.01"/>',
+    dice: '<rect x="3.5" y="3.5" width="17" height="17" rx="4"/><circle cx="8.5" cy="8.5" r=".6"/><circle cx="15.5" cy="8.5" r=".6"/><circle cx="12" cy="12" r=".6"/><circle cx="8.5" cy="15.5" r=".6"/><circle cx="15.5" cy="15.5" r=".6"/>',
+    star: '<path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/>'
+  };
+  function icon(n) { return '<svg class="gf-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + PATHS[n] + '</svg>'; }
+
+  var P = {
+    anna: { n: 'Anna', h: 0 }, bram: { n: 'Bram', h: 1 }, caro: { n: 'Caro', h: 2 }, jonas: { n: 'Jonas', h: 3 }, lotte: { n: 'Lotte', h: 1 }
+  };
+  var G = {
+    brass: { n: 'Brass: Birmingham', c: 'brassbirmingham', f: '60–120 min · heavy · 2–4', o: 'anna' },
+    cascadia: { n: 'Cascadia', c: 'cascadia', f: '30–45 min · medium-light · 1–4', o: 'anna' },
+    crew: { n: 'The Crew', c: 'thecrew', f: '20 min · medium-light · 2–5', o: 'anna' },
+    arknova: { n: 'Ark Nova', c: 'arknova', f: '90–150 min · heavy · 1–4', o: 'anna' },
+    heat: { n: 'Heat: Pedal to the Metal', c: 'heat', f: '30–60 min · medium-light · 1–6', o: 'anna' },
+    spirit: { n: 'Spirit Island', c: 'spiritisland', f: '90–120 min · heavy · 1–4', o: 'bram' },
+    azul: { n: 'Azul', c: 'azul', f: '30–45 min · light · 2–4', o: 'bram' },
+    arnak: { n: 'Lost Ruins of Arnak', c: 'lostruinsofarnak', f: '30–120 min · medium · 1–4', o: 'bram' },
+    root: { n: 'Root', c: 'root', f: '60–90 min · medium-heavy · 2–4', o: 'bram' },
+    wingspan: { n: 'Wingspan', c: 'wingspan', f: '40–70 min · medium-light · 1–5', o: 'caro' },
+    everdell: { n: 'Everdell', c: 'everdell', f: '40–80 min · medium · 1–4', o: 'caro' },
+    codenames: { n: 'Codenames', c: 'codenames', f: '15 min · light · 2–8', o: 'caro' },
+    concordia: { n: 'Concordia', c: 'concordia', f: '100 min · medium · 2–5', o: 'caro' },
+    quacks: { n: 'The Quacks of Quedlinburg', c: 'quacksofquedlinburg', f: '45 min · medium-light · 2–4', o: 'lotte' },
+    tfm: { n: 'Terraforming Mars', c: 'terraformingmars', f: '120 min · medium-heavy · 1–5', o: 'lotte' },
+    powergrid: { n: 'Power Grid', c: 'powergrid', f: '120 min · medium-heavy · 2–6', o: 'lotte' }
+  };
+
+  function av(p, cls) { return '<span class="gf-avatar ' + (cls || '') + '" data-hue="' + P[p].h + '" aria-hidden="true">' + P[p].n.charAt(0) + '</span>'; }
+  function avs(list) { return '<span class="gf-avatars">' + list.map(function (p) { return av(p, 'gf-avatar--sm'); }).join('') + '</span>'; }
+  function names(list) { var n = list.map(function (p) { return P[p].n; }); return n.length < 2 ? n.join('') : n.slice(0, -1).join(', ') + ' and ' + n[n.length - 1]; }
+  function art(g, cls, style) { var u = COV + G[g].c + '.webp'; return '<span class="gf-art ' + (cls || '') + '" style="--art:url(\'' + u + '\');' + (style || '') + '"><img src="' + u + '" alt="" loading="lazy"></span>'; }
+  function gameRow(g, trailing, meta) {
+    return '<div class="gf-game gf-game--compact">' + art(g) + '<div class="gf-game__body"><h3 class="gf-game__name"><a class="gf-bgglink" href="#" onclick="return false">' + G[g].n + '</a></h3><p class="gf-game__meta">' + (meta == null ? G[g].f : meta) + '</p></div>' + (trailing || '') + '</div>';
+  }
+  function owned(g) { return P[G[g].o].n + "'s · " + G[g].f; }
+  function themeBtn() { return '<button type="button" class="gf-iconbtn gf-theme-toggle" data-toggle-theme aria-label="Dark mode"><span class="gf-theme-toggle__moon">' + icon('moon') + '</span><span class="gf-theme-toggle__sun">' + icon('sun') + '</span></button>'; }
+  var WORDMARK = '<span class="gf-wordmark"><svg class="gf-wordmark__logo" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7"/><g><circle cx="10" cy="10" r="2.9"/><circle cx="22" cy="10" r="2.9"/><circle cx="16" cy="16" r="2.9"/><circle cx="10" cy="22" r="2.9"/><circle cx="22" cy="22" r="2.9"/></g></svg>Boardfest</span>';
+  function screen(me, body, dock) {
+    return '<div class="gf-screen gf-screen--wide"><header class="gf-appbar">' + WORDMARK + '<span class="gf-appbar__end gf-appbar__actions">' +
+      (me ? '<a class="gf-appbar__account" href="#" onclick="return false" aria-label="Your account">' + av(me) + '</a>' : '') + themeBtn() + '</span></header>' +
+      '<main class="gf-body">' + body + '</main>' + (dock ? '<div class="gf-dock">' + dock + '</div>' : '') + '</div>';
+  }
+  function crumb(t) { return '<a class="gf-crumb" href="#" onclick="return false">' + icon('back') + t + '</a>'; }
+  function head(kicker, h1, lede) { return '<div class="gf-stack">' + (kicker ? '<p class="gf-kicker">' + kicker + '</p>' : '') + '<h1 class="gf-h1">' + h1 + '</h1>' + (lede ? '<p class="gf-muted" style="margin:0">' + lede + '</p>' : '') + '</div>'; }
+  function field(id, label, value, hint, type) { return '<div class="gf-field"><label class="gf-label" for="' + id + '">' + label + '</label><input class="gf-input" id="' + id + '" type="' + (type || 'text') + '" value="' + value + '">' + (hint ? '<p class="gf-hint">' + hint + '</p>' : '') + '</div>'; }
+  function btn(label, style, extra) { return '<button type="button" class="gf-btn gf-btn--' + style + ' ' + (extra || '') + '">' + label + '</button>'; }
+  function notice(ic, text, kind) { return '<div class="gf-notice' + (kind ? ' gf-notice--' + kind : '') + '">' + icon(ic) + '<p>' + text + '</p></div>'; }
+  function next(kicker, title, text, action) { return '<section class="gf-next"><p class="gf-kicker">' + kicker + '</p><h2 class="gf-next__title">' + title + '</h2><p class="gf-next__text">' + text + '</p>' + (action ? btn(action, 'primary', 'gf-btn--block') : '') + '</section>'; }
+  function fan(games) { var r = ['-6deg', '3deg', '-2deg', '5deg', '-4deg']; return '<div class="gf-fan">' + games.map(function (g, i) { return art(g, '', '--r:' + r[i % r.length]); }).join('') + '</div>'; }
+  function facts(items) { return '<ul class="gf-facts">' + items.map(function (i) { return '<li>' + icon(i[0]) + i[1] + '</li>'; }).join('') + '</ul>'; }
+  function heartChip(on) { return '<button type="button" class="gf-chip gf-chip--text" data-heart aria-pressed="' + on + '">' + icon('heart') + '<span>' + (on ? 'I really want to play this' : 'I want to play this') + '</span></button>'; }
+  function tablebar(list, text) { return '<div class="gf-tablebar">' + avs(list) + '<p class="gf-tablebar__text" style="margin:0">' + text + '<span>' + names(list) + '</span></p>' + btn('Change', 'secondary', 'gf-btn--sm') + '</div>'; }
+  function suggestion(rank, g, minutes, reasonIcon, reason, large) {
+    return '<article class="gf-game' + (large ? ' gf-game--large' : '') + '"><span class="gf-game__rank">' + rank + '</span>' + art(g, large ? 'gf-art--wide' : '') +
+      '<div class="gf-game__body"><h3 class="gf-game__name">' + G[g].n + '</h3><p class="gf-game__meta">' + icon('clock') + minutes + '</p><p class="gf-game__reason">' + icon(reasonIcon) + reason + '</p></div></article>';
+  }
+  function seg(name, opts, checked) {
+    return '<fieldset class="gf-seg u11-ans" style="border:1px solid var(--line)" data-last="' + (checked || '') + '"><legend class="gf-vh">Your answer</legend>' + opts.map(function (o) {
+      return '<label><input type="radio" name="' + name + '" value="' + o + '"' + (o === checked ? ' checked' : '') + '>' + o + '</label>';
+    }).join('') + '</fieldset>';
+  }
+  function tile(g, checked, who) { return '<label class="gf-tile"><input type="checkbox"' + (checked ? ' checked' : '') + '>' + art(g) + (who ? '<span class="gf-tile__owner">' + av(who) + '</span>' : '') + '<span class="gf-tile__name">' + G[g].n + '</span></label>'; }
+  function meter(yes, total) { var s = ''; for (var i = 0; i < total; i++) s += '<i' + (i < yes ? ' class="is-yes"' : '') + '></i>'; return '<div class="gf-meter" aria-hidden="true">' + s + '</div>'; }
+
+  var EVERYONE = ['anna', 'bram', 'caro', 'jonas', 'lotte'];
+
+  /* ---------------- Option A: Library night ---------------- */
+  var A = [
+    { who: 'Host', label: 'Home', cap: 'Anna\'s home page gets a third card next to "Host a game day" and "Not sure when?". It carries the brand fill while she has nothing coming up.',
+      html: screen('anna',
+        '<p class="gf-kicker">Hi Anna</p><h1 class="gf-h1">Nothing planned yet</h1>' +
+        '<div class="gf-home"><div class="gf-home__aside">' +
+        '<article class="gf-card gf-homecard"><span class="gf-tag gf-tag--brand" style="justify-self:start">New</span><h2 class="gf-homecard__title">Plan a library night</h2><p class="gf-small gf-muted">A few friends, one evening, games from each other\'s shelves.</p>' + btn(icon('plus') + 'Plan a library night', 'primary') + '</article>' +
+        '<article class="gf-card gf-homecard"><h2 class="gf-homecard__title">Host a game day</h2><p class="gf-small gf-muted">Pick a date, share a link, everyone brings games.</p>' + btn(icon('plus') + 'Host a game day', 'secondary') + '</article>' +
+        '<article class="gf-card gf-homecard"><h2 class="gf-homecard__title">Not sure when?</h2><p class="gf-small gf-muted">Ask your group which date suits them first.</p>' + btn(icon('calendar') + 'Find a date', 'secondary') + '</article>' +
+        '</div></div>') },
+    { who: 'Host', label: 'Create', cap: 'Same three fields as a game day. The difference is in the promise: you\'ll pick the games from your friends\' shelves.',
+      html: screen('anna',
+        crumb('All game days') + head('New library night', 'Plan a library night', 'Invite a few friends, then pick games from all your shelves. They say which ones they fancy.') +
+        '<form class="gf-poll-form" onsubmit="return false">' + field('a-title', 'Title', 'Small one at Anna\'s', 'Whatever your group calls it.') + field('a-date', 'Date', '2026-11-06', '', 'date') +
+        field('a-place', 'Where', 'Anna\'s place', 'Only people who have joined see it.') + btn('Make the library night', 'primary', 'gf-btn--block') + '</form>') },
+    { who: 'Host', label: 'Invite', cap: 'The night\'s hub. The invite is a signed link, like a game day\'s: no email invites, and new accounts still wait for the admin. Jonas joined without BGG, so his games aren\'t in the library.',
+      html: screen('anna',
+        crumb('All game days') + '<p class="gf-kicker">Library night · 5 going</p><h1 class="gf-h1 gf-h1--hub">Small one at Anna\'s</h1>' +
+        facts([['calendar', 'Friday 6 November'], ['pin', 'Anna\'s place']]) +
+        next('Your next step', 'Pick what to play', 'Your library has 61 games from 4 shelves. Put forward up to 6 and your friends say yes, maybe or no.', 'Open the library') +
+        '<section class="gf-section"><h2 class="gf-h2">Invite friends</h2><div class="gf-copy"><span class="gf-copy__value gf-copy__value--small">boardfest.kunlabora.ninja/l/q3n8…</span>' + btn('Copy', 'secondary', 'gf-btn--sm') + '</div><p class="gf-small gf-muted" style="margin:0">Post it in your group chat. Anyone with it can join.</p></section>' +
+        '<section class="gf-section"><h2 class="gf-h2">Who\'s coming</h2><ul class="gf-list">' +
+        [['anna', 'Host · 18 games'], ['bram', '14 games'], ['caro', '17 games'], ['lotte', '12 games'], ['jonas', 'Hasn\'t linked BGG yet']].map(function (r) {
+          return '<li class="gf-row">' + av(r[0]) + '<span class="gf-row__main"><span class="gf-row__title">' + P[r[0]].n + '</span><span class="gf-row__sub">' + r[1] + '</span></span></li>';
+        }).join('') + '</ul></section>') },
+    { who: 'Host', label: 'Library', cap: 'Everyone\'s collection in one list, sorted by what fits five and what Anna will likely enjoy. Try "Propose": up to 6. Proposing Bram\'s Spirit Island also asks Bram to bring it.',
+      html: screen('anna',
+        crumb('Small one at Anna\'s') + head('The library · 61 games', 'What do you fancy?', 'Put forward up to 6. Your friends say yes, maybe or no to each.') +
+        '<div class="gf-search"><input class="gf-input" type="search" placeholder="Search the library" aria-label="Search the library"></div>' +
+        '<fieldset class="gf-seg" style="border:1px solid var(--line);margin:0"><legend class="gf-vh">Show</legend><label><input type="radio" name="a-lib" checked>Fits all 5</label><label><input type="radio" name="a-lib">Everything</label></fieldset>' +
+        '<p class="gf-label" style="margin:0" data-propose-count>3 of 6 proposed</p>' +
+        '<ul class="gf-list" data-propose-group>' +
+        [['heat', true], ['spirit', true], ['wingspan', true], ['powergrid', false], ['crew', false], ['concordia', false], ['tfm', false], ['codenames', false]].map(function (r) {
+          return '<li>' + gameRow(r[0], r[1] ? '<button type="button" class="gf-btn gf-btn--secondary gf-btn--sm" data-propose aria-pressed="true">' + icon('check') + 'Proposed</button>' : '<button type="button" class="gf-btn gf-btn--secondary gf-btn--sm" data-propose aria-pressed="false">Propose</button>', owned(r[0])) + '</li>';
+        }).join('') + '</ul>' +
+        '<p class="gf-error" data-propose-error hidden>' + icon('alert') + 'You can propose 6 games: take one off first</p>' +
+        notice('alert', 'Jonas hasn\'t linked BGG, so his games aren\'t in here yet.')) },
+    { who: 'Friend', label: 'Invite link', cap: 'What Bram sees when he taps the link in the group chat: who, when, and the games so far. The place stays hidden until he joins (as for game days).',
+      html: screen(null,
+        '<div class="gf-media" style="padding-top:var(--space-3)">' + av('anna', 'gf-avatar--lg') + '<p class="gf-muted" style="margin:0"><strong style="color:var(--ink)">Anna</strong> invites you to a library night</p></div>' +
+        '<h1 class="gf-h1 gf-h1--landing">Small one at Anna\'s</h1>' + facts([['calendar', 'Friday 6 November'], ['users', avs(['anna', 'caro', 'lotte', 'jonas']) + '4 going']]) +
+        '<p class="gf-muted" style="margin:0">Anna picked a few games from your shelves. Join to say which ones you fancy.</p>' +
+        fan(['heat', 'spirit', 'wingspan', 'powergrid', 'crew']) +
+        btn('Join Small one at Anna\'s', 'primary', 'gf-btn--lg gf-btn--block') + '<p class="gf-hint">Just your email. No password, no app to install.</p>') },
+    { who: 'Friend', label: 'Answer', cap: 'Bram answers per game. A yes is a heart: try a fourth. His own game comes with the bring question, answered the U20 way.',
+      html: screen('bram',
+        crumb('Small one at Anna\'s') + head('Friday 6 November · 5 proposals', 'Would you play these?', 'Yes counts as a heart, and you have 3. Maybe and no only tell Anna.') +
+        notice('heart', '<b>Anna would like to play your Spirit Island.</b> Can you bring it?') +
+        '<div class="gf-row" style="padding:0;min-height:0">' + btn('Bring it', 'primary', 'gf-btn--sm') + btn('Not this time', 'ghost', 'gf-btn--sm') + '</div>' +
+        '<ul class="gf-list" data-yes-group>' +
+        [['heat', 'Yes', 'Caro and Lotte said yes'], ['spirit', 'Yes', 'Anna said yes'], ['wingspan', 'No', 'Caro and Jonas said yes'], ['powergrid', 'Maybe', 'Anna and Lotte said yes'], ['crew', '', 'Jonas said yes']].map(function (r, i) {
+          return '<li>' + gameRow(r[0], '', owned(r[0])) + '<p class="gf-small gf-muted" style="margin:0 var(--space-4) 6px">' + r[2] + '</p>' + seg('a-ans-' + i, ['Yes', 'Maybe', 'No'], r[1]) + '</li>';
+        }).join('') + '</ul>' +
+        '<p class="gf-error" data-yes-error hidden>' + icon('alert') + 'You can say yes to 3 games: take one off first</p>' +
+        '<p class="gf-small gf-muted" style="margin:0">It saves as you go.</p>') },
+    { who: 'Host', label: 'Board', cap: 'Anna\'s overview: one card per proposal, the poll\'s meter and who-line, owners\' bring answers as tags. Maybe and no are visible here only.',
+      html: screen('anna',
+        crumb('Small one at Anna\'s') + head('Proposals · 4 of 5 answered', 'How it\'s looking', 'Most yeses first. Jonas hasn\'t answered yet.') +
+        '<div class="gf-opts">' +
+        [['heat', 3, 'gf-opt--best', 'Most wanted', 'Bringing it', 'Bram, Caro and Lotte · Jonas maybe'],
+         ['spirit', 2, '', '', 'Bram brings it', 'Anna and Bram · Lotte maybe'],
+         ['powergrid', 2, '', '', 'Lotte brings it', 'Anna and Lotte · Bram maybe · Caro no'],
+         ['wingspan', 2, '', '', 'Caro brings it', 'Caro and Jonas · Bram no'],
+         ['crew', 1, '', '', 'Bringing it', 'Jonas · Anna and Caro maybe']].map(function (r) {
+          return '<article class="gf-card gf-opt ' + r[2] + '"><div class="u11-mini">' + art(r[0]) + '<div><h3>' + G[r[0]].n + '</h3><p>' + (r[3] ? '<span class="gf-tag gf-tag--brand">' + r[3] + '</span> ' : '') + '<span class="gf-tag gf-tag--olive">' + r[4] + '</span></p></div></div>' +
+            meter(r[1], 5) + '<div class="gf-who">' + icon('heart') + '<span>' + r[1] + ' yes: ' + r[5] + '</span></div></article>';
+        }).join('') + '</div>' + btn(icon('plus') + 'Propose another', 'secondary', 'gf-btn--block')) },
+    { who: 'Everyone', label: 'On the night', cap: 'The pick-a-game screen as it is today. The shelf is the proposals the owners are bringing; the wishes are the yeses. Nothing new in the matcher except the small "no" minus.',
+      html: screen('anna',
+        crumb('Small one at Anna\'s') + tablebar(EVERYONE, '5 players · 2h') +
+        '<section class="gf-section"><h2 class="gf-h2">Play this</h2>' +
+        suggestion(1, 'heat', '~50 min for the 5 of you', 'heart', 'Three of you really want to play this.', true) +
+        suggestion(2, 'powergrid', '~120 min for 5', 'heart', 'Anna and Lotte both want to play this.') +
+        suggestion(3, 'crew', '~25 min for 5', 'spark', 'Nobody\'s played it and everyone\'s likely to enjoy it.') + '</section>') }
+  ];
+
+  /* ---------------- Option B: Wishes first ---------------- */
+  var B = [
+    { who: 'Host', label: 'Create', cap: 'The host promises less work: everyone picks, the group\'s favourites become the plan.',
+      html: screen('anna',
+        crumb('All game days') + head('New game night', 'Plan a game night', 'Invite a few friends. Everyone hearts 3 games from each other\'s shelves, and the most wanted ones make the plan.') +
+        '<form class="gf-poll-form" onsubmit="return false">' + field('b-title', 'Title', 'Friday at Anna\'s', 'Whatever your group calls it.') + field('b-date', 'Date', '2026-11-06', '', 'date') +
+        field('b-place', 'Where', 'Anna\'s place', 'Only people who have joined see it.') + btn('Make the game night', 'primary', 'gf-btn--block') + '</form>') },
+    { who: 'Friend', label: 'Invite link', cap: 'Caro\'s landing. The selling point is the size of the pool, not a list of games.',
+      html: screen(null,
+        '<div class="gf-media" style="padding-top:var(--space-3)">' + av('anna', 'gf-avatar--lg') + '<p class="gf-muted" style="margin:0"><strong style="color:var(--ink)">Anna</strong> invites you to a game night</p></div>' +
+        '<h1 class="gf-h1 gf-h1--landing">Friday at Anna\'s</h1>' + facts([['calendar', 'Friday 6 November'], ['users', avs(['anna', 'bram', 'lotte']) + '3 going'], ['dice', '44 games on their shelves']]) +
+        '<p class="gf-muted" style="margin:0">Join, look through everyone\'s games and heart the 3 you most want to play. Your shelf joins the pool too.</p>' +
+        fan(['arnak', 'quacks', 'brass', 'root']) + btn('Join Friday at Anna\'s', 'primary', 'gf-btn--lg gf-btn--block')) },
+    { who: 'Friend', label: 'The pool', cap: 'Caro\'s main screen: the whole pool, filtered to what plays with five and sorted by her own likely enjoyment. The hearts are the shelf-wish chips from U10. Try a fourth.',
+      html: screen('caro',
+        crumb('Friday at Anna\'s') + head('The pool · 61 games from 4 shelves', 'Which 3 do you want to play?', 'Each heart nudges a game towards the plan.') +
+        '<fieldset class="gf-seg" style="border:1px solid var(--line);margin:0"><legend class="gf-vh">Show</legend><label><input type="radio" name="b-pool" checked>Fits all 5</label><label><input type="radio" name="b-pool">Everything</label><label><input type="radio" name="b-pool">Hearted</label></fieldset>' +
+        '<p class="gf-label" style="margin:0" data-heart-count>1 of 3 hearts</p>' +
+        '<ul class="gf-list" data-heart-group>' +
+        [['heat', false, '3 people want this', 'You\'d likely enjoy it'], ['tfm', true, '1 person wants this', 'Right in your wheelhouse'], ['powergrid', false, '2 people want this', ''], ['crew', false, '', 'Short and calm'], ['concordia', false, '', ''], ['codenames', false, '1 person wants this', '']].map(function (r) {
+          return '<li>' + gameRow(r[0], '', owned(r[0])) + (r[3] ? '<p class="gf-game__reason" style="margin:0 var(--space-4) 6px">' + icon('spark') + r[3] + '</p>' : '') +
+            '<div class="gf-wish">' + heartChip(r[1]) + (r[2] ? '<span class="gf-small gf-muted">' + r[2] + '</span>' : '') + '</div></li>';
+        }).join('') + '</ul>' +
+        '<p class="gf-error" data-heart-error hidden>' + icon('alert') + 'You can pick 3 favourites: take one off first</p>') },
+    { who: 'Host', label: 'Most wanted', cap: 'Anna sees the pool ranked by hearts and fit for the group. She switches on what goes in the plan; each switch is a bring request to the owner.',
+      html: screen('anna',
+        crumb('Friday at Anna\'s') + head('Most wanted · 4 of 5 hearted', 'What the group wants', 'Switch on what goes in the plan. We\'ll ask the owners to bring it.') +
+        '<p class="gf-label" style="margin:0" data-plan-count>3 games in the plan</p>' +
+        '<ul class="gf-list" data-plan-group>' +
+        [['heat', 3, 'Bram, Caro and Lotte', true, ''], ['powergrid', 2, 'Anna and Lotte', true, ''], ['spirit', 2, 'Anna and Bram', true, 'Plays 1–4: one of you sits out'], ['wingspan', 1, 'Jonas', false, ''], ['tfm', 1, 'Caro', false, ''], ['codenames', 1, 'Lotte', false, '']].map(function (r, i) {
+          return '<li><label class="gf-row"><span class="gf-game__rank" style="position:static;flex:none">' + (i + 1) + '</span><span class="gf-row__main"><span class="gf-row__title">' + G[r[0]].n + '</span><span class="gf-row__sub">' + r[1] + ' ' + (r[1] === 1 ? 'heart' : 'hearts') + ': ' + r[2] + (r[4] ? ' · ' + r[4] : '') + '</span></span><input class="gf-switch" type="checkbox" role="switch" data-plan' + (r[3] ? ' checked' : '') + ' aria-label="In the plan"></label></li>';
+        }).join('') + '</ul>' +
+        btn('Settle the plan', 'primary', 'gf-btn--block') + '<p class="gf-small gf-muted" style="margin:0">Still to heart: Jonas. You can change the plan until the night.</p>') },
+    { who: 'Friend', label: 'Bring it?', cap: 'Bram, as an owner. Settling the plan asked him to bring Spirit Island; it\'s U20\'s answer, on the game night\'s page.',
+      html: screen('bram',
+        crumb('All game days') + '<p class="gf-kicker">Game night · 5 going</p><h1 class="gf-h1 gf-h1--hub">Friday at Anna\'s</h1>' + facts([['calendar', 'Friday 6 November'], ['pin', 'Anna\'s place']]) +
+        '<section class="gf-next"><p class="gf-kicker">Waiting for you</p><h2 class="gf-next__title">Can you bring Spirit Island?</h2><p class="gf-next__text">It\'s in the plan: Anna and you want to play it. One tap to say yes, or not this time.</p>' + btn('Bring it', 'primary', 'gf-btn--block') + '<button type="button" class="gf-btn gf-btn--ghost" style="color:var(--surface)">Not this time</button></section>' +
+        '<section class="gf-section"><h2 class="gf-h2">The plan · 3</h2><div class="gf-tiles">' + tile('heat', false, 'anna') + tile('powergrid', false, 'lotte') + tile('spirit', false, 'bram') + '</div></section>') },
+    { who: 'Everyone', label: 'On the night', cap: 'Same pick-a-game screen. Shelf = the plan; wishes = the hearts.',
+      html: screen('caro',
+        crumb('Friday at Anna\'s') + tablebar(EVERYONE, '5 players · 2h') +
+        '<section class="gf-section"><h2 class="gf-h2">Play this</h2>' +
+        suggestion(1, 'heat', '~50 min for the 5 of you', 'heart', 'Three of you really want to play this.', true) +
+        suggestion(2, 'powergrid', '~120 min for 5', 'heart', 'Anna and Lotte both want to play this.') +
+        suggestion(3, 'spirit', '~110 min for 4', 'heart', 'Bram brought it and has been itching to play.') + '</section>') }
+  ];
+
+  /* ---------------- Option C: Date and games poll ---------------- */
+  var C = [
+    { who: 'Host', label: 'Start the poll', cap: 'Today\'s "Find a date" form, plus one switch. With it on, Anna picks games from her own shelf; friends\' games become available as they join.',
+      html: screen('anna',
+        crumb('All game days') + head('Find a date', 'Find a date', 'Pick a few dates that could work, share the link, and see who can make which.') +
+        '<form class="gf-poll-form" onsubmit="return false">' + field('c-title', 'Title', 'Small one at Anna\'s', 'Whatever your group calls it.') + field('c-place', 'Where', 'Anna\'s place', 'Only people who have joined see it.') +
+        '<div class="gf-section"><h2 class="gf-h2">Which dates could work?</h2><div class="gf-stack"><input class="gf-input" type="date" value="2026-11-06" aria-label="Date"><input class="gf-input" type="date" value="2026-11-07" aria-label="Date"><input class="gf-input" type="date" value="2026-11-13" aria-label="Date"></div></div>' +
+        '<label class="gf-row" style="padding:0"><span class="gf-row__main"><span class="gf-row__title">Ask about games as well</span><span class="gf-row__sub">For a small evening: say what you\'d like to play.</span></span><input class="gf-switch" type="checkbox" role="switch" checked aria-label="Ask about games as well"></label>' +
+        '<div class="gf-section"><h2 class="gf-label">From your shelf · pick up to 5</h2><div class="gf-tiles">' + tile('heat', true) + tile('brass', true) + tile('crew', true) + tile('cascadia', false) + tile('arknova', false) + '</div><p class="gf-hint">Your friends\' games show up here as they join.</p></div>' +
+        btn('Start the poll', 'primary', 'gf-btn--block') + '</form>') },
+    { who: 'Friend', label: 'Poll link', cap: 'Lotte gets one link that asks both things. Same link, same join as a date poll today.',
+      html: screen(null,
+        '<div class="gf-media" style="padding-top:var(--space-3)">' + av('anna', 'gf-avatar--lg') + '<p class="gf-muted" style="margin:0"><strong style="color:var(--ink)">Anna</strong> wants to find a date and the games</p></div>' +
+        '<h1 class="gf-h1 gf-h1--landing">Small one at Anna\'s</h1>' + facts([['calendar', '3 dates to choose from'], ['heart', '4 games to choose from'], ['users', avs(['anna', 'bram', 'caro']) + '3 people in']]) +
+        '<p class="gf-small gf-muted" style="margin:0">Tick the dates you can make and the games you\'d play. Anna picks the date and the game night appears.</p>' +
+        fan(['heat', 'brass', 'crew', 'spirit']) + btn('Join and answer', 'primary', 'gf-btn--lg gf-btn--block')) },
+    { who: 'Friend', label: 'Answer', cap: 'One page, two questions. Dates are today\'s chips; games get yes or no, and a yes is one of the 3 hearts. Try a fourth yes.',
+      html: screen('lotte',
+        crumb('All game days') + '<p class="gf-kicker">Finding a date · 3 of 5 answered</p><h1 class="gf-h1">Small one at Anna\'s</h1>' +
+        '<section class="gf-section"><h2 class="gf-label">Which dates can you make?</h2><fieldset class="gf-chips" style="border:0;padding:0;margin:0"><legend class="gf-vh">Dates you can make</legend>' +
+        [['Fri 6 Nov', true], ['Sat 7 Nov', false], ['Fri 13 Nov', true]].map(function (d) { return '<label class="gf-chip gf-chip--text"><input type="checkbox"' + (d[1] ? ' checked' : '') + '><span class="gf-chip__check" aria-hidden="true">' + icon('check') + '</span>' + d[0] + '</label>'; }).join('') + '</fieldset></section>' +
+        '<section class="gf-section"><h2 class="gf-label">Which games would you play?</h2><p class="gf-small gf-muted" style="margin:0">A yes is a heart: you have 3. No just tells Anna.</p><ul class="gf-list" data-yes-group>' +
+        [['heat', 'Yes'], ['brass', 'No'], ['crew', 'Yes'], ['spirit', '']].map(function (r, i) {
+          return '<li>' + gameRow(r[0], '', owned(r[0])) + seg('c-ans-' + i, ['Yes', 'No'], r[1]) + '</li>';
+        }).join('') + '</ul><p class="gf-error" data-yes-error hidden>' + icon('alert') + 'You can say yes to 3 games: take one off first</p>' +
+        '<p class="gf-small gf-muted" style="margin:0">Anna added Spirit Island from Bram\'s shelf after he joined. It saves as you go.</p></section>') },
+    { who: 'Host', label: 'Results', cap: 'Anna\'s view: today\'s date cards, then the same kind of card per game. Picking the date makes the game night with who can come and what they said yes to.',
+      html: screen('anna',
+        crumb('All game days') + '<p class="gf-kicker">Finding a date · 4 of 5 answered</p><h1 class="gf-h1">Small one at Anna\'s</h1>' +
+        '<div class="gf-opts" data-pick-group>' +
+        [['Nov', '6', 'Friday 6 November', 4, true, ['anna', 'caro', 'jonas', 'lotte'], 'Bram can\'t'], ['Nov', '13', 'Friday 13 November', 3, false, ['anna', 'bram', 'lotte'], 'Caro and Jonas can\'t']].map(function (d) {
+          return '<article class="gf-card gf-opt' + (d[4] ? ' gf-opt--best' : '') + '"><div class="gf-opt__top"><span class="gf-date"><span class="gf-date__month">' + d[0] + '</span> <span class="gf-date__day">' + d[1] + '</span></span><div><h3 class="gf-opt__title">' + d[2] + '</h3>' + (d[4] ? '<span class="gf-tag gf-tag--brand">Most can come</span>' : '') + '</div></div>' +
+            meter(d[3], 5) + '<div class="gf-who">' + avs(d[5]) + '<span>' + d[3] + ' can · ' + d[6] + '</span></div>' + btn(d[4] ? 'Pick this date' : 'Pick this one', d[4] ? 'primary' : 'secondary', 'gf-btn--block" data-pick="' + d[2]) + '</article>';
+        }).join('') + '</div>' +
+        '<section class="gf-section"><h2 class="gf-h2">The games</h2><ul class="gf-list">' +
+        [['heat', 'Caro, Jonas and Lotte want it', '3 hearts'], ['crew', 'Anna and Lotte want it', '2 hearts'], ['spirit', 'Bram wants it · Bram can\'t make the 6th', '1 heart'], ['brass', 'Anna wants it · Lotte no', '1 heart']].map(function (r) {
+          return '<li>' + gameRow(r[0], '<span class="gf-tag gf-tag--accent">' + icon('heart') + r[2] + '</span>', r[1]) + '</li>';
+        }).join('') + '</ul></section>') },
+    { who: 'Everyone', label: 'Game night', cap: 'The result: a small game night with the four who can come and the plan. Bram\'s Spirit Island drops out because he can\'t make it, and the page says so.',
+      html: screen('lotte',
+        crumb('All game days') + '<p class="gf-kicker">Game night · 4 going</p><h1 class="gf-h1 gf-h1--hub">Small one at Anna\'s</h1>' + facts([['calendar', 'Friday 6 November'], ['pin', 'Anna\'s place']]) +
+        notice('check', 'Anna picked <strong>Friday 6 November</strong>. You\'re in.', 'good') +
+        '<section class="gf-section"><h2 class="gf-h2">The plan · 3</h2><div class="gf-tiles">' + tile('heat', false, 'anna') + tile('crew', false, 'anna') + tile('brass', false, 'anna') + '</div>' +
+        '<p class="gf-small gf-muted" style="margin:0">Spirit Island stays home: Bram can\'t make it.</p></section>' +
+        '<section class="gf-section"><h2 class="gf-h2">Who\'s coming</h2><div class="gf-who">' + avs(['anna', 'caro', 'jonas', 'lotte']) + '<span>Anna, Caro, Jonas and Lotte</span></div></section>' +
+        btn('Pick a game for my table', 'secondary', 'gf-btn--block')) },
+    { who: 'Everyone', label: 'On the night', cap: 'Same pick-a-game screen; the yeses became wishes when the night was made.',
+      html: screen('lotte',
+        crumb('Small one at Anna\'s') + tablebar(['anna', 'caro', 'jonas', 'lotte'], '4 players · 90 min') +
+        '<section class="gf-section"><h2 class="gf-h2">Play this</h2>' +
+        suggestion(1, 'heat', '~45 min for the 4 of you', 'heart', 'Three of you really want to play this.', true) +
+        suggestion(2, 'crew', '~20 min for 4', 'heart', 'Anna and Lotte both want to play this.') +
+        suggestion(3, 'brass', '~90 min for 4', 'heart', 'Anna brought it and has been itching to play.') + '</section>') }
+  ];
+
+  /* ---------------- Demo player ---------------- */
+  var SETS = { a: A, b: B, c: C };
+  function renderDemo(el) {
+    var steps = SETS[el.getAttribute('data-demo')];
+    el.innerHTML = '<div class="u11-phone" tabindex="0" aria-label="Phone mockup"></div>' +
+      '<div class="u11-demo__side"><div class="u11-steps" role="tablist" aria-label="Screens">' + steps.map(function (s, i) {
+        return '<button type="button" role="tab" class="gf-chip gf-chip--text" data-step="' + i + '" aria-pressed="false"><b>' + (i + 1) + '</b> ' + s.who + ' · ' + s.label + '</button>';
+      }).join('') + '</div>' +
+      '<div class="gf-card u11-caption"><p class="gf-kicker" data-cap-kicker></p><p data-cap></p></div>' +
+      '<div class="u11-nav">' + btn(icon('back') + 'Back', 'secondary', 'gf-btn--sm" data-prev="') + btn('Next screen', 'primary', 'gf-btn--sm" data-next="') + '</div></div>';
+    var phone = el.querySelector('.u11-phone'), cur = 0;
+    function show(i) {
+      cur = Math.max(0, Math.min(steps.length - 1, i));
+      phone.innerHTML = steps[cur].html; phone.scrollTop = 0;
+      el.querySelectorAll('[data-step]').forEach(function (b) { var on = +b.getAttribute('data-step') === cur; b.setAttribute('aria-pressed', on); b.setAttribute('aria-selected', on); });
+      el.querySelector('[data-cap-kicker]').textContent = 'Screen ' + (cur + 1) + ' of ' + steps.length + ' · ' + steps[cur].who;
+      el.querySelector('[data-cap]').textContent = steps[cur].cap;
+      el.querySelector('[data-prev]').disabled = cur === 0;
+      el.querySelector('[data-next]').disabled = cur === steps.length - 1;
+      phone.querySelectorAll('img').forEach(function (img) {
+        img.addEventListener('error', function () { var f = img.parentNode; f.classList.add('gf-art--missing'); f.innerHTML = '<span class="gf-art__mono">?</span>'; });
+      });
+    }
+    el.addEventListener('click', function (e) {
+      var s = e.target.closest('[data-step]'); if (s) show(+s.getAttribute('data-step'));
+      if (e.target.closest('[data-prev]')) show(cur - 1);
+      if (e.target.closest('[data-next]')) show(cur + 1);
+    });
+    show(0);
+  }
+  document.querySelectorAll('[data-demo]').forEach(renderDemo);
+
+  /* ---------------- Interactions inside the mockups ---------------- */
+  document.addEventListener('click', function (e) {
+    var t = e.target.closest('[data-toggle-theme]');
+    if (t) {
+      var root = document.documentElement, dark = root.dataset.theme ? root.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+      root.dataset.theme = dark ? 'light' : 'dark';
+      return;
+    }
+    var p = e.target.closest('[data-propose]');
+    if (p) {
+      var g = p.closest('.gf-body'), on = p.getAttribute('aria-pressed') === 'true', n = g.querySelectorAll('[data-propose][aria-pressed="true"]').length, err = g.querySelector('[data-propose-error]');
+      if (!on && n >= 6) { err.hidden = false; return; }
+      err.hidden = true;
+      p.setAttribute('aria-pressed', !on); p.innerHTML = on ? 'Propose' : icon('check') + 'Proposed';
+      g.querySelector('[data-propose-count]').textContent = (n + (on ? -1 : 1)) + ' of 6 proposed';
+      return;
+    }
+    var h = e.target.closest('[data-heart]');
+    if (h) {
+      var hg = h.closest('.gf-body'), hon = h.getAttribute('aria-pressed') === 'true', hn = hg.querySelectorAll('[data-heart][aria-pressed="true"]').length, herr = hg.querySelector('[data-heart-error]');
+      if (!hon && hn >= 3) { herr.hidden = false; return; }
+      herr.hidden = true;
+      h.setAttribute('aria-pressed', !hon); h.querySelector('span').textContent = hon ? 'I want to play this' : 'I really want to play this';
+      hg.querySelector('[data-heart-count]').textContent = (hn + (hon ? -1 : 1)) + ' of 3 hearts';
+      return;
+    }
+    var pk = e.target.closest('[data-pick]');
+    if (pk) {
+      var box = pk.closest('[data-pick-group]');
+      box.querySelectorAll('[data-pick]').forEach(function (b) { b.disabled = true; });
+      var note = document.createElement('div');
+      note.className = 'gf-notice gf-notice--good';
+      note.innerHTML = icon('check') + '<p>You picked <strong>' + pk.getAttribute('data-pick') + '</strong>. The poll is closed and the game night is made.</p>';
+      box.insertBefore(note, box.firstChild);
+    }
+  });
+  document.addEventListener('change', function (e) {
+    var r = e.target;
+    if (r.matches('[data-yes-group] input[type=radio]') && r.value === 'Yes') {
+      var grp = r.closest('[data-yes-group]'), err = grp.parentNode.querySelector('[data-yes-error]');
+      if (grp.querySelectorAll('input[value=Yes]:checked').length > 3) {
+        var fs = r.closest('fieldset'), last = fs.getAttribute('data-last');
+        r.checked = false; err.hidden = false;
+        fs.querySelectorAll('input').forEach(function (i) { i.checked = i.value === last; });
+        return;
+      }
+      err.hidden = true;
+    } else if (r.matches('[data-yes-group] input[type=radio]')) {
+      var e2 = r.closest('[data-yes-group]').parentNode.querySelector('[data-yes-error]'); if (e2) e2.hidden = true;
+    }
+    if (r.matches('[data-yes-group] input[type=radio]')) r.closest('fieldset').setAttribute('data-last', r.value);
+    if (r.matches('[data-plan]')) {
+      var pg = r.closest('.gf-body'), c = pg.querySelectorAll('[data-plan]:checked').length;
+      pg.querySelector('[data-plan-count]').textContent = c + (c === 1 ? ' game' : ' games') + ' in the plan';
+    }
+  });
+
+  document.querySelectorAll('[data-theme-button]').forEach(function (s) { s.outerHTML = themeBtn(); });
+})();
+</script>
+</body>
+</html>
