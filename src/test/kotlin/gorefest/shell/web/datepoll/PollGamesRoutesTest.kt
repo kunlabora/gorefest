@@ -113,6 +113,20 @@ class PollGamesRoutesTest {
     }
 
     @Test
+    fun `the host's add buttons take them to the search, which is right there when there are no games yet`() = test.webTest(session = anna) { client ->
+        val empty = client.get(pollPage).page()
+        empty.one(".gf-poll-signpost a[href=#add-game-q]").text() shouldBe "Add games"
+        empty.select("#poll-games .gf-sechead a") shouldHaveSize 0
+        empty.one("#poll-games h2").text() shouldBe "Which games would you play?"
+        empty.one("input#add-game-q[type=search]")
+
+        given(DatePollGameProposed(poll, azul))
+        val one = client.get(pollPage).page()
+        one.one("#poll-games h2").text() shouldBe "Which games would you play? · 1"
+        one.one("#poll-games .gf-sechead a[href=#add-game-q]").attr("_") shouldContain "focus()"
+    }
+
+    @Test
     fun `only the host adds games`() = test.webTest(session = bram) { client ->
         client.submitForm("$pollPage/games", parameters { append("game", humanity.toString()) }).status shouldBe HttpStatusCode.Conflict
         client.get(pollPage).page().select(".gf-pollgames__add") shouldHaveSize 0

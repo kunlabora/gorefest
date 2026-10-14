@@ -182,8 +182,9 @@ private fun FlowContent.gamesSignpost(view: DatePollView, games: PollGamesView) 
             else -> "${games.rows.size.of("game")} to choose from · you answered $answered · ${games.yesLeft.of("yes", "yeses")} left"
         }
     }
-    if (poll.open && (games.rows.isNotEmpty() || isHost)) a("#poll-games", classes = buttonClasses(ButtonStyle.SECONDARY, ButtonSize.SMALL)) {
-        +if (games.rows.isEmpty()) "Add games" else if (answered < games.rows.size) "Answer the games" else "See the games"
+    if (poll.open && games.rows.isEmpty() && isHost) addGameButton("Add games")
+    else if (poll.open && games.rows.isNotEmpty()) a("#poll-games", classes = buttonClasses(ButtonStyle.SECONDARY, ButtonSize.SMALL)) {
+        +if (answered < games.rows.size) "Answer the games" else "See the games"
     }
 }
 
@@ -193,14 +194,15 @@ private fun FlowContent.pollGames(view: DatePollView, games: PollGamesView) = se
     val poll = view.poll
     val isHost = view.me == poll.host
     div("gf-sechead") {
-        h2("gf-h2 gf-h2--section") { +"Which games would you play? · ${games.rows.size}" }
-        if (isHost && poll.open) a("#add-game", classes = buttonClasses(ButtonStyle.SECONDARY, ButtonSize.SMALL)) { icon("plus"); +"Add a game" }
+        h2("gf-h2 gf-h2--section") { +"Which games would you play?"; if (games.rows.isNotEmpty()) +" · ${games.rows.size}" }
+        // With no games yet the search is right below the empty state: a second way there would only repeat it.
+        if (isHost && poll.open && games.rows.isNotEmpty()) addGameButton("Add a game")
     }
     if (poll.open) p("gf-muted") {
         +"Up to $MAX_WISHES games you'd play: each one counts as a heart on the night. Have one? Say you'll bring it."
     }
     if (games.error != null) errorNotice(games.error)
-    if (games.rows.isEmpty()) emptyState("No games yet", if (isHost) "Add a few below: from your shelves, your friends' as they join, or any game on BGG." else "${view.names[poll.host] ?: "The host"} hasn't added any games yet.")
+    if (games.rows.isEmpty()) emptyState("No games yet", if (isHost) "Search for a few below: in your shelves, your friends' as they join, or anything on BGG." else "${view.names[poll.host] ?: "The host"} hasn't added any games yet.")
     div("gf-pollgames__list") { games.rows.forEach { pollGameCard(view, it) } }
     if (isHost && poll.open) pollGameAdder(view, games)
 }
@@ -248,6 +250,15 @@ private fun FlowContent.pollGameCard(view: DatePollView, row: PollGameRow) = art
     }
 }
 
+private const val ADD_GAME_SEARCH = "add-game-q"
+
+/** Takes the host to the game search and puts the cursor in it: a jump alone does nothing when the search is already on screen. */
+private fun FlowContent.addGameButton(label: String) = a("#$ADD_GAME_SEARCH", classes = buttonClasses(ButtonStyle.SECONDARY, ButtonSize.SMALL)) {
+    hyperscript("on click halt the event then call #$ADD_GAME_SEARCH.scrollIntoView({block: 'center'}) then call #$ADD_GAME_SEARCH.focus()")
+    icon("plus")
+    +label
+}
+
 /** A toggle chip that submits [name]=[value]; [pressed] shows the answer you gave, like the bring page's heart. */
 private fun FlowContent.chipButton(name: String, value: String, pressed: Boolean, label: String, icon: String? = null) =
     button(type = ButtonType.submit, classes = "gf-chip gf-chip--text" + if (icon != null && icon != "heart") " gf-chip--outline-icon" else "") {
@@ -262,7 +273,7 @@ private fun FlowContent.chipButton(name: String, value: String, pressed: Boolean
 private fun FlowContent.pollGameAdder(view: DatePollView, games: PollGamesView) = div("gf-card gf-pollgames__add") {
     id = "add-game"
     h3("gf-h3") { +"Add a game" }
-    searchField("Search your friends' games and BGG", "Search for a game to add", "/polls/${view.poll.id}/games/search", "#poll-game-search")
+    searchField("Search your friends' games and BGG", "Search for a game to add", "/polls/${view.poll.id}/games/search", "#poll-game-search") { id = ADD_GAME_SEARCH }
     div { id = "poll-game-search" }
     if (games.pool.isNotEmpty()) details("gf-pollgames__pool") {
         summary { +"Browse everyone's games (${games.pool.size})" }
