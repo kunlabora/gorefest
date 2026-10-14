@@ -62,7 +62,9 @@ fun Route.gameDayRoutes(app: App) {
                 HomeNext(day, login.names(day.players), shelf, nextStep(app, day, me, shelf, login))
             }
             val (past, later) = gameDays.filter { it !== nextDay }.partition { it.closed }
-            val view = HomeView(next, later, past, polls, clock.todayIn(DEFAULT_TIME_ZONE), bggLinked = app.bggAccounts.isLinked(me.id))
+            val today = clock.todayIn(DEFAULT_TIME_ZONE)
+            val (nightsAhead, nightsPast) = app.gameNights.forPlayer(me.id).partition { it.date >= clock.todayIn(it.timeZone) }
+            val view = HomeView(next, later, past, polls, today, bggLinked = app.bggAccounts.isLinked(me.id), nights = nightsAhead, pastNights = nightsPast)
             call.respondHtml { homePage(view) }
         }
     }

@@ -10,6 +10,9 @@ import gorefest.core.BringRequested
 import gorefest.core.BringRequestsAllowedChanged
 import gorefest.core.ComparisonRecorded
 import gorefest.core.DatePollAnswered
+import gorefest.core.DatePollBringAnswered
+import gorefest.core.DatePollGameAnswered
+import gorefest.core.GameNightCreated
 import gorefest.core.DatePollCreated
 import gorefest.core.DatePollId
 import gorefest.core.DatePollJoined
@@ -94,6 +97,15 @@ object PersonalData {
         is DatePollCreated -> entry("Started a date poll", "title" to event.title, "place" to event.place, "dates" to event.dates.joinToString(", "))
         is DatePollJoined -> entry("Joined a date poll", "poll" to l.poll(event.poll))
         is DatePollAnswered -> entry("Answered a date poll", "poll" to l.poll(event.poll), "canMake" to event.available.joinToString(", "))
+        is DatePollGameAnswered -> entry(if (event.yes) "Said you'd play a game in a date poll" else "Said you'd rather not play a game in a date poll", "game" to l.game(event.game), "poll" to l.poll(event.poll))
+        is DatePollBringAnswered -> entry(if (event.bringing) "Offered to bring a game" else "Said you won't bring a game", "game" to l.game(event.game), "poll" to l.poll(event.poll))
+        // Only your own part: the others on the night are not named, not even by id.
+        is GameNightCreated -> entry(
+            if (event.host == me) "Hosted a game night" else "Were on a game night",
+            "title" to event.title, "date" to event.date.toString(),
+            "youBring" to event.plan.filter { it.bringer == me }.joinToString(", ") { l.game(it.game).orEmpty() },
+            "youWanted" to event.plan.filter { me in it.wantedBy }.joinToString(", ") { l.game(it.game).orEmpty() },
+        )
         else -> entry(event.type)
     }
 

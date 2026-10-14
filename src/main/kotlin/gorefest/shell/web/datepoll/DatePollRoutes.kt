@@ -1,6 +1,17 @@
 package gorefest.shell.web.datepoll
 
 import gorefest.core.DatePollId
+import gorefest.core.gameday.MAX_WISHES
+import gorefest.core.datepoll.ProposePollGameDecider
+import gorefest.core.datepoll.ProposePollGame
+import gorefest.core.datepoll.AnswerPollGameDecider
+import gorefest.core.datepoll.AnswerPollGame
+import gorefest.core.datepoll.AnswerBringDecider
+import gorefest.core.datepoll.AnswerBring
+import gorefest.core.game.Game
+import gorefest.core.PlayerId
+import gorefest.core.GameNightId
+import gorefest.core.BggId
 import gorefest.core.GameDayId
 import gorefest.core.datepoll.AnswerDatePoll
 import gorefest.core.datepoll.AnswerDatePollDecider
@@ -44,13 +55,15 @@ import kotlin.uuid.Uuid
 
 context(ids: IdGenerator, clock: Clock, login: Login, config: AppConfig)
 fun Route.datePollRoutes(app: App) {
-    suspend fun view(poll: DatePollSummary, me: CurrentPlayer) = DatePollView(
+    suspend fun view(poll: DatePollSummary, me: CurrentPlayer, gamesError: String? = null) = DatePollView(
         poll = poll,
         names = login.names(poll.participants),
         viewer = me,
         today = clock.todayIn(poll.timeZone),
         inviteLink = "${config.baseUrl}/p/${app.invites.token(poll.id)}",
-        gameDay = poll.picked?.let { app.gameDaysById[it.gameDay] },
+        gameDay = poll.picked?.gameDay?.let { app.gameDaysById[it] },
+        gameNight = poll.picked?.gameNight?.let(app.gameNights::of),
+        games = if (poll.asksAboutGames) pollGames(app, poll, me, gamesError) else null,
     )
 
     get("/polls/new") {
@@ -72,6 +85,7 @@ fun Route.datePollRoutes(app: App) {
                 dates = form.dates("dates"),
                 timeZone = form["timeZone"] ?: DEFAULT_TIME_ZONE,
                 today = clock.todayIn(form["timeZone"]),
+                asksAboutGames = form["games"] == "true",
             )
             when (val decision = app.commands.handle(CreateDatePollDecider, command)) {
                 is Decision.Accepted -> redirect("/polls/${command.poll}")
@@ -107,14 +121,81 @@ fun Route.datePollRoutes(app: App) {
             val me = contextOf<CurrentPlayer>()
             val poll = memberPoll(app, me) ?: return@authenticated call.respond(HttpStatusCode.NotFound)
             val date = call.receiveParameters()["date"]?.let { runCatching { LocalDate.parse(it) }.getOrNull() }
-            val command = PickDate(poll.id, me.id, date ?: LocalDate.MIN, GameDayId(ids.next()), clock.todayIn(poll.timeZone))
+            val command = PickDate(poll.id, me.id, date ?: LocalDate.MIN, GameDayId(ids.next()), clock.todayIn(poll.timeZone), GameNightId(ids.next()))
             when (val decision = app.commands.handle(PickDateDecider, command)) {
-                is Decision.Accepted -> redirect("/gamedays/${command.gameDay}")
+                is Decision.Accepted -> redirect(if (poll.asksAboutGames) "/gamenights/${command.gameNight}" else "/gamedays/${command.gameDay}")
                 is Decision.Rejected -> {
                     val results = view(app.datePolls.of(poll.id) ?: poll, me)
                     respondFragment(HttpStatusCode.Conflict) { datePollResults(results, decision.reason.message()) }
                 }
             }
+        }
+    }
+
+    // Games (U11): plain forms that come back to the poll, so the dates' results and the games always agree.
+
+    suspend fun RoutingContext.afterGames(poll: DatePollSummary, me: CurrentPlayer, decision: Decision<*>) {
+        when (decision) {
+            is Decision.Accepted -> redirect("/polls/${poll.id}#poll-games")
+            is Decision.Rejected -> {
+                val page = view(app.datePolls.of(poll.id) ?: poll, me, decision.reason.message())
+                call.respondHtml(HttpStatusCode.Conflict) { datePollPage(page) }
+            }
+        }
+    }
+
+    get("/polls/{id}/games/search") {
+        authenticated {
+            val me = contextOf<CurrentPlayer>()
+            val poll = memberPoll(app, me)?.takeIf { it.host == me.id && it.asksAboutGames } ?: return@authenticated call.respond(HttpStatusCode.NotFound)
+            val query = call.parameters["q"].orEmpty().trim()
+            val pool = gamePool(app, poll, me).filter { (game, _) -> query.isNotEmpty() && game.name.contains(query, ignoreCase = true) }
+            val found = if (query.length < 2) null else app.gameSearch.search(query)
+            val names = login.names(pool.flatMap { it.second }.distinct())
+            val known = pool.map { it.first.id }.toSet()
+            respondFragment {
+                pollGameSearchResults(poll, pool, names, found?.games.orEmpty().filter { it.id !in known && it.id !in poll.proposals }, found?.bggUnavailable == true, found?.nothingFor(query))
+            }
+        }
+    }
+
+    post("/polls/{id}/games") {
+        authenticated {
+            val me = contextOf<CurrentPlayer>()
+            val poll = memberPoll(app, me) ?: return@authenticated call.respond(HttpStatusCode.NotFound)
+            // Only games we know (found by search, or in someone's collection) go in: the page needs a name and a cover.
+            val game = call.receiveParameters()["game"]?.toIntOrNull()?.let(::BggId)?.takeIf { app.catalog[it] != null }
+                ?: return@authenticated call.respond(HttpStatusCode.NotFound)
+            afterGames(poll, me, app.commands.handle(ProposePollGameDecider, ProposePollGame(poll.id, me.id, game)))
+        }
+    }
+
+    post("/polls/{id}/games/{game}/remove") {
+        authenticated {
+            val me = contextOf<CurrentPlayer>()
+            val poll = memberPoll(app, me) ?: return@authenticated call.respond(HttpStatusCode.NotFound)
+            val game = call.parameters["game"]?.toIntOrNull()?.let(::BggId) ?: return@authenticated call.respond(HttpStatusCode.NotFound)
+            afterGames(poll, me, app.commands.handle(ProposePollGameDecider, ProposePollGame(poll.id, me.id, game, proposed = false)))
+        }
+    }
+
+    post("/polls/{id}/games/{game}/answer") {
+        authenticated {
+            val me = contextOf<CurrentPlayer>()
+            val poll = memberPoll(app, me) ?: return@authenticated call.respond(HttpStatusCode.NotFound)
+            val game = call.parameters["game"]?.toIntOrNull()?.let(::BggId) ?: return@authenticated call.respond(HttpStatusCode.NotFound)
+            val yes = call.receiveParameters()["yes"]?.toBooleanStrictOrNull() ?: return@authenticated call.respond(HttpStatusCode.BadRequest)
+            afterGames(poll, me, app.commands.handle(AnswerPollGameDecider, AnswerPollGame(poll.id, me.id, game, yes)))
+        }
+    }
+
+    post("/polls/{id}/games/{game}/bring") {
+        authenticated {
+            val me = contextOf<CurrentPlayer>()
+            val poll = memberPoll(app, me) ?: return@authenticated call.respond(HttpStatusCode.NotFound)
+            val game = call.parameters["game"]?.toIntOrNull()?.let(::BggId) ?: return@authenticated call.respond(HttpStatusCode.NotFound)
+            val bringing = call.receiveParameters()["bringing"]?.toBooleanStrictOrNull() ?: return@authenticated call.respond(HttpStatusCode.BadRequest)
+            afterGames(poll, me, app.commands.handle(AnswerBringDecider, AnswerBring(poll.id, me.id, game, bringing)))
         }
     }
 
@@ -163,3 +244,34 @@ private fun RoutingContext.memberPoll(app: App, me: CurrentPlayer): DatePollSumm
 /** Valid ISO dates among the values of [name]; blanks and junk are dropped. */
 private fun Parameters.dates(name: String): List<LocalDate> =
     getAll(name).orEmpty().mapNotNull { runCatching { LocalDate.parse(it) }.getOrNull() }
+
+/**
+ * Games the host can put to the poll from people's collections: their own, and those of people in the poll who let
+ * others ask them to bring games (the same switch as on a game day's ask screen). Each with who has it.
+ */
+private suspend fun gamePool(app: App, poll: DatePollSummary, me: CurrentPlayer): List<Pair<Game, List<PlayerId>>> {
+    if (me.id != poll.host) return emptyList()
+    val owners = poll.participants.filter { it == me.id || app.bringRequests.accepts(it) }
+    val byGame = mutableMapOf<BggId, MutableList<PlayerId>>()
+    owners.forEach { owner -> app.collectionSync.collection(owner).forEach { byGame.getOrPut(it) { mutableListOf() } += owner } }
+    return byGame.filterKeys { it !in poll.proposals }.mapNotNull { (id, who) -> app.catalog[id]?.let { it to who.toList() } }.sortedBy { it.first.name.lowercase() }
+}
+
+/** The games part of a poll page: each game with its answers and who brings it, and for the host the games they can add. */
+private suspend fun pollGames(app: App, poll: DatePollSummary, me: CurrentPlayer, error: String?): PollGamesView {
+    val mine = app.collectionSync.collection(me.id)
+    val rows = poll.proposals.mapNotNull { id ->
+        app.catalog[id]?.let { game ->
+            PollGameRow(
+                game = game,
+                yes = poll.yesFor(id),
+                no = poll.noFor(id),
+                bringers = poll.bringers(id),
+                myAnswer = poll.gameAnswers[me.id]?.get(id),
+                myBring = poll.bringAnswers[me.id]?.get(id),
+                inMyCollection = id in mine,
+            )
+        }
+    }
+    return PollGamesView(rows, pool = gamePool(app, poll, me), yesLeft = (MAX_WISHES - poll.yesCount(me.id)).coerceAtLeast(0), error = error)
+}

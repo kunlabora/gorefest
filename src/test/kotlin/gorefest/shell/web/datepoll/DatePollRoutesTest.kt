@@ -222,7 +222,7 @@ class DatePollRoutesTest {
             val gameDay = app.datePolls.of(poll)!!.picked!!
             gameDay.date shouldBe sat
             response.headers["HX-Redirect"] shouldBe "/gamedays/${gameDay.gameDay}"
-            val created = app.gameDaysById.getValue(gameDay.gameDay)
+            val created = app.gameDaysById.getValue(gameDay.gameDay!!)
             created.title shouldBe "Boardfest #8"
             created.place shouldBe "Anna's place"
             created.date shouldBe sat
@@ -343,7 +343,7 @@ class DatePollRoutesTest {
     fun `if the picked game day was cancelled, the poll says so`() {
         kotlinx.coroutines.runBlocking { annasPoll() }
         test.webTest(session = anna) { client -> client.htmxPost("$pollPage/pick", parameters { append("date", sun.toString()) }) }
-        val gameDay = app.datePolls.of(poll)!!.picked!!.gameDay
+        val gameDay = app.datePolls.of(poll)!!.picked!!.gameDay!!
         kotlinx.coroutines.runBlocking { given(gorefest.core.GameDayCancelled(gameDay)) }
 
         test.webTest(session = anna) { client ->

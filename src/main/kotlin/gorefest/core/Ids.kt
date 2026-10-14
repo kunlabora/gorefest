@@ -30,6 +30,17 @@ value class DatePollId(val value: Uuid) {
     }
 }
 
+/** A game night (U11): a small evening made from a date poll that asked about games too. */
+@Serializable
+@JvmInline
+value class GameNightId(val value: Uuid) {
+    override fun toString() = value.toString()
+
+    companion object {
+        fun parse(s: String) = GameNightId(Uuid.parse(s))
+    }
+}
+
 /** BoardGameGeek's id for a game. */
 @Serializable
 @JvmInline

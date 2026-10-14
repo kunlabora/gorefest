@@ -80,4 +80,13 @@ sealed interface Rejection {
     data object NotAnOption : Rejection
     data object TooFewDates : Rejection
     data object TooManyDates : Rejection
+
+    // Games on a date poll (U11)
+    /** The poll doesn't ask about games. */
+    data object PollAsksNoGames : Rejection
+    data object OnlyHostProposesGames : Rejection
+
+    /** The game isn't (or no longer) one of the poll's games. */
+    data object NotInPoll : Rejection
+    data object TooManyPollGames : Rejection
 }

@@ -2,6 +2,7 @@ package gorefest.shell.web
 
 import gorefest.core.Rejection
 import gorefest.core.datepoll.MAX_POLL_DATES
+import gorefest.core.datepoll.MAX_POLL_GAMES
 import gorefest.core.gameday.MAX_BRING_REQUESTS
 import gorefest.core.gameday.MAX_PLACE_LENGTH
 import gorefest.core.gameday.MAX_TITLE_LENGTH
@@ -47,4 +48,8 @@ fun Rejection.message(): String = when (this) {
     Rejection.NotAnOption -> "That date isn't one of the options"
     Rejection.TooFewDates -> "Give at least two dates to choose from"
     Rejection.TooManyDates -> "That's a lot of dates: keep it to ${MAX_POLL_DATES}"
+    Rejection.PollAsksNoGames -> "This poll doesn't ask about games"
+    Rejection.OnlyHostProposesGames -> "Only the host adds games"
+    Rejection.NotInPoll -> "That game isn't in the poll anymore"
+    Rejection.TooManyPollGames -> "That's a lot of games: keep it to $MAX_POLL_GAMES"
 }

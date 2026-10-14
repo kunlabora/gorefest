@@ -70,4 +70,28 @@ class PersonalDataTest {
         text shouldNotContain "Anna's day"
         file["history"]!!.jsonArray.last().jsonObject["peopleAtTheTable"]!!.jsonPrimitive.content shouldBe "2"
     }
+
+    @Test
+    fun `a game night and a poll's games hold only your own part`() {
+        val poll = gorefest.core.DatePollId(Uuid.random())
+        val night = gorefest.core.GameNightId(Uuid.random())
+        val nightEvents = listOf(
+            gorefest.core.DatePollGameAnswered(poll, kim, azul, true),
+            gorefest.core.DatePollBringAnswered(poll, kim, brass, true),
+            gorefest.core.GameNightCreated(
+                night, poll, anna, "Small night", LocalDate.parse("2026-10-24"), "Anna's home address", "Europe/Brussels", listOf(anna, kim),
+                listOf(gorefest.core.PlannedGame(azul, anna, listOf(kim, anna)), gorefest.core.PlannedGame(brass, kim, listOf(anna))),
+            ),
+        )
+
+        val text = PersonalData.of(kim, profile, nightEvents, lookups)
+        val history = text["history"]!!.jsonArray.map { it.jsonObject }
+
+        history.map { it["what"]!!.jsonPrimitive.content } shouldBe listOf("Said you'd play a game in a date poll", "Offered to bring a game", "Were on a game night")
+        history.last()["youBring"]!!.jsonPrimitive.content shouldBe "Brass"
+        history.last()["youWanted"]!!.jsonPrimitive.content shouldBe "Azul"
+        text.toString() shouldNotContain anna.toString()
+        text.toString() shouldNotContain "Anna's home address"
+    }
 }
+

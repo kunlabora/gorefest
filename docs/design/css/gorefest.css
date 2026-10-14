@@ -692,6 +692,23 @@ div.gf-tile { cursor: default; }
   .gf-split.gf-split--poll { grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: 56px; align-items: start; }
   .gf-split.gf-split--pollform { grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: 56px; align-items: start; }
 }
+/* U11: a date poll that asks about games too. */
+.gf-poll-form__games { padding: 0; }
+.gf-opt__games { margin: 0; display: flex; align-items: center; gap: 6px; color: var(--ink-muted); }
+.gf-opt__games--missing { color: var(--ink); }
+.gf-pollgames__list { display: grid; gap: 14px; }
+.gf-pollgame { display: grid; gap: 8px; padding: 12px 16px 16px; }
+.gf-pollgame > p { margin: 0; }
+.gf-pollgame .gf-game--compact { padding-inline: 0; }
+.gf-pollgame__bring { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.gf-pollgame__actions { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; }
+.gf-pollgame__answer { display: flex; flex-wrap: wrap; gap: 8px; }
+.gf-pollgames__add { display: grid; gap: 12px; padding: 16px; }
+.gf-pollgames__add > * { margin: 0; }
+.gf-pollgames__pool summary { cursor: pointer; font-weight: 700; padding: 6px 0; }
+@media (min-width: 720px) {
+  .gf-pollgames__list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
 
 /* ==== R12 sign-in follow-ups ==== */
 .gf-ink { color: var(--ink); }

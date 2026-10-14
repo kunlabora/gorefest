@@ -21,6 +21,7 @@ object Tags {
     fun gameDay(id: GameDayId) = Tag("gameday:$id")
     fun game(id: BggId) = Tag("game:$id")
     fun datePoll(id: DatePollId) = Tag("datepoll:$id")
+    fun gameNight(id: GameNightId) = Tag("gamenight:$id")
 
     /** A BGG username, case-insensitive like BGG itself. */
     fun bggUser(username: String) = Tag("bgg:${username.lowercase()}")
@@ -230,7 +231,10 @@ data class GameDayEnded(val gameDay: GameDayId) : Event {
     override val tags get() = setOf(Tags.gameDay(gameDay))
 }
 
-/** A host asks a group which of these [dates] suits them. [timeZone] is the zone the dates are in, for the game day made from the winner. */
+/**
+ * A host asks a group which of these [dates] suits them. [timeZone] is the zone the dates are in, for the game day made from the winner.
+ * With [asksAboutGames] the poll also asks which games people would play, and the pick makes a game night instead of a game day (U11).
+ */
 @Serializable
 @SerialName("DatePollCreated")
 data class DatePollCreated(
@@ -240,6 +244,7 @@ data class DatePollCreated(
     val place: String,
     val dates: List<@Serializable(with = LocalDateSerializer::class) LocalDate>,
     val timeZone: String,
+    val asksAboutGames: Boolean = false,
 ) : Event {
     override val tags get() = setOf(Tags.datePoll(poll), Tags.player(host))
 }
@@ -271,4 +276,68 @@ data class DatePollClosed(
     val gameDay: GameDayId,
 ) : Event {
     override val tags get() = setOf(Tags.datePoll(poll), Tags.gameDay(gameDay))
+}
+
+/** The host puts [game] to the poll (U11): found in someone's collection or by search. */
+@Serializable
+@SerialName("DatePollGameProposed")
+data class DatePollGameProposed(val poll: DatePollId, val game: BggId) : Event {
+    override val tags get() = setOf(Tags.datePoll(poll), Tags.game(game))
+}
+
+/** The host takes [game] off the poll; its answers and offers stop counting. */
+@Serializable
+@SerialName("DatePollGameWithdrawn")
+data class DatePollGameWithdrawn(val poll: DatePollId, val game: BggId) : Event {
+    override val tags get() = setOf(Tags.datePoll(poll), Tags.game(game))
+}
+
+/** [player] would ([yes]) or wouldn't play [game]; it replaces their earlier answer for it. A yes becomes a wish on the game night. */
+@Serializable
+@SerialName("DatePollGameAnswered")
+data class DatePollGameAnswered(val poll: DatePollId, val player: PlayerId, val game: BggId, val yes: Boolean) : Event {
+    override val tags get() = setOf(Tags.datePoll(poll), Tags.player(player), Tags.game(game))
+}
+
+/** [player] will bring [game] if it's played ([bringing]), or says "not this time" or takes it back; it replaces their earlier answer for it. */
+@Serializable
+@SerialName("DatePollBringAnswered")
+data class DatePollBringAnswered(val poll: DatePollId, val player: PlayerId, val game: BggId, val bringing: Boolean) : Event {
+    override val tags get() = setOf(Tags.datePoll(poll), Tags.player(player), Tags.game(game))
+}
+
+/** The host picked [date] in a poll that asked about games: the poll is over and [gameNight] was made for it. */
+@Serializable
+@SerialName("DatePollPickedForGameNight")
+data class DatePollPickedForGameNight(
+    val poll: DatePollId,
+    @Serializable(with = LocalDateSerializer::class) val date: LocalDate,
+    val gameNight: GameNightId,
+) : Event {
+    override val tags get() = setOf(Tags.datePoll(poll), Tags.gameNight(gameNight))
+}
+
+/** One game on a game night's plan: who brings it and who said they'd play it. */
+@Serializable
+data class PlannedGame(val game: BggId, val bringer: PlayerId, val wantedBy: List<PlayerId> = emptyList())
+
+/**
+ * A game night (U11), made whole when its poll's date is picked: the [players] who can come (host first), the [plan] of
+ * games someone coming will bring, and the [missing] games nobody coming can bring. Nothing changes it afterwards yet.
+ */
+@Serializable
+@SerialName("GameNightCreated")
+data class GameNightCreated(
+    val gameNight: GameNightId,
+    val poll: DatePollId,
+    val host: PlayerId,
+    val title: String,
+    @Serializable(with = LocalDateSerializer::class) val date: LocalDate,
+    val place: String,
+    val timeZone: String,
+    val players: List<PlayerId>,
+    val plan: List<PlannedGame>,
+    val missing: List<BggId> = emptyList(),
+) : Event {
+    override val tags get() = setOf(Tags.gameNight(gameNight), Tags.datePoll(poll)) + players.map(Tags::player) + plan.map { Tags.game(it.game) }
 }

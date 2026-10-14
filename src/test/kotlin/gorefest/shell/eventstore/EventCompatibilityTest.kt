@@ -11,6 +11,14 @@ import gorefest.core.Event
 import gorefest.core.GameBrought
 import gorefest.core.GameDayCreated
 import gorefest.core.DatePollAnswered
+import gorefest.core.DatePollBringAnswered
+import gorefest.core.DatePollGameAnswered
+import gorefest.core.DatePollGameProposed
+import gorefest.core.DatePollGameWithdrawn
+import gorefest.core.DatePollPickedForGameNight
+import gorefest.core.GameNightCreated
+import gorefest.core.GameNightId
+import gorefest.core.PlannedGame
 import gorefest.core.DatePollClosed
 import gorefest.core.DatePollCreated
 import gorefest.core.DatePollId
@@ -56,6 +64,7 @@ class EventCompatibilityTest {
     private fun player(s: String) = PlayerId(Uuid.parse(s))
     private val gameDay = GameDayId.parse(d1)
     private val poll = DatePollId.parse(d1)
+    private val gameNight = GameNightId.parse(d1)
 
     private val stored: List<Pair<String, Event>> = listOf(
         """{"type":"PlayerRegistered","player":"$p1"}""" to
@@ -86,6 +95,20 @@ class EventCompatibilityTest {
             DatePollAnswered(poll, player(p2), listOf(LocalDate.parse("2026-10-10"))),
         """{"type":"DatePollClosed","poll":"$d1","date":"2026-10-10","gameDay":"$d1"}""" to
             DatePollClosed(poll, LocalDate.parse("2026-10-10"), gameDay),
+        """{"type":"DatePollCreated","poll":"$d1","host":"$p1","title":"Small night","place":"Tim's","dates":["2026-10-09","2026-10-10"],"timeZone":"Europe/Brussels","asksAboutGames":true}""" to
+            DatePollCreated(poll, player(p1), "Small night", "Tim's", listOf(LocalDate.parse("2026-10-09"), LocalDate.parse("2026-10-10")), "Europe/Brussels", asksAboutGames = true),
+        """{"type":"DatePollGameProposed","poll":"$d1","game":13}""" to
+            DatePollGameProposed(poll, BggId(13)),
+        """{"type":"DatePollGameWithdrawn","poll":"$d1","game":13}""" to
+            DatePollGameWithdrawn(poll, BggId(13)),
+        """{"type":"DatePollGameAnswered","poll":"$d1","player":"$p2","game":13,"yes":true}""" to
+            DatePollGameAnswered(poll, player(p2), BggId(13), true),
+        """{"type":"DatePollBringAnswered","poll":"$d1","player":"$p2","game":13,"bringing":true}""" to
+            DatePollBringAnswered(poll, player(p2), BggId(13), true),
+        """{"type":"DatePollPickedForGameNight","poll":"$d1","date":"2026-10-10","gameNight":"$d1"}""" to
+            DatePollPickedForGameNight(poll, LocalDate.parse("2026-10-10"), gameNight),
+        """{"type":"GameNightCreated","gameNight":"$d1","poll":"$d1","host":"$p1","title":"Small night","date":"2026-10-10","place":"Tim's","timeZone":"Europe/Brussels","players":["$p1","$p2"],"plan":[{"game":13,"bringer":"$p2","wantedBy":["$p1"]}],"missing":[822]}""" to
+            GameNightCreated(gameNight, poll, player(p1), "Small night", LocalDate.parse("2026-10-10"), "Tim's", "Europe/Brussels", listOf(player(p1), player(p2)), listOf(PlannedGame(BggId(13), player(p2), listOf(player(p1)))), listOf(BggId(822))),
         """{"type":"GameBrought","gameDay":"$d1","player":"$p1","game":13}""" to
             GameBrought(gameDay, player(p1), BggId(13)),
         """{"type":"GameUnbrought","gameDay":"$d1","player":"$p1","game":13}""" to

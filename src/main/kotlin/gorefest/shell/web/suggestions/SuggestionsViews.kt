@@ -13,9 +13,16 @@ const val TABLE_SET = "tableSet"
 /** Time options: label to budget in minutes (null: any). */
 val TIMES = listOf("Any" to null, "45m" to 45, "90m" to 90, "2h" to 120, "3h+" to 240)
 
+/** What a table is picked for: a game day or a game night (U11). [base] is its page; [tasteRound] is where to learn your taste for it, if anywhere. */
+data class TableEvent(val base: String, val title: String, val players: List<PlayerId>, val tasteRound: String?) {
+    companion object {
+        fun of(gameDay: GameDaySummary) = TableEvent("/gamedays/${gameDay.id}", gameDay.title, gameDay.players, "/gamedays/${gameDay.id}/taste")
+    }
+}
+
 /** The table picker: who's playing, how long, and the suggestions for that. [chosen] is null for "everyone"; [table] is who that comes to. */
 data class TableView(
-    val gameDay: GameDaySummary,
+    val event: TableEvent,
     val names: Map<PlayerId, String>,
     val chosen: Set<String>?,
     val table: List<PlayerId>,
@@ -31,19 +38,19 @@ fun HTML.tablePage(view: TableView) = page(
     mainClasses = "gf-body--pick",
 ) {
     wrap {
-        crumb("/gamedays/${view.gameDay.id}", view.gameDay.title)
+        crumb(view.event.base, view.event.title)
         h1("gf-h1 gf-picker__title") { +"Pick a game" }
         div("gf-picker") {
             form(classes = "gf-picker__side") {
                 id = "table-form"
-                hx("get", "/gamedays/${view.gameDay.id}/suggestions")
+                hx("get", "${view.event.base}/suggestions")
                 hx("trigger", "change")
                 hx("target", "#suggestions")
                 hx("swap", "outerHTML")
                 hiddenInput(TABLE_SET, "1")
                 section("gf-card gf-picker__panel") {
                     h2("gf-h2") { +"Who's at the table?" }
-                    playerChips(view.gameDay.players, view.names, checked = { view.chosen == null || it.toString() in view.chosen })
+                    playerChips(view.event.players, view.names, checked = { view.chosen == null || it.toString() in view.chosen })
                     h2("gf-h2") { +"How long?" }
                     segmented("time", "Time", TIMES.map { it.first }, checked = view.time, idPrefix = "time")
                 }
@@ -65,7 +72,7 @@ fun TagConsumer<*>.suggestions(view: TableView) = section("gf-picker__answer") {
         when (val suggestions = view.suggestions) {
             is Suggestions.Found -> {
                 h2("gf-h2") { +"Play this" }
-                if (suggestions.unknown.isNotEmpty()) unknownTaste(suggestions.unknown, view.tableSize, view.gameDay, view.names, view.me.id)
+                if (suggestions.unknown.isNotEmpty()) unknownTaste(suggestions.unknown, view.tableSize, view.event, view.names, view.me.id)
                 suggestions.top.take(1).forEach { s ->
                     rankedGame(1, s.game, s.reason.text()) { icon("clock"); +"~${s.minutes} min ${if (view.tableSize == 1) "for you" else "for the ${view.tableSize} of you"}" }
                 }
@@ -119,7 +126,7 @@ private fun FlowContent.relaxButton(timeLabel: String, text: String) = button(ty
  * Says what the picks lean on when taste is missing, and lets the viewer fix their own part:
  * a few pairs turn "fits the table" into "you'll like it".
  */
-private fun FlowContent.unknownTaste(unknown: List<PlayerId>, tableSize: Int, gameDay: GameDaySummary, names: Map<PlayerId, String>, me: PlayerId) {
+private fun FlowContent.unknownTaste(unknown: List<PlayerId>, tableSize: Int, event: TableEvent, names: Map<PlayerId, String>, me: PlayerId) {
     val text = if (unknown.size == tableSize) {
         "${if (tableSize == 1) "We don't know your taste yet" else "Nobody at this table has done a taste round yet"}, so these picks go by player count, playing time and who's keen to play what."
     } else {
@@ -127,7 +134,7 @@ private fun FlowContent.unknownTaste(unknown: List<PlayerId>, tableSize: Int, ga
         "Picks for $who go by player count and playing time: we haven't learned ${if (me in unknown) "your" else "their"} taste yet."
     }
     notice("spark") { +text }
-    if (me in unknown) linkButton("/gamedays/${gameDay.id}/taste", "Take the 2-minute taste round", ButtonStyle.SECONDARY)
+    if (me in unknown && event.tasteRound != null) linkButton(event.tasteRound, "Take the 2-minute taste round", ButtonStyle.SECONDARY)
 }
 
 private fun List<String>.joinAnd(): String = if (size < 2) joinToString() else dropLast(1).joinToString(", ") + " and " + last()

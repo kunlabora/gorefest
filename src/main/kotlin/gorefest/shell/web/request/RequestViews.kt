@@ -214,7 +214,7 @@ fun TagConsumer<*>.bringRequestsSwitch(allowed: Boolean) = div("gf-stack") {
         span("gf-row__main") {
             span("gf-row__title") { +"Let people on my game days ask me to bring games" }
             span("gf-row__sub") {
-                +"Only people on a game day you joined see your collection, and only to ask you for a game. You always get to say \"Not this time\"."
+                +"Only people on a game day you joined see your collection, to ask you for a game, and the host of a date poll you joined, to put one of your games to the group. You always get to say \"Not this time\"."
             }
         }
         input(InputType.checkBox, classes = "gf-switch", name = "allowed") {

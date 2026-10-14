@@ -12,6 +12,7 @@ import gorefest.shell.web.bgg.collectionRoutes
 import gorefest.shell.web.bgg.devBggRoutes
 import gorefest.shell.web.checkpoint.checkpointRoutes
 import gorefest.shell.web.datepoll.datePollRoutes
+import gorefest.shell.web.gamenight.gameNightRoutes
 import gorefest.shell.web.dev.devRoutes
 import gorefest.shell.web.gameday.gameDayRoutes
 import gorefest.shell.web.gameday.readinessRoutes
@@ -157,6 +158,7 @@ fun Application.web(app: App) {
         context(app.login) { requestRoutes(app) }
         context(app.login) { tasteRoutes(app) }
         context(app.login) { suggestionsRoutes(app) }
+        context(app.login) { gameNightRoutes(app) }
         context(app.login) { checkpointRoutes(app) }
         context(app.login, app.config) { readinessRoutes(app) }
         if (app.config.dev && app.mailer is DevMailbox) devRoutes(app.mailer)

@@ -1,6 +1,6 @@
 # U11 Organise a small game evening from people's libraries
 
-Source: user testing, 2026-10-06. Status: ⏭
+Source: user testing, 2026-10-06. Status: ✅
 
 **Feedback:** A feature to organise a game evening with fewer people, where it is more "I see these games in your library and want to play game a, b and c".
 
@@ -26,23 +26,23 @@ Source: user testing, 2026-10-06. Status: ⏭
 ## Criteria
 
 **The poll asks about games**
-- [ ] When starting a date poll, the host can switch on "Ask about games as well". Without it, the poll works and makes a game day exactly as today.
-- [ ] The host proposes games for the poll while it is open: from their own collection, from the collections of people who joined, or by BGG search for any game (`DatePollGameProposed`). The host can take a proposal back (`DatePollGameWithdrawn`). Only the host adds or removes games.
-- [ ] On the poll page everyone answers yes or no per proposed game, next to the dates, and can change it until the pick (`DatePollGameAnswered`). At most 3 yeses per person (`MAX_WISHES`): a fourth is refused with the reason.
-- [ ] Per proposed game anyone in the poll can say "I'll bring it" and take it back (`DatePollBringOffered`, `DatePollBringWithdrawn`), whether or not it's in their collection.
-- [ ] When someone joins, or opens the poll, and a proposed game is in their linked collection, they're asked once per game: "You have Humanity. Bring it if we play?", with "I'll bring it" and "Not this time".
+- [x] When starting a date poll, the host can switch on "Ask about games as well" (`DatePollCreated.asksAboutGames`). Without it, the poll works and makes a game day exactly as today.
+- [x] The host proposes games while the poll is open: from their own collection, from the collections of people who joined (unless they switched bring requests off), or by BGG search for any game (`DatePollGameProposed`). The host can take one back (`DatePollGameWithdrawn`), which drops its answers and offers. Only the host adds or removes games; at most `MAX_POLL_GAMES` (12).
+- [x] Everyone in the poll answers yes or no per game and can change it until the pick (`DatePollGameAnswered`). At most 3 yeses per person (`MAX_WISHES`): a fourth is refused with the reason.
+- [x] Per game anyone in the poll can say "I'll bring it" and take it back, whether or not it's in their collection (`DatePollBringAnswered`).
+- [x] Someone with a proposed game in their linked collection is asked once per game: "You have Humanity. Bring it if we play?", with "I'll bring it" and "Not this time" (both answer it).
 
 **Results**
-- [ ] Each game card shows who said yes, who brings it, and "Nobody can bring it yet" when nobody offered.
-- [ ] Each date card shows, besides who can come, which proposed games would be missing that day because nobody who offered to bring them can come ("Sat 8 Nov: nobody to bring Humanity, Ruben can't come").
-- [ ] "No" answers are shown to the host only.
+- [x] Each game card shows who said yes, who brings it, and "Nobody can bring it yet" when nobody offered.
+- [x] Each date card shows which games would be missing that day and why ("Missing that day: Humanity (Ruben can't come); Azul (nobody offered to bring it)"). The host counts as coming on every date, as for a game day.
+- [x] "No" answers are shown to the host only.
 
 **The pick makes a game night**
-- [ ] When the host picks a date in a poll with games, a game night is made (a new concept next to the game day, `GameNightCreated` and its own join events) with the date, title, place, time zone, the host and everyone who can come.
-- [ ] Its plan holds the proposed games someone can bring that day, each with who brings it (the first one who offered and can come). Games nobody can bring that day are listed apart as missing.
-- [ ] Every yes from someone who can come becomes a wish on that game for the night; wishes from people who can't come are dropped.
-- [ ] The game night page (members only) shows the date, place, who's coming, the plan with who brings what, and "Pick a game for my table": the same matching as a game day, with the plan as the shelf.
-- [ ] The poll's existing link leads to the game night once picked, as it leads to the game day today.
-- [ ] Erasure: a game night drops an erased player like a game day does (their offers, answers and place at the table) until it's over; their data is in the export (`PersonalData`).
+- [x] Picking a date in a poll with games makes a game night (`DatePollPickedForGameNight`, `GameNightCreated`) with the date, title, place, time zone, the host and everyone who can come.
+- [x] Its plan holds the games someone coming offered to bring, each with the first such offer; games nobody coming can bring are listed apart as missing (`DatePollSummary.planFor`, shared by the results and the pick).
+- [x] Every yes from someone coming is a wish on that game for the night; yeses from people not coming are dropped.
+- [x] The game night page (members only) shows the date, place, who's coming and what they bring, the plan, what's missing, and "Pick a game for my table": the same matching as a game day, with the plan as the shelf. It's on the home page too.
+- [x] After the pick the poll links to the game night, as it does to a game day.
+- [x] Erasure: an erased player leaves the game night (their yeses go, a game they were to bring becomes missing); the data export describes your own answers, offers and game nights, never the others on them (`PersonalData`).
 
-**Not in this version:** checkpoints, play log, closing at midnight, the recap mail, editing or cancelling a game night, its own invite link.
+**Not in this version:** checkpoints, play log, closing at midnight, the recap mail, editing or cancelling a game night, its own invite link, a taste round from the game night.

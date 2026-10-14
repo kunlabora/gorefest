@@ -5,6 +5,8 @@ import gorefest.shell.web.components.SOMEONE
 import gorefest.core.PlayerId
 import gorefest.core.game.Game
 import gorefest.core.datepoll.DatePollSummary
+import gorefest.core.gamenight.GameNightSummary
+import gorefest.shell.web.gamenight.gameNightCard
 import gorefest.core.gameday.GameDaySummary
 import gorefest.core.gameday.ShelfGame
 import gorefest.shell.web.CurrentPlayer
@@ -89,6 +91,9 @@ data class HomeView(
     val polls: List<DatePollSummary>,
     val today: LocalDate,
     val bggLinked: Boolean,
+    /** Game nights (U11) still to come, and the ones that were. */
+    val nights: List<GameNightSummary> = emptyList(),
+    val pastNights: List<GameNightSummary> = emptyList(),
 )
 
 context(me: CurrentPlayer)
@@ -98,7 +103,7 @@ fun HTML.homePage(view: HomeView) = page(
     appBar = { logoutButton() },
     mainClasses = "gf-landing gf-home",
 ) {
-    val nothingYet = view.next == null && view.later.isEmpty() && view.past.isEmpty() && view.polls.isEmpty()
+    val nothingYet = view.next == null && view.later.isEmpty() && view.past.isEmpty() && view.polls.isEmpty() && view.nights.isEmpty() && view.pastNights.isEmpty()
     wrap {
         h1("gf-vh") { +"Your game days" }
         // Above both columns, so the next game day's card and the action tiles start on the same line.
@@ -126,11 +131,12 @@ fun HTML.homePage(view: HomeView) = page(
         // No nav under 720px, so the collection is one tap away here instead.
         if (view.bggLinked) p("gf-small gf-phone-only") { a("/collection", classes = "gf-link") { +"Your collection" } }
     }
-    if (view.later.isNotEmpty() || view.polls.isNotEmpty() || !view.bggLinked) band(sunk = true) {
+    if (view.later.isNotEmpty() || view.polls.isNotEmpty() || view.nights.isNotEmpty() || !view.bggLinked) band(sunk = true) {
         div("gf-stack gf-home__coming") {
             h2("gf-h2 gf-h2--section") { +"Coming up" }
             div("gf-home__list") {
                 view.later.forEach { dayCard(it, view.today) }
+                view.nights.forEach { gameNightCard(it, view.today) }
                 view.polls.forEach { pollCard(it) }
                 if (!view.bggLinked) div("gf-dashrow") {
                     id = "bgg-nudge"
@@ -143,10 +149,13 @@ fun HTML.homePage(view: HomeView) = page(
             }
         }
     }
-    if (view.past.isNotEmpty()) wrap {
+    if (view.past.isNotEmpty() || view.pastNights.isNotEmpty()) wrap {
         div("gf-stack gf-home__past") {
             h2("gf-h2 gf-h2--section") { +"Past" }
-            div("gf-home__list") { view.past.forEach { dayCard(it, view.today) } }
+            div("gf-home__list") {
+                view.past.forEach { dayCard(it, view.today) }
+                view.pastNights.forEach { gameNightCard(it, view.today) }
+            }
         }
     }
 }
