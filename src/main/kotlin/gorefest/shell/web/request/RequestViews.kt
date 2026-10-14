@@ -212,7 +212,7 @@ fun TagConsumer<*>.bringRequestsSwitch(allowed: Boolean) = div("gf-stack") {
     id = "bring-requests-switch"
     label("gf-row") {
         span("gf-row__main") {
-            span("gf-row__title") { +"Let people on my game days ask me to bring games" }
+            span("gf-row__title") { +"Let people see my collection to ask for games" }
             span("gf-row__sub") {
                 +"Only people on a game day you joined see your collection, to ask you for a game, and the host of a date poll you joined, to put one of your games to the group. You always get to say \"Not this time\"."
             }
@@ -221,7 +221,7 @@ fun TagConsumer<*>.bringRequestsSwitch(allowed: Boolean) = div("gf-stack") {
             attributes["role"] = "switch"
             value = "true"
             checked = allowed
-            attributes["aria-label"] = "Let people on my game days ask me to bring games"
+            attributes["aria-label"] = "Let people see my collection to ask for games"
             hx("post", "/collection/bring-requests")
             hx("trigger", "change")
             hx("vals", """{"allowed": "${!allowed}"}""")
