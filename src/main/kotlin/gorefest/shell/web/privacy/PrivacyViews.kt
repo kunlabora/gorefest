@@ -72,7 +72,7 @@ fun HTML.privacyPage(view: PrivacyView) = page("Privacy", appBar = { wordmark() 
 
         privacySection("sees", "Who sees what") {
             p { +"People on the same game day or game night see your name, the games you bring and the games you've hearted. In a date poll, the people in it see which dates suit you, which games you'd play and which you offered to bring; only the host sees the games you said no to." }
-            p { +"Your collection is seen by people on the same game day, on the screen where they ask you to bring a game, and by the host of a date poll you joined, to put your games to the group. One switch on your collection page turns both off. Nobody outside the group sees anything: you need an invite, and I approve every new account by hand." }
+            p { +"Your collection is seen only by people on the same game day, on the screen where they ask you to bring a game, unless you switch that off on your collection page. A date poll's host proposes games from their own collection or BGG, never from yours. Nobody outside the group sees anything: you need an invite, and I approve every new account by hand." }
         }
 
         privacySection("others", "Who else handles it") {
