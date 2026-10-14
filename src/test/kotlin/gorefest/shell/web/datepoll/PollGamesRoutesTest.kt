@@ -167,11 +167,11 @@ class PollGamesRoutesTest {
 
         page.one("#poll-game-$humanity .gf-pollgame__bring").text() shouldBe "Ruben brings it"
         page.one("#poll-game-$humanity").text() shouldContain "Bram wants to play it"
-        page.one("#poll-game-$azul .gf-pollgame__bring").text() shouldBe "Nobody can bring it yet"
+        page.one("#poll-game-$azul .gf-pollgame__bring").text() shouldBe "Nobody brings it yet"
     }
 
     @Test
-    fun `a date card says which games would be missing that day, and why`() = test.webTest(session = anna) { client ->
+    fun `a date card says which games that day would lose, and why`() = test.webTest(session = anna) { client ->
         given(
             DatePollGameProposed(poll, humanity), DatePollGameProposed(poll, azul), DatePollBringAnswered(poll, rubenId, humanity, true),
             DatePollAnswered(poll, rubenId, listOf(sat)), DatePollAnswered(poll, bramId, listOf(fri, sat)),
@@ -179,8 +179,32 @@ class PollGamesRoutesTest {
 
         val cards = client.get(pollPage).page().select("#poll-results .gf-opt")
 
-        cards[0].one(".gf-opt__games").text() shouldBe "Missing that day: Wingspan (Ruben can't come); Azul (nobody offered to bring it)"
-        cards[1].one(".gf-opt__games").text() shouldBe "Missing that day: Azul (nobody offered to bring it)"
+        // Azul has nobody to bring it on any date: its own card says so, the dates don't repeat it.
+        cards[0].select(".gf-opt__games").map { it.text() } shouldBe listOf("No Wingspan: Ruben can't come")
+        cards[1].select(".gf-opt__games") shouldHaveSize 0
+
+        given(DatePollBringAnswered(poll, annaId, azul, true))
+        client.get(pollPage).page().select("#poll-results .gf-opt")[1].one(".gf-opt__games").text() shouldBe "Someone brings every game"
+    }
+
+    @Test
+    fun `the games are signposted next to the dates, so nobody misses them`() = test.webTest(session = bram) { client ->
+        given(DatePollGameProposed(poll, humanity), DatePollGameProposed(poll, azul), DatePollGameAnswered(poll, bramId, azul, true))
+
+        val signpost = client.get(pollPage).page().one(".gf-poll-signpost")
+
+        signpost.text() shouldContain "2 games to choose from · you answered 1 · 2 yeses left"
+        signpost.one("a[href=#poll-games]").text() shouldBe "Answer the games"
+    }
+
+    @Test
+    fun `an answer shows as a pressed chip`() = test.webTest(session = bram) { client ->
+        given(DatePollGameProposed(poll, azul), DatePollGameAnswered(poll, bramId, azul, true))
+
+        val card = client.get(pollPage).page().one("#poll-game-$azul")
+
+        card.select("button[name=yes][aria-pressed=true]").map { it.text() } shouldBe listOf("I'd play this")
+        card.one("button[name=bringing]").attr("aria-pressed") shouldBe "false"
     }
 
     @Test

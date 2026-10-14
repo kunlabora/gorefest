@@ -22,7 +22,7 @@ data class GameNightView(
 fun HTML.gameNightPage(view: GameNightView) {
     val night = view.night
     fun name(id: PlayerId) = if (id == view.me.id) "you" else view.names[id] ?: SOMEONE
-    page(night.title, site = SiteBar(view.me, Nav.GAME_DAYS)) {
+    page(night.title, site = SiteBar(view.me, Nav.GAME_DAYS), mainClasses = "gf-landing") {
         wrap {
             crumb("/", "All game days")
             p("gf-kicker") { +"Game night" }

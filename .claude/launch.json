@@ -22,6 +22,20 @@
         "127.0.0.1"
       ],
       "port": 8765
+    },
+    {
+      "name": "gorefest-review",
+      "runtimeExecutable": "./gradlew",
+      "runtimeArgs": [
+        "run",
+        "--quiet"
+      ],
+      "port": 8081,
+      "env": {
+        "PORT": "8081",
+        "BASE_URL": "http://localhost:8081",
+        "DATABASE_URL": "jdbc:postgresql://localhost:5432/gorefest_review"
+      }
     }
   ]
 }

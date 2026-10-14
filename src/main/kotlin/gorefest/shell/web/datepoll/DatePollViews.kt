@@ -117,7 +117,8 @@ data class PollGamesView(val rows: List<PollGameRow>, val pool: List<Pair<Game, 
 fun HTML.datePollPage(view: DatePollView) {
     val poll = view.poll
     val host = view.names[poll.host]
-    page(poll.title, site = SiteBar(view.viewer, Nav.GAME_DAYS)) {
+    // gf-landing: the games band runs edge to edge, like the hub's shelf.
+    page(poll.title, site = SiteBar(view.viewer, Nav.GAME_DAYS), mainClasses = "gf-landing") {
         wrap {
             split("gf-split--poll") {
                 div("gf-split__copy gf-poll-copy") {
@@ -153,6 +154,7 @@ fun HTML.datePollPage(view: DatePollView) {
                         dateChips(poll.dates, checked = { it in mine }, disabled = { it < view.today }, legend = "Dates you can make")
                         p("gf-small gf-muted") { +"Tick every date that suits you. It saves as you go." }
                     }
+                    view.games?.let { games -> gamesSignpost(view, games) }
                     if (poll.open) {
                         p("gf-label") { +"Share the poll" }
                         copyBox(view.inviteLink, small = true)
@@ -166,15 +168,36 @@ fun HTML.datePollPage(view: DatePollView) {
     }
 }
 
+/** In the copy column, right under the dates: the poll's second question, so nobody misses the games further down. */
+private fun FlowContent.gamesSignpost(view: DatePollView, games: PollGamesView) = div("gf-card gf-poll-signpost") {
+    val poll = view.poll
+    val isHost = view.me == poll.host
+    val answered = games.rows.count { it.myAnswer != null }
+    h2("gf-label") { +"Which games would you play?" }
+    p("gf-small gf-muted") {
+        +when {
+            games.rows.isEmpty() && isHost -> "No games yet. Add a few from your friends' shelves or BGG."
+            games.rows.isEmpty() -> "${view.names[poll.host] ?: "The host"} hasn't added any games yet."
+            !poll.open -> "${games.rows.size.of("game")} in the poll."
+            else -> "${games.rows.size.of("game")} to choose from · you answered $answered · ${games.yesLeft.of("yes", "yeses")} left"
+        }
+    }
+    if (poll.open && (games.rows.isNotEmpty() || isHost)) a("#poll-games", classes = buttonClasses(ButtonStyle.SECONDARY, ButtonSize.SMALL)) {
+        +if (games.rows.isEmpty()) "Add games" else if (answered < games.rows.size) "Answer the games" else "See the games"
+    }
+}
+
 /** The poll's games: yes or no for each, who brings it, and for the host a way to add more (U11). */
 private fun FlowContent.pollGames(view: DatePollView, games: PollGamesView) = section("gf-stack gf-pollgames") {
     id = "poll-games"
     val poll = view.poll
     val isHost = view.me == poll.host
-    h2("gf-h2 gf-h2--section") { +"Which games would you play?" }
+    div("gf-sechead") {
+        h2("gf-h2 gf-h2--section") { +"Which games would you play? · ${games.rows.size}" }
+        if (isHost && poll.open) a("#add-game", classes = buttonClasses(ButtonStyle.SECONDARY, ButtonSize.SMALL)) { icon("plus"); +"Add a game" }
+    }
     if (poll.open) p("gf-muted") {
-        +"Say yes to up to $MAX_WISHES: each yes counts as a heart on the night. Have one of these? Say you'll bring it, so it's there."
-        if (games.yesLeft < MAX_WISHES) +" You have ${games.yesLeft.of("yes", "yeses")} left."
+        +"Up to $MAX_WISHES games you'd play: each one counts as a heart on the night. Have one? Say you'll bring it."
     }
     if (games.error != null) errorNotice(games.error)
     if (games.rows.isEmpty()) emptyState("No games yet", if (isHost) "Add a few below: from your shelves, your friends' as they join, or any game on BGG." else "${view.names[poll.host] ?: "The host"} hasn't added any games yet.")
@@ -187,49 +210,57 @@ private fun FlowContent.pollGameCard(view: DatePollView, row: PollGameRow) = art
     val poll = view.poll
     val base = "/polls/${poll.id}/games/${row.game.id}"
     fun who(ids: List<PlayerId>) = ids.map { if (it == view.me) "you" else view.names[it] ?: "someone" }
-    gameRow(row.game)
-    p("gf-small") {
-        +if (row.yes.isEmpty()) "Nobody said yes yet" else "${who(row.yes).joinAnd().replaceFirstChar(Char::uppercase)} ${if (row.yes.size == 1 && row.yes.single() != view.me) "wants" else "want"} to play it"
-        if (view.me == poll.host && row.no.isNotEmpty()) span("gf-muted") { +" · ${who(row.no).joinAnd().replaceFirstChar(Char::uppercase)} said no" }
+    gameRow(row.game) {
+        if (view.me == poll.host && poll.open) form(action = "$base/remove", method = FormMethod.post) {
+            hyperscript("on submit if not confirm('Take ${row.game.name.replace("'", "")} off the poll? Its answers go with it.') halt the event")
+            button(type = ButtonType.submit, classes = buttonClasses(ButtonStyle.GHOST, ButtonSize.SMALL)) { +"Take off" }
+        }
     }
-    p("gf-small gf-pollgame__bring") {
-        if (row.bringers.isEmpty()) span("gf-tag gf-tag--accent") { +"Nobody can bring it yet" }
-        else { icon("check"); +"${who(row.bringers).first().replaceFirstChar(Char::uppercase)} ${if (row.bringers.first() == view.me) "bring" else "brings"} it" ; if (row.bringers.size > 1) span("gf-muted") { +" · ${(row.bringers.size - 1).of("other")} can too" } }
+    ul("gf-pollgame__facts") {
+        li {
+            icon("heart")
+            +if (row.yes.isEmpty()) "Nobody said yes yet" else "${who(row.yes).joinAnd().replaceFirstChar(Char::uppercase)} ${if (row.yes.size == 1 && row.yes.single() != view.me) "wants" else "want"} to play it"
+            if (view.me == poll.host && row.no.isNotEmpty()) span("gf-muted") { +" · ${who(row.no).joinAnd()} said no" }
+        }
+        li("gf-pollgame__bring") {
+            if (row.bringers.isEmpty()) span("gf-tag gf-tag--accent") { +"Nobody brings it yet" }
+            else {
+                icon("check")
+                +"${who(row.bringers).first().replaceFirstChar(Char::uppercase)} ${if (row.bringers.first() == view.me) "bring" else "brings"} it"
+                if (row.bringers.size > 1) span("gf-muted") { +" · ${(row.bringers.size - 1).of("other")} can too" }
+            }
+        }
     }
     if (!poll.open) return@article
     if (row.inMyCollection && row.myBring == null) notice("spark", id = "bring-prompt-${row.game.id}") {
         +"You have ${row.game.name}. Bring it if we play?"
     }
     div("gf-pollgame__actions") {
-        form(action = "$base/answer", method = FormMethod.post, classes = "gf-pollgame__answer") {
-            button(type = ButtonType.submit, classes = buttonClasses(if (row.myAnswer == true) ButtonStyle.PRIMARY else ButtonStyle.SECONDARY, ButtonSize.SMALL)) {
-                name = "yes"; value = "true"; attributes["aria-pressed"] = (row.myAnswer == true).toString()
-                icon("heart"); +"Yes"
-            }
-            button(type = ButtonType.submit, classes = buttonClasses(if (row.myAnswer == false) ButtonStyle.PRIMARY else ButtonStyle.SECONDARY, ButtonSize.SMALL)) {
-                name = "yes"; value = "false"; attributes["aria-pressed"] = (row.myAnswer == false).toString()
-                +"No"
-            }
+        form(action = "$base/answer", method = FormMethod.post, classes = "gf-chips") {
+            chipButton("yes", "true", pressed = row.myAnswer == true, icon = "heart", label = "I'd play this")
+            chipButton("yes", "false", pressed = row.myAnswer == false, label = "Not for me")
         }
-        form(action = "$base/bring", method = FormMethod.post, classes = "gf-pollgame__answer") {
-            when {
-                row.myBring == true -> button(type = ButtonType.submit, classes = buttonClasses(ButtonStyle.GHOST, ButtonSize.SMALL)) { name = "bringing"; value = "false"; +"Take back: I won't bring it" }
-                row.inMyCollection && row.myBring == null -> {
-                    button(type = ButtonType.submit, classes = buttonClasses(ButtonStyle.PRIMARY, ButtonSize.SMALL)) { name = "bringing"; value = "true"; +"I'll bring it" }
-                    button(type = ButtonType.submit, classes = buttonClasses(ButtonStyle.GHOST, ButtonSize.SMALL)) { name = "bringing"; value = "false"; +"Not this time" }
-                }
-                else -> button(type = ButtonType.submit, classes = buttonClasses(ButtonStyle.GHOST, ButtonSize.SMALL)) { name = "bringing"; value = "true"; +"I'll bring it" }
-            }
-        }
-        if (view.me == poll.host) form(action = "$base/remove", method = FormMethod.post, classes = "gf-pollgame__answer") {
-            hyperscript("on submit if not confirm('Take ${row.game.name.replace("'", "")} off the poll? Its answers go with it.') halt the event")
-            button(type = ButtonType.submit, classes = buttonClasses(ButtonStyle.GHOST, ButtonSize.SMALL)) { +"Take off" }
+        form(action = "$base/bring", method = FormMethod.post, classes = "gf-chips") {
+            // Pressed means "I bring it": pressing again takes it back.
+            chipButton("bringing", (row.myBring != true).toString(), pressed = row.myBring == true, icon = "check", label = "I'll bring it")
+            if (row.inMyCollection && row.myBring == null) button(type = ButtonType.submit, classes = buttonClasses(ButtonStyle.GHOST, ButtonSize.SMALL)) { name = "bringing"; value = "false"; +"Not this time" }
         }
     }
 }
 
+/** A toggle chip that submits [name]=[value]; [pressed] shows the answer you gave, like the bring page's heart. */
+private fun FlowContent.chipButton(name: String, value: String, pressed: Boolean, label: String, icon: String? = null) =
+    button(type = ButtonType.submit, classes = "gf-chip gf-chip--text" + if (icon != null && icon != "heart") " gf-chip--outline-icon" else "") {
+        this.name = name
+        this.value = value
+        attributes["aria-pressed"] = pressed.toString()
+        if (icon != null) icon(icon)
+        span { +label }
+    }
+
 /** The host's way to add games: search everyone's collections and BGG, or browse the collections. */
 private fun FlowContent.pollGameAdder(view: DatePollView, games: PollGamesView) = div("gf-card gf-pollgames__add") {
+    id = "add-game"
     h3("gf-h3") { +"Add a game" }
     searchField("Search your friends' games and BGG", "Search for a game to add", "/polls/${view.poll.id}/games/search", "#poll-game-search")
     div { id = "poll-game-search" }
@@ -321,15 +352,13 @@ fun TagConsumer<*>.datePollResults(view: DatePollView, error: String? = null) = 
                 }
             }
             if (poll.asksAboutGames && poll.proposals.isNotEmpty()) {
+                // Only what this date changes: a game nobody offered to bring is missing on every date, and its own card says so.
                 val missing = poll.planFor(tally.date).missing
-                if (missing.isEmpty()) p("gf-small gf-opt__games") { icon("check"); +"Every game has someone to bring it" }
-                else p("gf-small gf-opt__games gf-opt__games--missing") {
-                    +"Missing that day: "
-                    +missing.joinToString("; ") { game ->
-                        val name = view.gameNames[game] ?: "a game"
-                        val offered = poll.bringers(game)
-                        if (offered.isEmpty()) "$name (nobody offered to bring it)"
-                        else "$name (${offered.map { view.names[it] ?: "someone" }.joinAnd()} can't come)"
+                val lost = missing.filter { poll.bringers(it).isNotEmpty() }
+                if (missing.isEmpty()) p("gf-small gf-opt__games") { icon("check"); +"Someone brings every game" }
+                lost.forEach { game ->
+                    p("gf-small gf-opt__games gf-opt__games--missing") {
+                        +"No ${view.gameNames[game] ?: "game"}: ${poll.bringers(game).map { view.names[it] ?: "someone" }.joinAnd()} can't come"
                     }
                 }
             }
