@@ -75,7 +75,7 @@ tasks.processResources {
     inputs.property("version", project.version.toString())
     filesMatching("version.properties") { expand("version" to project.version.toString()) }
     from("docs/design/css") { into("static/css") }
-    from("docs/design/fonts") { include("*.woff2"); into("static/fonts") }
+    from("docs/design/fonts") { include("*.woff2", "OFL.txt"); into("static/fonts") }
     from("docs/design/icons") { include("*.svg", "favicon.ico", "apple-touch-icon.png"); into("static/icons") }
 }
 

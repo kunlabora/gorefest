@@ -4,7 +4,9 @@ Helps a group of boardgamers pick the games they'll enjoy most at a game day. Ev
 
 Game data comes from [BoardGameGeek](https://boardgamegeek.com).
 
-It's a private app for one friend group. It tells search engines to stay away (`robots.txt`, `X-Robots-Tag`), and everything except login and invite pages needs an account.
+It's built for one friend group and runs as a private, self-hosted app: it tells search engines to stay away (`robots.txt`, `X-Robots-Tag`), everything except login and invite pages needs an account, and the admin approves every new account. You're welcome to run your own instance for your group. There's no public instance to sign up to.
+
+The code is called `gorefest` (the game days it started with); the app calls itself Boardfest.
 
 ## How it works
 
@@ -49,4 +51,12 @@ Tests start their own Postgres through Testcontainers, so only the container run
 
 ## Deployment
 
-One small VPS runs the fat jar under systemd, with Caddy in front for TLS and a nightly `pg_dump` to object storage. Every push to `main` is built, tested and deployed by GitHub Actions, and a release that doesn't come up healthy is rolled back.
+One small VPS runs the fat jar under systemd, with Caddy in front for TLS and a nightly `pg_dump` to object storage. Every push to `main` is built, tested and deployed by GitHub Actions, and a release that doesn't come up healthy is rolled back. In a fork the deploy step skips itself until you set the `DEPLOY_*` secrets.
+
+Running your own instance against the real BoardGameGeek needs your own `BGG_TOKEN`: since 2025 BGG's XML API only answers registered applications, so register one with BGG and follow their terms. Without a token the app uses a fake BGG.
+
+## Licence
+
+[MIT](LICENSE), for the code and docs. The fonts are under the SIL Open Font License ([docs/design/fonts/OFL.txt](docs/design/fonts/OFL.txt)), and the "Powered by BGG" logo and the BGG screenshot belong to BoardGameGeek.
+
+Found a security problem? See [SECURITY.md](SECURITY.md).
