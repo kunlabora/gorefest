@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "gorefest"
-version = "2.2.0"
+version = "2.2.1"
 
 kotlin {
     jvmToolchain(25)
