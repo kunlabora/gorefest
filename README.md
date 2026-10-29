@@ -45,7 +45,7 @@ Tests start their own Postgres through Testcontainers, so only the container run
 ## Documentation
 
 - [CLAUDE.md](CLAUDE.md): architecture, conventions, taste model, matching
-- [docs/backlog.md](docs/backlog.md): stories and their status
+- [docs/backlog.md](docs/backlog.md): milestones, story status and flow metrics
 - [docs/design/](docs/design): design system, brand book, microcopy and screen mockups
 - [deploy/](deploy): deployment. [scaleway.md](deploy/scaleway.md) is the step-by-step guide, [README.md](deploy/README.md) covers general setup, deploys and restores
 

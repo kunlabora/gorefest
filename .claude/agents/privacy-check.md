@@ -10,7 +10,7 @@ You review a finished change in this repo for privacy impact and keep the privac
 - `docs/gdpr.md`: the analysis (what we hold, processors, findings, the household-exemption decision).
 - `docs/processing-register.md`: one row per data store.
 - The public notice: `src/main/kotlin/gorefest/shell/web/privacy/PrivacyViews.kt` (and `PrivacyNoticeTest`).
-- `docs/requests/g*.md` and the GDPR table in `docs/backlog.md`.
+- `docs/requests/g*.md` and the GDPR table in `docs/milestone-2.md`.
 - The "Erasure" and "Logs" notes in `CLAUDE.md`.
 
 **What to do**

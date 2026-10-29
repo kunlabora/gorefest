@@ -61,7 +61,7 @@ New accounts are approved by hand by the admin (`ADMIN_EMAIL`) before they can d
 
 ## Stories
 
-All in the [backlog](backlog.md#gdpr-2026-10-09). Suggested order: G1 and G2 first (G2 is the hard one); G3 to G8 are independent of each other.
+All in [milestone 2](milestone-2.md#gdpr-2026-10-09). Suggested order: G1 and G2 first (G2 is the hard one); G3 to G8 are independent of each other.
 
 | # | Story | Size | Depends on |
 |---|---|---|---|

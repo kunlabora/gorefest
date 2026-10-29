@@ -5,13 +5,13 @@ description: Build a Boardfest backlog story from idea to commit - request doc w
 
 # Story
 
-A story is done when every criterion in its request doc is ticked and covered by a test: a decider given/when/then where there's a decision, a web test where there's a page (`docs/backlog.md`, top). CLAUDE.md holds the rules; this is the order to apply them in. Read CLAUDE.md's Architecture and conventions sections before starting if they aren't in context.
+A story is done when every criterion in its request doc is ticked and covered by a test: a decider given/when/then where there's a decision, a web test where there's a page (`docs/backlog.md`). CLAUDE.md holds the rules; this is the order to apply them in. Read CLAUDE.md's Architecture and conventions sections before starting if they aren't in context.
 
 ## 0. Find the story
 
-- From the user's words, or the ⏭ row in the table at the top of `docs/backlog.md`. A brand-new idea gets the next free number in its group (`U21`, …), a row in the table (📋) and a file `docs/requests/u21-short-slug.md`.
+- From the user's words, or the ⏭ row in a milestone table (`docs/milestone-N.md`, listed in `docs/backlog.md`). A brand-new idea gets the next free number in its group (`U21`, …), a row in the latest milestone's table (📋, Arrived today) and a file `docs/requests/u21-short-slug.md`.
 - If the request doc exists, read it whole: decisions and answers are recorded in it with dates (`**Decision (2026-10-14):** …`). Don't re-open what is decided.
-- Set the row to 🚧.
+- Set the row to 🚧 with Started today.
 
 ## 1. Design (stop for the user here)
 
@@ -64,7 +64,7 @@ Run `./gradlew test`. Commit: `U21 web: <what>`.
 
 - `CLAUDE.md`: vocabulary for new terms, the events list, the web package list for a new package, matching notes if the matcher changed. Keep it to what a future reader needs.
 - Request doc: tick every criterion, set `Status: ✅ built`, add a `Built as designed, with these notes:` list for anything that turned out different.
-- `docs/backlog.md`: row to ✅; update the summary line under the U table if it lists decisions.
+- The milestone table: row to ✅ with Done today; update the summary line above the table if it lists decisions.
 
 ## 6. Privacy check
 
