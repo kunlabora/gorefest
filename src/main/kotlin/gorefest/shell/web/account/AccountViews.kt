@@ -141,11 +141,7 @@ fun HTML.emailCodePage(newEmail: String, error: String? = null) = page("Confirm 
                 id = "email-code"
                 label("gf-label") { htmlFor = "code"; +"6-digit code" }
                 div("gf-signin__row") {
-                    input(InputType.text, name = "code", classes = "gf-input gf-code") {
-                        id = "code"; required = true; maxLength = "6"; placeholder = "······"
-                        attributes["inputmode"] = "numeric"; attributes["autocomplete"] = "one-time-code"
-                        if (error != null) attributes["aria-invalid"] = "true"
-                    }
+                    codeInput(invalid = error != null)
                     button(type = ButtonType.submit, classes = buttonClasses(ButtonStyle.PRIMARY, ButtonSize.LARGE)) { +"Change my email" }
                 }
                 if (error != null) fieldError(error)

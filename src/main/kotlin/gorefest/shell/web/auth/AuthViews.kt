@@ -187,15 +187,7 @@ fun TagConsumer<*>.emailForm(returnTo: String, email: String = "", error: String
 fun TagConsumer<*>.codeForm(attempt: Uuid, error: String? = null) = singleFieldForm("code-form", "/login/code", "Let me in", error) {
     hiddenInput("attempt", attempt.toString())
     label("gf-label") { htmlFor = "code"; +"6-digit code" }
-    input(InputType.text, name = "code", classes = "gf-input gf-code") {
-        id = "code"
-        required = true
-        maxLength = "6"
-        placeholder = "······"
-        attributes["inputmode"] = "numeric"
-        attributes["autocomplete"] = "one-time-code"
-        if (error != null) attributes["aria-invalid"] = "true"
-    }
+    codeInput(invalid = error != null)
     if (error != null) fieldError(error)
     p("gf-hint") { +"Opened this from WhatsApp or Signal? The code is the quicker route." }
 }

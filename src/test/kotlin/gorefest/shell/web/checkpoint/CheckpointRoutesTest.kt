@@ -179,6 +179,30 @@ class CheckpointRoutesTest {
     }
 
     @Test
+    fun `after the game day ended, a forgotten play can still be logged, and the hub shows it`() = test.webTest(session = kim) { client ->
+        given(GamePlayStatusDeclared(kimId, cascadia, played = true), GameDayEnded(gorefest7))
+        test.clock.advance(Duration.ofDays(1))
+
+        client.get("/gamedays/$gorefest7").page().one(".gf-hub__hero a[href=$log]").text() shouldBe "Log a game"
+        client.get(log).page().one(".gf-log__head .gf-kicker").text() shouldBe "After the game day"
+        val compare = client.htmxPost(log, parameters {
+            append("game", azul.toString()); append("players", kimId.toString()); append("players", anna.toString()); append("duration", "45m")
+        }).headers["HX-Redirect"]!!
+        val page = client.get(compare).page()
+        val done = client.submitForm("/gamedays/$gorefest7/log/compare", parameters {
+            page.select("form input[type=hidden]").forEach { append(it.attr("name"), it.`val`()) }
+            append("answer", "A")
+        })
+
+        done.headers["Location"] shouldBe "/gamedays/$gorefest7"
+        app.tastes.of(kimId).comparisons.single().basis shouldBe Basis.PLAYED
+        val hub = client.get("/gamedays/$gorefest7").page()
+        val played = hub.select(".gf-hub__rest > .gf-section").first()!!
+        played.select("h2").text() shouldBe "Played"
+        played.select(".gf-list li").single().text() shouldContain "Azul"
+    }
+
+    @Test
     fun `logging a table you weren't at asks you nothing and records nothing`() = test.webTest(session = kim) { client ->
         given(GamePlayStatusDeclared(kimId, cascadia, played = true))
 

@@ -32,6 +32,20 @@ fun FlowContent.field(id: String, label: String, hint: String? = null, error: St
 
 fun FlowContent.hiddenInput(name: String, value: String) = input(InputType.hidden, name = name) { this.value = value }
 
+/**
+ * The 6-digit code field. A pasted code often brings a space or a dash along: the browser keeps only the digits, rather
+ * than a `maxlength` cutting the last digit off first. The server ignores anything but digits as well.
+ */
+fun FlowContent.codeInput(invalid: Boolean) = input(InputType.text, name = "code", classes = "gf-input gf-code") {
+    id = "code"
+    required = true
+    placeholder = "······"
+    attributes["inputmode"] = "numeric"
+    attributes["autocomplete"] = "one-time-code"
+    if (invalid) attributes["aria-invalid"] = "true"
+    hyperscript("on input js(me) me.value = me.value.replace(/\\D/g, '').slice(0, 6) end")
+}
+
 /** Players as checkbox chips (avatar, tick when checked, name), submitted as [name]. */
 fun FlowContent.playerChips(
     players: List<PlayerId>, names: Map<PlayerId, String>, checked: (PlayerId) -> Boolean, name: String = "players", legend: String = "Players",

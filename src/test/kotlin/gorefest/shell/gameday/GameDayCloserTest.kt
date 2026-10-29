@@ -14,8 +14,8 @@ import gorefest.shell.web.TestApp
 import gorefest.shell.web.htmxPost
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldStartWith
 import io.kotest.matchers.string.shouldContain
-import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.parameters
 import org.junit.jupiter.api.BeforeEach
@@ -106,17 +106,16 @@ class GameDayCloserTest {
     }
 
     @Test
-    fun `after closing, the shelf and play log are closed too`() {
+    fun `after closing, the shelf is closed too, while a forgotten play can still be logged`() {
         kotlinx.coroutines.runBlocking {
             test.clock.now = Instant.parse("2026-09-28T08:00:00Z")
             app.closer.closeDue()
         }
         test.webTest(session = kim) { client ->
             client.htmxPost("/gamedays/$gorefest7/shelf/$cascadia", parameters { append("bringing", "true") }).status shouldBe HttpStatusCode.Conflict
-            val refused = client.htmxPost("/gamedays/$gorefest7/log", parameters {
+            client.htmxPost("/gamedays/$gorefest7/log", parameters {
                 append("game", cascadia.toString()); append("players", kimId.toString()); append("duration", "30m")
-            })
-            org.jsoup.Jsoup.parse(refused.bodyAsText()).select("[role=alert]").text() shouldBe "This game day has ended"
+            }).headers["HX-Redirect"]!! shouldStartWith "/gamedays/$gorefest7/log/compare"
         }
     }
 }

@@ -6,10 +6,10 @@ import gorefest.core.Event
 import gorefest.core.GameDayCreated
 import gorefest.core.GameDayDetailsChanged
 import gorefest.core.GameDayCancelled
-import gorefest.core.GameDayEnded
 import gorefest.core.GameDayId
 import gorefest.core.PlayLogged
 import gorefest.core.PlayerId
+import gorefest.core.PlayerErased
 import gorefest.core.PlayerJoined
 import gorefest.core.Tags
 import gorefest.core.game.Game
@@ -26,30 +26,32 @@ import java.time.ZoneId
 
 /**
  * Logging needs to know who joined and when the game day is, so the boundary is its lifecycle, its date and its joins.
- * Plays can be logged from the game day's date (in its own time zone) until it ends or is cancelled.
+ * Plays can be logged from the game day's date (in its own time zone), also after it ended (nobody logs everything on
+ * the night), but not on a cancelled one. Erased players stay on a closed game day's history, so every erasure is in
+ * the boundary too: a new play must never name someone who was erased.
  */
 object LogPlayDecider : Decider<PlayLogged, LogPlayDecider.State, PlayLogged> {
-    data class State(val date: LocalDate? = null, val zone: ZoneId = ZoneId.of("UTC"), val open: Boolean = false, val ended: Boolean = false, val cancelled: Boolean = false, val joined: Set<PlayerId> = emptySet())
+    data class State(val date: LocalDate? = null, val zone: ZoneId = ZoneId.of("UTC"), val open: Boolean = false, val cancelled: Boolean = false, val joined: Set<PlayerId> = emptySet())
 
     override val initialState = State()
 
     override fun query(command: PlayLogged) = Query.of(
-        Query.Item(setOf(typeName<GameDayCreated>(), typeName<GameDayDetailsChanged>(), typeName<GameDayEnded>(), typeName<GameDayCancelled>(), typeName<PlayerJoined>()), setOf(Tags.gameDay(command.gameDay))),
+        Query.Item(setOf(typeName<GameDayCreated>(), typeName<GameDayDetailsChanged>(), typeName<GameDayCancelled>(), typeName<PlayerJoined>()), setOf(Tags.gameDay(command.gameDay))),
+        Query.Item(setOf(typeName<PlayerErased>()), emptySet()),
     )
 
     override fun evolve(state: State, event: Event) = when (event) {
         is GameDayCreated -> state.copy(open = true, date = event.date, zone = runCatching { ZoneId.of(event.timeZone) }.getOrDefault(state.zone))
         is GameDayDetailsChanged -> state.copy(date = event.date)
-        is GameDayEnded -> state.copy(ended = true)
         is GameDayCancelled -> state.copy(cancelled = true)
         is PlayerJoined -> state.copy(joined = state.joined + event.player)
+        is PlayerErased -> state.copy(joined = state.joined - event.player)
         else -> state
     }
 
     override fun decide(command: PlayLogged, state: State): Decision<PlayLogged> = when {
         !state.open -> Rejected(Rejection.NoSuchGameDay)
         state.cancelled -> Rejected(Rejection.GameDayCancelled)
-        state.ended -> Rejected(Rejection.GameDayOver)
         state.date != null && command.at.atZone(state.zone).toLocalDate() < state.date -> Rejected(Rejection.GameDayNotStarted)
         command.loggedBy !in state.joined -> Rejected(Rejection.NotJoined)
         command.players.isEmpty() -> Rejected(Rejection.NobodyPlayed)

@@ -241,8 +241,8 @@ fun HTML.gameDayPage(hub: GameDayHub) {
                         li { icon("users"); +"${gameDay.players.size} going" }
                     }
                     if (open && hub.shelf.isNotEmpty()) linkButton("$base/table", "Pick a game for my table", ButtonStyle.SECONDARY, ButtonSize.LARGE, icon = "dice")
-                    // On the day, someone still doing their taste round can log a play from here too.
-                    if (open && hub.logOffered && hub.next !is NextStep.Checkpoint) linkButton("$base/log", "Log a game", ButtonStyle.GHOST, ButtonSize.SMALL)
+                    // On the day, someone still doing their taste round can log a play from here too; after it, anyone can add a forgotten one.
+                    if (!gameDay.cancelled && hub.logOffered && hub.next !is NextStep.Checkpoint) linkButton("$base/log", "Log a game", ButtonStyle.GHOST, ButtonSize.SMALL)
                     // Watched a table play something (U9): tell us what you made of it.
                     if (open && hub.logOffered && hub.shelf.isNotEmpty()) linkButton("$base/watched", "Watched a game?", ButtonStyle.GHOST, ButtonSize.SMALL)
                 }
@@ -268,12 +268,14 @@ fun HTML.gameDayPage(hub: GameDayHub) {
         wrap("gf-hub__rest") {
             if (hub.played.isNotEmpty()) section("gf-section") {
                 // The log stays one tap away all day, not only through the checkpoint card.
-                sectionHead("Played today", "$base/log".takeIf { hub.next is NextStep.Checkpoint }, "Log a game")
+                sectionHead(if (gameDay.ended) "Played" else "Played today", "$base/log".takeIf { hub.next is NextStep.Checkpoint }, "Log a game")
                 ul("gf-list") {
                     hub.played.forEach { (game, log) ->
                         li {
                             gameRow(game, meta = "${log.players.map { hub.names[it] ?: SOMEONE }.joinToString(", ")} · ${log.minutes} min") {
-                                span("gf-small gf-muted") { +log.at.atZone(zone(gameDay)).toLocalTime().withSecond(0).withNano(0).toString() }
+                                // A play logged after the day says when it was logged, not played: no time then.
+                                val at = log.at.atZone(zone(gameDay))
+                                if (at.toLocalDate() == gameDay.date) span("gf-small gf-muted") { +at.toLocalTime().withSecond(0).withNano(0).toString() }
                             }
                         }
                     }

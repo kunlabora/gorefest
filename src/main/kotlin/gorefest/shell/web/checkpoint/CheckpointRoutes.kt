@@ -39,8 +39,9 @@ import kotlin.uuid.Uuid
 
 private const val MAX_MINUTES = 24 * 60
 
-/** Morning, lunch or evening, by the clock where the game day is. */
+/** Morning, lunch or evening, by the clock where the game day is; after the day, just that. */
 fun checkpointLabel(gameDay: GameDaySummary, clock: java.time.Clock): String {
+    if (gameDay.ended) return "After the game day"
     val hour = clock.instant().atZone(zone(gameDay)).hour
     return when {
         hour < 11 -> "Morning checkpoint"
@@ -100,7 +101,9 @@ fun Route.checkpointRoutes(app: App) {
             val players = call.parameters.getAll("players").orEmpty()
                 .mapNotNull { runCatching { PlayerId(Uuid.parse(it)) }.getOrNull() }.filter { it in gameDay.players }.distinct()
             val minutes = call.parameters["minutes"]?.toIntOrNull()?.takeIf { it in 0..MAX_MINUTES } ?: 0
-            val tableLink = "/gamedays/${gameDay.id}/table?" + players.joinToString("&") { "players=${it.toString().urlEncoded()}" }
+            // After the day there is no next game to pick: back to the hub, where the play now shows.
+            val tableLink = if (gameDay.ended) "/gamedays/${gameDay.id}"
+            else "/gamedays/${gameDay.id}/table?" + players.joinToString("&") { "players=${it.toString().urlEncoded()}" }
             // "Which did you enjoy more?" is about your own play: logging someone else's table asks nothing.
             if (me.id !in players) return@authenticated redirect(tableLink)
             val player = PlayerGames(app.tastes.of(me.id), app.collectionSync.collection(me.id))

@@ -3,8 +3,10 @@ package gorefest.core.gameday
 import gorefest.core.Rejection
 import gorefest.core.BggId
 import gorefest.core.GameDayDetailsChanged
+import gorefest.core.GameDayCancelled
 import gorefest.core.GameDayEnded
 import gorefest.core.PlayLogged
+import gorefest.core.PlayerErased
 import gorefest.core.PlayerJoined
 import gorefest.core.eventsourcing.given
 import gorefest.core.taste.PlayerGames
@@ -28,13 +30,23 @@ class PlaysTest {
     }
 
     @Test
-    fun `logs need joined players, a real duration and a running game day`() {
+    fun `logs need joined players, a real duration and a game day that wasn't cancelled`() {
         val stranger = gorefest.core.PlayerId(kotlin.uuid.Uuid.random())
         LogPlayDecider.given(*joined).whenever(log(45, listOf(anna, stranger))).thenRejects(Rejection.PlayersNotAtGameDay)
         LogPlayDecider.given(*joined).whenever(log(45, emptyList())).thenRejects(Rejection.NobodyPlayed)
         LogPlayDecider.given(*joined).whenever(log(0)).thenRejects(Rejection.ImplausibleDuration)
-        LogPlayDecider.given(*joined, GameDayEnded(gorefest7)).whenever(log(45)).thenRejects(Rejection.GameDayOver)
+        LogPlayDecider.given(*joined, GameDayCancelled(gorefest7)).whenever(log(45)).thenRejects(Rejection.GameDayCancelled)
         LogPlayDecider.given(gameDayCreated()).whenever(log(45)).thenRejects(Rejection.NotJoined)
+    }
+
+    @Test
+    fun `a play can still be logged after the game day ended`() {
+        LogPlayDecider.given(*joined, GameDayEnded(gorefest7)).whenever(log(45)).thenEmits(log(45))
+    }
+
+    @Test
+    fun `a play never names someone who was erased, also on an ended game day that still shows them`() {
+        LogPlayDecider.given(*joined, GameDayEnded(gorefest7), PlayerErased(bram)).whenever(log(45)).thenRejects(Rejection.PlayersNotAtGameDay)
     }
 
     @Test
