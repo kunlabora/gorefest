@@ -266,7 +266,7 @@ div.gf-tile { cursor: default; }
 @keyframes gf-spin { to { transform: rotate(360deg); } }
 @keyframes gf-deal { from { opacity: 0; transform: translateY(14px) rotate(-1.5deg); } }
 @media (prefers-reduced-motion: reduce) {
-  .gf-deal, .gf-deal .gf-pick { animation: none; }
+  .gf-deal, .gf-deal .gf-pick, .gf-deal .gf-pick:last-of-type { animation: none; }
   .gf-btn, .gf-pick, .gf-switch, .gf-switch::before { transition: none; }
   .gf-spin { animation-duration: 2s; }
 }
@@ -340,7 +340,7 @@ div.gf-tile { cursor: default; }
 .gf-ill__face { width: 22px; height: 22px; margin-left: -5px; border-radius: 50%; border: 2px solid var(--surface-raised); display: grid; place-items: center; font: 800 9px/1 var(--font-display); color: var(--ink); }
 .gf-ill__three { display: flex; flex-direction: column; gap: 4px; width: 84%; }
 .gf-ill__three > div { display: flex; align-items: center; gap: 6px; padding: 3px 6px; border-radius: 6px; background: var(--surface); border: 1px solid var(--line); font: 700 10px/14px var(--font-sans); }
-.gf-ill__three > div::after { content: "\2713"; margin-left: auto; color: var(--good); }
+.gf-ill__three > div::after { content: "\2713"; margin-left: auto; color: var(--olive); }
 .gf-minitile--tiny { width: 14px; height: 14px; border-radius: 4px; font-size: 8px; }
 .gf-sample { display: grid; grid-template-columns: 76px minmax(0, 1fr); gap: 14px; align-items: center; padding: 12px; }
 .gf-minitile--big { width: 76px; height: 76px; font-size: 26px; }
