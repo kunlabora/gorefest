@@ -47,7 +47,7 @@ fun HTML.logPage(view: LogFormView, checkpoint: String, me: CurrentPlayer) = pag
         div("gf-log__head") {
             crumb("/gamedays/${view.gameDay.id}", view.gameDay.title)
             p("gf-kicker") { +checkpoint }
-            h1("gf-h1 gf-h1--landing") { +"What did you play?" }
+            pageHeading("What did you play?")
         }
         consumer.logForm(view, me, Parameters.Empty, error = null)
     }
@@ -86,7 +86,7 @@ fun TagConsumer<*>.logForm(view: LogFormView, me: CurrentPlayer, values: Paramet
                 val chosenGame = values["game"] ?: view.games.firstOrNull()?.id?.toString()
                 gameTiles("Which game did you play?", "game") { view.games.forEach { gameTileChoice(it, checked = it.id.toString() == chosenGame) } }
                 div("gf-log__search") {
-                    h3("gf-log__sub") { +"Played something else?" }
+                    heading(Level.H3, "gf-log__sub") { +"Played something else?" }
                     // Enter would submit the whole log form from here.
                     searchField("Search BGG", "Search for the game you played", "/gamedays/${view.gameDay.id}/log/search", "#log-search-results") {
                         hyperscript("on keydown[key=='Enter'] halt the event")
@@ -104,7 +104,7 @@ fun TagConsumer<*>.logForm(view: LogFormView, me: CurrentPlayer, values: Paramet
         }
         aside("gf-log__summary") {
             p("gf-kicker") { +"You're logging" }
-            h2("gf-log__game") { attributes["data-log"] = "game"; +(summary.game ?: "Pick a game") }
+            heading(Level.H2, "gf-log__game") { attributes["data-log"] = "game"; +(summary.game ?: "Pick a game") }
             p("gf-muted gf-log__about") { attributes["data-log"] = "about"; +summary.about }
             actionButton("Log it", ButtonStyle.PRIMARY, ButtonSize.LARGE, block = true, submit = true, spinner = true)
             p("gf-hint") { +"Then one quick question about it." }
@@ -116,6 +116,7 @@ fun TagConsumer<*>.logSearchResults(
     games: List<Game>, bggUnavailable: Boolean, nothingFor: String? = null, id: String = "log-search-results", question: String = "Which game did you play?",
 ) = div {
     this.id = id
+    announce(searchAnnouncement(games.size, nothingFor))
     if (bggUnavailable) p("gf-small gf-muted") { +"BGG isn't answering right now, so these are only games we already know." }
     if (games.isNotEmpty()) gameTiles(question, "game") { games.forEach { gameTileChoice(it, checked = false) } }
     else if (nothingFor != null) p("gf-small gf-muted gf-search-empty") { +"Nothing found for \u201c$nothingFor\u201d. Try another spelling." }
@@ -134,7 +135,7 @@ fun HTML.logComparePage(view: LogCompareView, me: CurrentPlayer) = page(
         notice("check", NoticeKind.GOOD) { +"Logged "; strong { +view.played.name }; +": ${view.players.of("player")}, ${view.minutes} min." }
         div("gf-stack") {
             p("gf-kicker") { +"One quick question" }
-            h1("gf-h1") { +"Which did you enjoy more?" }
+            heading(Level.H1, "gf-h1") { +"Which did you enjoy more?" }
         }
         form(action = "/gamedays/${view.gameDay.id}/log/compare", method = FormMethod.post, classes = "gf-wizard__form") {
             hiddenInput("a", view.played.id.toString())
@@ -160,7 +161,7 @@ fun HTML.watchedPage(view: WatchedView, checkpoint: String, me: CurrentPlayer) =
         div("gf-log__head") {
             crumb("/gamedays/${view.gameDay.id}", view.gameDay.title)
             p("gf-kicker") { +checkpoint }
-            h1("gf-h1 gf-h1--landing") { +"What did you watch?" }
+            pageHeading("What did you watch?")
             p("gf-lede") { +"Seen a table play something you haven't? Pick it, and one question tells us what you made of it. It counts as if you'd played it." }
         }
         form(action = "/gamedays/${view.gameDay.id}/watched/compare", method = FormMethod.get, classes = "gf-stack") {
@@ -168,7 +169,7 @@ fun HTML.watchedPage(view: WatchedView, checkpoint: String, me: CurrentPlayer) =
             if (view.games.isEmpty()) p("gf-muted") { +"Nothing on the shelf you haven't played. Search for the game you watched." }
             gameTiles(WATCHED_QUESTION, "game") { view.games.forEachIndexed { i, game -> gameTileChoice(game, checked = i == 0) } }
             div("gf-log__search") {
-                h3("gf-log__sub") { +"Watched something else?" }
+                heading(Level.H2, "gf-log__sub") { +"Watched something else?" }
                 // Enter would submit the form from here.
                 searchField("Search BGG", "Search for the game you watched", "/gamedays/${view.gameDay.id}/watched/search", "#$WATCHED_RESULTS") {
                     hyperscript("on keydown[key=='Enter'] halt the event")
@@ -192,7 +193,7 @@ fun HTML.watchedComparePage(view: WatchedCompareView, me: CurrentPlayer) = page(
     wrap("gf-log__compare") {
         div("gf-stack") {
             p("gf-kicker") { +"You watched ${view.watched.name}" }
-            h1("gf-h1") { +"Now that you've seen it, which would you rather play?" }
+            heading(Level.H1, "gf-h1") { +"Now that you've seen it, which would you rather play?" }
         }
         form(action = "/gamedays/${view.gameDay.id}/watched/compare", method = FormMethod.post, classes = "gf-wizard__form") {
             hiddenInput("a", view.watched.id.toString())
@@ -207,7 +208,7 @@ fun HTML.watchedComparePage(view: WatchedCompareView, me: CurrentPlayer) = page(
 fun HTML.watchedNothingPage(gameDay: GameDaySummary, watched: Game, me: CurrentPlayer) = page("Nothing to compare yet", site = SiteBar(me, Nav.GAME_DAYS)) {
     wrap {
         crumb("/gamedays/${gameDay.id}", gameDay.title)
-        emptyState("Nothing to compare yet", "We'd ask you to hold ${watched.name} up against a game you've played, and we don't know any yet. Log a game you played, or do a taste round first.")
+        emptyState("Nothing to compare yet", "We'd ask you to hold ${watched.name} up against a game you've played, and we don't know any yet. Log a game you played, or do a taste round first.", level = Level.H1)
     }
 }
 

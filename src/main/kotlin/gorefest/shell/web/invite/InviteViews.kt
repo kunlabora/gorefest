@@ -52,7 +52,7 @@ fun HTML.invitePage(view: InviteLanding) {
             split("gf-inv-hero") {
                 div("gf-split__copy") {
                     inviterLine(gameDay.host, view.names[gameDay.host], "invites you to a game day")
-                    h1("gf-h1 gf-h1--landing") { +gameDay.title }
+                    pageHeading(gameDay.title)
                     ul("gf-facts") {
                         li { icon("calendar"); +gameDay.date.full() }
                         li {
@@ -109,7 +109,7 @@ private fun FlowContent.hand(shelf: List<Pair<Game, ShelfGame>>, names: Map<Play
     shelf.take(4).forEach { (game, entry) ->
         div("gf-card gf-hand__card") {
             art(game)
-            h3("gf-hand__name") { +game.name }
+            heading(Level.H3, "gf-hand__name") { +game.name }
             span("gf-hand__chip") { +broughtBy(entry.owners.mapNotNull { names[it] }) }
         }
     }
@@ -124,7 +124,7 @@ private fun broughtBy(owners: List<String>) = when (owners.size) {
 }
 
 private fun FlowContent.whatHappensNext(loggedIn: Boolean) = div("gf-stack gf-inv-next") {
-    h2("gf-h2") { +"What happens next" }
+    sectionHeading("What happens next")
     stepper("gf-stepper--cols") {
         listOf(
             (if (loggedIn) "Join the guest list" else "Sign in with your email") to
@@ -144,7 +144,7 @@ private fun HTML.statusPage(title: String, kicker: String?, heading: String, tex
         div("gf-hero-band") {
             div("gf-hero-band__copy") {
                 if (kicker != null) p("gf-kicker") { +kicker }
-                h1("gf-h1 gf-h1--landing") { +heading }
+                pageHeading(heading)
                 p("gf-lede gf-muted") { +text }
                 action?.invoke(this)
             }

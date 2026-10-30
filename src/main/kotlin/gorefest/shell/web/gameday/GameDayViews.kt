@@ -2,6 +2,11 @@ package gorefest.shell.web.gameday
 
 import gorefest.core.PlayLogged
 import gorefest.shell.web.components.SOMEONE
+import gorefest.shell.web.components.announce
+import gorefest.shell.web.components.Level
+import gorefest.shell.web.components.heading
+import gorefest.shell.web.components.pageHeading
+import gorefest.shell.web.components.sectionHeading
 import gorefest.core.PlayerId
 import gorefest.core.game.Game
 import gorefest.core.datepoll.DatePollSummary
@@ -106,7 +111,7 @@ fun HTML.homePage(view: HomeView) = page(
 ) {
     val nothingYet = view.next == null && view.later.isEmpty() && view.past.isEmpty() && view.polls.isEmpty() && view.nights.isEmpty() && view.pastNights.isEmpty()
     wrap {
-        h1("gf-vh") { +"Your game days" }
+        heading(Level.H1, "gf-vh") { +"Your game days" }
         // Above both columns, so the next game day's card and the action tiles start on the same line.
         p("gf-kicker gf-home__kicker") { +(if (view.next != null) "Hi ${me.name.substringBefore(' ')} · next up" else "Hi ${me.name.substringBefore(' ')}") }
         div("gf-home__hero") {
@@ -118,12 +123,12 @@ fun HTML.homePage(view: HomeView) = page(
                 // The one brand fill is the next step; without a game day, hosting takes it.
                 val hostStyle = if (view.next == null) ButtonStyle.PRIMARY else ButtonStyle.SECONDARY
                 article("gf-card gf-homecard") {
-                    h2("gf-homecard__title") { +"Host a game day" }
+                    heading(Level.H2, "gf-homecard__title") { +"Host a game day" }
                     p("gf-small gf-muted") { +"Pick a date, share a link, everyone brings games." }
                     linkButton("/gamedays/new", "Host a game day", hostStyle, icon = "plus")
                 }
                 article("gf-card gf-homecard") {
-                    h2("gf-homecard__title") { +"Not sure when?" }
+                    heading(Level.H2, "gf-homecard__title") { +"Not sure when?" }
                     p("gf-small gf-muted") { +"Ask your group which date suits them first." }
                     linkButton("/polls/new", "Find a date", ButtonStyle.SECONDARY, icon = "calendar")
                 }
@@ -134,7 +139,7 @@ fun HTML.homePage(view: HomeView) = page(
     }
     if (view.later.isNotEmpty() || view.polls.isNotEmpty() || view.nights.isNotEmpty() || !view.bggLinked) band(sunk = true) {
         div("gf-stack gf-home__coming") {
-            h2("gf-h2 gf-h2--section") { +"Coming up" }
+            heading(Level.H2, "gf-h2 gf-h2--section") { +"Coming up" }
             div("gf-home__list") {
                 view.later.forEach { dayCard(it, view.today) }
                 view.nights.forEach { gameNightCard(it, view.today) }
@@ -152,7 +157,7 @@ fun HTML.homePage(view: HomeView) = page(
     }
     if (view.past.isNotEmpty() || view.pastNights.isNotEmpty()) wrap {
         div("gf-stack gf-home__past") {
-            h2("gf-h2 gf-h2--section") { +"Past" }
+            heading(Level.H2, "gf-h2 gf-h2--section") { +"Past" }
             div("gf-home__list") {
                 view.past.forEach { dayCard(it, view.today) }
                 view.pastNights.forEach { gameNightCard(it, view.today) }
@@ -174,7 +179,7 @@ private fun FlowContent.nextGameDay(next: HomeNext, today: LocalDate) {
             }
             div {
                 style = "min-width: 0"
-                h2("gf-homeday__title") { a(base) { +gameDay.title } }
+                heading(Level.H2, "gf-homeday__title") { a(base) { +gameDay.title } }
                 p("gf-muted gf-homeday__meta") { +listOf(gameDay.place, "${gameDay.players.size} going").filter { it.isNotBlank() }.joinToString(" · ") }
             }
         }
@@ -234,7 +239,7 @@ fun HTML.gameDayPage(hub: GameDayHub) {
             split("gf-hub__hero") {
                 div("gf-split__copy") {
                     crumb("/", "All game days")
-                    h1("gf-h1 gf-h1--hub") { +gameDay.title }
+                    heading(Level.H1, "gf-h1 gf-h1--hub") { +gameDay.title }
                     if (gameDay.cancelled) span("gf-tag") { +"Cancelled" } else if (gameDay.ended) span("gf-tag") { +"Ended" }
                     ul("gf-hubfacts") {
                         li { icon("calendar"); +gameDay.date.long() }
@@ -253,14 +258,14 @@ fun HTML.gameDayPage(hub: GameDayHub) {
         band(sunk = true) {
             div("gf-stack gf-hub__shelf") {
                 div("gf-sechead") {
-                    h2("gf-h2 gf-h2--section") { +"The shelf · ${hub.shelf.size}" }
+                    heading(Level.H2, "gf-h2 gf-h2--section") { +"The shelf · ${hub.shelf.size}" }
                     if (open) div("gf-sechead__actions") {
                         if (gameDay.players.size > 1) linkButton("$base/ask", "Ask someone", ButtonStyle.GHOST, ButtonSize.SMALL)
                         linkButton("$base/bring", "Bring games", ButtonStyle.SECONDARY, ButtonSize.SMALL, icon = "plus")
                     }
                 }
-                if (hub.shelf.isEmpty() && open) emptyState("Nothing on the shelf yet", "Tick the games you're bringing, and ask the others to do the same.")
-                else if (hub.shelf.isEmpty()) emptyState("Nothing on the shelf", "No games were brought.")
+                if (hub.shelf.isEmpty() && open) emptyState("Nothing on the shelf yet", "Tick the games you're bringing, and ask the others to do the same.", level = Level.H3)
+                else if (hub.shelf.isEmpty()) emptyState("Nothing on the shelf", "No games were brought.", level = Level.H3)
                 else div("gf-tiles") {
                     hub.shelf.forEach { (game, entry) -> gameTile(game, entry.owners.firstOrNull(), entry.owners.firstOrNull()?.let(hub.names::get)) }
                 }
@@ -288,7 +293,7 @@ fun HTML.gameDayPage(hub: GameDayHub) {
                     consumer.players(gameDay, hub.names, broughtBy = hub.shelf.flatMap { (_, entry) -> entry.owners }.groupingBy { it }.eachCount())
                 }
                 if (open) section("gf-section") {
-                    h2("gf-h2") { +"Invite friends" }
+                    sectionHeading("Invite friends")
                     consumer.invite(gameDay, hub.inviteLink)
                 }
             }
@@ -305,7 +310,7 @@ fun HTML.cancelGameDayPage(gameDay: GameDaySummary, error: String? = null) =
             div("gf-split__copy gf-narrow") {
                 crumb("/gamedays/${gameDay.id}", gameDay.title)
                 p("gf-kicker") { +"Cancel game day" }
-                h1("gf-h1 gf-h1--landing") { +"Cancel ${gameDay.title}?" }
+                heading(Level.H1, "gf-h1 gf-h1--landing") { +"Cancel ${gameDay.title}?" }
                 if (error != null) errorNotice(error)
                 p("gf-lede gf-muted") { +"The game day stays visible to everyone who joined, marked as cancelled, and can't be changed anymore. The invite link stops working. Nobody gets an email, so tell your group yourself." }
                 form(action = "/gamedays/${gameDay.id}/cancel", method = FormMethod.post, classes = "gf-cancel-actions") {
@@ -383,6 +388,7 @@ private fun TagConsumer<*>.players(gameDay: GameDaySummary, names: Map<PlayerId,
 context(me: CurrentPlayer)
 fun TagConsumer<*>.invite(gameDay: GameDaySummary, link: String) = div("gf-stack") {
     id = "invite"
+    announce("New invite link made. The old one stops working.")
     p("gf-small gf-muted") { +"Share this link in your group chat. Anyone with it can join." }
     copyBox(link, small = true)
     if (me.id == gameDay.host) actionButton("Make a new link", ButtonStyle.GHOST, ButtonSize.SMALL, icon = "refresh") {

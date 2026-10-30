@@ -25,7 +25,7 @@ fun FlowContent.stepper(modifier: String = "", steps: OL.() -> Unit) = ol(("gf-s
 /** A numbered step with a title and a line of text, and room for [extra] under it (a screenshot, a button). */
 fun OL.step(number: Int, title: String, text: P.() -> Unit, tone: StepTone = StepTone.INK, extra: (DIV.() -> Unit)? = null) = li("gf-stepper__item") {
     stepNumber(number, tone)
-    h3("gf-stepper__title") { +title }
+    heading(Level.H3, title, "gf-stepper__title")
     p("gf-muted gf-stepper__text") { text() }
     if (extra != null) div("gf-stepper__extra") { extra() }
 }
@@ -33,7 +33,7 @@ fun OL.step(number: Int, title: String, text: P.() -> Unit, tone: StepTone = Ste
 /** A numbered step whose body is a form section (game, who, how long), under a display-size title. */
 fun OL.formStep(number: Int, title: String, body: FlowContent.() -> Unit) = li("gf-stepper__item") {
     stepNumber(number, StepTone.INK)
-    h2("gf-stepper__title") { +title }
+    heading(Level.H2, title, "gf-stepper__title")
     div("gf-stepper__body") { body() }
 }
 
@@ -41,7 +41,7 @@ fun OL.formStep(number: Int, title: String, body: FlowContent.() -> Unit) = li("
 fun OL.illustratedStep(number: Int, title: String, text: String, illustration: FlowContent.() -> Unit) = li("gf-stepper__item gf-stepper__item--ill") {
     illustration()
     p("gf-kicker") { +"Step $number" }
-    h3("gf-stepper__title") { +title }
+    heading(Level.H3, title, "gf-stepper__title")
     p("gf-muted gf-stepper__text") { +text }
 }
 

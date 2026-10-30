@@ -69,7 +69,7 @@ class FormsTest {
         switch.attr("aria-label") shouldBe "Ask about games as well"
         switch.descriptions(row) shouldBe listOf("Put a few games to the group.")
 
-        val tile = render { switchTile("bringing", "Bringing Brass", checked = false, classes = "gf-tile") { +"Brass" } }
+        val tile = render { switchTile("bringing", "Bringing Brass", checked = false, classes = "gf-tile", id = "bring-1-switch") { +"Brass" } }
         tile.one("label.gf-tile > input").attr("aria-label") shouldBe "Bringing Brass"
     }
 

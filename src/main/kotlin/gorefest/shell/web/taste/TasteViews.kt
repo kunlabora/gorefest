@@ -24,6 +24,7 @@ fun HTML.wizardPage(me: CurrentPlayer, step: WizardStep) = page(
 /** The next step as an htmx fragment: the whole `main#wizard`. */
 fun TagConsumer<*>.wizardFragment(step: WizardStep) = main("gf-body gf-wizard gf-wrap") {
     id = "wizard"
+    announce("Next: ${step.pair.a.name} or ${step.pair.b.name}?")
     wizardContent(step)
 }
 
@@ -36,10 +37,10 @@ private fun FlowContent.wizardContent(step: WizardStep) {
             progressSteps(round.progress.coerceAtMost(total - 1), total, "Taste round")
             if (pair.basis == Basis.PLAYED) {
                 span("gf-tag gf-tag--olive gf-tag--start") { icon("check"); +"You've played both" }
-                h1("gf-h1 gf-wiz__question") { +"Which did you enjoy more?" }
+                heading(Level.H1, "gf-h1 gf-wiz__question") { +"Which did you enjoy more?" }
             } else {
                 span("gf-tag gf-tag--accent gf-tag--start") { icon("unplayed"); +"Unplayed pair" }
-                h1("gf-h1 gf-wiz__question") { +"Which would you rather try?" }
+                heading(Level.H1, "gf-h1 gf-wiz__question") { +"Which would you rather try?" }
             }
             p("gf-wiz__keys") {
                 kbd { +"A" }; kbd { +"B" }; +" to pick · "; kbd { +"1" }; +" both great · "; kbd { +"2" }; +" both meh"
@@ -84,7 +85,7 @@ fun HTML.favouritesPage(me: CurrentPlayer, view: Payoff) {
             div("gf-split__copy") {
                 crumb("/gamedays/${gameDay.id}", gameDay.title)
                 if (view.answers != null) p("gf-kicker") { +"Round done · ${view.answers} ${if (view.answers == 1) "answer" else "answers"}" }
-                h1("gf-h1 gf-h1--landing") { +if (view.shelfEmpty) "Nice taste. Now we need games." else "Your likely favourites today" }
+                pageHeading(if (view.shelfEmpty) "Nice taste. Now we need games." else "Your likely favourites today")
                 if (view.favourites.isNotEmpty() && !view.shelfEmpty) p("gf-lede") { +"Based on how you picked, these are the games from ${gameDay.title}'s shelf that should suit you best." }
                 div("gf-pay__cta") {
                     linkButton("/gamedays/${gameDay.id}", "Open ${gameDay.title}", ButtonStyle.PRIMARY, ButtonSize.LARGE)
@@ -118,7 +119,7 @@ private fun LI.favourite(rank: Int, f: Favourite) {
     span("gf-game__rank") { +"$rank" }
     art(f.game)
     div {
-        h3("gf-sample__name") { bggNameLink(f.game) }
+        heading(Level.H2, "gf-sample__name") { bggNameLink(f.game) }
         p("gf-fav__reason") { icon("spark"); +f.reason.text() }
     }
 }

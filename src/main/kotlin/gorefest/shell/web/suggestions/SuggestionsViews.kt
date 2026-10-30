@@ -39,7 +39,7 @@ fun HTML.tablePage(view: TableView) = page(
 ) {
     wrap {
         crumb(view.event.base, view.event.title)
-        h1("gf-h1 gf-picker__title") { +"Pick a game" }
+        heading(Level.H1, "gf-h1 gf-picker__title") { +"Pick a game" }
         div("gf-picker") {
             form(classes = "gf-picker__side") {
                 id = "table-form"
@@ -49,9 +49,9 @@ fun HTML.tablePage(view: TableView) = page(
                 hx("swap", "outerHTML")
                 hiddenInput(TABLE_SET, "1")
                 section("gf-card gf-picker__panel") {
-                    h2("gf-h2") { +"Who's at the table?" }
+                    sectionHeading("Who's at the table?")
                     playerChips(view.event.players, view.names, checked = { view.chosen == null || it.toString() in view.chosen })
-                    h2("gf-h2") { +"How long?" }
+                    sectionHeading("How long?")
                     segmented("time", "Time", TIMES.map { it.first }, checked = view.time, idPrefix = "time")
                 }
             }
@@ -60,16 +60,24 @@ fun HTML.tablePage(view: TableView) = page(
     }
 }
 
+/** What a screen reader hears when the picks change: the games in order, or why nothing fits. */
+private fun TableView.announcement(): String = when (val s = suggestions) {
+    is Suggestions.Found -> "Play this: ${s.top.map { it.game.name }.joinAnd()}"
+    is Suggestions.NothingFits -> s.title()
+}
+
 /**
  * The answer, swapped whenever the table form changes: the collapsed table bar (phone) and the picks.
  * The root lays out as the page's own grid cells (`display: contents`), so the bar sits above the form on the phone.
  */
-fun TagConsumer<*>.suggestions(view: TableView) = liveSection("suggestions", "gf-picker__answer") {
+fun TagConsumer<*>.suggestions(view: TableView) = section("gf-picker__answer") {
+    id = "suggestions"
+    announce(view.announcement())
     tableBar(view)
     div("gf-picker__results") {
         when (val suggestions = view.suggestions) {
             is Suggestions.Found -> {
-                h2("gf-h2") { +"Play this" }
+                sectionHeading("Play this")
                 if (suggestions.unknown.isNotEmpty()) unknownTaste(suggestions.unknown, view.tableSize, view.event, view.names, view.me.id)
                 suggestions.top.take(1).forEach { s ->
                     rankedGame(1, s.game, s.reason.text()) { icon("clock"); +"~${s.minutes} min ${if (view.tableSize == 1) "for you" else "for the ${view.tableSize} of you"}" }
@@ -80,7 +88,7 @@ fun TagConsumer<*>.suggestions(view: TableView) = liveSection("suggestions", "gf
                     }
                 }
             }
-            is Suggestions.NothingFits -> emptyState(suggestions.title(), suggestions.text()) {
+            is Suggestions.NothingFits -> emptyState(suggestions.title(), suggestions.text(), level = Level.H3) {
                 if (suggestions !is Suggestions.NothingFits.NoGameInTime) return@emptyState
                 val relax = suggestions.relaxTo ?: return@emptyState
                 val fitsThen = suggestions.fitsThen

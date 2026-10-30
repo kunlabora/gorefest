@@ -4,6 +4,8 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import gorefest.shell.web.components.page
+import gorefest.shell.web.components.Level
+import gorefest.shell.web.components.pageHeading
 import gorefest.shell.web.components.wordmark
 import io.ktor.server.html.respondHtml
 import io.ktor.server.request.uri
@@ -38,7 +40,7 @@ suspend fun RoutingContext.respondFragment(status: HttpStatusCode = HttpStatusCo
     val html = createHTML().apply(content).finalize()
     // Only a form post can end up here without htmx; the GET endpoints are fragments by design.
     if (isHtmx || call.request.local.method != HttpMethod.Post) call.respondText(html, ContentType.Text.Html, status)
-    else call.respondHtml(status) { page("Boardfest", appBar = { wordmark() }, wide = true) { unsafe { raw(html) } } }
+    else call.respondHtml(status) { page("Boardfest", appBar = { wordmark() }, wide = true) { pageHeading("Have another look", "gf-vh"); unsafe { raw(html) } } }
 }
 
 /** The page the user is looking at: for htmx requests that's the page that made the request. */

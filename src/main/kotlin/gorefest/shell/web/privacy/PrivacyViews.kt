@@ -1,6 +1,10 @@
 package gorefest.shell.web.privacy
 
 import gorefest.shell.web.components.crumb
+import gorefest.shell.web.components.Level
+import gorefest.shell.web.components.heading
+import gorefest.shell.web.components.pageHeading
+import gorefest.shell.web.components.sectionHeading
 import gorefest.shell.web.components.page
 import gorefest.shell.web.components.wordmark
 import gorefest.shell.web.components.wrap
@@ -35,7 +39,7 @@ enum class MailProvider(val label: String, val where: String) {
 fun HTML.privacyPage(view: PrivacyView) = page("Privacy", appBar = { wordmark() }, wide = true, mainClasses = "gf-privacy") {
     wrap {
         crumb("/", "Back")
-        h1("gf-h1") { +"What Boardfest keeps about you" }
+        heading(Level.H1, "gf-h1") { +"What Boardfest keeps about you" }
         p("gf-lede") {
             +"Boardfest is a private site for one group of friends who play board games together. I run it for them, not as a business. This is what it keeps, who can see it, and how to get rid of it."
         }
@@ -100,6 +104,6 @@ fun HTML.privacyPage(view: PrivacyView) = page("Privacy", appBar = { wordmark() 
 
 private fun FlowContent.privacySection(id: String, heading: String, body: FlowContent.() -> Unit) = section("gf-privacy__section") {
     this.id = id
-    h2("gf-h2") { +heading }
+    sectionHeading(heading)
     div { body() }
 }

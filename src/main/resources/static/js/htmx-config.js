@@ -19,3 +19,19 @@ document.addEventListener("htmx:afterRequest", (evt) => {
   const xhr = evt.detail.xhr;
   if (!(evt.detail.successful && xhr && xhr.getResponseHeader("HX-Redirect"))) delete elt.dataset.gfBusy;
 });
+
+// A swapped-in element says what changed in data-announce (the `announce` component); the page's status line reads it
+// out, since the swapped region itself is replaced and can't be a live region. The sentence is read from the response's
+// root element, so it holds for any swap style, and even when a background refresh replaces the new element at once.
+// A sentence already said isn't repeated (the collection page polls).
+document.addEventListener("htmx:afterSwap", (evt) => {
+  const status = document.getElementById("gf-announce");
+  const xhr = evt.detail.xhr;
+  if (!status || !xhr) return;
+  const template = document.createElement("template");
+  template.innerHTML = xhr.responseText;
+  const root = template.content.firstElementChild;
+  const message = root && root.dataset ? root.dataset.announce : null;
+  if (!message || status.textContent === message) return;
+  status.textContent = message;
+});

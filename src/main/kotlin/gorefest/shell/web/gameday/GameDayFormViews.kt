@@ -23,7 +23,7 @@ fun HTML.gameDayFormPage(view: GameDayFormView, values: Parameters = Parameters.
                 div("gf-split__copy") {
                     crumb(view.back.first, view.back.second)
                     p("gf-kicker") { +view.appBarTitle }
-                    h1("gf-h1 gf-h1--landing") { +view.heading }
+                    pageHeading(view.heading)
                     p("gf-lede gf-muted") {
                         +if (view.editing) "Fix the title, date or place. The invite link stays the same." else "Pick a date, share the link, and your friends bring the games."
                     }
@@ -57,7 +57,7 @@ private fun FlowContent.invitePreview(host: String, values: Parameters) = decora
         id = "invite-preview"
         div("gf-pv__art") { listOf(0, 1, 2).forEach { span("gf-pv__tile gf-pv__tile--$it") } }
         p("gf-kicker") { +"$host invites you to a game day" }
-        h3("gf-pv__title") { id = "pv-title"; +title }
+        heading(Level.H3, "gf-pv__title") { id = "pv-title"; +title }
         ul("gf-pv__facts") {
             li { icon("calendar"); span { id = "pv-date"; +date } }
             li { icon("users"); +"Hosted by $host" }
@@ -89,7 +89,7 @@ fun TagConsumer<*>.gameDayForm(view: GameDayFormView, error: String? = null, val
 /** The title input; when creating, an icon button beside it swaps in another generated title. */
 fun FlowContent.titleField(value: String, reroll: Boolean) = div { id = "title-field"; titleFieldContent(value, reroll) }
 
-fun TagConsumer<*>.titleField(value: String, reroll: Boolean) = div { id = "title-field"; titleFieldContent(value, reroll) }
+fun TagConsumer<*>.titleField(value: String, reroll: Boolean) = div { id = "title-field"; announce("New title: $value"); titleFieldContent(value, reroll) }
 
 private fun FlowContent.titleFieldContent(value: String, reroll: Boolean) = div("gf-titlerow") {
     field("title", "Title") {

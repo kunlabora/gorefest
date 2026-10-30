@@ -42,7 +42,7 @@ fun HTML.datePollFormPage(site: SiteBar, values: Parameters = Parameters.Empty, 
                 div("gf-split__copy") {
                     crumb("/", "All game days")
                     p("gf-kicker") { +"Find a date" }
-                    h1("gf-h1 gf-h1--landing") { +"Find a date" }
+                    pageHeading("Find a date")
                     p("gf-lede gf-muted") { +"Pick a few dates that could work, share the link, and see who can make which. You choose the winner, and the evening is set up for you." }
                 }
                 consumer.datePollForm(values = values, picks = picks)
@@ -63,7 +63,7 @@ fun TagConsumer<*>.datePollForm(error: String? = null, values: Parameters = Para
             fieldInput("place") { maxLength = MAX_PLACE_LENGTH.toString(); value = values["place"].orEmpty() }
         }
         div("gf-section") {
-            h2("gf-h2") { id = "poll-dates-heading"; +"Which dates could work?" }
+            heading(Level.H2, "gf-h2") { id = "poll-dates-heading"; +"Which dates could work?" }
             val given = values.getAll("dates").orEmpty()
             labelledGroup("poll-dates", headingId = "poll-dates-heading") {
                 (given + List((MIN_POLL_DATES + 1 - given.size).coerceAtLeast(0)) { "" }).forEach { dateField(it) }
@@ -91,12 +91,12 @@ fun TagConsumer<*>.datePollForm(error: String? = null, values: Parameters = Para
 private fun FlowContent.pollFormGamePicker(picks: PollFormGames) = div("gf-poll-form__gamepick") {
     // Attributes go before any child (the HTML streams). Stops a 13th tick here, so the limit isn't only news after "Start the poll" (BUG-034).
     hyperscript("on change[target.name == 'game' and target.checked] if (<input[name='game']:checked/> in me).length > $MAX_POLL_GAMES set target.checked to false then put 'That makes more than $MAX_POLL_GAMES: untick one first.' into #poll-form-games-limit else put '' into #poll-form-games-limit end")
-    h2("gf-h2") { +"Which games could you play?" }
+    sectionHeading("Which games could you play?")
     p("gf-small gf-muted") { +"Tick a few to put to the group, up to $MAX_POLL_GAMES. You can add more once the poll is up." }
     liveLine("poll-form-games-limit", "gf-small gf-error")
     val (shown, rest) = picks.suggested.withIndex().partition { (i, game) -> i < SUGGESTED_SHOWN || game.id in picks.ticked }.let { (a, b) -> a.map { it.value } to b.map { it.value } }
     // Without any taste answers the order is only alphabetical: don't claim favourites.
-    if (picks.suggested.isNotEmpty()) h3("gf-label") { +if (picks.tasteKnown) "Your games, likely favourites first" else "Your games" }
+    if (picks.suggested.isNotEmpty()) heading(Level.H3, "gf-label") { +if (picks.tasteKnown) "Your games, likely favourites first" else "Your games" }
     else p("gf-small") {
         +if (picks.linked) "Your collection is still on its way from BGG. Search for games below." else "Link your BGG account to pick from your own games. Or search below. "
         if (!picks.linked) a("/bgg?returnTo=%2Fpolls%2Fnew", classes = "gf-link") { +"Link BGG" }
@@ -109,7 +109,7 @@ private fun FlowContent.pollFormGamePicker(picks: PollFormGames) = div("gf-poll-
         summary { +"More of your games (${rest.size})" }
         gameTiles(POLL_GAMES_QUESTION, "game", multiple = true) { rest.forEach { gameTileChoice(it, checked = false) } }
     }
-    h3("gf-label") { +"Something else?" }
+    heading(Level.H3, "gf-label") { +"Something else?" }
     // Enter would submit the whole form from here.
     searchField("Search BGG", "Search BGG for a game to put to the group", "/polls/new/games/search", "#poll-form-search-results") {
         hyperscript("on keydown[key=='Enter'] halt the event")
@@ -120,6 +120,7 @@ private fun FlowContent.pollFormGamePicker(picks: PollFormGames) = div("gf-poll-
 /** BGG results on the poll form: ticking one moves it up with the picked games, so the next search can't wipe it. */
 fun TagConsumer<*>.pollFormSearchResults(games: List<Game>, bggUnavailable: Boolean, nothingFor: String?, inYourGames: List<String> = emptyList()) = div {
     id = "poll-form-search-results"
+    announce(searchAnnouncement(games.size, nothingFor))
     hyperscript("on change if event.target.checked put event.target.closest('label') at the end of #poll-form-picked end")
     if (bggUnavailable) p("gf-small gf-muted") { +"BGG isn't answering right now, so these are only games we already know." }
     if (inYourGames.isNotEmpty()) p("gf-small gf-muted") { +"${inYourGames.joinAnd()} ${if (inYourGames.size == 1) "is" else "are"} in your games above." }
@@ -128,7 +129,7 @@ fun TagConsumer<*>.pollFormSearchResults(games: List<Game>, bggUnavailable: Bool
 }
 
 /** One more date input, for the "add another date" button. */
-fun TagConsumer<*>.dateField(value: String = "") = listedInput("dates", "Date", InputType.date) { this.value = value }
+fun TagConsumer<*>.dateField(value: String = "") = listedInput("dates", "Date", InputType.date) { this.value = value; announce("Another date added") }
 
 /** Everything the poll page shows. [gameDay] (or [gameNight], for a poll with games) is what the pick made, once there is one. */
 data class DatePollView(
@@ -177,7 +178,7 @@ fun HTML.datePollPage(view: DatePollView) {
                             else -> "${if (poll.asksAboutGames) "Finding a date and games" else "Finding a date"} · ${poll.answers.size} of ${poll.participants.size} answered"
                         }
                     }
-                    h1("gf-h1 gf-h1--landing") { +poll.title }
+                    pageHeading(poll.title)
                     if (poll.place.isNotBlank()) ul("gf-facts") { li { icon("pin"); +poll.place } }
                     p("gf-lede gf-muted") {
                         +when {
@@ -205,7 +206,7 @@ fun HTML.datePollPage(view: DatePollView) {
                         hx("target", "#poll-results")
                         hx("swap", "outerHTML")
                         val mine = poll.answers[view.me].orEmpty()
-                        h2("gf-label") { +"Which dates can you make?" }
+                        heading(Level.H2, "gf-label") { +"Which dates can you make?" }
                         dateChips(poll.dates, checked = { it in mine }, disabled = { it < view.today }, legend = "Dates you can make")
                         p("gf-small gf-muted") { +"Tick every date that suits you. It saves as you go." }
                     }
@@ -228,7 +229,7 @@ private fun FlowContent.gamesSignpost(view: DatePollView, games: PollGamesView) 
     val poll = view.poll
     val isHost = view.me == poll.host
     val answered = games.rows.count { it.myAnswer != null }
-    h2("gf-label") { +"Which games would you play?" }
+    heading(Level.H2, "gf-label") { +"Which games would you play?" }
     p("gf-small gf-muted") {
         +when {
             games.rows.isEmpty() && isHost -> "No games yet. Add a few from your shelves or BGG."
@@ -249,7 +250,7 @@ private fun FlowContent.pollGames(view: DatePollView, games: PollGamesView) = se
     val poll = view.poll
     val isHost = view.me == poll.host
     div("gf-sechead") {
-        h2("gf-h2 gf-h2--section") { +"Which games would you play?"; if (games.rows.isNotEmpty()) +" · ${games.rows.size}" }
+        heading(Level.H2, "gf-h2 gf-h2--section") { +"Which games would you play?"; if (games.rows.isNotEmpty()) +" · ${games.rows.size}" }
         // With no games yet the search is right below the empty state: a second way there would only repeat it.
         if (isHost && poll.open && games.rows.isNotEmpty()) addGameButton("Add a game")
     }
@@ -257,7 +258,7 @@ private fun FlowContent.pollGames(view: DatePollView, games: PollGamesView) = se
         +"Up to $MAX_WISHES games you'd play: each one counts as a heart on the night. Have one? Say you'll bring it."
     }
     if (games.error != null) errorNotice(games.error)
-    if (games.rows.isEmpty()) emptyState("No games yet", if (isHost) "Pick a few of yours below, or search BGG for anything." else "${view.names[poll.host] ?: "The host"} hasn't added any games yet.")
+    if (games.rows.isEmpty()) emptyState("No games yet", if (isHost) "Pick a few of yours below, or search BGG for anything." else "${view.names[poll.host] ?: "The host"} hasn't added any games yet.", level = Level.H3)
     div("gf-pollgames__list") { games.rows.forEach { pollGameCard(view, it) } }
     if (isHost && poll.open) pollGameAdder(view, games)
 }
@@ -331,7 +332,7 @@ private fun FlowContent.chipButton(field: String, value: String, pressed: Boolea
 /** The host's way to add games: their own collection, and BGG search for anything else. */
 private fun FlowContent.pollGameAdder(view: DatePollView, games: PollGamesView) = div("gf-card gf-pollgames__add") {
     id = "add-game"
-    h3("gf-h3") { +"Add a game" }
+    heading(Level.H3, "gf-h3") { +"Add a game" }
     searchField("Search your games and BGG", "Search for a game to add", "/polls/${view.poll.id}/games/search", "#poll-game-search") { id = ADD_GAME_SEARCH }
     div { id = "poll-game-search" }
     if (games.pool.isNotEmpty()) details("gf-pollgames__pool") {
@@ -351,6 +352,7 @@ private fun FlowContent.addRow(poll: String, game: Game, meta: String) =
 /** What the host's search found: their own games first, then BGG. */
 fun TagConsumer<*>.pollGameSearchResults(poll: DatePollSummary, mine: List<Game>, bgg: List<Game>, bggUnavailable: Boolean, nothingFor: String?) = div {
     id = "poll-game-search"
+    announce(searchAnnouncement(mine.size + bgg.size, nothingFor))
     if (bggUnavailable) p("gf-small gf-muted") { +"BGG isn't answering right now, so these are only games we already know." }
     if (mine.isEmpty() && bgg.isEmpty()) {
         if (nothingFor != null) p("gf-small gf-muted gf-search-empty") { +"Nothing found for \u201c$nothingFor\u201d. Try another spelling." }
@@ -367,9 +369,10 @@ fun TagConsumer<*>.pollGameSearchResults(poll: DatePollSummary, mine: List<Game>
 fun TagConsumer<*>.datePollResults(view: DatePollView, error: String? = null) = div("gf-opts") {
     id = "poll-results"
     val poll = view.poll
+    announce(poll.picked?.let { "Picked ${it.date.full()}" } ?: "${poll.tallies().size.of("date")} on the poll")
     val isHost = view.me == poll.host
     val best = poll.best().takeIf { poll.open }
-    h2("gf-vh") { +"How it looks" }
+    heading(Level.H2, "gf-vh") { +"How it looks" }
     if (error != null) errorNotice(error)
     poll.tallies().forEach { tally ->
         val declined = poll.answers.filter { (_, dates) -> tally.date !in dates }.keys.map { view.names[it] ?: SOMEONE }
@@ -382,7 +385,7 @@ fun TagConsumer<*>.datePollResults(view: DatePollView, error: String? = null) = 
                     span("gf-date__day") { +tally.date.dayOfMonth.toString() }
                 }
                 div {
-                    h3("gf-opt__title") { +tally.date.full() }
+                    heading(Level.H3, "gf-opt__title") { +tally.date.full() }
                     if (tally.date == best) span("gf-tag gf-tag--brand") { +"Most can come" }
                     if (poll.picked?.date == tally.date) span("gf-tag gf-tag--olive") { +"Picked" }
                 }
@@ -451,7 +454,7 @@ fun HTML.pollInvitePage(view: PollInviteView) {
             split {
                 div("gf-split__copy") {
                     inviterLine(poll.host, view.names[poll.host], if (poll.asksAboutGames) "wants to find a date and games for a game night" else "wants to find a date for a game day")
-                    h1("gf-h1 gf-h1--landing") { +poll.title }
+                    pageHeading(poll.title)
                     ul("gf-facts") {
                         li { icon("calendar"); +"${poll.dates.size.of("date")} to choose from" }
                         li { icon("users"); avatarStack(poll.participants, view.names); +"${poll.participants.size.of("person", "people")} in" }

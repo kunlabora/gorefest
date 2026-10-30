@@ -60,6 +60,7 @@ Promises stated in CLAUDE.md or a request doc that no test proves yet, found whe
 
 - **Accounts:** `email_changes` rows are purged by `Login.purge` (only sessions and attempts are tested); the session cookie's lifetime; approval times come from the database's `now()` rather than the injected clock (`shell/auth/Repositories.kt`), so tests can't pin them.
 - **Privacy:** the notice's wording on logs (kept 14 days, no links or addresses); inactive accounts are warned once only; G3 and G4 request docs still have unticked criteria for work that is built.
+- **Accessibility:** the status line really being read out (`htmx-config.js` runs in a browser, not in the tests; checked by hand in the in-app browser, 2026-10-30); focus after a swap where the control goes away ("Ask" becomes "Asked", "Bring it", "Take it back", "Not this time") falls back to the page.
 - **BGG:** game names link to their BGG page (`bggNameLink`); the monthly top-ranked refresh; fresh account links jump ahead of routine refreshes; the collection refresh loop; every request sends the bearer token (`XmlBggApi`).
 - **Game days:** no guests and no email invites; the Open Graph image's input holds no place; a cancelled game day sends no recap (only indirectly: it is never due).
 - **Shelf and plays:** checkpoint names and timing (morning, lunch, evening); the matcher ignores bring requests; bring requests send no mail or push.

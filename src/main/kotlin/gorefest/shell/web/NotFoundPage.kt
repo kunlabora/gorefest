@@ -1,6 +1,8 @@
 package gorefest.shell.web
 
 import gorefest.shell.web.components.ButtonStyle
+import gorefest.shell.web.components.Level
+import gorefest.shell.web.components.pageHeading
 import gorefest.shell.web.components.emptyState
 import gorefest.shell.web.components.linkButton
 import gorefest.shell.web.components.page
@@ -14,7 +16,7 @@ import kotlinx.html.HTML
  */
 fun HTML.notFoundPage() = page("Not found", appBar = { wordmark() }, wide = true) {
     wrap {
-        emptyState("That page isn't here", "The link may be old, or the game day may be gone.") {
+        emptyState("That page isn't here", "The link may be old, or the game day may be gone.", Level.H1) {
             linkButton("/", "Back to your game days", ButtonStyle.SECONDARY)
         }
     }

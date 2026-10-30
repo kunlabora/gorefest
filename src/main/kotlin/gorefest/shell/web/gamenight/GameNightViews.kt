@@ -26,7 +26,7 @@ fun HTML.gameNightPage(view: GameNightView) {
         wrap {
             crumb("/", "All game days")
             p("gf-kicker") { +"Game night" }
-            h1("gf-h1 gf-h1--landing") { +night.title }
+            pageHeading(night.title)
             ul("gf-hubfacts") {
                 li { icon("calendar"); +night.date.long() }
                 if (night.place.isNotBlank()) li { icon("pin"); +night.place }
@@ -37,8 +37,8 @@ fun HTML.gameNightPage(view: GameNightView) {
         band(sunk = true) {
             section("gf-stack") {
                 id = "plan"
-                h2("gf-h2 gf-h2--section") { +"The plan · ${view.plan.size}" }
-                if (view.plan.isEmpty()) emptyState("No games planned", "Nobody coming said they'd bring one of the poll's games. Bring something anyway?")
+                heading(Level.H2, "gf-h2 gf-h2--section") { +"The plan · ${view.plan.size}" }
+                if (view.plan.isEmpty()) emptyState("No games planned", "Nobody coming said they'd bring one of the poll's games. Bring something anyway?", level = Level.H3)
                 else ul("gf-list") {
                     view.plan.forEach { (game, planned) ->
                         li {
@@ -52,7 +52,7 @@ fun HTML.gameNightPage(view: GameNightView) {
                 }
                 if (view.missing.isNotEmpty()) div("gf-stack") {
                     id = "missing"
-                    h3("gf-h3") { +"Nobody can bring" }
+                    heading(Level.H3, "gf-h3") { +"Nobody can bring" }
                     p("gf-small gf-muted") { +"These were in the poll, but nobody coming said they'd bring them. Got one? Bring it along." }
                     ul("gf-list") { view.missing.forEach { li { gameRow(it) } } }
                 }
@@ -61,7 +61,7 @@ fun HTML.gameNightPage(view: GameNightView) {
         wrap {
             section("gf-section") {
                 id = "players"
-                h2("gf-h2") { +"Who's coming" }
+                sectionHeading("Who's coming")
                 ul("gf-list") {
                     night.players.forEach { player ->
                         li("gf-row") {

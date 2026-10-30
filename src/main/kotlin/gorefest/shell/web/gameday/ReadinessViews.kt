@@ -27,7 +27,7 @@ fun HTML.readinessPage(view: ReadinessView) {
                         else -> "Over"
                     }
                 }
-                h1("gf-h1 gf-h1--landing") { +"How ready are we?" }
+                pageHeading("How ready are we?")
                 div("gf-stats") {
                     stat("${readiness.joined}", "joined")
                     stat("${readiness.shelf}", "on the shelf")
@@ -43,7 +43,7 @@ fun HTML.readinessPage(view: ReadinessView) {
         }
         band(sunk = true) {
             div("gf-stack") {
-                h2("gf-h2") { +"Players" }
+                sectionHeading("Players")
                 ul("gf-list") { readiness.players.forEach { playerRow(it, view) } }
                 p("gf-hint") { +"Nudge copies a friendly message with a link to the taste round. Paste it in the chat." }
             }

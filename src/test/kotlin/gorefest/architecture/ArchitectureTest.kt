@@ -128,6 +128,14 @@ class ArchitectureTest {
     /** The file's text without comments, so a KDoc that mentions `button(` isn't a call. */
     private val KoFileDeclaration.code get() = COMMENT.replace(text, "")
 
+    @Test
+    @Obligation("A11Y-7", "A11Y-8")
+    fun `views render headings only through the components that take a level`() {
+        views().flatMap { file ->
+            RAW_HEADING.findAll(file.code).map { "${file.name}: ${it.value.trim()}. Use pageHeading, sectionHeading or heading(Level.Hn, …) from web.components" }
+        }.shouldBeEmpty()
+    }
+
     private fun views() = shell.filter { it.pkg.startsWith("gorefest.shell.web") && it.pkg != "gorefest.shell.web.components" }
 
     private fun com.lemonappdev.konsist.api.provider.KoParentProvider.isDecider() = parents().any { it.name.substringBefore("<").substringAfterLast(".") == "Decider" }
@@ -147,6 +155,9 @@ class ArchitectureTest {
 
         /** kotlinx.html's button and image tags, which leave the name or alt to whoever remembers it. */
         val RAW_NAMED_TAG = Regex("""(?<!\w)(button|img)\s*[({]""")
+
+        /** kotlinx.html's h1 to h6, which leave the level to whoever writes the view. */
+        val RAW_HEADING = Regex("""(?<![\w.])h[1-6]\s*[({]""")
 
         val COMMENT = Regex("""(?s)/\*.*?\*/|//[^\n]*""")
 

@@ -25,6 +25,7 @@ import kotlinx.html.link
 import kotlinx.html.main
 import kotlinx.html.meta
 import kotlinx.html.p
+import kotlinx.html.role
 import kotlinx.html.script
 import kotlinx.html.span
 import kotlinx.html.style
@@ -85,6 +86,8 @@ fun HTML.page(
                 content()
             }
             if (dock != null) div("gf-dock") { dock() }
+            // The one place a swap's [announce] sentence is read out (static/js/htmx-config.js): it stays put while regions are replaced.
+            p("gf-vh") { id = ANNOUNCER; role = "status" }
             footer("gf-footer") {
                 bggCredit()
                 p("gf-credit") { a("/privacy") { +"Privacy" } }

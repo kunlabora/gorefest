@@ -125,7 +125,7 @@ fun Route.requestRoutes(app: App) {
             val decision = app.commands.handle(WithdrawBringRequestDecider, WithdrawBringRequest(gameDay.id, me.id, owner, game))
             val status = if (decision is Decision.Rejected) HttpStatusCode.Conflict else HttpStatusCode.OK
             val rows = myRequests(app, gameDay, me, login)
-            respondFragment(status) { myRequests(gameDay, rows) }
+            respondFragment(status) { myRequests(gameDay, rows, tookBack = decision !is Decision.Rejected) }
         }
     }
 
@@ -140,7 +140,7 @@ fun Route.requestRoutes(app: App) {
             }
             val rejected = decisions.filterIsInstance<Decision.Rejected>().firstOrNull()
             val rows = ownerRequests(app, gameDay, me, login)
-            respondFragment(if (rejected != null) HttpStatusCode.Conflict else HttpStatusCode.OK) { bringRequests(gameDay, rows) }
+            respondFragment(if (rejected != null) HttpStatusCode.Conflict else HttpStatusCode.OK) { bringRequests(gameDay, rows, OwnerAnswer.DECLINED.takeIf { rejected == null }) }
         }
     }
 }

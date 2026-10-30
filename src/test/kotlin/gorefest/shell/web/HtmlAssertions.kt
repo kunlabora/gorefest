@@ -18,6 +18,7 @@ suspend fun HttpResponse.page(): Document = Jsoup.parse(bodyAsText()).also {
     it.shouldNameEveryControl()
     it.shouldHaveSoundIds(references = PAGE_REFERENCES)
     it.shouldGroupEveryChoice()
+    it.shouldHaveSoundStructure()
 }
 
 /** Parses an htmx fragment: exactly one top-level element, returned for swapping. */
@@ -28,6 +29,17 @@ suspend fun HttpResponse.fragment(): Element {
         it.shouldNameEveryControl()
         it.shouldHaveSoundIds(references = FRAGMENT_REFERENCES)
         it.shouldGroupEveryChoice()
+        it.shouldAnnounceItself()
+    }
+}
+
+/**
+ * A swapped-in fragment tells a screen reader what changed: it carries a sentence to announce, or an alert, or says it
+ * is a background refresh of a change announced elsewhere (`refreshesQuietly`).
+ */
+fun Element.shouldAnnounceItself() {
+    withClue("fragment <${tagName()} id=${id()}> announces itself (announce or refreshesQuietly) or carries a role=alert") {
+        (attr("data-announce").isNotBlank() || attr("data-quiet") == "true" || selectFirst("[role=alert]") != null) shouldBe true
     }
 }
 
@@ -94,3 +106,20 @@ fun Element.one(selector: String): Element =
     withClue("exactly one '$selector'") { select(selector).also { it shouldHaveSize 1 }.single() }
 
 fun Element.texts(selector: String): List<String> = select(selector).map { it.text() }
+
+/**
+ * The page has a language, one main heading, one main region and named navigation, and its headings don't skip a level
+ * on the way down (h1 then h3 leaves a screen reader's heading list with a hole). Visually hidden headings count; headings
+ * inside `aria-hidden` decoration don't, since a screen reader never reaches them.
+ */
+fun Document.shouldHaveSoundStructure() {
+    withClue("<html lang> is set") { selectFirst("html")!!.attr("lang").isNotBlank() shouldBe true }
+    withClue("exactly one <h1>: ${select("h1").map { it.text() }}") { select("h1") shouldHaveSize 1 }
+    withClue("exactly one <main>") { select("main") shouldHaveSize 1 }
+    withClue("every <nav> is named") { select("nav").filter { it.attr("aria-label").isBlank() && !it.hasAttr("aria-labelledby") } shouldHaveSize 0 }
+    val headings = select("h1, h2, h3, h4, h5, h6").filter { h -> (listOf(h) + h.parents()).none { it.attr("aria-hidden") == "true" } }
+    withClue("exactly one <h1> a screen reader reaches") { headings.count { it.tagName() == "h1" } shouldBe 1 }
+    val skips = headings.map { it.tagName()[1].digitToInt() to it.text() }.zipWithNext()
+        .filter { (a, b) -> b.first > a.first + 1 }.map { (a, b) -> "h${a.first} \"${a.second.take(30)}\" → h${b.first} \"${b.second.take(30)}\"" }
+    withClue("headings don't skip a level: $skips") { skips shouldHaveSize 0 }
+}

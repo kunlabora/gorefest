@@ -13,7 +13,7 @@ fun HTML.bggPage(returnTo: String, linked: String?, me: CurrentPlayer) = page("L
         crumb(returnTo, "Back")
         if (linked != null) {
             div("gf-bgg__copy gf-bgg__done") {
-                h1("gf-h1 gf-h1--landing") { +"You're linked" }
+                pageHeading("You're linked")
                 p("gf-lede gf-muted") { +"Your BGG account is "; strong { +linked }; +". Your collection comes from there." }
                 linkButton(returnTo, "Back", size = ButtonSize.LARGE)
                 form(action = "/bgg/unlink", method = FormMethod.post, classes = "gf-bgg__unlink") {
@@ -29,10 +29,10 @@ fun HTML.bggPage(returnTo: String, linked: String?, me: CurrentPlayer) = page("L
 
 /** Step 1, in the login's hero pattern: the username and its button in one row on a wide screen. */
 fun TagConsumer<*>.usernameStep(returnTo: String, username: String = "", error: String? = null) =
-    bggForm("/bgg/username", returnTo, "gf-bgg gf-bgg--username") {
+    bggForm("/bgg/username", returnTo, "gf-bgg gf-bgg--username", "Step 1 of 2: your BGG username") {
         div("gf-bgg__copy") {
             p("gf-kicker") { +"Link BoardGameGeek · step 1 of 2" }
-            h1("gf-h1 gf-h1--landing") { +"Link your BGG account" }
+            pageHeading("Link your BGG account")
             p("gf-lede gf-muted") { +"Then you can bring games straight from your BoardGameGeek collection." }
             div(if (error != null) "gf-signin gf-field--invalid" else "gf-signin") {
                 signinField(
@@ -52,11 +52,11 @@ fun TagConsumer<*>.usernameStep(returnTo: String, username: String = "", error: 
 
 /** Step 2: the code to paste into the BGG profile. In dev mode with the fake BGG, a button does the pasting. */
 fun TagConsumer<*>.codeStep(returnTo: String, username: String, code: String, dev: Boolean, error: String? = null) =
-    bggForm("/bgg/verify", returnTo, "gf-bgg gf-bgg--code") {
+    bggForm("/bgg/verify", returnTo, "gf-bgg gf-bgg--code", "Step 2 of 2: prove it's your account") {
         hiddenInput("username", username)
         div("gf-bgg__copy") {
             p("gf-kicker") { +"Link BoardGameGeek · step 2 of 2" }
-            h1("gf-h1 gf-h1--landing") { +"Prove it's your account" }
+            pageHeading("Prove it's your account")
             p("gf-lede gf-muted") {
                 +"BGG has no \"sign in with\". Put this code in your BGG profile, tell us when it's there, and your collection comes along."
             }
@@ -96,9 +96,10 @@ fun TagConsumer<*>.codeStep(returnTo: String, username: String, code: String, de
 
 fun TagConsumer<*>.devProfileFilled() = p("gf-small") { id = "dev-bgg"; +"Done: the fake BGG profile has the code. Now tap \"I've added it\"." }
 
-private fun TagConsumer<*>.bggForm(action: String, returnTo: String, classes: String, content: FORM.() -> Unit) =
+private fun TagConsumer<*>.bggForm(action: String, returnTo: String, classes: String, announcement: String, content: FORM.() -> Unit) =
     form(action = action, method = FormMethod.post, classes = classes) {
         id = "bgg-form"
+        announce(announcement)
         hx("post", action)
         hx("swap", "outerHTML")
         hiddenInput("returnTo", returnTo)

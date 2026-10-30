@@ -111,9 +111,11 @@ fun FlowContent.switchRow(name: String, title: String, sub: String, checked: Boo
 
 /** A tile with a switch first and [content] after it (the bring page's games): the whole tile toggles it. */
 fun FlowContent.switchTile(
-    name: String, label: String, checked: Boolean, classes: String, disabled: Boolean = false, configure: INPUT.() -> Unit = {}, content: LABEL.() -> Unit,
+    name: String, label: String, checked: Boolean, classes: String, id: String, disabled: Boolean = false, configure: INPUT.() -> Unit = {},
+    content: LABEL.() -> Unit,
 ) = label(classes) {
-    switchInput(name, label, checked, disabled, describedBy = null, configure)
+    // The id keeps focus on the switch when htmx swaps its tile for the new state.
+    switchInput(name, label, checked, disabled, describedBy = null) { this.id = id; configure() }
     content()
 }
 

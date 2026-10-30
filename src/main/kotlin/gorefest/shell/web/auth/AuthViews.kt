@@ -12,7 +12,7 @@ private fun HTML.authHero(
     div("gf-hero-band") {
         div("gf-hero-band__copy") {
             p("gf-kicker") { +kicker }
-            h1("gf-h1 gf-h1--landing") { +heading }
+            pageHeading(heading)
             copy()
         }
         aside?.invoke(this)
@@ -48,7 +48,7 @@ private fun FlowContent.sampleSuggestions() = decoration("gf-samples gf-tilted")
         div("gf-card gf-sample") {
             tile(name.take(2), hue, "gf-minitile--big")
             div {
-                h3("gf-sample__name") { +name }
+                heading(Level.H3, "gf-sample__name") { +name }
                 span("gf-sample__chip") { +reason }
             }
         }
@@ -71,7 +71,7 @@ private fun FlowContent.illustration(which: Illustration) = decoration("gf-ill")
 /** What the app is for, shown to people who arrive without an invite. */
 private fun FlowContent.howItWorks() = div("gf-how-band") {
     section("gf-how") {
-        h2("gf-h2") { +"How it works" }
+        sectionHeading("How it works")
         stepper("gf-stepper--cols") {
             steps.forEachIndexed { i, (title, text, ill) -> illustratedStep(i + 1, title, text) { illustration(ill) } }
         }
@@ -91,7 +91,7 @@ fun HTML.emailPage(returnTo: String) {
         div("gf-hero-band") {
             div("gf-hero-band__copy") {
                 p("gf-kicker") { +(if (landing) "For board game groups · Log in or sign up" else "For board game groups") }
-                h1("gf-h1 gf-h1--landing") { +"Find the game your whole table wants to play." }
+                pageHeading("Find the game your whole table wants to play.")
                 p("gf-lede gf-muted") { +"Boardfest learns what each player likes, then suggests three games for your next game day." }
                 consumer.emailForm(returnTo)
             }
@@ -115,7 +115,7 @@ fun HTML.codePage(attempt: Uuid, email: String, returnTo: String, dev: Boolean) 
 /** What the mail looks like, so people know what to look for in their inbox. Decoration, desktop only. */
 private fun FlowContent.mailCard() = decoration("gf-card gf-mailcard") {
     p("gf-kicker") { +"Inbox · just now" }
-    h3("gf-mailcard__subject") { +"Your Boardfest code: 482913" }
+    heading(Level.H3, "gf-mailcard__subject") { +"Your Boardfest code: 482913" }
     p("gf-mailcard__code") { +"482913" }
     p("gf-muted gf-small") { +"Type it in the app, or tap the button. It works once, for 15 minutes." }
     span("gf-mailcard__link") { +"Log me in" }

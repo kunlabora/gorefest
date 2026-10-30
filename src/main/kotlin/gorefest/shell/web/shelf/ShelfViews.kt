@@ -34,7 +34,7 @@ fun HTML.bringPage(
     wrap {
         crumb("/gamedays/${gameDay.id}", gameDay.title)
         div("gf-bring__head") {
-            h1("gf-h1") { +"What are you bringing?" }
+            heading(Level.H1, "gf-h1") { +"What are you bringing?" }
             if (!linked) notice("dice") {
                 +"Link your BGG account to pick from your collection. "
                 a("/bgg?returnTo=${"/gamedays/${gameDay.id}/bring".urlEncoded()}", classes = "gf-link") { +"Link BGG" }
@@ -57,12 +57,12 @@ fun HTML.bringPage(
                 if (!gameDay.closed) consumer.searchResults(gameDay, emptyList(), bggUnavailable = false)
                 if (!gameDay.closed) consumer.bringRequests(gameDay, requests)
                 consumer.bringList(gameDay, rows, linked)
-                if (rows.isEmpty() && linked) emptyState("Your collection is empty", "Mark games as owned on BGG, sync them on the collection page, or search for them.")
+                if (rows.isEmpty() && linked) emptyState("Your collection is empty", "Mark games as owned on BGG, sync them on the collection page, or search for them.", level = Level.H3)
             }
             aside("gf-bring__side") {
                 consumer.bringSummary(gameDay, summary)
                 if (!gameDay.ended) section("gf-card gf-bring__card gf-bring__wishes") {
-                    h2("gf-label") { +"Really want to play something?" }
+                    heading(Level.H2, "gf-label") { +"Really want to play something?" }
                     p("gf-muted gf-small") { +"Heart up to $MAX_WISHES games on the shelf. Each heart nudges a game up the suggestions." }
                     consumer.wishList(gameDay, wishes)
                 }
@@ -83,6 +83,7 @@ const val SHELF_CHANGED = "shelf-changed"
  */
 fun TagConsumer<*>.bringSummary(gameDay: GameDaySummary, summary: ShelfSummary) = div("gf-bring__summary") {
     id = "bring-summary"
+    refreshesQuietly()
     hx("get", "/gamedays/${gameDay.id}/bring/summary")
     // Debounced: several ticks in a burst each fire a trigger, and only the last answer is the whole truth.
     hx("trigger", "$BRING_LIST_CHANGED from:body delay:150ms, $SHELF_CHANGED from:body delay:150ms")
@@ -125,19 +126,21 @@ private fun FlowContent.fan(games: List<Game>) {
 
 fun TagConsumer<*>.bringList(gameDay: GameDaySummary, rows: List<BringRow>, linked: Boolean) = div("gf-bring__list") {
     id = "bring-list"
+    refreshesQuietly()
     hx("get", "/gamedays/${gameDay.id}/bring/list")
     hx("trigger", "$BRING_LIST_CHANGED from:body")
     hx("swap", "outerHTML")
-    if (rows.isNotEmpty() || linked) h2("gf-h2") { +"${if (linked) "Your collection" else "Your games"} · ${if (linked) rows.count { it.owned } else rows.size}" }
+    if (rows.isNotEmpty() || linked) heading(Level.H2, "gf-h2") { +"${if (linked) "Your collection" else "Your games"} · ${if (linked) rows.count { it.owned } else rows.size}" }
     ul("gf-bring-grid") { rows.forEach { bringItem(gameDay, it, readOnly = gameDay.closed) } }
 }
 
 /** Search results land in a grid like the collection's, above it; empty until something is searched. */
 fun TagConsumer<*>.searchResults(gameDay: GameDaySummary, rows: List<BringRow>, bggUnavailable: Boolean, nothingFor: String? = null) = div("gf-bring__results") {
     id = "search-results"
+    announce(searchAnnouncement(rows.size, nothingFor))
     if (bggUnavailable) p("gf-small gf-muted") { +"BGG isn't answering right now, so these are only games we already know." }
     if (rows.isNotEmpty()) {
-        h2("gf-h2") { +"Found" }
+        sectionHeading("Found")
         ul("gf-bring-grid") { rows.forEach { consumer.bringItem(gameDay, it, readOnly = false, prefix = "search") } }
     } else if (nothingFor != null) p("gf-small gf-muted gf-search-empty") { +"Nothing found for \u201c$nothingFor\u201d. Try another spelling." }
 }
@@ -146,7 +149,8 @@ fun TagConsumer<*>.searchResults(gameDay: GameDaySummary, rows: List<BringRow>, 
 fun TagConsumer<*>.bringItem(gameDay: GameDaySummary, row: BringRow, readOnly: Boolean, error: String? = null, prefix: String = "bring") = li {
     val rowId = "$prefix-${row.game.id}"
     id = rowId
-    switchTile("bringing", "Bringing ${row.game.name}", checked = row.bringing, classes = "gf-tile gf-bringtile", disabled = readOnly, configure = {
+    announce(if (row.bringing) "Bringing ${row.game.name}" else "Not bringing ${row.game.name}")
+    switchTile("bringing", "Bringing ${row.game.name}", checked = row.bringing, classes = "gf-tile gf-bringtile", id = "$rowId-switch", disabled = readOnly, configure = {
         hx("post", "/gamedays/${gameDay.id}/shelf/${row.game.id}")
         hx("trigger", "change")
         hx("target", "#$rowId")
@@ -162,6 +166,7 @@ fun TagConsumer<*>.bringItem(gameDay: GameDaySummary, row: BringRow, readOnly: B
 /** Every game on the shelf with a heart: any player can say which ones they really want to play. */
 fun TagConsumer<*>.wishList(gameDay: GameDaySummary, rows: List<WishRow>) = ul("gf-list") {
     id = "wish-list"
+    refreshesQuietly()
     hx("get", "/gamedays/${gameDay.id}/bring/wishes")
     hx("trigger", "$BRING_LIST_CHANGED from:body, $SHELF_CHANGED from:body")
     hx("swap", "outerHTML")
@@ -172,9 +177,12 @@ fun TagConsumer<*>.wishList(gameDay: GameDaySummary, rows: List<WishRow>) = ul("
 fun TagConsumer<*>.wishItem(gameDay: GameDaySummary, row: WishRow, error: String? = null) = li {
     val rowId = "wish-${row.game.id}"
     id = rowId
+    announce(if (row.wants) "You really want to play ${row.game.name}" else "No heart on ${row.game.name}")
     gameRow(row.game)
     div("gf-wish") {
         chipToggle(if (row.wants) "I really want to play this" else "I want to play this", pressed = row.wants, icon = "heart", says = "I want to play ${row.game.name}") {
+            // The id keeps focus on the heart when htmx swaps the row for the new state.
+            id = "$rowId-heart"
             hx("post", "/gamedays/${gameDay.id}/shelf/${row.game.id}/wish")
             hx("vals", """{"wants": "${!row.wants}"}""")
             hx("target", "#$rowId")

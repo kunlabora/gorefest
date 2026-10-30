@@ -13,14 +13,14 @@ import kotlinx.html.style
 fun FlowContent.nextStep(kicker: String, title: String, text: String, href: String, action: String, style: ButtonStyle = ButtonStyle.PRIMARY) =
     section("gf-next") {
         p("gf-kicker") { +kicker }
-        h2("gf-next__title") { +title }
+        heading(Level.H2, title, "gf-next__title")
         p("gf-next__text") { +text }
         linkButton(href, action, style, block = true)
     }
 
 /** A section heading with an optional link on the right. */
 fun FlowContent.sectionHead(title: String, linkHref: String? = null, linkLabel: String? = null) = div("gf-sechead") {
-    h2("gf-h2") { +title }
+    sectionHeading(title)
     if (linkHref != null && linkLabel != null) a(linkHref, classes = "gf-link") { +linkLabel }
 }
 

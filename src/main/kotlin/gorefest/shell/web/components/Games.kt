@@ -127,10 +127,10 @@ fun FlowContent.art(game: Game, extraClasses: String = "", extraStyle: String = 
 }
 
 /** A compact game row: art, name, facts, and whatever goes on the right (a switch, a time). */
-fun FlowContent.gameRow(game: Game, meta: String = game.facts, trailing: HtmlBlockTag.() -> Unit = {}) = div("gf-game gf-game--compact") {
+fun FlowContent.gameRow(game: Game, meta: String = game.facts, level: Level = Level.H3, trailing: HtmlBlockTag.() -> Unit = {}) = div("gf-game gf-game--compact") {
     art(game)
     div("gf-game__body") {
-        h3("gf-game__name") { bggNameLink(game) }
+        heading(level, "gf-game__name") { bggNameLink(game) }
         if (meta.isNotBlank()) p("gf-game__meta") { +meta }
     }
     trailing()
@@ -167,12 +167,12 @@ fun FlowContent.gameTileChoice(game: Game, checked: Boolean) = label("gf-tile") 
  * A numbered pick (payoff podium, suggestions): the first one large with wide art.
  * [meta] fills the facts line, [reason] says why.
  */
-fun FlowContent.rankedGame(rank: Int, game: Game, reason: String, meta: P.() -> Unit = { +game.facts }) =
+fun FlowContent.rankedGame(rank: Int, game: Game, reason: String, level: Level = Level.H3, meta: P.() -> Unit = { +game.facts }) =
     article(if (rank == 1) "gf-game gf-game--large" else "gf-game") {
         span("gf-game__rank") { +"$rank" }
         art(game, if (rank == 1) "gf-art--wide" else "")
         div("gf-game__body") {
-            h3("gf-game__name") { bggNameLink(game) }
+            heading(level, "gf-game__name") { bggNameLink(game) }
             if (game.typeText.isNotEmpty()) p("gf-game__type") { +game.typeText }
             p("gf-game__meta") { meta() }
             p("gf-game__reason") { icon("spark"); +reason }

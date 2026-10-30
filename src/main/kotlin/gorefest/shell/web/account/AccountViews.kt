@@ -21,13 +21,13 @@ fun HTML.accountPage(view: AccountView) = page("Your account", site = SiteBar(me
     wrap {
         div("gf-split__copy") {
             p("gf-kicker") { +"Your account" }
-            h1("gf-h1 gf-h1--landing") { +view.name }
+            pageHeading(view.name)
             ul("gf-facts") { li { +view.email } }
         }
     }
     wrap {
         div("gf-stack") {
-            h2("gf-h2") { +"Your email" }
+            sectionHeading("Your email")
             if (view.emailChanged) notice("check", NoticeKind.GOOD) { +"Done. That's your address now." }
             p("gf-muted") { +"We send a code to the new address first, and the old one hears about the change." }
             form(action = "/account/email", method = FormMethod.post, classes = if (view.emailError != null) "gf-signin gf-field--invalid" else "gf-signin") {
@@ -43,7 +43,7 @@ fun HTML.accountPage(view: AccountView) = page("Your account", site = SiteBar(me
     }
     band(sunk = true) {
         div("gf-stack") {
-            h2("gf-h2") { +"Your data" }
+            sectionHeading("Your data")
             p("gf-muted") { +"Both of these go to me by message, and I do them by hand. See what's kept on the "; a("/privacy", classes = "gf-link") { +"privacy page" }; +"." }
             request(RequestKind.EXPORT, "Send me my data", "I'll mail you a file with everything Boardfest has about you.", view.pending)
             request(
@@ -71,7 +71,7 @@ private fun FlowContent.request(
     extra: FlowContent.() -> Unit = {},
 ) = section("gf-card gf-account-request") {
     id = "request-${kind.name.lowercase()}"
-    h3("gf-h3") { +label }
+    heading(Level.H3, "gf-h3") { +label }
     p { +text }
     extra()
     if (kind in pending) {
@@ -89,7 +89,7 @@ fun HTML.requestsPage(open: List<OpenRequest>) = page("Account requests", site =
     wrap {
         div("gf-split__copy") {
             p("gf-kicker") { +"Admin" }
-            h1("gf-h1 gf-h1--landing") { +"Account requests" }
+            pageHeading("Account requests")
             p("gf-lede") { +"People who asked to delete their account or to get their data." }
         }
     }
@@ -131,7 +131,7 @@ fun HTML.emailCodePage(newEmail: String, error: String? = null) = page("Confirm 
         crumb("/account", "Your account")
         div("gf-split__copy") {
             p("gf-kicker") { +"Your email" }
-            h1("gf-h1 gf-h1--landing") { +"Check your mail" }
+            pageHeading("Check your mail")
             p("gf-lede gf-muted") { +"We sent a 6-digit code to "; strong { +newEmail }; +". It works for 15 minutes." }
             form(action = "/account/email/confirm", method = FormMethod.post, classes = if (error != null) "gf-signin gf-field--invalid" else "gf-signin") {
                 id = "email-code"

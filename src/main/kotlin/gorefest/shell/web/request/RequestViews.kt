@@ -40,7 +40,7 @@ fun HTML.askPage(gameDay: GameDaySummary, view: AskView) = page("Ask someone to 
         div("gf-split__copy gf-ask") {
             crumb("/gamedays/${gameDay.id}", gameDay.title)
             p("gf-kicker") { +"Ask someone" }
-            h1("gf-h1 gf-h1--landing") { +"Who could bring what?" }
+            pageHeading("Who could bring what?")
             p("gf-lede gf-muted") { +"Fancy a game you know somebody owns? Ask them to bring it. They answer with one tap, and you can ask up to $MAX_BRING_REQUESTS." }
             div("gf-stack") {
                 searchField(
@@ -54,8 +54,8 @@ fun HTML.askPage(gameDay: GameDaySummary, view: AskView) = page("Ask someone to 
     }
     band(sunk = true) {
         div("gf-stack") {
-            h2("gf-h2") { +"Or look through someone's collection" }
-            if (view.members.isEmpty()) emptyState("Nobody to ask yet", "Once friends join this game day, you can ask them to bring a game.")
+            sectionHeading("Or look through someone's collection")
+            if (view.members.isEmpty()) emptyState("Nobody to ask yet", "Once friends join this game day, you can ask them to bring a game.", level = Level.H3)
             else ul("gf-list") {
                 view.members.forEach { member ->
                     li("gf-row") {
@@ -77,7 +77,7 @@ fun HTML.askMemberPage(gameDay: GameDaySummary, owner: AskMember, rows: List<Ask
             div("gf-split__copy gf-ask") {
                 crumb("/gamedays/${gameDay.id}/ask", "Ask someone")
                 p("gf-kicker") { +"Ask ${owner.name}" }
-                h1("gf-h1 gf-h1--landing") { +"What could ${owner.name.substringBefore(' ')} bring?" }
+                heading(Level.H1, "gf-h1 gf-h1--landing") { +"What could ${owner.name.substringBefore(' ')} bring?" }
                 searchField(
                     placeholder = "Filter ${owner.name.substringBefore(' ')}'s games", label = "Filter games",
                     url = "/gamedays/${gameDay.id}/ask/from/${owner.id}/games", target = "#ask-list",
@@ -90,6 +90,7 @@ fun HTML.askMemberPage(gameDay: GameDaySummary, owner: AskMember, rows: List<Ask
 /** The games of one member under the filter box. */
 fun TagConsumer<*>.askList(gameDay: GameDaySummary, rows: List<AskRow>, named: Boolean) = ul("gf-list") {
     id = "ask-list"
+    announce(if (rows.isEmpty()) "No games to show" else rows.size.of("game"))
     if (rows.isEmpty()) li { p("gf-small gf-muted") { +"No games to show." } }
     rows.forEach { askRow(gameDay, it, named) }
 }
@@ -97,6 +98,7 @@ fun TagConsumer<*>.askList(gameDay: GameDaySummary, rows: List<AskRow>, named: B
 /** Games matching a search, each with who has it. Empty until something is searched. */
 fun TagConsumer<*>.askResults(gameDay: GameDaySummary, rows: List<AskRow>, searched: Boolean) = div("gf-stack") {
     id = "ask-results"
+    announce(if (!searched) "Search cleared" else if (rows.isEmpty()) "Nobody on this game day has that one" else "${rows.size.of("game")} found")
     if (searched && rows.isEmpty()) p("gf-small gf-muted") { +"Nobody on this game day has that one." }
     if (rows.isNotEmpty()) ul("gf-list") { rows.forEach { askRow(gameDay, it, named = true) } }
 }
@@ -105,8 +107,16 @@ fun TagConsumer<*>.askResults(gameDay: GameDaySummary, rows: List<AskRow>, searc
 fun TagConsumer<*>.askRow(gameDay: GameDaySummary, row: AskRow, named: Boolean, error: String? = null) = li {
     val rowId = "ask-${row.owner}-${row.game.id}"
     id = rowId
+    announce(
+        when (row.state) {
+            AskState.CAN_ASK -> "You can ask ${row.ownerName} to bring ${row.game.name}"
+            AskState.ASKED -> "Asked ${row.ownerName} to bring ${row.game.name}"
+            AskState.BRINGING -> "${row.ownerName} is bringing ${row.game.name}"
+            AskState.DECLINED -> "${row.ownerName} can't bring ${row.game.name} this time"
+        },
+    )
     val meta = if (named) "${row.ownerName} · ${row.game.facts}" else row.game.facts
-    gameRow(row.game, meta) {
+    gameRow(row.game, meta, Level.H2) {
         when (row.state) {
             AskState.CAN_ASK -> actionButton("Ask", ButtonStyle.SECONDARY, ButtonSize.SMALL, says = "Ask ${row.ownerName} to bring ${row.game.name}") {
                 hx("post", "/gamedays/${gameDay.id}/ask")
@@ -123,13 +133,18 @@ fun TagConsumer<*>.askRow(gameDay: GameDaySummary, row: AskRow, named: Boolean, 
 }
 
 /** My requests with how they went, and a way to take an open one back. Fetched again when I ask. */
-fun TagConsumer<*>.myRequests(gameDay: GameDaySummary, rows: List<MyRequest>) = section("gf-section") {
+/** What the owner just did with a request, for the section that answers it to announce. */
+enum class OwnerAnswer { BROUGHT, DECLINED }
+
+/** My requests and how they went. [tookBack] when this answers "Take it back"; otherwise it's a refresh and stays quiet. */
+fun TagConsumer<*>.myRequests(gameDay: GameDaySummary, rows: List<MyRequest>, tookBack: Boolean = false) = section("gf-section") {
     id = "my-requests"
+    if (tookBack) announce("Request taken back") else refreshesQuietly()
     hx("get", "/gamedays/${gameDay.id}/ask/mine")
     hx("trigger", "$REQUESTS_CHANGED from:body")
     hx("swap", "outerHTML")
     if (rows.isNotEmpty()) {
-        h2("gf-h2") { +"Your requests" }
+        sectionHeading("Your requests")
         ul("gf-list") {
             rows.forEach { row ->
                 li("gf-row") {
@@ -166,13 +181,18 @@ const val REQUESTS_CHANGED = "requests-changed"
  * On the bring page, above the collection: the games people ask me to bring, each with "Bring it" and "Not this time".
  * Always present (empty when nothing is asked) so it can be swapped; fetched again when the shelf changes.
  */
-fun TagConsumer<*>.bringRequests(gameDay: GameDaySummary, rows: List<OwnerRequest>) = section("gf-section") {
+fun TagConsumer<*>.bringRequests(gameDay: GameDaySummary, rows: List<OwnerRequest>, answered: OwnerAnswer? = null) = section("gf-section") {
     id = "bring-requests"
+    when (answered) {
+        OwnerAnswer.BROUGHT -> announce("Bringing it: it's on the shelf")
+        OwnerAnswer.DECLINED -> announce("Not this time, then")
+        null -> refreshesQuietly()
+    }
     hx("get", "/gamedays/${gameDay.id}/ask/requests")
     hx("trigger", "shelf-changed from:body")
     hx("swap", "outerHTML")
     if (rows.isNotEmpty()) {
-        h2("gf-h2") { +"People are asking" }
+        sectionHeading("People are asking")
         ul("gf-list") {
             rows.forEach { row ->
                 val names = row.askers.map { it.second }
@@ -204,6 +224,7 @@ fun TagConsumer<*>.bringRequests(gameDay: GameDaySummary, rows: List<OwnerReques
 /** The collection page's switch: may people on my game days ask me to bring games? */
 fun TagConsumer<*>.bringRequestsSwitch(allowed: Boolean) = div("gf-stack") {
     id = "bring-requests-switch"
+    announce(if (allowed) "People on your game days can ask you for games" else "Nobody can ask you for games now")
     switchRow(
         "allowed", "Let people see my collection to ask for games",
         "Only people on a game day you joined see your collection, and only to ask you for a game. You always get to say \"Not this time\".",

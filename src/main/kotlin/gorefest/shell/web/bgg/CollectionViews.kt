@@ -14,7 +14,7 @@ data class CollectionView(val sync: CollectionSyncState?, val games: List<Game>)
 fun HTML.collectionPage(view: CollectionView, me: CurrentPlayer, bringRequestsAllowed: Boolean, onward: String? = null) = page("Your collection", site = SiteBar(me, Nav.COLLECTION)) {
     wrap("gf-collection") {
         p("gf-kicker") { +"BoardGameGeek" }
-        h1("gf-h1 gf-h1--landing") { +"Your collection" }
+        pageHeading("Your collection")
         if (onward != null) div("gf-continue") {
             linkButton(onward, onwardLabel(onward), ButtonStyle.PRIMARY, ButtonSize.LARGE)
             p("gf-small gf-muted") { +"Your games are on their way from BGG; you can carry on while they load." }
@@ -30,6 +30,13 @@ private fun onwardLabel(path: String) = if (path.endsWith("/bring")) "Back to br
 fun TagConsumer<*>.collection(view: CollectionView) = div("gf-stack") {
     id = "collection"
     val sync = view.sync
+    announce(
+        when (sync?.status) {
+            SyncStatus.QUEUED, null -> sync?.message ?: "Asking BGG for your collection"
+            SyncStatus.FAILED -> sync.message ?: "That didn't work."
+            SyncStatus.DONE -> "${view.games.size.of("game")} from BGG"
+        },
+    )
     when (sync?.status) {
         SyncStatus.QUEUED, null -> {
             hx("get", "/collection/status")
@@ -45,7 +52,7 @@ fun TagConsumer<*>.collection(view: CollectionView) = div("gf-stack") {
         SyncStatus.DONE -> {
             p("gf-muted") { +"${view.games.size} games from ${sync.username} on BGG." }
             if (view.games.isEmpty()) emptyState("No games in your BGG collection", "Mark games as owned on BGG, then sync again.")
-            else ul("gf-list gf-collection__list") { view.games.forEach { li { gameRow(it) } } }
+            else ul("gf-list gf-collection__list") { view.games.forEach { li { gameRow(it, level = Level.H2) } } }
             syncButton("Sync again")
         }
     }

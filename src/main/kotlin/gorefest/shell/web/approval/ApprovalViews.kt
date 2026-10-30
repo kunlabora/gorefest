@@ -10,7 +10,7 @@ fun HTML.approvalsPage(waiting: List<Player>) = page("New accounts", site = Site
     wrap {
         div("gf-split__copy") {
             p("gf-kicker") { +"Admin" }
-            h1("gf-h1 gf-h1--landing") { +"New accounts" }
+            pageHeading("New accounts")
             p("gf-lede") { +"People who signed up and are waiting to be let in. Only approve people you know." }
         }
     }

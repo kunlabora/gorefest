@@ -19,7 +19,7 @@ class PageChecksTest {
     }
 
     @Test
-    @Obligation("A11Y-2")
+    @Obligation("A11Y-2", "A11Y-9")
     fun `a duplicate id or a description pointing at nothing fails the page`() {
         shouldThrow<AssertionError> { html("""<p id="email-hint">A</p><p id="email-hint">B</p>""").shouldHaveSoundIds() }
         shouldThrow<AssertionError> { html("""<input id="email" aria-describedby="email-hint">""").shouldHaveSoundIds() }
@@ -35,5 +35,42 @@ class PageChecksTest {
             .shouldGroupEveryChoice()
         html("""<div role="group" aria-label="Which game?"><label><input type="radio" name="game">A</label><label><input type="radio" name="game">B</label></div>""")
             .shouldGroupEveryChoice()
+    }
+
+    @Test
+    @Obligation("A11Y-9")
+    fun `an htmx target that isn't on the page fails it`() {
+        shouldThrow<AssertionError> { html("""<button hx-target="#results">Search</button>""").shouldHaveResolvableHxTargets() }
+        html("""<button hx-target="#results">Search</button><div id="results"></div>""").shouldHaveResolvableHxTargets()
+    }
+
+    @Test
+    @Obligation("A11Y-7")
+    fun `a page without a language, a main heading or a main region fails`() {
+        val good = """<nav aria-label="Main"></nav><main><h1>Gorefest #7</h1></main>"""
+        html(good).shouldHaveSoundStructure()
+        shouldThrow<AssertionError> { Jsoup.parse("<html><body>$good</body></html>").shouldHaveSoundStructure() }
+        shouldThrow<AssertionError> { html("""<main><h2>Coming up</h2></main>""").shouldHaveSoundStructure() }
+        shouldThrow<AssertionError> { html("""<main><h1>A</h1><h1>B</h1></main>""").shouldHaveSoundStructure() }
+        shouldThrow<AssertionError> { html("""<h1>A</h1>""").shouldHaveSoundStructure() }
+        shouldThrow<AssertionError> { html("""<nav></nav><main><h1>A</h1></main>""").shouldHaveSoundStructure() }
+    }
+
+    @Test
+    @Obligation("A11Y-8")
+    fun `a heading that skips a level fails, unless it sits in hidden decoration`() {
+        shouldThrow<AssertionError> { html("""<main><h1>Your collection</h1><h3>7 Wonders</h3></main>""").shouldHaveSoundStructure() }
+        html("""<main><h1>Your collection</h1><h2>7 Wonders</h2><h3>Facts</h3><h2>Azul</h2></main>""").shouldHaveSoundStructure()
+        html("""<main><h1>Sign in</h1><div aria-hidden="true"><h3>Cascadia</h3></div></main>""").shouldHaveSoundStructure()
+    }
+
+    @Test
+    @Obligation("A11Y-10")
+    fun `a fragment that neither announces itself, alerts nor refreshes quietly fails`() {
+        fun fragment(html: String) = Jsoup.parseBodyFragment(html).body().child(0)
+        shouldThrow<AssertionError> { fragment("""<div id="results"><p>3 games</p></div>""").shouldAnnounceItself() }
+        fragment("""<div id="results" data-announce="3 games found"></div>""").shouldAnnounceItself()
+        fragment("""<form id="f"><p role="alert">That doesn't look like an email address.</p></form>""").shouldAnnounceItself()
+        fragment("""<div id="summary" data-quiet="true"></div>""").shouldAnnounceItself()
     }
 }
