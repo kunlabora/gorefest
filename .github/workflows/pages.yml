@@ -1,0 +1,35 @@
+name: Site
+# The onboarding site (site/) on GitHub Pages. Separate from CI: it never touches the app's server.
+on:
+  push:
+    branches: [main]
+    paths:
+      - site/**
+      - docs/design/css/**
+      - docs/design/fonts/**
+      - docs/design/icons/**
+      - scripts/build_site.sh
+      - .github/workflows/pages.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: true
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v5
+      - run: scripts/build_site.sh
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: build/site
+      - id: deployment
+        uses: actions/deploy-pages@v4
