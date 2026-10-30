@@ -6,6 +6,7 @@ The stories live in one file per milestone:
 |--------------------------------------------|---------------|------------------------------------------------------------|----------|
 | [1: MVP](milestone-1.md)                   | S0–S17        | From the walking skeleton to date polls                    | 1.0      |
 | [2: user testing and GDPR](milestone-2.md) | U1–U20, G1–G9 | What the 2026-10-06 user test asked for, and the GDPR work | 2.1, 2.2 |
+| [3: accessibility](milestone-3.md)         | A1–A4         | WCAG basics built into the components, checked by rules    |          |
 
 New stories go in the latest milestone until a new one is opened (`milestone-3.md`, same shape). The screen-by-screen
 visual redesign has its own list ([redesign-backlog.md](redesign-backlog.md)), and QA bugs theirs
