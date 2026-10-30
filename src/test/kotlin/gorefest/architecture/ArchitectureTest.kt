@@ -5,6 +5,7 @@ import gorefest.contract.Obligation
 import com.lemonappdev.konsist.api.declaration.KoFileDeclaration
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldNotBeEmpty
+import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
 /**
@@ -118,6 +119,13 @@ class ArchitectureTest {
     }
 
     @Test
+    fun `comments are skipped, strings that hold a double slash are not`() {
+        val code = withoutComments("a(\"https://x\") { }; button { } // button(\n/* img( */ h3(\"x\")")
+        RAW_NAMED_TAG.findAll(code).map { it.value.trim() }.toList() shouldBe listOf("button {")
+        RAW_HEADING.findAll(code).count() shouldBe 1
+    }
+
+    @Test
     @Obligation("A11Y-4", "A11Y-5", "A11Y-6")
     fun `views leave ARIA to the components`() {
         views().flatMap { file ->
@@ -126,7 +134,7 @@ class ArchitectureTest {
     }
 
     /** The file's text without comments, so a KDoc that mentions `button(` isn't a call. */
-    private val KoFileDeclaration.code get() = COMMENT.replace(text, "")
+    private val KoFileDeclaration.code get() = withoutComments(text)
 
     @Test
     @Obligation("A11Y-7", "A11Y-8")
@@ -159,7 +167,10 @@ class ArchitectureTest {
         /** kotlinx.html's h1 to h6, which leave the level to whoever writes the view. */
         val RAW_HEADING = Regex("""(?<![\w.])h[1-6]\s*[({]""")
 
-        val COMMENT = Regex("""(?s)/\*.*?\*/|//[^\n]*""")
+        /** Strings first, so a `//` inside `"https://…"` isn't taken for a comment; only the comments are dropped. */
+        val COMMENT_OR_STRING = Regex("(?s)\"\"\".*?\"\"\"|\"(?:\\\\.|[^\"\\\\\n])*\"|/\\*.*?\\*/|//[^\n]*")
+
+        fun withoutComments(code: String) = COMMENT_OR_STRING.replace(code) { if (it.value.startsWith("/")) "" else it.value }
 
         /** ARIA written by hand: `aria-*` and `role` attributes. */
         val RAW_ARIA = Regex("""attributes\["(aria-[a-z]+|role)"]|\brole\s*=""")

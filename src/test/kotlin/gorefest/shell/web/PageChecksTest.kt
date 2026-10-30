@@ -73,4 +73,18 @@ class PageChecksTest {
         fragment("""<form id="f"><p role="alert">That doesn't look like an email address.</p></form>""").shouldAnnounceItself()
         fragment("""<div id="summary" data-quiet="true"></div>""").shouldAnnounceItself()
     }
+
+    @Test
+    @Obligation("A11Y-4")
+    fun `buttons that share a name but act on different things fail the page`() {
+        shouldThrow<AssertionError> {
+            html("""<form action="/polls/1/games"><input type="hidden" name="game" value="1"><button>Add</button></form>
+                    <form action="/polls/1/games"><input type="hidden" name="game" value="2"><button>Add</button></form>""").shouldTellAlikeControlsApart()
+        }
+        html("""<form action="/polls/1/games"><input type="hidden" name="game" value="1"><button aria-label="Add Azul to the poll">Add</button></form>
+                <form action="/polls/1/games"><input type="hidden" name="game" value="2"><button aria-label="Add Brass to the poll">Add</button></form>""")
+            .shouldTellAlikeControlsApart()
+        // The same action twice (the dock repeats the page's main button) is fine.
+        html("""<a href="/bring">Bring games</a><a href="/bring">Bring games</a>""").shouldTellAlikeControlsApart()
+    }
 }

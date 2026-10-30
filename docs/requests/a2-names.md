@@ -6,7 +6,7 @@ Source: product idea, 2026-10-30. Status: ✅ built. Design: [Accessible by cons
 
 ## Criteria
 
-- [x] A11Y-4: Every button and link has a name a screen reader can say, icon-only ones included.
+- [x] A11Y-4: Every button and link has a name a screen reader can say, icon-only ones included, and one of several alike says what it acts on.
 - [x] A11Y-5: Decorative icons and pictures are hidden from screen readers; an image that informs says what it shows.
 - [x] A11Y-6: A toggle says whether it is on.
 - [x] `button`/`submitButton`, `iconButton`, `textLink`, `toggle(pressed)`, `image(alt: Alt)`, `AccessibleName` refuses a blank string.
@@ -21,3 +21,9 @@ Built as designed, with these notes:
 - Buttons that had no `type` (sync, "Make a new link") are now `type="button"`; none sits in a form, so nothing changes for them.
 - The rules skip comments now, so a KDoc that mentions `button(` isn't a call.
 - `Alt` sits in `Alt.kt` with `image` and `decoration` (detekt's `MatchingDeclarationName`).
+
+After review (2026-10-30, an adversarial review of `8bd8950^..7f33499`):
+
+- Alike buttons didn't say what they act on: "Approve"/"Reject" per person, the admin's request buttons, the poll's "Add" per game and "Pick this one" per date, "See games" per member. Each now has `says` ("Add Azul to the poll", "Pick Saturday 7 November"), `linkButton` takes `says` too, and `page()`/`fragment()` fail when buttons or links share a name but do different things.
+- The wizard's progress bar said "0" while the screen showed "1 / 12": it now says "Pair 1 of 12".
+- The rules' comment stripper treated `//` inside a string (`"https://…"`) as a comment; it now skips strings first.

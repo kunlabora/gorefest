@@ -86,11 +86,13 @@ fun FlowContent.chipToggle(
     span { +label }
 }
 
-/** A link that looks like a button. */
+/** A link that looks like a button. [says] names it for screen readers when the label is shared by several ("See games"). */
 fun FlowContent.linkButton(
     href: String, label: String, style: ButtonStyle = ButtonStyle.PRIMARY, size: ButtonSize = ButtonSize.NORMAL,
-    block: Boolean = false, icon: String? = null,
+    block: Boolean = false, icon: String? = null, says: String? = null,
 ) = a(href, classes = buttonClasses(style, size, block)) {
+    AccessibleName(label)
+    if (says != null) attributes["aria-label"] = AccessibleName(says).text
     if (icon != null) icon(icon)
     +label
 }

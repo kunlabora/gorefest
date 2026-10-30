@@ -61,7 +61,7 @@ fun HTML.askPage(gameDay: GameDaySummary, view: AskView) = page("Ask someone to 
                     li("gf-row") {
                         avatar(member.id, member.name)
                         span("gf-row__main") { span("gf-row__title") { +member.name } }
-                        linkButton("/gamedays/${gameDay.id}/ask/from/${member.id}", "See games", ButtonStyle.SECONDARY, ButtonSize.SMALL)
+                        linkButton("/gamedays/${gameDay.id}/ask/from/${member.id}", "See games", ButtonStyle.SECONDARY, ButtonSize.SMALL, says = "See ${member.name}'s games")
                     }
                 }
             }
@@ -136,13 +136,17 @@ fun TagConsumer<*>.askRow(gameDay: GameDaySummary, row: AskRow, named: Boolean, 
 /** What the owner just did with a request, for the section that answers it to announce. */
 enum class OwnerAnswer { BROUGHT, DECLINED }
 
-/** My requests and how they went. [tookBack] when this answers "Take it back"; otherwise it's a refresh and stays quiet. */
-fun TagConsumer<*>.myRequests(gameDay: GameDaySummary, rows: List<MyRequest>, tookBack: Boolean = false) = section("gf-section") {
+/**
+ * My requests and how they went. [tookBack] when this answers "Take it back", [error] when that was refused (both said
+ * out loud); otherwise it's a refresh and stays quiet.
+ */
+fun TagConsumer<*>.myRequests(gameDay: GameDaySummary, rows: List<MyRequest>, tookBack: Boolean = false, error: String? = null) = section("gf-section") {
     id = "my-requests"
-    if (tookBack) announce("Request taken back") else refreshesQuietly()
+    if (tookBack) announce("Request taken back") else if (error == null) refreshesQuietly()
     hx("get", "/gamedays/${gameDay.id}/ask/mine")
     hx("trigger", "$REQUESTS_CHANGED from:body")
     hx("swap", "outerHTML")
+    if (error != null) errorNotice(error)
     if (rows.isNotEmpty()) {
         sectionHeading("Your requests")
         ul("gf-list") {
@@ -181,16 +185,19 @@ const val REQUESTS_CHANGED = "requests-changed"
  * On the bring page, above the collection: the games people ask me to bring, each with "Bring it" and "Not this time".
  * Always present (empty when nothing is asked) so it can be swapped; fetched again when the shelf changes.
  */
-fun TagConsumer<*>.bringRequests(gameDay: GameDaySummary, rows: List<OwnerRequest>, answered: OwnerAnswer? = null) = section("gf-section") {
+/** The requests waiting for me. [answered] says what I just did, [error] why it was refused; without either it's a quiet refresh. */
+fun TagConsumer<*>.bringRequests(gameDay: GameDaySummary, rows: List<OwnerRequest>, answered: OwnerAnswer? = null, error: String? = null) = section("gf-section") {
     id = "bring-requests"
-    when (answered) {
-        OwnerAnswer.BROUGHT -> announce("Bringing it: it's on the shelf")
-        OwnerAnswer.DECLINED -> announce("Not this time, then")
-        null -> refreshesQuietly()
+    when {
+        error != null -> Unit
+        answered == OwnerAnswer.BROUGHT -> announce("Bringing it: it's on the shelf")
+        answered == OwnerAnswer.DECLINED -> announce("Not this time, then")
+        else -> refreshesQuietly()
     }
     hx("get", "/gamedays/${gameDay.id}/ask/requests")
     hx("trigger", "shelf-changed from:body")
     hx("swap", "outerHTML")
+    if (error != null) errorNotice(error)
     if (rows.isNotEmpty()) {
         sectionHeading("People are asking")
         ul("gf-list") {

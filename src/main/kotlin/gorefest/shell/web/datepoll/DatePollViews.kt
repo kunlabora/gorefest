@@ -345,7 +345,7 @@ private fun FlowContent.addRow(poll: String, game: Game, meta: String) =
     gameRow(game, meta = meta) {
         form(action = "/polls/$poll/games", method = FormMethod.post) {
             hiddenInput("game", game.id.toString())
-            actionButton("Add", ButtonStyle.SECONDARY, ButtonSize.SMALL, submit = true, icon = "plus")
+            actionButton("Add", ButtonStyle.SECONDARY, ButtonSize.SMALL, submit = true, icon = "plus", says = "Add ${game.name} to the poll")
         }
     }
 
@@ -418,7 +418,7 @@ fun TagConsumer<*>.datePollResults(view: DatePollView, error: String? = null) = 
             }
             if (isHost && poll.open && tally.date >= view.today) actionButton(
                 if (tally.date == best) "Pick this date" else "Pick this one",
-                if (tally.date == best) ButtonStyle.PRIMARY else ButtonStyle.SECONDARY, block = true,
+                if (tally.date == best) ButtonStyle.PRIMARY else ButtonStyle.SECONDARY, block = true, says = "Pick ${tally.date.full()}",
             ) {
                 hx("post", "/polls/${poll.id}/pick")
                 hx("vals", """{"date": "${tally.date}"}""")

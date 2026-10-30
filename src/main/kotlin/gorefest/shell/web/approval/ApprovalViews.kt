@@ -31,10 +31,10 @@ private fun UL.row(player: Player) = li("gf-row gf-row--approval") {
     }
     div("gf-row__actions") {
         form(action = "/admin/approvals/${player.id.value}/approve", method = FormMethod.post) {
-            actionButton("Approve", ButtonStyle.PRIMARY, submit = true)
+            actionButton("Approve", ButtonStyle.PRIMARY, submit = true, says = "Approve ${player.name ?: player.email}")
         }
         form(action = "/admin/approvals/${player.id.value}/reject", method = FormMethod.post) {
-            actionButton("Reject", ButtonStyle.GHOST, submit = true)
+            actionButton("Reject", ButtonStyle.GHOST, submit = true, says = "Reject ${player.name ?: player.email}")
         }
     }
 }

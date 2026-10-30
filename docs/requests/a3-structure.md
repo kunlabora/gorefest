@@ -20,3 +20,8 @@ Built differently from the design, with these notes:
 - **Announcing a swap needs a status line that stays, not live regions.** htmx replaces the swapped region (`outerHTML`), so an `aria-live` on it isn't reliably read. The page has one `role=status` line (`#gf-announce`), every fragment carries its sentence (`announce`), and `htmx-config.js` reads it from the response's root after the swap. A background refresh is `refreshesQuietly()`, so it doesn't talk over what you just did (in the browser, the requests section's refresh first overwrote "Bringing Azul"). `fragment()` checks every fragment announces, alerts or is quiet. `liveSection` went; `liveLine` stays for the poll's limit message, which a script writes into a line that stays put.
 - **Focus after a swap.** In the browser, toggling a bring switch or a heart dropped focus to the page. They now keep an `id`, and htmx puts focus back on the element with the same id. Rows whose control disappears (Ask, Bring it, Take it back, Not this time) still lose focus: listed under Known gaps.
 - The id checks landed with the A1 review (`d321e0b`).
+
+After review (2026-10-30, the same review):
+
+- A refused "Take it back", "Not this time" or "Bring it" (an ended game day) answered with a quiet section and no reason. The request sections now show the refusal as an alert, and `fragment()` fails when a 4xx fragment has no alert or calls itself a quiet refresh. Web tests prove a refusal is read out, an action says what it did, and a background refresh stays quiet.
+- The status line skipped a sentence that matched the last one, so a second search that also found 3 games was silent. Only a poll (`hx-trigger` "every …") skips a repeat now; anything else clears the line and fills it again.

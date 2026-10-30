@@ -156,7 +156,9 @@ private suspend fun RoutingContext.respondBringDecision(
         // "Bring it" on a request: the same decision as ticking the game, answered with the requests section; the list below looks again.
         call.response.header("HX-Trigger", BRING_LIST_CHANGED)
         val requests = ownerRequests(app, gameDay, me, login)
-        return respondFragment(if (decision is Decision.Rejected) HttpStatusCode.Conflict else HttpStatusCode.OK) { bringRequests(gameDay, requests, OwnerAnswer.BROUGHT.takeIf { decision !is Decision.Rejected }) }
+        return respondFragment(if (decision is Decision.Rejected) HttpStatusCode.Conflict else HttpStatusCode.OK) {
+            bringRequests(gameDay, requests, OwnerAnswer.BROUGHT.takeIf { decision !is Decision.Rejected }, error = (decision as? Decision.Rejected)?.reason?.message())
+        }
     }
     val row = bringRow(game, app.shelves.of(gameDay.id), me)
     val prefix = if (rowPrefix == "search") "search" else "bring"

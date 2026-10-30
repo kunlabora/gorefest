@@ -107,6 +107,17 @@ class ShelfRoutesTest {
     }
 
     @Test
+    @Obligation("A11Y-10")
+    fun `ticking a game says so out loud, and the summary that reloads after it stays quiet`() = test.webTest(session = kim) { client ->
+        val row = client.htmxPost("/gamedays/$gorefest7/shelf/$brass", parameters { append("bringing", "true") }).fragment()
+        val summary = client.get("$bringPage/summary").fragment()
+
+        row.attr("data-announce") shouldBe "Bringing Brass: Birmingham"
+        summary.attr("data-quiet") shouldBe "true"
+        summary.hasAttr("data-announce") shouldBe false
+    }
+
+    @Test
     @Obligation("SH-1")
     fun `unticking takes it off again`() = test.webTest(session = kim) { client ->
         client.htmxPost("/gamedays/$gorefest7/shelf/$brass", parameters { append("bringing", "true") })

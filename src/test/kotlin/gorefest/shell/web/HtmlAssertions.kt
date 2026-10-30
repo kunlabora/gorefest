@@ -19,13 +19,19 @@ suspend fun HttpResponse.page(): Document = Jsoup.parse(bodyAsText()).also {
     it.shouldHaveSoundIds(references = PAGE_REFERENCES)
     it.shouldGroupEveryChoice()
     it.shouldHaveSoundStructure()
+    it.shouldTellAlikeControlsApart()
 }
 
 /** Parses an htmx fragment: exactly one top-level element, returned for swapping. */
 suspend fun HttpResponse.fragment(): Element {
     val roots = Jsoup.parseBodyFragment(bodyAsText()).body().children()
     withClue("an htmx fragment has exactly one top-level element") { roots shouldHaveSize 1 }
+    val refused = status.value in 400..499
     return roots.single().also {
+        withClue("a refused fragment (${status.value}) says why with an alert, and isn't a quiet refresh") {
+            if (refused) (it.selectFirst("[role=alert]") != null && it.attr("data-quiet") != "true") shouldBe true
+        }
+        it.shouldTellAlikeControlsApart()
         it.shouldNameEveryControl()
         it.shouldHaveSoundIds(references = FRAGMENT_REFERENCES)
         it.shouldGroupEveryChoice()
@@ -122,4 +128,23 @@ fun Document.shouldHaveSoundStructure() {
     val skips = headings.map { it.tagName()[1].digitToInt() to it.text() }.zipWithNext()
         .filter { (a, b) -> b.first > a.first + 1 }.map { (a, b) -> "h${a.first} \"${a.second.take(30)}\" → h${b.first} \"${b.second.take(30)}\"" }
     withClue("headings don't skip a level: $skips") { skips shouldHaveSize 0 }
+}
+
+/**
+ * Buttons and links with the same name do the same thing: "Add", "Add", "Add" on three games would leave a screen reader
+ * user guessing which is which, so each says what it acts on (`says`). What a control does is its link, its htmx request
+ * or its form's action with its own name and value.
+ */
+fun Element.shouldTellAlikeControlsApart() {
+    fun Element.name() = attr("aria-label").ifBlank { text() }.trim()
+    fun Element.action(): String = when {
+        tagName() == "a" -> attr("href")
+        hasAttr("hx-post") || hasAttr("hx-get") -> attr("hx-post") + attr("hx-get") + attr("hx-vals")
+        hasAttr("_") -> attr("_")
+        else -> closest("form").let { form ->
+            (form?.attr("action") ?: "") + " " + form?.select("input[type=hidden]")?.joinToString(" ") { it.attr("name") + "=" + it.`val`() } + " " + attr("name") + "=" + attr("value")
+        }
+    }
+    val clashes = select("button, a[href]").groupBy { it.name() }.filterValues { alike -> alike.map { it.action() }.distinct().size > 1 }.keys
+    withClue("controls that share a name do the same thing (give each its own with says): $clashes") { clashes shouldHaveSize 0 }
 }

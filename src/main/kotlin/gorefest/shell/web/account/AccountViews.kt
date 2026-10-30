@@ -110,15 +110,16 @@ private fun UL.row(request: OpenRequest) = li("gf-row gf-row--approval") {
     }
     div("gf-row__actions") {
         val base = "/admin/requests/${player.id.value}"
+        val who = player.name ?: player.email
         when (request.kind) {
             RequestKind.DELETE -> form(action = "$base/erase", method = FormMethod.post) {
                 confirmOnSubmit("Delete ${player.name ?: "this"}'s account for good?")
-                actionButton("Delete account", ButtonStyle.PRIMARY, submit = true)
+                actionButton("Delete account", ButtonStyle.PRIMARY, submit = true, says = "Delete $who's account")
             }
             RequestKind.EXPORT -> {
-                a("$base/export", classes = buttonClasses(ButtonStyle.PRIMARY, ButtonSize.NORMAL)) { +"Download their data" }
+                linkButton("$base/export", "Download their data", says = "Download $who's data")
                 form(action = "$base/export/done", method = FormMethod.post) {
-                    actionButton("Sent it", ButtonStyle.GHOST, submit = true)
+                    actionButton("Sent it", ButtonStyle.GHOST, submit = true, says = "Sent $who's data")
                 }
             }
         }

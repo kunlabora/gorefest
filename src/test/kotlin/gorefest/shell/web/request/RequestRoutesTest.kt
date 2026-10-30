@@ -323,6 +323,20 @@ class RequestRoutesTest {
     }
 
     @Test
+    @Obligation("A11Y-10")
+    fun `taking back or turning down a request on an ended game day says why, out loud`() = test.webTest(session = kim) { client ->
+        given(BringRequested(gorefest7, kimId, anna, brass), BringRequested(gorefest7, anna, kimId, azul), GameDayEnded(gorefest7))
+
+        val withdrawn = client.htmxPost("$ask/withdraw", asks(brass))
+        withdrawn.status shouldBe HttpStatusCode.Conflict
+        withdrawn.fragment().one("[role=alert]").text() shouldBe "This game day has ended"
+
+        val declined = client.htmxPost("$ask/decline", parameters { append("game", azul.toString()) })
+        declined.status shouldBe HttpStatusCode.Conflict
+        declined.fragment().one("[role=alert]").text() shouldBe "This game day has ended"
+    }
+
+    @Test
     @Obligation("SH-33")
     fun `a cancelled game day is gone`() = test.webTest(session = kim) { client ->
         given(GameDayCancelled(gorefest7))

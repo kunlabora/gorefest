@@ -82,4 +82,14 @@ class NamesTest {
         switch.attr("role") shouldBe "switch"
         switch.hasAttr("checked") shouldBe true
     }
+
+    @Test
+    @Obligation("A11Y-6")
+    fun `a progress bar tells a screen reader the count the screen shows`() {
+        val bar = render { progressSteps(step = 0, total = 12, label = "Taste round") }.one("[role=progressbar]")
+
+        bar.attr("aria-valuenow") shouldBe "1"
+        bar.attr("aria-valuetext") shouldBe "Pair 1 of 12"
+        bar.one(".gf-progress__count").text() shouldBe "1 / 12"
+    }
 }
