@@ -40,4 +40,6 @@ Pushing `main` deploys (`.github/workflows/ci.yml`: test → build → deploy on
 
 Tell the user the new version, the commit hash, the tag line, and the pushed range (`old..new`). Say that the push to main starts the deploy, and that the footer shows the new version once it's live.
 
+The push asks for confirmation (the `guard.py` hook); that is expected, the user confirms it.
+
 Never move or re-push an existing tag. If a tag is wrong after it was pushed, ask the user before doing anything about it.
