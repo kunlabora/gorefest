@@ -97,6 +97,8 @@ tasks.test {
     jvmArgs(jvmWarningFlags)
     // Tests share one database (TestDatabase), so test classes must not run in parallel forks.
     maxParallelForks = 1
+    // ContractCoverageTest reads the Contract from disk: a change there must rerun the tests, not hit the cache.
+    inputs.dir("docs/contract")
 }
 
 // Mutation testing on the core (IMP's kill matrix): which changes to the code no test notices.

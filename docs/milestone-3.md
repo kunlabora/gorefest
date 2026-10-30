@@ -14,7 +14,7 @@ Decisions (2026-10-30): split into four stories; a contrast pair that fails is f
 
 | #  | Story                                                                                      | Status | Depends on | Arrived    | Started    | Done |
 |----|--------------------------------------------------------------------------------------------|--------|------------|------------|------------|------|
-| A1 | [Forms: every control has its label, hint and error](requests/a1-forms.md)                 | 🚧     |            | 2026-10-30 | 2026-10-30 |      |
+| A1 | [Forms: every control has its label, hint and error](requests/a1-forms.md)                 | ✅     |            | 2026-10-30 | 2026-10-30 | 2026-10-30 |
 | A2 | [Names: every button, link, toggle and image says what it is](requests/a2-names.md)        | 📋     |            | 2026-10-30 |            |      |
 | A3 | [Structure: one heading, headings in order, announced swaps](requests/a3-structure.md)     | 📋     |            | 2026-10-30 |            |      |
 | A4 | [Colour and motion: contrast, focus and target size checked](requests/a4-colour-motion.md) | 📋     |            | 2026-10-30 |            |      |

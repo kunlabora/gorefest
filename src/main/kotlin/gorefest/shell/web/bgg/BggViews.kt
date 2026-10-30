@@ -35,18 +35,16 @@ fun TagConsumer<*>.usernameStep(returnTo: String, username: String = "", error: 
             h1("gf-h1 gf-h1--landing") { +"Link your BGG account" }
             p("gf-lede gf-muted") { +"Then you can bring games straight from your BoardGameGeek collection." }
             div(if (error != null) "gf-signin gf-field--invalid" else "gf-signin") {
-                label("gf-label") { htmlFor = "username"; +"BGG username" }
-                div("gf-signin__row") {
-                    input(InputType.text, name = "username", classes = "gf-input") {
-                        id = "username"
+                signinField(
+                    "username", "BGG username", error = error,
+                    action = { button(type = ButtonType.submit, classes = buttonClasses(ButtonStyle.PRIMARY, ButtonSize.LARGE)) { spinner(); +"Next" } },
+                ) {
+                    textInput("username") {
                         value = username
                         attributes["autocapitalize"] = "none"
                         attributes["autocomplete"] = "username"
-                        if (error != null) attributes["aria-invalid"] = "true"
                     }
-                    button(type = ButtonType.submit, classes = buttonClasses(ButtonStyle.PRIMARY, ButtonSize.LARGE)) { spinner(); +"Next" }
                 }
-                if (error != null) fieldError(error)
                 p("gf-hint") { a(returnTo, classes = "gf-link") { +"Not now" } }
             }
         }

@@ -210,23 +210,15 @@ fun TagConsumer<*>.bringRequests(gameDay: GameDaySummary, rows: List<OwnerReques
 /** The collection page's switch: may people on my game days ask me to bring games? */
 fun TagConsumer<*>.bringRequestsSwitch(allowed: Boolean) = div("gf-stack") {
     id = "bring-requests-switch"
-    label("gf-row") {
-        span("gf-row__main") {
-            span("gf-row__title") { +"Let people see my collection to ask for games" }
-            span("gf-row__sub") {
-                +"Only people on a game day you joined see your collection, and only to ask you for a game. You always get to say \"Not this time\"."
-            }
-        }
-        input(InputType.checkBox, classes = "gf-switch", name = "allowed") {
-            attributes["role"] = "switch"
-            value = "true"
-            checked = allowed
-            attributes["aria-label"] = "Let people see my collection to ask for games"
-            hx("post", "/collection/bring-requests")
-            hx("trigger", "change")
-            hx("vals", """{"allowed": "${!allowed}"}""")
-            hx("target", "#bring-requests-switch")
-            hx("swap", "outerHTML")
-        }
+    switchRow(
+        "allowed", "Let people see my collection to ask for games",
+        "Only people on a game day you joined see your collection, and only to ask you for a game. You always get to say \"Not this time\".",
+        checked = allowed,
+    ) {
+        hx("post", "/collection/bring-requests")
+        hx("trigger", "change")
+        hx("vals", """{"allowed": "${!allowed}"}""")
+        hx("target", "#bring-requests-switch")
+        hx("swap", "outerHTML")
     }
 }

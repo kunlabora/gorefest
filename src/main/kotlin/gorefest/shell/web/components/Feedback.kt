@@ -33,7 +33,8 @@ fun FlowContent.errorNotice(message: String, id: String? = null) = notice("alert
 fun TagConsumer<*>.errorNotice(message: String, id: String? = null) = notice("alert", NoticeKind.ERROR, id) { +message }
 
 /** The error line under a form field. */
-fun FlowContent.fieldError(message: String) = p("gf-error") {
+fun FlowContent.fieldError(message: String, id: String? = null) = p("gf-error") {
+    if (id != null) this.id = id
     role = "alert"
     icon("alert")
     +message

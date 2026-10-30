@@ -52,6 +52,7 @@ fun `only the host can edit`() { … }
 | [privacy.md](privacy.md) | `PR` | Erasure, export, retention, logs, the notice, staying private |
 | [event-log.md](event-log.md) | `EV` | The event log: appends, conflicts, replay, evolution |
 | [web.md](web.md) | `WEB` | Pages in general: members-only, htmx, theme, layout, static files |
+| [a11y.md](a11y.md) | `A11Y` | Accessibility: labels, names, structure, contrast, focus, motion |
 
 ## Known gaps
 

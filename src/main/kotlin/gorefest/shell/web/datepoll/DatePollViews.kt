@@ -54,16 +54,15 @@ fun TagConsumer<*>.datePollForm(error: String? = null, values: Parameters = Para
         hx("swap", "outerHTML")
         if (error != null) errorNotice(error)
         field("title", "Title", hint = "Whatever your group calls it.") {
-            input(InputType.text, name = "title", classes = "gf-input") { id = "title"; placeholder = "Gorefest #7"; required = true; maxLength = MAX_TITLE_LENGTH.toString(); value = values["title"].orEmpty() }
+            textInput("title") { placeholder = "Gorefest #7"; required = true; maxLength = MAX_TITLE_LENGTH.toString(); value = values["title"].orEmpty() }
         }
         field("place", "Where", hint = "Only people who have joined see it. Leave out the house number if you like.") {
-            input(InputType.text, name = "place", classes = "gf-input") { id = "place"; maxLength = MAX_PLACE_LENGTH.toString(); value = values["place"].orEmpty() }
+            textInput("place") { maxLength = MAX_PLACE_LENGTH.toString(); value = values["place"].orEmpty() }
         }
         div("gf-section") {
-            h2("gf-h2") { +"Which dates could work?" }
+            h2("gf-h2") { id = "poll-dates-heading"; +"Which dates could work?" }
             val given = values.getAll("dates").orEmpty()
-            div("gf-stack") {
-                id = "poll-dates"
+            labelledGroup("poll-dates", headingId = "poll-dates-heading") {
                 (given + List((MIN_POLL_DATES + 1 - given.size).coerceAtLeast(0)) { "" }).forEach { dateField(it) }
             }
             button(type = ButtonType.button, classes = buttonClasses(ButtonStyle.GHOST, ButtonSize.SMALL)) {
@@ -77,18 +76,11 @@ fun TagConsumer<*>.datePollForm(error: String? = null, values: Parameters = Para
                 +"Add another date"
             }
         }
-        label("gf-row gf-poll-form__games") {
-            span("gf-row__main") {
-                span("gf-row__title") { +"Ask about games as well" }
-                span("gf-row__sub") { +"Put a few games to the group and see who'd play what and who can bring it. The date you pick makes a small game night instead of a game day." }
-            }
-            input(InputType.checkBox, classes = "gf-switch", name = "games") {
-                attributes["role"] = "switch"
-                value = "true"
-                attributes["aria-label"] = "Ask about games as well"
-                checked = values["games"] == "true"
-            }
-        }
+        switchRow(
+            "games", "Ask about games as well",
+            "Put a few games to the group and see who'd play what and who can bring it. The date you pick makes a small game night instead of a game day.",
+            checked = values["games"] == "true", classes = "gf-poll-form__games",
+        )
         pollFormGamePicker(picks)
         browserTimeZone()
         primaryButton("Start the poll")
@@ -136,10 +128,7 @@ fun TagConsumer<*>.pollFormSearchResults(games: List<Game>, bggUnavailable: Bool
 }
 
 /** One more date input, for the "add another date" button. */
-fun TagConsumer<*>.dateField(value: String = "") = input(InputType.date, name = "dates", classes = "gf-input") {
-    attributes["aria-label"] = "Date"
-    this.value = value
-}
+fun TagConsumer<*>.dateField(value: String = "") = listedInput("dates", "Date", InputType.date) { this.value = value }
 
 /** Everything the poll page shows. [gameDay] (or [gameNight], for a poll with games) is what the pick made, once there is one. */
 data class DatePollView(

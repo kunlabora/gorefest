@@ -166,44 +166,37 @@ fun TagConsumer<*>.emailForm(returnTo: String, email: String = "", error: String
         hx("swap", "outerHTML")
         hiddenInput("returnTo", returnTo)
         if (submitLabel != "Send me a code") hiddenInput("submitLabel", submitLabel)
-        label("gf-label") { htmlFor = "email"; +"Email address" }
-        div("gf-signin__row") {
-            input(InputType.email, name = "email", classes = "gf-input") {
-                id = "email"
+        signinField(
+            "email", "Email address", error = error,
+            hint = "Log in or sign up with the same step: we email a sign-in link and a 6-digit code. No password. New accounts are approved by hand, so a first sign-in may have to wait a little.",
+            action = { button(type = ButtonType.submit, classes = buttonClasses(ButtonStyle.PRIMARY, ButtonSize.LARGE)) { spinner(); +submitLabel } },
+        ) {
+            textInput("email", InputType.email) {
                 required = true
                 value = email
                 placeholder = "you@example.com"
                 attributes["inputmode"] = "email"
                 attributes["autocomplete"] = "email"
-                if (error != null) attributes["aria-invalid"] = "true"
             }
-            button(type = ButtonType.submit, classes = buttonClasses(ButtonStyle.PRIMARY, ButtonSize.LARGE)) { spinner(); +submitLabel }
         }
-        if (error != null) fieldError(error)
-        p("gf-hint") { +"Log in or sign up with the same step: we email a sign-in link and a 6-digit code. No password. New accounts are approved by hand, so a first sign-in may have to wait a little." }
     }
 
 /** The big code field with the button directly under it; htmx re-renders the form in place when the server rejects the code. */
 fun TagConsumer<*>.codeForm(attempt: Uuid, error: String? = null) = singleFieldForm("code-form", "/login/code", "Let me in", error) {
     hiddenInput("attempt", attempt.toString())
-    label("gf-label") { htmlFor = "code"; +"6-digit code" }
-    codeInput(invalid = error != null)
-    if (error != null) fieldError(error)
-    p("gf-hint") { +"Opened this from WhatsApp or Signal? The code is the quicker route." }
+    signinField("code", "6-digit code", hint = "Opened this from WhatsApp or Signal? The code is the quicker route.", error = error) { codeInput() }
 }
 
 fun TagConsumer<*>.nameForm(returnTo: String, name: String, error: String? = null) = singleFieldForm("name-form", "/welcome", "That's me", error, inline = true) {
     hiddenInput("returnTo", returnTo)
-    label("gf-label") { htmlFor = "name"; +"Name" }
-    input(InputType.text, name = "name", classes = "gf-input") {
-        id = "name"
-        required = true
-        value = name
-        placeholder = "Kim"
-        attributes["autocomplete"] = "given-name"
-        if (error != null) attributes["aria-invalid"] = "true"
+    signinField("name", "Name", error = error) {
+        textInput("name") {
+            required = true
+            value = name
+            placeholder = "Kim"
+            attributes["autocomplete"] = "given-name"
+        }
     }
-    if (error != null) fieldError(error)
 }
 
 /**

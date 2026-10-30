@@ -86,18 +86,17 @@ private fun FlowContent.signInForm(path: String, title: String) =
         hx("swap", "outerHTML")
         hiddenInput("returnTo", "$path?join=1")
         hiddenInput("submitLabel", "Join $title")
-        label("gf-label") { htmlFor = "email"; +"Your email" }
-        div("gf-signin__row") {
-            input(InputType.email, name = "email", classes = "gf-input") {
-                id = "email"
+        signinField(
+            "email", "Your email", hint = "We'll email a sign-in link and a 6-digit code. No password.",
+            action = { button(type = ButtonType.submit, classes = buttonClasses(ButtonStyle.PRIMARY, ButtonSize.LARGE)) { spinner(); +"Join $title" } },
+        ) {
+            textInput("email", InputType.email) {
                 required = true
                 placeholder = "you@example.com"
                 attributes["inputmode"] = "email"
                 attributes["autocomplete"] = "email"
             }
-            button(type = ButtonType.submit, classes = buttonClasses(ButtonStyle.PRIMARY, ButtonSize.LARGE)) { spinner(); +"Join $title" }
         }
-        p("gf-hint") { +"We'll email a sign-in link and a 6-digit code. No password." }
     }
 
 /** Logged in: one button that joins. */

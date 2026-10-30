@@ -147,19 +147,13 @@ fun TagConsumer<*>.searchResults(gameDay: GameDaySummary, rows: List<BringRow>, 
 fun TagConsumer<*>.bringItem(gameDay: GameDaySummary, row: BringRow, readOnly: Boolean, error: String? = null, prefix: String = "bring") = li {
     val rowId = "$prefix-${row.game.id}"
     id = rowId
-    label("gf-tile gf-bringtile") {
-        input(InputType.checkBox, classes = "gf-switch", name = "bringing") {
-            attributes["role"] = "switch"
-            value = "true"
-            checked = row.bringing
-            disabled = readOnly
-            attributes["aria-label"] = "Bringing ${row.game.name}"
-            hx("post", "/gamedays/${gameDay.id}/shelf/${row.game.id}")
-            hx("trigger", "change")
-            hx("target", "#$rowId")
-            hx("swap", "outerHTML")
-            hx("vals", """{"row": "$prefix"}""")
-        }
+    switchTile("bringing", "Bringing ${row.game.name}", checked = row.bringing, classes = "gf-tile gf-bringtile", disabled = readOnly, configure = {
+        hx("post", "/gamedays/${gameDay.id}/shelf/${row.game.id}")
+        hx("trigger", "change")
+        hx("target", "#$rowId")
+        hx("swap", "outerHTML")
+        hx("vals", """{"row": "$prefix"}""")
+    }) {
         art(row.game)
         span("gf-tile__name") { bggNameLink(row.game) }
     }

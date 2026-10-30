@@ -1,6 +1,7 @@
 package gorefest.architecture
 
 import com.lemonappdev.konsist.api.Konsist
+import gorefest.contract.Obligation
 import com.lemonappdev.konsist.api.declaration.KoFileDeclaration
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldNotBeEmpty
@@ -96,7 +97,23 @@ class ArchitectureTest {
             .map { it.name }.shouldBeEmpty()
     }
 
+    @Test
+    @Obligation("A11Y-1", "A11Y-2", "A11Y-3")
+    fun `views render form controls only through the components that label them`() {
+        val components = shell.filter { it.pkg == "gorefest.shell.web.components" }
+        val views = shell.filter { it.pkg.startsWith("gorefest.shell.web") && it.pkg != "gorefest.shell.web.components" }
+        components.filter { RAW_FORM_TAG.containsMatchIn(it.text) }.shouldNotBeEmpty()
+        views.flatMap { file ->
+            RAW_FORM_TAG.findAll(file.text).map { "${file.name}: ${it.value.trim()}. Use field, signinField, switchRow, switchTile or a chip group from web.components" }
+        }.shouldBeEmpty()
+    }
+
     private fun com.lemonappdev.konsist.api.provider.KoParentProvider.isDecider() = parents().any { it.name.substringBefore("<").substringAfterLast(".") == "Decider" }
     private fun com.lemonappdev.konsist.api.provider.KoParentProvider.isProjection() = parents().any { it.name.substringBefore("<").substringAfterLast(".") == "Projection" }
     private fun com.lemonappdev.konsist.api.provider.KoContainingFileProvider.pkg() = containingFile.packagee?.name.orEmpty()
+
+    private companion object {
+        /** kotlinx.html's own form tags, called directly rather than through a component (`textInput(` and `hiddenInput(` don't match). */
+        val RAW_FORM_TAG = Regex("""(?<![\w.])(input|select|textarea|label|fieldSet)\s*\(""")
+    }
 }

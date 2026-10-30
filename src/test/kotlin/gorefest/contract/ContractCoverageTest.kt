@@ -38,6 +38,12 @@ class ContractCoverageTest {
     }
 
     @Test
+    fun `every area declares its prefix and has obligations the parser reads`() {
+        val files = File("docs/contract").listFiles { f -> f.extension == "md" && f.name != "README.md" }.orEmpty().map { it.name }
+        files.filter { file -> obligations.none { it.area.file == file && it.area.prefix.isNotEmpty() } }.shouldBeEmpty()
+    }
+
+    @Test
     fun `ids carry their area's prefix`() {
         obligations.filter { !it.id.startsWith(it.area.prefix + "-") }.map { "${it.id} in ${it.area.file}" }.shouldBeEmpty()
     }
@@ -49,8 +55,8 @@ private data class Clause(val id: String, val text: String, val area: Area)
 
 private object Contract {
     private val heading = Regex("""^# (.+)$""")
-    private val prefixLine = Regex("""^Prefix: `([A-Z]+)`""")
-    private val obligation = Regex("""^- \*\*([A-Z]+-\d+)\*\* (.+)$""")
+    private val prefixLine = Regex("""^Prefix: `([A-Z][A-Z0-9]*)`""")
+    private val obligation = Regex("""^- \*\*([A-Z][A-Z0-9]*-\d+)\*\* (.+)$""")
 
     fun read(dir: File): List<Clause> =
         dir.listFiles { f -> f.extension == "md" && f.name != "README.md" }.orEmpty().sortedBy { it.name }.flatMap { file ->
@@ -66,7 +72,7 @@ private object Contract {
 
 private object Proofs {
     private val annotation = Regex("""@Obligation\(([^)]*)\)""")
-    private val id = Regex(""""([A-Z]+-\d+)"""")
+    private val id = Regex(""""([A-Z][A-Z0-9]*-\d+)"""")
 
     /** Obligation id to the test files that prove it. */
     fun read(dir: File): Map<String, Set<String>> =

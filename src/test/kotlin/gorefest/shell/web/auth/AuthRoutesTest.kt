@@ -135,6 +135,18 @@ class AuthRoutesTest {
     }
 
     @Test
+    @Obligation("A11Y-2")
+    fun `a refused email is marked invalid and read out with its error and hint`() = test.webTest { client ->
+        val form = client.htmxPost("/login", parameters { append("email", "kim-at-home") }).fragment()
+
+        val email = form.one("input[name=email]")
+        email.attr("aria-invalid") shouldBe "true"
+        email.attr("aria-describedby").split(" ").map { form.one("#$it").text() } shouldBe
+            listOf(form.one(".gf-hint").text(), "That doesn't look like an email address.")
+        form.one("label[for=email]").text() shouldBe "Email address"
+    }
+
+    @Test
     @Obligation("ACC-9")
     fun `an invite's sign-in keeps its own button label when the email is rejected`() = test.webTest { client ->
         val form = client.htmxPost("/login", parameters { append("email", "kim-at-home"); append("submitLabel", "Join Gorefest #7") }).fragment()

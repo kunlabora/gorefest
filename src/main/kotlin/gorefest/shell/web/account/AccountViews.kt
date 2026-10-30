@@ -32,16 +32,12 @@ fun HTML.accountPage(view: AccountView) = page("Your account", site = SiteBar(me
             p("gf-muted") { +"We send a code to the new address first, and the old one hears about the change." }
             form(action = "/account/email", method = FormMethod.post, classes = if (view.emailError != null) "gf-signin gf-field--invalid" else "gf-signin") {
                 id = "email-change"
-                label("gf-label") { htmlFor = "email"; +"New email address" }
-                div("gf-signin__row") {
-                    input(InputType.email, name = "email", classes = "gf-input") {
-                        id = "email"; required = true; placeholder = "you@example.com"
-                        attributes["autocomplete"] = "email"
-                        if (view.emailError != null) attributes["aria-invalid"] = "true"
-                    }
-                    button(type = ButtonType.submit, classes = buttonClasses(ButtonStyle.PRIMARY, ButtonSize.LARGE)) { +"Send a code" }
+                signinField(
+                    "email", "New email address", error = view.emailError,
+                    action = { button(type = ButtonType.submit, classes = buttonClasses(ButtonStyle.PRIMARY, ButtonSize.LARGE)) { +"Send a code" } },
+                ) {
+                    textInput("email", InputType.email) { required = true; placeholder = "you@example.com"; attributes["autocomplete"] = "email" }
                 }
-                if (view.emailError != null) fieldError(view.emailError)
             }
         }
     }
@@ -139,12 +135,10 @@ fun HTML.emailCodePage(newEmail: String, error: String? = null) = page("Confirm 
             p("gf-lede gf-muted") { +"We sent a 6-digit code to "; strong { +newEmail }; +". It works for 15 minutes." }
             form(action = "/account/email/confirm", method = FormMethod.post, classes = if (error != null) "gf-signin gf-field--invalid" else "gf-signin") {
                 id = "email-code"
-                label("gf-label") { htmlFor = "code"; +"6-digit code" }
-                div("gf-signin__row") {
-                    codeInput(invalid = error != null)
-                    button(type = ButtonType.submit, classes = buttonClasses(ButtonStyle.PRIMARY, ButtonSize.LARGE)) { +"Change my email" }
-                }
-                if (error != null) fieldError(error)
+                signinField(
+                    "code", "6-digit code", error = error,
+                    action = { button(type = ButtonType.submit, classes = buttonClasses(ButtonStyle.PRIMARY, ButtonSize.LARGE)) { +"Change my email" } },
+                ) { codeInput() }
             }
         }
     }

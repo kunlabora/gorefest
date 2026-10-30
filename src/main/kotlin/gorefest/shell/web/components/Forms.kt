@@ -11,6 +11,9 @@ import kotlinx.html.FormMethod
 import kotlinx.html.form
 import kotlinx.html.p
 import kotlinx.html.INPUT
+import kotlinx.html.LABEL
+import kotlinx.html.TagConsumer
+import kotlinx.html.role
 import kotlinx.html.InputType
 import kotlinx.html.div
 import kotlinx.html.fieldSet
@@ -21,14 +24,37 @@ import kotlinx.html.legend
 import kotlinx.html.p
 import kotlinx.html.span
 
-/** Label, the input from [input], an optional hint, and the error line when the server rejected it. */
-fun FlowContent.field(id: String, label: String, hint: String? = null, error: String? = null, input: DIV.() -> Unit) =
+private fun control(id: String, hint: String?, error: String?) = FieldControl(id, hint?.let { "$id-hint" }, error?.let { "$id-error" })
+
+/** Label, the control from [control], an optional hint, and the error line when the server rejected it; the hint and error describe the control. */
+fun FlowContent.field(id: String, label: String, hint: String? = null, error: String? = null, control: context(FieldControl) FlowContent.() -> Unit) =
     div(if (error != null) "gf-field gf-field--invalid" else "gf-field") {
+        val tied = control(id, hint, error)
         label("gf-label") { htmlFor = id; +label }
-        input()
-        if (hint != null) p("gf-hint") { +hint }
-        if (error != null) fieldError(error)
+        control(tied, this)
+        if (hint != null) p("gf-hint") { this.id = "$id-hint"; +hint }
+        if (error != null) fieldError(error, id = "$id-error")
     }
+
+/**
+ * The sign-in layout of a field, inside the caller's form: label, the control with [action] (the button) beside it when given,
+ * the error, then the hint. The caller's form carries `gf-signin` and its invalid state.
+ */
+fun FlowContent.signinField(
+    id: String, label: String, hint: String? = null, error: String? = null, action: (FlowContent.() -> Unit)? = null,
+    control: context(FieldControl) FlowContent.() -> Unit,
+) {
+    val tied = control(id, hint, error)
+    label("gf-label") { htmlFor = id; +label }
+    if (action != null) div("gf-signin__row") { control(tied, this); action() } else control(tied, this)
+    if (error != null) fieldError(error, id = "$id-error")
+    if (hint != null) p("gf-hint") { this.id = "$id-hint"; +hint }
+}
+
+/** A text-like input (text, email, date) for the field around it; [configure] sets its value and constraints. */
+context(field: FieldControl)
+fun FlowContent.textInput(name: String, type: InputType = InputType.text, configure: INPUT.() -> Unit = {}) =
+    input(type, name = name, classes = "gf-input") { with(field) { tie() }; configure() }
 
 fun FlowContent.hiddenInput(name: String, value: String) = input(InputType.hidden, name = name) { this.value = value }
 
@@ -36,14 +62,59 @@ fun FlowContent.hiddenInput(name: String, value: String) = input(InputType.hidde
  * The 6-digit code field. A pasted code often brings a space or a dash along: the browser keeps only the digits, rather
  * than a `maxlength` cutting the last digit off first. The server ignores anything but digits as well.
  */
-fun FlowContent.codeInput(invalid: Boolean) = input(InputType.text, name = "code", classes = "gf-input gf-code") {
-    id = "code"
+context(field: FieldControl)
+fun FlowContent.codeInput() = input(InputType.text, name = "code", classes = "gf-input gf-code") {
+    with(field) { tie() }
     required = true
     placeholder = "······"
     attributes["inputmode"] = "numeric"
     attributes["autocomplete"] = "one-time-code"
-    if (invalid) attributes["aria-invalid"] = "true"
     hyperscript("on input js(me) me.value = me.value.replace(/\\D/g, '').slice(0, 6) end")
+}
+
+/**
+ * One of a list of like inputs under a heading (the poll's dates): it has no label of its own, so it is named [label],
+ * and the list around it is a [labelledGroup] that carries the question.
+ */
+fun TagConsumer<*>.listedInput(name: String, label: String, type: InputType = InputType.text, configure: INPUT.() -> Unit = {}) =
+    input(type, name = name, classes = "gf-input") { attributes["aria-label"] = label; configure() }
+
+/** A group of controls named by the heading with id [headingId], so a screen reader announces the question with them. */
+fun FlowContent.labelledGroup(id: String, headingId: String, classes: String = "gf-stack", content: DIV.() -> Unit) = div(classes) {
+    this.id = id
+    role = "group"
+    attributes["aria-labelledby"] = headingId
+    content()
+}
+
+/** An on/off switch: named [label] (the visible text around it may be longer), sending [name]=true when on. */
+private fun FlowContent.switchInput(name: String, label: String, checked: Boolean, disabled: Boolean, describedBy: String?, configure: INPUT.() -> Unit) =
+    input(InputType.checkBox, classes = "gf-switch", name = name) {
+        role = "switch"
+        value = "true"
+        this.checked = checked
+        this.disabled = disabled
+        attributes["aria-label"] = label
+        if (describedBy != null) attributes["aria-describedby"] = describedBy
+        configure()
+    }
+
+/** A settings row: [title] and the line under it ([sub], which describes the switch), with the switch at the end. */
+fun FlowContent.switchRow(name: String, title: String, sub: String, checked: Boolean, classes: String = "", configure: INPUT.() -> Unit = {}) =
+    label("gf-row $classes".trim()) {
+        span("gf-row__main") {
+            span("gf-row__title") { +title }
+            span("gf-row__sub") { id = "$name-sub"; +sub }
+        }
+        switchInput(name, title, checked, disabled = false, describedBy = "$name-sub", configure)
+    }
+
+/** A tile with a switch first and [content] after it (the bring page's games): the whole tile toggles it. */
+fun FlowContent.switchTile(
+    name: String, label: String, checked: Boolean, classes: String, disabled: Boolean = false, configure: INPUT.() -> Unit = {}, content: LABEL.() -> Unit,
+) = label(classes) {
+    switchInput(name, label, checked, disabled, describedBy = null, configure)
+    content()
 }
 
 /** Players as checkbox chips (avatar, tick when checked, name), submitted as [name]. */
