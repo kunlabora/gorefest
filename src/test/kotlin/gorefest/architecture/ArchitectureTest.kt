@@ -103,7 +103,7 @@ class ArchitectureTest {
         val components = shell.filter { it.pkg == "gorefest.shell.web.components" }
         components.filter { RAW_FORM_TAG.containsMatchIn(it.text) }.shouldNotBeEmpty()
         views().flatMap { file ->
-            RAW_FORM_TAG.findAll(file.code).map { "${file.name}: ${it.value.trim()}. Use field, signinField, switchRow, switchTile or a chip group from web.components" }
+            RAW_FORM_TAG.findAll(file.code).map { "${file.name}: ${it.value.trim()}. Use field, signinField, switchRow, switchTile, gameTiles or a chip group from web.components" }
         }.shouldBeEmpty()
     }
 
@@ -135,11 +135,18 @@ class ArchitectureTest {
     private fun com.lemonappdev.konsist.api.provider.KoContainingFileProvider.pkg() = containingFile.packagee?.name.orEmpty()
 
     private companion object {
-        /** kotlinx.html's own form tags, called directly rather than through a component (`textInput(` and `hiddenInput(` don't match). */
-        val RAW_FORM_TAG = Regex("""(?<![\w.])(input|select|textarea|label|fieldSet)\s*\(""")
+        /**
+         * kotlinx.html's own form tags and typed input builders, called directly (with or without a receiver, with or without
+         * arguments) rather than through a component. `fieldInput`, `codeInput` and `hiddenInput` don't match.
+         */
+        val RAW_FORM_TAG = Regex(
+            """(?<!\w)(input|select|textarea|textArea|label|fieldSet|""" +
+                """(text|checkBox|radio|email|date|dateTime|dateTimeLocal|time|month|week|search|number|range|password|tel|url|color|file|submit|reset|button|image)Input)""" +
+                """\s*[({]""",
+        )
 
         /** kotlinx.html's button and image tags, which leave the name or alt to whoever remembers it. */
-        val RAW_NAMED_TAG = Regex("""(?<![\w.])(button|img)\s*\(""")
+        val RAW_NAMED_TAG = Regex("""(?<!\w)(button|img)\s*[({]""")
 
         val COMMENT = Regex("""(?s)/\*.*?\*/|//[^\n]*""")
 

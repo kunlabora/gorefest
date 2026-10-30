@@ -39,7 +39,7 @@ fun TagConsumer<*>.usernameStep(returnTo: String, username: String = "", error: 
                     "username", "BGG username", error = error,
                     action = { actionButton("Next", ButtonStyle.PRIMARY, ButtonSize.LARGE, submit = true, spinner = true) },
                 ) {
-                    textInput("username") {
+                    fieldInput("username") {
                         value = username
                         attributes["autocapitalize"] = "none"
                         attributes["autocomplete"] = "username"

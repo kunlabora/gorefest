@@ -21,3 +21,10 @@ Built as designed, with these notes:
 - `FieldControl` sits in its own file (detekt's `MatchingDeclarationName`).
 - The Contract's parser only read prefixes of capital letters, so `A11Y` was skipped without a word: prefixes may now hold digits, an area the parser reads no obligations from fails the build, and the test task tracks `docs/contract` so a Contract change isn't served from the cache.
 - The bring tile and the collection switch were checked by their web tests, not in the browser (the dev account had no linked collection); the markup is the same as before.
+
+After review (2026-10-30, an adversarial review of `4312cdd`):
+
+- Game tiles (the log's and the watched form's "which game?", the poll form's games, and their search results) were bare radios and checkboxes with no group, so a screen reader never heard the question. They now come from `gameTiles(question, name)`, and `gameTileChoice` needs that group in context.
+- The rule had holes: it now also catches `textArea`, kotlinx's typed input builders (`checkBoxInput`, `radioInput`, …), calls without parentheses and calls on a receiver. Our `textInput` became `fieldInput`, because kotlinx.html has its own unlabelled `textInput` and the rule couldn't tell them apart.
+- A11Y-1 to A11Y-3 are now also checked on every page and fragment the web tests parse (`HtmlAssertions`): unique ids, labels and descriptions that point at ids that exist, and choices sharing a name inside a named group (switches excepted: each carries its own name). `PageChecksTest` shows the checks catch what they claim.
+- `ContractCoverageTest` also fails on a line that looks like an obligation (`- **`) but doesn't parse, not only on an area with none.

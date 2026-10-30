@@ -13,13 +13,51 @@ import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 
 /** Parses a full page and checks the htmx wiring on it. */
-suspend fun HttpResponse.page(): Document = Jsoup.parse(bodyAsText()).also { it.shouldHaveResolvableHxTargets(); it.shouldNameEveryControl() }
+suspend fun HttpResponse.page(): Document = Jsoup.parse(bodyAsText()).also {
+    it.shouldHaveResolvableHxTargets()
+    it.shouldNameEveryControl()
+    it.shouldHaveSoundIds(references = PAGE_REFERENCES)
+    it.shouldGroupEveryChoice()
+}
 
 /** Parses an htmx fragment: exactly one top-level element, returned for swapping. */
 suspend fun HttpResponse.fragment(): Element {
     val roots = Jsoup.parseBodyFragment(bodyAsText()).body().children()
     withClue("an htmx fragment has exactly one top-level element") { roots shouldHaveSize 1 }
-    return roots.single().also { it.shouldNameEveryControl() }
+    return roots.single().also {
+        it.shouldNameEveryControl()
+        it.shouldHaveSoundIds(references = FRAGMENT_REFERENCES)
+        it.shouldGroupEveryChoice()
+    }
+}
+
+/** Attributes that point at an id on the page. A fragment may point outside itself with `aria-controls`, so it checks fewer. */
+private val PAGE_REFERENCES = listOf("for", "aria-labelledby", "aria-describedby", "aria-controls")
+private val FRAGMENT_REFERENCES = listOf("for", "aria-labelledby", "aria-describedby")
+
+/** Ids are unique, and every label, description and control reference names an id that exists, so it reads the right text. */
+fun Element.shouldHaveSoundIds(references: List<String> = PAGE_REFERENCES) {
+    val ids = select("[id]").map { it.id() }
+    withClue("ids are unique") { ids.groupBy { it }.filterValues { it.size > 1 }.keys shouldHaveSize 0 }
+    val dangling = references.flatMap { attr ->
+        select("[$attr]").flatMap { el -> el.attr(attr).split(" ").filter { it.isNotBlank() && it !in ids }.map { "$attr=\"$it\" on <${el.tagName()}>" } }
+    }
+    withClue("references resolve: $dangling") { dangling shouldHaveSize 0 }
+}
+
+/**
+ * Radios and checkboxes that share a name are one question: they sit in a fieldset with a legend, or a group with a name.
+ * Switches are left out: each is a setting of its own and carries its whole name ("Bringing Brass").
+ */
+fun Element.shouldGroupEveryChoice() {
+    val choices = select("input[type=radio][name], input[type=checkbox][name]:not([role=switch])").groupBy { it.attr("name") }.filterValues { it.size > 1 }.values.flatten()
+    val ungrouped = choices.filter { input ->
+        input.parents().none { p ->
+            (p.tagName() == "fieldset" && p.selectFirst("> legend")?.text()?.isNotBlank() == true) ||
+                (p.attr("role") in setOf("group", "radiogroup") && (p.attr("aria-label").isNotBlank() || p.hasAttr("aria-labelledby")))
+        }
+    }
+    withClue("every set of choices is a named group: ${ungrouped.map { it.attr("name") }.distinct()}") { ungrouped shouldHaveSize 0 }
 }
 
 /**

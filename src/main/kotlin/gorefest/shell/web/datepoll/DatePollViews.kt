@@ -32,6 +32,9 @@ data class PollFormGames(val suggested: List<Game>, val found: List<Game>, val t
 /** How many of the host's likeliest favourites show before "All your games". */
 private const val SUGGESTED_SHOWN = 8
 
+/** What the poll form's game tiles answer, wherever they sit (your games, more of them, a search). */
+private const val POLL_GAMES_QUESTION = "Which games could you play?"
+
 fun HTML.datePollFormPage(site: SiteBar, values: Parameters = Parameters.Empty, picks: PollFormGames = PollFormGames.none) =
     page("Find a date", site = site) {
         wrap {
@@ -54,10 +57,10 @@ fun TagConsumer<*>.datePollForm(error: String? = null, values: Parameters = Para
         hx("swap", "outerHTML")
         if (error != null) errorNotice(error)
         field("title", "Title", hint = "Whatever your group calls it.") {
-            textInput("title") { placeholder = "Gorefest #7"; required = true; maxLength = MAX_TITLE_LENGTH.toString(); value = values["title"].orEmpty() }
+            fieldInput("title") { placeholder = "Gorefest #7"; required = true; maxLength = MAX_TITLE_LENGTH.toString(); value = values["title"].orEmpty() }
         }
         field("place", "Where", hint = "Only people who have joined see it. Leave out the house number if you like.") {
-            textInput("place") { maxLength = MAX_PLACE_LENGTH.toString(); value = values["place"].orEmpty() }
+            fieldInput("place") { maxLength = MAX_PLACE_LENGTH.toString(); value = values["place"].orEmpty() }
         }
         div("gf-section") {
             h2("gf-h2") { id = "poll-dates-heading"; +"Which dates could work?" }
@@ -98,14 +101,13 @@ private fun FlowContent.pollFormGamePicker(picks: PollFormGames) = div("gf-poll-
         +if (picks.linked) "Your collection is still on its way from BGG. Search for games below." else "Link your BGG account to pick from your own games. Or search below. "
         if (!picks.linked) a("/bgg?returnTo=%2Fpolls%2Fnew", classes = "gf-link") { +"Link BGG" }
     }
-    div("gf-tiles") {
-        id = "poll-form-picked"
-        picks.found.forEach { gameTileChoice(it, "game", checked = true, multiple = true) }
-        shown.forEach { gameTileChoice(it, "game", checked = it.id in picks.ticked, multiple = true) }
+    gameTiles(POLL_GAMES_QUESTION, "game", multiple = true, id = "poll-form-picked") {
+        picks.found.forEach { gameTileChoice(it, checked = true) }
+        shown.forEach { gameTileChoice(it, checked = it.id in picks.ticked) }
     }
     if (rest.isNotEmpty()) details("gf-pollgames__pool") {
         summary { +"More of your games (${rest.size})" }
-        div("gf-tiles") { rest.forEach { gameTileChoice(it, "game", checked = false, multiple = true) } }
+        gameTiles(POLL_GAMES_QUESTION, "game", multiple = true) { rest.forEach { gameTileChoice(it, checked = false) } }
     }
     h3("gf-label") { +"Something else?" }
     // Enter would submit the whole form from here.
@@ -121,7 +123,7 @@ fun TagConsumer<*>.pollFormSearchResults(games: List<Game>, bggUnavailable: Bool
     hyperscript("on change if event.target.checked put event.target.closest('label') at the end of #poll-form-picked end")
     if (bggUnavailable) p("gf-small gf-muted") { +"BGG isn't answering right now, so these are only games we already know." }
     if (inYourGames.isNotEmpty()) p("gf-small gf-muted") { +"${inYourGames.joinAnd()} ${if (inYourGames.size == 1) "is" else "are"} in your games above." }
-    if (games.isNotEmpty()) div("gf-tiles") { games.forEach { gameTileChoice(it, "game", checked = false, multiple = true) } }
+    if (games.isNotEmpty()) gameTiles(POLL_GAMES_QUESTION, "game", multiple = true) { games.forEach { gameTileChoice(it, checked = false) } }
     else if (nothingFor != null) p("gf-small gf-muted gf-search-empty") { +"Nothing found for \u201c$nothingFor\u201d. Try another spelling." }
 }
 

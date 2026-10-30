@@ -128,6 +128,18 @@ class CheckpointRoutesTest {
     }
 
     @Test
+    @Obligation("A11Y-3")
+    fun `the game tiles to log are one group that asks which game, on the shelf and in a search`() = test.webTest(session = kim) { client ->
+        val form = client.get(log).page().one("#log-form")
+        val results = client.get("$log/search?q=brass").fragment()
+
+        listOf(form, results).forEach { html ->
+            html.select("input[name=game]").map { input -> input.parents().first { it.attr("role") == "group" }.attr("aria-label") }.toSet() shouldBe
+                setOf("Which game did you play?")
+        }
+    }
+
+    @Test
     @Obligation("PL-6")
     fun `a game that isn't on the shelf can be found by search and logged`() = test.webTest(session = kim) { client ->
         val form = client.get(log).page().one("#log-form")

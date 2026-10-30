@@ -75,10 +75,10 @@ fun TagConsumer<*>.gameDayForm(view: GameDayFormView, error: String? = null, val
         titleField(values["title"].orEmpty(), reroll = !view.editing)
         div("gf-newform__two") {
             field("date", "Date") {
-                textInput("date", InputType.date) { required = true; value = values["date"].orEmpty() }
+                fieldInput("date", InputType.date) { required = true; value = values["date"].orEmpty() }
             }
             field("place", "Where") {
-                textInput("place") { maxLength = MAX_PLACE_LENGTH.toString(); value = values["place"].orEmpty() }
+                fieldInput("place") { maxLength = MAX_PLACE_LENGTH.toString(); value = values["place"].orEmpty() }
             }
         }
         p("gf-hint gf-newform__hint") { +"Only people who have joined see it, not the invite or its preview. Leave out the house number if you like." }
@@ -93,7 +93,7 @@ fun TagConsumer<*>.titleField(value: String, reroll: Boolean) = div { id = "titl
 
 private fun FlowContent.titleFieldContent(value: String, reroll: Boolean) = div("gf-titlerow") {
     field("title", "Title") {
-        textInput("title") { placeholder = "Gorefest #7"; required = true; maxLength = MAX_TITLE_LENGTH.toString(); this.value = value }
+        fieldInput("title") { placeholder = "Gorefest #7"; required = true; maxLength = MAX_TITLE_LENGTH.toString(); this.value = value }
     }
     if (reroll) iconButton("Another title", "refresh") {
         hx("get", "/gamedays/title")

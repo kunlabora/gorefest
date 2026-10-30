@@ -84,7 +84,7 @@ fun TagConsumer<*>.logForm(view: LogFormView, me: CurrentPlayer, values: Paramet
             formStep(1, "The game") {
                 if (view.games.isEmpty()) p("gf-muted") { +"Nothing on the shelf yet. Search for the game you played." }
                 val chosenGame = values["game"] ?: view.games.firstOrNull()?.id?.toString()
-                div("gf-tiles") { view.games.forEach { gameTileChoice(it, "game", checked = it.id.toString() == chosenGame) } }
+                gameTiles("Which game did you play?", "game") { view.games.forEach { gameTileChoice(it, checked = it.id.toString() == chosenGame) } }
                 div("gf-log__search") {
                     h3("gf-log__sub") { +"Played something else?" }
                     // Enter would submit the whole log form from here.
@@ -112,10 +112,12 @@ fun TagConsumer<*>.logForm(view: LogFormView, me: CurrentPlayer, values: Paramet
     }
 
 /** Games found by the search above the form: more tiles in the same radio group. */
-fun TagConsumer<*>.logSearchResults(games: List<Game>, bggUnavailable: Boolean, nothingFor: String? = null, id: String = "log-search-results") = div {
+fun TagConsumer<*>.logSearchResults(
+    games: List<Game>, bggUnavailable: Boolean, nothingFor: String? = null, id: String = "log-search-results", question: String = "Which game did you play?",
+) = div {
     this.id = id
     if (bggUnavailable) p("gf-small gf-muted") { +"BGG isn't answering right now, so these are only games we already know." }
-    if (games.isNotEmpty()) div("gf-tiles") { games.forEach { gameTileChoice(it, "game", checked = false) } }
+    if (games.isNotEmpty()) gameTiles(question, "game") { games.forEach { gameTileChoice(it, checked = false) } }
     else if (nothingFor != null) p("gf-small gf-muted gf-search-empty") { +"Nothing found for \u201c$nothingFor\u201d. Try another spelling." }
 }
 
@@ -147,6 +149,9 @@ fun HTML.logComparePage(view: LogCompareView, me: CurrentPlayer) = page(
 /** Where the watched page's search puts its tiles. */
 const val WATCHED_RESULTS = "watched-search-results"
 
+/** What the watched form's tiles answer, for the shelf and for a search alike. */
+const val WATCHED_QUESTION = "Which game did you watch?"
+
 /** Watched a table play (U9): which game. The whole shelf, minus what you've played. */
 data class WatchedView(val gameDay: GameDaySummary, val games: List<Game>)
 
@@ -161,14 +166,14 @@ fun HTML.watchedPage(view: WatchedView, checkpoint: String, me: CurrentPlayer) =
         form(action = "/gamedays/${view.gameDay.id}/watched/compare", method = FormMethod.get, classes = "gf-stack") {
             id = "watched-form"
             if (view.games.isEmpty()) p("gf-muted") { +"Nothing on the shelf you haven't played. Search for the game you watched." }
-            div("gf-tiles") { view.games.forEachIndexed { i, game -> gameTileChoice(game, "game", checked = i == 0) } }
+            gameTiles(WATCHED_QUESTION, "game") { view.games.forEachIndexed { i, game -> gameTileChoice(game, checked = i == 0) } }
             div("gf-log__search") {
                 h3("gf-log__sub") { +"Watched something else?" }
                 // Enter would submit the form from here.
                 searchField("Search BGG", "Search for the game you watched", "/gamedays/${view.gameDay.id}/watched/search", "#$WATCHED_RESULTS") {
                     hyperscript("on keydown[key=='Enter'] halt the event")
                 }
-                consumer.logSearchResults(emptyList(), bggUnavailable = false, id = WATCHED_RESULTS)
+                consumer.logSearchResults(emptyList(), bggUnavailable = false, id = WATCHED_RESULTS, question = WATCHED_QUESTION)
             }
             div("gf-continue") { primaryButton("Next") }
         }

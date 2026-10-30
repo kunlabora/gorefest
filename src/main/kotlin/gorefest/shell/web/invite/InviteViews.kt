@@ -89,7 +89,7 @@ private fun FlowContent.signInForm(path: String, title: String) =
             "email", "Your email", hint = "We'll email a sign-in link and a 6-digit code. No password.",
             action = { actionButton("Join $title", ButtonStyle.PRIMARY, ButtonSize.LARGE, submit = true, spinner = true) },
         ) {
-            textInput("email", InputType.email) {
+            fieldInput("email", InputType.email) {
                 required = true
                 placeholder = "you@example.com"
                 attributes["inputmode"] = "email"

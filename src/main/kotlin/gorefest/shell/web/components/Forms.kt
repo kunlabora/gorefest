@@ -53,7 +53,7 @@ fun FlowContent.signinField(
 
 /** A text-like input (text, email, date) for the field around it; [configure] sets its value and constraints. */
 context(field: FieldControl)
-fun FlowContent.textInput(name: String, type: InputType = InputType.text, configure: INPUT.() -> Unit = {}) =
+fun FlowContent.fieldInput(name: String, type: InputType = InputType.text, configure: INPUT.() -> Unit = {}) =
     input(type, name = name, classes = "gf-input") { with(field) { tie() }; configure() }
 
 fun FlowContent.hiddenInput(name: String, value: String) = input(InputType.hidden, name = name) { this.value = value }

@@ -44,6 +44,14 @@ class ContractCoverageTest {
     }
 
     @Test
+    fun `every line that looks like an obligation is read as one`() {
+        val malformed = File("docs/contract").listFiles { f -> f.extension == "md" && f.name != "README.md" }.orEmpty().flatMap { file ->
+            file.readLines().filter { it.startsWith("- **") && !Contract.isObligation(it) }.map { "${file.name}: $it" }
+        }
+        malformed.shouldBeEmpty()
+    }
+
+    @Test
     fun `ids carry their area's prefix`() {
         obligations.filter { !it.id.startsWith(it.area.prefix + "-") }.map { "${it.id} in ${it.area.file}" }.shouldBeEmpty()
     }
@@ -57,6 +65,8 @@ private object Contract {
     private val heading = Regex("""^# (.+)$""")
     private val prefixLine = Regex("""^Prefix: `([A-Z][A-Z0-9]*)`""")
     private val obligation = Regex("""^- \*\*([A-Z][A-Z0-9]*-\d+)\*\* (.+)$""")
+
+    fun isObligation(line: String) = obligation.matches(line)
 
     fun read(dir: File): List<Clause> =
         dir.listFiles { f -> f.extension == "md" && f.name != "README.md" }.orEmpty().sortedBy { it.name }.flatMap { file ->

@@ -11,5 +11,5 @@ Source: product idea, 2026-10-30. Status: 📋 todo. Design: [Accessible by cons
 - [ ] A11Y-9: Ids on a page are unique, and every reference to one (labels, descriptions, controls, htmx targets) resolves.
 - [ ] A11Y-10: A result htmx swaps in is announced to a screen reader; a refusal is announced at once.
 - [ ] `ArchitectureTest`: no view calls `h1(` … `h6(`.
-- [ ] `HtmlAssertions.page()` and `fragment()` run the structure and id checks.
+- [ ] `HtmlAssertions.page()` and `fragment()` run the structure checks (the id checks arrived with the A1 review: unique ids, references resolve).
 - [ ] Screens look as before; no event, route or stored data changes.

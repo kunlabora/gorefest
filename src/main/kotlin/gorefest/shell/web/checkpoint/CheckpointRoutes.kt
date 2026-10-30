@@ -161,7 +161,7 @@ private fun Route.watchedRoutes(app: App) {
             val query = call.parameters["q"].orEmpty()
             val result = app.gameSearch.search(query)
             val onShelf = watchChoices(app, gameDay, me).map { it.id }.toSet()
-            respondFragment { logSearchResults(result.games.filter { it.id !in onShelf }, result.bggUnavailable, result.nothingFor(query), id = WATCHED_RESULTS) }
+            respondFragment { logSearchResults(result.games.filter { it.id !in onShelf }, result.bggUnavailable, result.nothingFor(query), id = WATCHED_RESULTS, question = WATCHED_QUESTION) }
         }
     }
 

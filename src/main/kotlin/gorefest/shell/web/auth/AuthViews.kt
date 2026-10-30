@@ -168,7 +168,7 @@ fun TagConsumer<*>.emailForm(returnTo: String, email: String = "", error: String
             hint = "Log in or sign up with the same step: we email a sign-in link and a 6-digit code. No password. New accounts are approved by hand, so a first sign-in may have to wait a little.",
             action = { actionButton(submitLabel, ButtonStyle.PRIMARY, ButtonSize.LARGE, submit = true, spinner = true) },
         ) {
-            textInput("email", InputType.email) {
+            fieldInput("email", InputType.email) {
                 required = true
                 value = email
                 placeholder = "you@example.com"
@@ -187,7 +187,7 @@ fun TagConsumer<*>.codeForm(attempt: Uuid, error: String? = null) = singleFieldF
 fun TagConsumer<*>.nameForm(returnTo: String, name: String, error: String? = null) = singleFieldForm("name-form", "/welcome", "That's me", error, inline = true) {
     hiddenInput("returnTo", returnTo)
     signinField("name", "Name", error = error) {
-        textInput("name") {
+        fieldInput("name") {
             required = true
             value = name
             placeholder = "Kim"

@@ -27,7 +27,7 @@ class FormsTest {
     @Test
     @Obligation("A11Y-1")
     fun `a field's label points at its control`() {
-        val html = render { field("title", "Title") { textInput("title") { value = "Gorefest #7" } } }
+        val html = render { field("title", "Title") { fieldInput("title") { value = "Gorefest #7" } } }
 
         html.one("label").attr("for") shouldBe "title"
         html.one("input").id() shouldBe "title"
@@ -37,11 +37,11 @@ class FormsTest {
     @Test
     @Obligation("A11Y-2")
     fun `a field's hint and error describe its control, and an error marks it invalid`() {
-        val plain = render { field("place", "Where", hint = "Only people who joined see it.") { textInput("place") } }
+        val plain = render { field("place", "Where", hint = "Only people who joined see it.") { fieldInput("place") } }
         plain.one("input").descriptions(plain) shouldBe listOf("Only people who joined see it.")
         plain.one("input").hasAttr("aria-invalid") shouldBe false
 
-        val refused = render { field("place", "Where", hint = "Only people who joined see it.", error = "That's too long.") { textInput("place") } }
+        val refused = render { field("place", "Where", hint = "Only people who joined see it.", error = "That's too long.") { fieldInput("place") } }
         refused.one("input").descriptions(refused) shouldBe listOf("Only people who joined see it.", "That's too long.")
         refused.one("input").attr("aria-invalid") shouldBe "true"
     }

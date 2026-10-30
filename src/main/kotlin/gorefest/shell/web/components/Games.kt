@@ -3,6 +3,7 @@ package gorefest.shell.web.components
 import gorefest.core.PlayerId
 import gorefest.core.game.Game
 import kotlinx.html.ButtonType
+import kotlinx.html.DIV
 import kotlinx.html.FlowContent
 import kotlinx.html.HtmlBlockTag
 import kotlinx.html.InputType
@@ -17,6 +18,7 @@ import kotlinx.html.img
 import kotlinx.html.input
 import kotlinx.html.label
 import kotlinx.html.p
+import kotlinx.html.role
 import kotlinx.html.span
 import kotlinx.html.style
 
@@ -141,9 +143,22 @@ fun FlowContent.gameTile(game: Game, owner: PlayerId?, ownerName: String?) = div
     span("gf-tile__name") { bggNameLink(game) }
 }
 
-/** A game tile that's a radio button, for "which game?" pickers; with [multiple] a checkbox, for "which games?". */
-fun FlowContent.gameTileChoice(game: Game, name: String, checked: Boolean, multiple: Boolean = false) = label("gf-tile") {
-    input(if (multiple) InputType.checkBox else InputType.radio, name = name) { value = game.id.toString(); this.checked = checked }
+/**
+ * Game tiles to pick from, as one group named [question]: radios sent as [name] for "which game?", checkboxes with [multiple]
+ * for "which games?". A search's results are a group of their own, asking the same question.
+ */
+fun FlowContent.gameTiles(question: String, name: String, multiple: Boolean = false, id: String? = null, tiles: context(TileGroup) DIV.() -> Unit) =
+    div("gf-tiles") {
+        if (id != null) this.id = id
+        role = "group"
+        attributes["aria-label"] = AccessibleName(question).text
+        tiles(TileGroup(name, multiple), this)
+    }
+
+/** One game in its [gameTiles] group, ticked when [checked]. */
+context(group: TileGroup)
+fun FlowContent.gameTileChoice(game: Game, checked: Boolean) = label("gf-tile") {
+    input(if (group.multiple) InputType.checkBox else InputType.radio, name = group.name) { value = game.id.toString(); this.checked = checked }
     art(game)
     span("gf-tile__name") { +game.name }
 }

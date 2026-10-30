@@ -36,7 +36,7 @@ fun HTML.accountPage(view: AccountView) = page("Your account", site = SiteBar(me
                     "email", "New email address", error = view.emailError,
                     action = { actionButton("Send a code", ButtonStyle.PRIMARY, ButtonSize.LARGE, submit = true) },
                 ) {
-                    textInput("email", InputType.email) { required = true; placeholder = "you@example.com"; attributes["autocomplete"] = "email" }
+                    fieldInput("email", InputType.email) { required = true; placeholder = "you@example.com"; attributes["autocomplete"] = "email" }
                 }
             }
         }
