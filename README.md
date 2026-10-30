@@ -21,6 +21,15 @@ Kotlin (JDK 25), Ktor, kotlinx.html, htmx and hyperscript. Server-rendered, no S
 
 [CLAUDE.md](CLAUDE.md) is the best description of the architecture, conventions and domain vocabulary, and works as the contributor guide for people and AI assistants alike.
 
+## How it's built
+
+Mostly by AI agents, following [Impatient Programming](https://impatientprogramming.org/) (IMP): Extreme Programming applied to agentic development. In this repo that means:
+
+- **The Contract** ([docs/contract/](docs/contract)): what the app promises, as numbered obligations. Every obligation has a test tagged `@Obligation("GD-1")`, and the build fails when one is unproven.
+- **Machines enforce the standards**: architecture rules (Konsist, `ArchitectureTest`) and detekt run in `./gradlew check` on every push. Mutation testing (`./gradlew mutationTest`) shows which tests actually catch anything.
+- **Guardrails on the agent**: Claude Code hooks (`.claude/hooks/`) ask before a push, before changing a migration or a stored event type, and before dropping an obligation.
+- **`fix:` and `refine:`**: a `fix:` commit is only for a defect in live production, and it starts with the obligation that was missing. Everything else is `refine:`.
+
 ## Run it locally
 
 You need JDK 25 and a container runtime (Docker or Podman).
@@ -37,14 +46,15 @@ Then open http://localhost:8080. Dev mode (the default) sends login mail to an i
 ## Test
 
 ```bash
-./gradlew test
+./gradlew check
 ```
 
-Tests start their own Postgres through Testcontainers, so only the container runtime has to be running.
+This runs the tests, the Contract coverage, the architecture rules and detekt. Tests start their own Postgres through Testcontainers, so only the container runtime has to be running.
 
 ## Documentation
 
 - [CLAUDE.md](CLAUDE.md): architecture, conventions, taste model, matching
+- [docs/contract/](docs/contract): the Contract, what the app promises, with its known gaps
 - [docs/backlog.md](docs/backlog.md): milestones, story status and flow metrics
 - [docs/design/](docs/design): design system, brand book, microcopy and screen mockups
 - [deploy/](deploy): deployment. [scaleway.md](deploy/scaleway.md) is the step-by-step guide, [README.md](deploy/README.md) covers general setup, deploys and restores
