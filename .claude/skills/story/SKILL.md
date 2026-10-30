@@ -42,7 +42,7 @@ When the product owner has a real choice between shapes, write options instead (
 - **Erasure:** decide what `PlayerErased` does to the new state (on days still to be played: take the person out; closed days keep history). Handle it in the projection and test it.
 - **Rejections** get a sentence in `shell/web/Rejections.kt` (`Rejection.message()`), pinned in `RejectionsTest`.
 - Tests: given/when/then per decision, one per rejection and per no-op; projection tests for the read model. Tag each with the obligations it proves (`@Obligation("SH-35")`).
-- Breathe out before committing (IMP Rule 12): fold what the story taught back into the existing code (a second copy becomes a shared helper, a special case becomes the rule), so the core stays as simple as before. `ArchitectureTest` and detekt must stay green without touching `config/detekt/baseline.xml`.
+- `ArchitectureTest` and detekt must stay green without touching `config/detekt/baseline.xml`.
 - Touched a decider or the matcher: run `./gradlew mutationTest` and `scripts/kill_matrix.py --survivors`; a survivor in the new code is a missing test or obligation.
 
 Then, in the shell:
@@ -62,18 +62,23 @@ Run `./gradlew check`. Commit: `refine: U21 core: <what>`.
 
 Run `./gradlew check`. Commit: `refine: U21 web: <what>`.
 
-## 5. Docs
+## 5. Review and breathe out
+
+- Run the `adversarial-review` agent on the story's range (`<first story commit>^..HEAD`). Give it the range only, not what you built or worry about: fresh eyes are the point. Fix what it finds (a missing obligation, an untested edge) or say in the report why not.
+- Run the `exhale` agent on the same range (IMP Rule 12): it folds what the story taught back into the existing code, so it's as simple as before, with behaviour unchanged. Look at its diff, run `./gradlew check`, and commit it on its own: `refine: U21: breathe out`.
+
+## 6. Docs
 
 - `CLAUDE.md`: vocabulary for new terms, the events list, the web package list for a new package, matching notes if the matcher changed. Keep it to what a future reader needs.
 - Contract: `build/reports/contract/coverage.md` shows the area fully proven; a promise you found but couldn't test goes under "Known gaps" in `docs/contract/README.md`.
 - Request doc: tick every criterion, set `Status: ✅ built`, add a `Built as designed, with these notes:` list for anything that turned out different.
 - The milestone table: row to ✅ with Done today; update the summary line above the table if it lists decisions.
 
-## 6. Privacy check
+## 7. Privacy check
 
 Run the `privacy-check` agent on the story's commit range (give it the range, e.g. `<design commit>^..HEAD`). Review what it changed and commit it separately: `refine: Privacy check after U21: <what changed>`.
 
-## 7. Commit and report
+## 8. Commit and report
 
 Commit finished, tested work on `main` without asking; split as above or one `refine: U21: <title>` commit for a small story. Messages start with `refine:` (or `fix:` only for a defect in live production), then a plain, user-facing sentence (see `git log`). Don't push: pushing deploys; the `release` skill does that when the user asks.
 

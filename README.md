@@ -28,6 +28,7 @@ Mostly by AI agents, following [Impatient Programming](https://impatientprogramm
 - **The Contract** ([docs/contract/](docs/contract)): what the app promises, as numbered obligations. Every obligation has a test tagged `@Obligation("GD-1")`, and the build fails when one is unproven.
 - **Machines enforce the standards**: architecture rules (Konsist, `ArchitectureTest`) and detekt run in `./gradlew check` on every push. Mutation testing (`./gradlew mutationTest`) shows which tests actually catch anything.
 - **Guardrails on the agent**: Claude Code hooks (`.claude/hooks/`) ask before a push, before changing a migration or a stored event type, and before dropping an obligation.
+- **Skills and agents for the loop** (`.claude/`): `story` and `bug` build a story and fix a bug Contract-first, `spike` tries options in throwaway worktrees, `adversarial-review` reviews a change with fresh eyes, and `exhale` simplifies after one.
 - **`fix:` and `refine:`**: a `fix:` commit is only for a defect in live production, and it starts with the obligation that was missing. Everything else is `refine:`.
 
 ## Run it locally
