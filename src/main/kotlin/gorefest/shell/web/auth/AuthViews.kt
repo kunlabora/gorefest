@@ -43,8 +43,7 @@ private fun FlowContent.tile(mono: String, hue: Int, extra: String = "") =
     span("gf-minitile gf-minitile--$hue $extra".trim()) { +mono }
 
 /** What a suggestion looks like, as three cards on the hero. Decoration for people who arrive without an invite. */
-private fun FlowContent.sampleSuggestions() = div("gf-samples gf-tilted") {
-    attributes["aria-hidden"] = "true"
+private fun FlowContent.sampleSuggestions() = decoration("gf-samples gf-tilted") {
     listOf(Triple("Cascadia", "Suits all 5 players", 0), Triple("Azul", "4 of 5 love it", 1), Triple("Splendor", "Quick, 30 min", 2)).forEach { (name, reason, hue) ->
         div("gf-card gf-sample") {
             tile(name.take(2), hue, "gf-minitile--big")
@@ -56,8 +55,7 @@ private fun FlowContent.sampleSuggestions() = div("gf-samples gf-tilted") {
     }
 }
 
-private fun FlowContent.illustration(which: Illustration) = div("gf-ill") {
-    attributes["aria-hidden"] = "true"
+private fun FlowContent.illustration(which: Illustration) = decoration("gf-ill") {
     when (which) {
         Illustration.DUEL -> div("gf-ill__duel") { tile("Wi", 0, "gf-minitile--on"); span("gf-ill__or") { +"OR" }; tile("Co", 2) }
         Illustration.INVITE -> div("gf-ill__invite") {
@@ -115,8 +113,7 @@ fun HTML.codePage(attempt: Uuid, email: String, returnTo: String, dev: Boolean) 
     }
 
 /** What the mail looks like, so people know what to look for in their inbox. Decoration, desktop only. */
-private fun FlowContent.mailCard() = div("gf-card gf-mailcard") {
-    attributes["aria-hidden"] = "true"
+private fun FlowContent.mailCard() = decoration("gf-card gf-mailcard") {
     p("gf-kicker") { +"Inbox · just now" }
     h3("gf-mailcard__subject") { +"Your Boardfest code: 482913" }
     p("gf-mailcard__code") { +"482913" }
@@ -129,7 +126,7 @@ fun HTML.confirmLinkPage(email: String, token: String) = authHero("Log in", "Sig
     form(action = "/login/link", method = FormMethod.post, classes = "gf-signin") {
         id = "link-form"
         hiddenInput("token", token)
-        button(type = ButtonType.submit, classes = buttonClasses(ButtonStyle.PRIMARY, ButtonSize.LARGE)) { spinner(); +"Let me in" }
+        actionButton("Let me in", ButtonStyle.PRIMARY, ButtonSize.LARGE, submit = true, spinner = true)
     }
 }
 
@@ -153,7 +150,7 @@ private fun FlowContent.resendLinks(email: String, returnTo: String) = form(acti
     hiddenInput("email", email)
     hiddenInput("returnTo", returnTo)
     +"No mail after a minute? "
-    button(type = ButtonType.submit, classes = "gf-link") { +"Send it again" }
+    textButton("Send it again", submit = true)
     +" · "
     a("/login?returnTo=${returnTo.urlEncoded()}", classes = "gf-link") { +"Change email" }
 }
@@ -169,7 +166,7 @@ fun TagConsumer<*>.emailForm(returnTo: String, email: String = "", error: String
         signinField(
             "email", "Email address", error = error,
             hint = "Log in or sign up with the same step: we email a sign-in link and a 6-digit code. No password. New accounts are approved by hand, so a first sign-in may have to wait a little.",
-            action = { button(type = ButtonType.submit, classes = buttonClasses(ButtonStyle.PRIMARY, ButtonSize.LARGE)) { spinner(); +submitLabel } },
+            action = { actionButton(submitLabel, ButtonStyle.PRIMARY, ButtonSize.LARGE, submit = true, spinner = true) },
         ) {
             textInput("email", InputType.email) {
                 required = true
@@ -210,7 +207,7 @@ private fun TagConsumer<*>.singleFieldForm(
     hx("post", action)
     hx("swap", "outerHTML")
     content()
-    button(type = ButtonType.submit, classes = buttonClasses(ButtonStyle.PRIMARY, ButtonSize.LARGE)) { spinner(); +button }
+    actionButton(button, ButtonStyle.PRIMARY, ButtonSize.LARGE, submit = true, spinner = true)
 }
 
 /** Signed in and named, but the admin hasn't approved the account yet. [returnTo] is where they were headed. */

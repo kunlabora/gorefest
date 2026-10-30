@@ -64,9 +64,7 @@ fun HTML.tablePage(view: TableView) = page(
  * The answer, swapped whenever the table form changes: the collapsed table bar (phone) and the picks.
  * The root lays out as the page's own grid cells (`display: contents`), so the bar sits above the form on the phone.
  */
-fun TagConsumer<*>.suggestions(view: TableView) = section("gf-picker__answer") {
-    id = "suggestions"
-    attributes["aria-live"] = "polite"
+fun TagConsumer<*>.suggestions(view: TableView) = liveSection("suggestions", "gf-picker__answer") {
     tableBar(view)
     div("gf-picker__results") {
         when (val suggestions = view.suggestions) {
@@ -109,17 +107,14 @@ private fun FlowContent.tableBar(view: TableView) = div("gf-tablebar") {
             }
         }
     }
-    button(type = ButtonType.button, classes = buttonClasses(ButtonStyle.SECONDARY, ButtonSize.SMALL)) {
-        attributes["aria-controls"] = "table-form"
+    actionButton("Change", ButtonStyle.SECONDARY, ButtonSize.SMALL, controls = "table-form") {
         hyperscript("on click toggle .is-open on #table-form")
-        +"Change"
     }
 }
 
 /** Picks that time option in the form above, which re-asks for suggestions. */
-private fun FlowContent.relaxButton(timeLabel: String, text: String) = button(type = ButtonType.button, classes = buttonClasses(ButtonStyle.PRIMARY, block = true)) {
+private fun FlowContent.relaxButton(timeLabel: String, text: String) = actionButton(text, ButtonStyle.PRIMARY, block = true) {
     hyperscript("on click set #time-${timeLabel.idSlug()}.checked to true then send change to #table-form")
-    +text
 }
 
 /**

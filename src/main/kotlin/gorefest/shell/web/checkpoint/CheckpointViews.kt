@@ -37,11 +37,10 @@ fun HTML.logPage(view: LogFormView, checkpoint: String, me: CurrentPlayer) = pag
     site = SiteBar(me, Nav.GAME_DAYS),
     dock = {
         classes = classes + "gf-phone-only"
-        button(type = ButtonType.submit, classes = buttonClasses(ButtonStyle.PRIMARY, ButtonSize.LARGE, block = true)) {
-            attributes["form"] = "log-form"
-            spinner()
-            span { attributes["data-log"] = "dock"; +logSummary(view, Parameters.Empty).dock }
-        }
+        actionButton(
+            logSummary(view, Parameters.Empty).dock, ButtonStyle.PRIMARY, ButtonSize.LARGE, block = true, submit = true, spinner = true,
+            labelSpan = { attributes["data-log"] = "dock" },
+        ) { attributes["form"] = "log-form" }
     },
 ) {
     wrap {
@@ -107,7 +106,7 @@ fun TagConsumer<*>.logForm(view: LogFormView, me: CurrentPlayer, values: Paramet
             p("gf-kicker") { +"You're logging" }
             h2("gf-log__game") { attributes["data-log"] = "game"; +(summary.game ?: "Pick a game") }
             p("gf-muted gf-log__about") { attributes["data-log"] = "about"; +summary.about }
-            button(type = ButtonType.submit, classes = buttonClasses(ButtonStyle.PRIMARY, ButtonSize.LARGE, block = true)) { spinner(); +"Log it" }
+            actionButton("Log it", ButtonStyle.PRIMARY, ButtonSize.LARGE, block = true, submit = true, spinner = true)
             p("gf-hint") { +"Then one quick question about it." }
         }
     }

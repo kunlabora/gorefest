@@ -65,15 +65,13 @@ fun TagConsumer<*>.datePollForm(error: String? = null, values: Parameters = Para
             labelledGroup("poll-dates", headingId = "poll-dates-heading") {
                 (given + List((MIN_POLL_DATES + 1 - given.size).coerceAtLeast(0)) { "" }).forEach { dateField(it) }
             }
-            button(type = ButtonType.button, classes = buttonClasses(ButtonStyle.GHOST, ButtonSize.SMALL)) {
+            actionButton("Add another date", ButtonStyle.GHOST, ButtonSize.SMALL, icon = "plus") {
                 hx("get", "/polls/new/date")
                 hx("target", "#poll-dates")
                 hx("swap", "beforeend")
                 // The server only allows MAX_POLL_DATES: stop offering more once the form has that many fields.
                 disabled = given.size >= MAX_POLL_DATES
                 hyperscript("on htmx:afterRequest if #poll-dates.querySelectorAll('input').length >= $MAX_POLL_DATES set my.disabled to true")
-                icon("plus")
-                +"Add another date"
             }
         }
         switchRow(
@@ -92,7 +90,7 @@ private fun FlowContent.pollFormGamePicker(picks: PollFormGames) = div("gf-poll-
     hyperscript("on change[target.name == 'game' and target.checked] if (<input[name='game']:checked/> in me).length > $MAX_POLL_GAMES set target.checked to false then put 'That makes more than $MAX_POLL_GAMES: untick one first.' into #poll-form-games-limit else put '' into #poll-form-games-limit end")
     h2("gf-h2") { +"Which games could you play?" }
     p("gf-small gf-muted") { +"Tick a few to put to the group, up to $MAX_POLL_GAMES. You can add more once the poll is up." }
-    p("gf-small gf-error") { id = "poll-form-games-limit"; attributes["aria-live"] = "polite" }
+    liveLine("poll-form-games-limit", "gf-small gf-error")
     val (shown, rest) = picks.suggested.withIndex().partition { (i, game) -> i < SUGGESTED_SHOWN || game.id in picks.ticked }.let { (a, b) -> a.map { it.value } to b.map { it.value } }
     // Without any taste answers the order is only alphabetical: don't claim favourites.
     if (picks.suggested.isNotEmpty()) h3("gf-label") { +if (picks.tasteKnown) "Your games, likely favourites first" else "Your games" }
@@ -270,7 +268,7 @@ private fun FlowContent.pollGameCard(view: DatePollView, row: PollGameRow) = art
     gameRow(row.game) {
         if (view.me == poll.host && poll.open) form(action = "$base/remove", method = FormMethod.post) {
             confirmOnSubmit("Take ${row.game.name} off the poll? Its answers go with it.")
-            button(type = ButtonType.submit, classes = buttonClasses(ButtonStyle.GHOST, ButtonSize.SMALL)) { attributes["aria-label"] = "Take ${row.game.name} off the poll"; +"Take off" }
+            actionButton("Take off", ButtonStyle.GHOST, ButtonSize.SMALL, submit = true, says = "Take ${row.game.name} off the poll")
         }
     }
     ul("gf-pollgame__facts") {
@@ -300,8 +298,10 @@ private fun FlowContent.pollGameCard(view: DatePollView, row: PollGameRow) = art
         form(action = "$base/bring", method = FormMethod.post, classes = "gf-chips") {
             // Pressed means "I bring it": pressing again takes it back.
             chipButton("bringing", (row.myBring != true).toString(), pressed = row.myBring == true, icon = "check", label = "I'll bring it", name = "I'll bring ${row.game.name}")
-            if (row.inMyCollection && row.myBring == null) button(type = ButtonType.submit, classes = buttonClasses(ButtonStyle.GHOST, ButtonSize.SMALL)) {
-                name = "bringing"; value = "false"; attributes["aria-label"] = "Not bringing ${row.game.name} this time"; +"Not this time"
+            if (row.inMyCollection && row.myBring == null) {
+                actionButton("Not this time", ButtonStyle.GHOST, ButtonSize.SMALL, submit = true, says = "Not bringing ${row.game.name} this time") {
+                    name = "bringing"; value = "false"
+                }
             }
         }
     }
@@ -321,13 +321,9 @@ private fun FlowContent.addGameButton(label: String) = a("#$ADD_GAME_SEARCH", cl
  * reader says: the game is in it, since every card has the same chips (BUG-035).
  */
 private fun FlowContent.chipButton(field: String, value: String, pressed: Boolean, label: String, icon: String? = null, name: String = label) =
-    button(type = ButtonType.submit, classes = "gf-chip gf-chip--text" + if (icon != null && icon != "heart") " gf-chip--outline-icon" else "") {
+    chipToggle(label, pressed, icon, says = name, submit = true, outlineIcon = icon != null && icon != "heart") {
         this.name = field
         this.value = value
-        attributes["aria-label"] = name
-        attributes["aria-pressed"] = pressed.toString()
-        if (icon != null) icon(icon)
-        span { +label }
     }
 
 /** The host's way to add games: their own collection, and BGG search for anything else. */
@@ -346,7 +342,7 @@ private fun FlowContent.addRow(poll: String, game: Game, meta: String) =
     gameRow(game, meta = meta) {
         form(action = "/polls/$poll/games", method = FormMethod.post) {
             hiddenInput("game", game.id.toString())
-            button(type = ButtonType.submit, classes = buttonClasses(ButtonStyle.SECONDARY, ButtonSize.SMALL)) { icon("plus"); +"Add" }
+            actionButton("Add", ButtonStyle.SECONDARY, ButtonSize.SMALL, submit = true, icon = "plus")
         }
     }
 
@@ -389,8 +385,7 @@ fun TagConsumer<*>.datePollResults(view: DatePollView, error: String? = null) = 
                     if (poll.picked?.date == tally.date) span("gf-tag gf-tag--olive") { +"Picked" }
                 }
             }
-            div("gf-meter") {
-                attributes["aria-hidden"] = "true"
+            decoration("gf-meter") {
                 poll.participants.indices.forEach { idx -> i(if (idx < tally.available.size) "is-yes" else null) {} }
             }
             div("gf-who") {
@@ -416,16 +411,15 @@ fun TagConsumer<*>.datePollResults(view: DatePollView, error: String? = null) = 
                     }
                 }
             }
-            if (isHost && poll.open && tally.date >= view.today) button(
-                type = ButtonType.button,
-                classes = buttonClasses(if (tally.date == best) ButtonStyle.PRIMARY else ButtonStyle.SECONDARY, block = true),
+            if (isHost && poll.open && tally.date >= view.today) actionButton(
+                if (tally.date == best) "Pick this date" else "Pick this one",
+                if (tally.date == best) ButtonStyle.PRIMARY else ButtonStyle.SECONDARY, block = true,
             ) {
                 hx("post", "/polls/${poll.id}/pick")
                 hx("vals", """{"date": "${tally.date}"}""")
                 hx("target", "#poll-results")
                 hx("swap", "outerHTML")
                 hx("confirm", "Pick ${tally.date.short()}? The poll closes and the ${if (poll.asksAboutGames) "game night" else "game day"} is created.")
-                +if (tally.date == best) "Pick this date" else "Pick this one"
             }
         }
     }

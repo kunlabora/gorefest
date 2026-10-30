@@ -61,8 +61,7 @@ fun HTML.invitePage(view: InviteLanding) {
                             +"${gameDay.players.size.of("player")} going"
                         }
                     }
-                    if (shelf.isNotEmpty()) div("gf-phone-only gf-inv-fan") {
-                        attributes["aria-hidden"] = "true"
+                    if (shelf.isNotEmpty()) decoration("gf-phone-only gf-inv-fan") {
                         div("gf-fan") {
                             // Each box tilts a little differently, like a hand of cards.
                             shelf.take(3).zip(listOf(-6, 3, -2)).forEach { (entry, tilt) -> art(entry.first, extraStyle = "--r:${tilt}deg") }
@@ -88,7 +87,7 @@ private fun FlowContent.signInForm(path: String, title: String) =
         hiddenInput("submitLabel", "Join $title")
         signinField(
             "email", "Your email", hint = "We'll email a sign-in link and a 6-digit code. No password.",
-            action = { button(type = ButtonType.submit, classes = buttonClasses(ButtonStyle.PRIMARY, ButtonSize.LARGE)) { spinner(); +"Join $title" } },
+            action = { actionButton("Join $title", ButtonStyle.PRIMARY, ButtonSize.LARGE, submit = true, spinner = true) },
         ) {
             textInput("email", InputType.email) {
                 required = true
@@ -102,12 +101,11 @@ private fun FlowContent.signInForm(path: String, title: String) =
 /** Logged in: one button that joins. */
 private fun FlowContent.joinButton(path: String, title: String) =
     form(action = "$path/join", method = FormMethod.post, classes = "gf-join") {
-        button(type = ButtonType.submit, classes = buttonClasses(ButtonStyle.PRIMARY, ButtonSize.LARGE)) { +"Join $title" }
+        actionButton("Join $title", ButtonStyle.PRIMARY, ButtonSize.LARGE, submit = true)
     }
 
 /** Four box covers as a tilted hand of cards, each with who brings it. Desktop only; phones get the small fan. */
-private fun FlowContent.hand(shelf: List<Pair<Game, ShelfGame>>, names: Map<PlayerId, String>) = div("gf-hand gf-tilted") {
-    attributes["aria-hidden"] = "true"
+private fun FlowContent.hand(shelf: List<Pair<Game, ShelfGame>>, names: Map<PlayerId, String>) = decoration("gf-hand gf-tilted") {
     shelf.take(4).forEach { (game, entry) ->
         div("gf-card gf-hand__card") {
             art(game)

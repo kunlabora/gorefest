@@ -101,12 +101,34 @@ class ArchitectureTest {
     @Obligation("A11Y-1", "A11Y-2", "A11Y-3")
     fun `views render form controls only through the components that label them`() {
         val components = shell.filter { it.pkg == "gorefest.shell.web.components" }
-        val views = shell.filter { it.pkg.startsWith("gorefest.shell.web") && it.pkg != "gorefest.shell.web.components" }
         components.filter { RAW_FORM_TAG.containsMatchIn(it.text) }.shouldNotBeEmpty()
-        views.flatMap { file ->
-            RAW_FORM_TAG.findAll(file.text).map { "${file.name}: ${it.value.trim()}. Use field, signinField, switchRow, switchTile or a chip group from web.components" }
+        views().flatMap { file ->
+            RAW_FORM_TAG.findAll(file.code).map { "${file.name}: ${it.value.trim()}. Use field, signinField, switchRow, switchTile or a chip group from web.components" }
         }.shouldBeEmpty()
     }
+
+    @Test
+    @Obligation("A11Y-4", "A11Y-5")
+    fun `views render buttons and images only through the components that name them`() {
+        val components = shell.filter { it.pkg == "gorefest.shell.web.components" }
+        components.filter { RAW_NAMED_TAG.containsMatchIn(it.text) }.shouldNotBeEmpty()
+        views().flatMap { file ->
+            RAW_NAMED_TAG.findAll(file.code).map { "${file.name}: ${it.value.trim()}. Use actionButton, textButton, iconButton, chipToggle or image from web.components" }
+        }.shouldBeEmpty()
+    }
+
+    @Test
+    @Obligation("A11Y-4", "A11Y-5", "A11Y-6")
+    fun `views leave ARIA to the components`() {
+        views().flatMap { file ->
+            RAW_ARIA.findAll(file.code).map { "${file.name}: ${it.value.trim()}. Pass says, controls or pressed to a component, or use decoration or a live region" }
+        }.shouldBeEmpty()
+    }
+
+    /** The file's text without comments, so a KDoc that mentions `button(` isn't a call. */
+    private val KoFileDeclaration.code get() = COMMENT.replace(text, "")
+
+    private fun views() = shell.filter { it.pkg.startsWith("gorefest.shell.web") && it.pkg != "gorefest.shell.web.components" }
 
     private fun com.lemonappdev.konsist.api.provider.KoParentProvider.isDecider() = parents().any { it.name.substringBefore("<").substringAfterLast(".") == "Decider" }
     private fun com.lemonappdev.konsist.api.provider.KoParentProvider.isProjection() = parents().any { it.name.substringBefore("<").substringAfterLast(".") == "Projection" }
@@ -115,5 +137,13 @@ class ArchitectureTest {
     private companion object {
         /** kotlinx.html's own form tags, called directly rather than through a component (`textInput(` and `hiddenInput(` don't match). */
         val RAW_FORM_TAG = Regex("""(?<![\w.])(input|select|textarea|label|fieldSet)\s*\(""")
+
+        /** kotlinx.html's button and image tags, which leave the name or alt to whoever remembers it. */
+        val RAW_NAMED_TAG = Regex("""(?<![\w.])(button|img)\s*\(""")
+
+        val COMMENT = Regex("""(?s)/\*.*?\*/|//[^\n]*""")
+
+        /** ARIA written by hand: `aria-*` and `role` attributes. */
+        val RAW_ARIA = Regex("""attributes\["(aria-[a-z]+|role)"]|\brole\s*=""")
     }
 }

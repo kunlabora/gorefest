@@ -104,7 +104,7 @@ private val PRELOADED_FONTS = listOf("atkinson-hyperlegible-next-latin.woff2", "
 fun FlowContent.bggCredit() = p("gf-credit") {
     a("https://boardgamegeek.com", target = "_blank", classes = "gf-credit__logo") {
         attributes["rel"] = "noopener noreferrer"
-        img(src = "/static/poweredbybgg.webp", alt = "Powered by BGG") { width = "120"; height = "35"; attributes["loading"] = "lazy" }
+        image("/static/poweredbybgg.webp", Alt.Text("Powered by BGG")) { width = "120"; height = "35"; attributes["loading"] = "lazy" }
     }
 }
 

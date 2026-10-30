@@ -14,6 +14,7 @@ import gorefest.shell.web.DEFAULT_TIME_ZONE
 import gorefest.shell.web.zone
 import gorefest.shell.web.bgg.collection
 import gorefest.shell.web.components.ButtonSize
+import gorefest.shell.web.components.actionButton
 import gorefest.shell.web.components.Nav
 import gorefest.shell.web.components.SiteBar
 import gorefest.shell.web.components.art
@@ -308,7 +309,7 @@ fun HTML.cancelGameDayPage(gameDay: GameDaySummary, error: String? = null) =
                 if (error != null) errorNotice(error)
                 p("gf-lede gf-muted") { +"The game day stays visible to everyone who joined, marked as cancelled, and can't be changed anymore. The invite link stops working. Nobody gets an email, so tell your group yourself." }
                 form(action = "/gamedays/${gameDay.id}/cancel", method = FormMethod.post, classes = "gf-cancel-actions") {
-                    button(type = ButtonType.submit, classes = buttonClasses(ButtonStyle.PRIMARY, ButtonSize.LARGE)) { +"Yes, cancel the game day" }
+                    actionButton("Yes, cancel the game day", ButtonStyle.PRIMARY, ButtonSize.LARGE, submit = true)
                     linkButton("/gamedays/${gameDay.id}", "Keep it", ButtonStyle.GHOST)
                 }
             }
@@ -384,13 +385,11 @@ fun TagConsumer<*>.invite(gameDay: GameDaySummary, link: String) = div("gf-stack
     id = "invite"
     p("gf-small gf-muted") { +"Share this link in your group chat. Anyone with it can join." }
     copyBox(link, small = true)
-    if (me.id == gameDay.host) button(classes = buttonClasses(ButtonStyle.GHOST, ButtonSize.SMALL)) {
+    if (me.id == gameDay.host) actionButton("Make a new link", ButtonStyle.GHOST, ButtonSize.SMALL, icon = "refresh") {
         hx("post", "/gamedays/${gameDay.id}/invite")
         hx("target", "#invite")
         hx("swap", "outerHTML")
         hx("confirm", "The current link will stop working. Make a new one?")
-        icon("refresh")
-        +"Make a new link"
     }
 }
 

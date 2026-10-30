@@ -34,7 +34,7 @@ fun HTML.accountPage(view: AccountView) = page("Your account", site = SiteBar(me
                 id = "email-change"
                 signinField(
                     "email", "New email address", error = view.emailError,
-                    action = { button(type = ButtonType.submit, classes = buttonClasses(ButtonStyle.PRIMARY, ButtonSize.LARGE)) { +"Send a code" } },
+                    action = { actionButton("Send a code", ButtonStyle.PRIMARY, ButtonSize.LARGE, submit = true) },
                 ) {
                     textInput("email", InputType.email) { required = true; placeholder = "you@example.com"; attributes["autocomplete"] = "email" }
                 }
@@ -79,7 +79,7 @@ private fun FlowContent.request(
     } else {
         form(action = "/account/${kind.name.lowercase()}", method = FormMethod.post) {
             if (confirm != null) confirmOnSubmit(confirm)
-            button(type = ButtonType.submit, classes = buttonClasses(if (danger) ButtonStyle.SECONDARY else ButtonStyle.PRIMARY, ButtonSize.NORMAL)) { +label }
+            actionButton(label, if (danger) ButtonStyle.SECONDARY else ButtonStyle.PRIMARY, submit = true)
         }
     }
 }
@@ -113,12 +113,12 @@ private fun UL.row(request: OpenRequest) = li("gf-row gf-row--approval") {
         when (request.kind) {
             RequestKind.DELETE -> form(action = "$base/erase", method = FormMethod.post) {
                 confirmOnSubmit("Delete ${player.name ?: "this"}'s account for good?")
-                button(type = ButtonType.submit, classes = buttonClasses(ButtonStyle.PRIMARY, ButtonSize.NORMAL)) { +"Delete account" }
+                actionButton("Delete account", ButtonStyle.PRIMARY, submit = true)
             }
             RequestKind.EXPORT -> {
                 a("$base/export", classes = buttonClasses(ButtonStyle.PRIMARY, ButtonSize.NORMAL)) { +"Download their data" }
                 form(action = "$base/export/done", method = FormMethod.post) {
-                    button(type = ButtonType.submit, classes = buttonClasses(ButtonStyle.GHOST, ButtonSize.NORMAL)) { +"Sent it" }
+                    actionButton("Sent it", ButtonStyle.GHOST, submit = true)
                 }
             }
         }
@@ -137,7 +137,7 @@ fun HTML.emailCodePage(newEmail: String, error: String? = null) = page("Confirm 
                 id = "email-code"
                 signinField(
                     "code", "6-digit code", error = error,
-                    action = { button(type = ButtonType.submit, classes = buttonClasses(ButtonStyle.PRIMARY, ButtonSize.LARGE)) { +"Change my email" } },
+                    action = { actionButton("Change my email", ButtonStyle.PRIMARY, ButtonSize.LARGE, submit = true) },
                 ) { codeInput() }
             }
         }

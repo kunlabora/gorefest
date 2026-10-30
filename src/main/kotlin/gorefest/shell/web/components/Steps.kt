@@ -11,6 +11,7 @@ import kotlinx.html.ol
 import kotlinx.html.p
 import kotlinx.html.span
 import kotlinx.html.div
+import kotlinx.html.role
 
 /** How a step's number disc looks: dark ink (the default) or the soft brand tint. */
 enum class StepTone(val css: String) { INK(""), SOFT(" gf-stepper__num--soft") }
@@ -45,3 +46,14 @@ fun OL.illustratedStep(number: Int, title: String, text: String, illustration: F
 }
 
 private fun FlowContent.stepNumber(number: Int, tone: StepTone) = span("gf-stepper__num${tone.css}") { attributes["aria-hidden"] = "true"; +"$number" }
+
+/** Progress through a round of [total] steps, [step] of them done: a progress bar named [label], with "3 / 12" beside the pips. */
+fun FlowContent.progressSteps(step: Int, total: Int, label: String) = div("gf-progress") {
+    role = "progressbar"
+    attributes["aria-label"] = AccessibleName(label).text
+    attributes["aria-valuemin"] = "0"
+    attributes["aria-valuemax"] = "$total"
+    attributes["aria-valuenow"] = "$step"
+    div("gf-progress__track") { repeat(total) { span(if (it < step) "gf-progress__pip gf-progress__pip--done" else "gf-progress__pip") {} } }
+    span("gf-progress__count") { +"${step + 1} / $total" }
+}

@@ -113,7 +113,7 @@ fun FlowContent.art(game: Game, extraClasses: String = "", extraStyle: String = 
     if (image != null) {
         span("gf-art $extraClasses".trim()) {
             style = "--art:url('$image');$extraStyle"
-            img(src = image, alt = "") { attributes["loading"] = "lazy" }
+            image(image, Alt.Decorative) { attributes["loading"] = "lazy" }
         }
     } else {
         span("gf-art gf-art--missing $extraClasses".trim()) {

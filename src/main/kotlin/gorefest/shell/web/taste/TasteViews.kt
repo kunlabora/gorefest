@@ -33,7 +33,7 @@ private fun FlowContent.wizardContent(step: WizardStep) {
     split("gf-wiz") {
         div("gf-split__copy gf-wiz__copy") {
             p("gf-kicker") { +"${gameDay.title} · ${if (step.topUp) "Top-up round" else "Taste round"}" }
-            progress(round.progress.coerceAtMost(total - 1), total)
+            progressSteps(round.progress.coerceAtMost(total - 1), total, "Taste round")
             if (pair.basis == Basis.PLAYED) {
                 span("gf-tag gf-tag--olive gf-tag--start") { icon("check"); +"You've played both" }
                 h1("gf-h1 gf-wiz__question") { +"Which did you enjoy more?" }
@@ -65,16 +65,6 @@ private fun FlowContent.wizardContent(step: WizardStep) {
             duelAnswers("Haven't played either", keyIds = true)
         }
     }
-}
-
-private fun FlowContent.progress(step: Int, total: Int) = div("gf-progress") {
-    role = "progressbar"
-    attributes["aria-label"] = "Taste round"
-    attributes["aria-valuemin"] = "0"
-    attributes["aria-valuemax"] = "$total"
-    attributes["aria-valuenow"] = "$step"
-    div("gf-progress__track") { repeat(total) { span(if (it < step) "gf-progress__pip gf-progress__pip--done" else "gf-progress__pip") {} } }
-    span("gf-progress__count") { +"${step + 1} / $total" }
 }
 
 /** The payoff: favourites on this shelf, or what to do when there's no shelf or too few answers yet. */

@@ -35,11 +35,7 @@ fun TagConsumer<*>.collection(view: CollectionView) = div("gf-stack") {
             hx("get", "/collection/status")
             hx("trigger", "every 2s")
             hx("swap", "outerHTML")
-            div("gf-notice") {
-                attributes["aria-live"] = "polite"
-                span("gf-spin") { attributes["aria-hidden"] = "true"; attributes["style"] = "display: inline-block" }
-                p { +(sync?.message ?: "Asking BGG for your collection") }
-            }
+            busyNotice(sync?.message ?: "Asking BGG for your collection")
             p("gf-small gf-muted") { +"BGG can take a few minutes for big collections. You can leave this page; it carries on." }
         }
         SyncStatus.FAILED -> {
@@ -55,10 +51,8 @@ fun TagConsumer<*>.collection(view: CollectionView) = div("gf-stack") {
     }
 }
 
-private fun FlowContent.syncButton(label: String) = button(classes = buttonClasses(ButtonStyle.SECONDARY, block = true)) {
+private fun FlowContent.syncButton(label: String) = actionButton(label, ButtonStyle.SECONDARY, block = true, icon = "refresh") {
     hx("post", "/collection/sync")
     hx("target", "#collection")
     hx("swap", "outerHTML")
-    icon("refresh")
-    +label
 }

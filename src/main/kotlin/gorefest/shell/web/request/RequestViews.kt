@@ -108,13 +108,11 @@ fun TagConsumer<*>.askRow(gameDay: GameDaySummary, row: AskRow, named: Boolean, 
     val meta = if (named) "${row.ownerName} · ${row.game.facts}" else row.game.facts
     gameRow(row.game, meta) {
         when (row.state) {
-            AskState.CAN_ASK -> button(type = ButtonType.button, classes = buttonClasses(ButtonStyle.SECONDARY, ButtonSize.SMALL)) {
-                attributes["aria-label"] = "Ask ${row.ownerName} to bring ${row.game.name}"
+            AskState.CAN_ASK -> actionButton("Ask", ButtonStyle.SECONDARY, ButtonSize.SMALL, says = "Ask ${row.ownerName} to bring ${row.game.name}") {
                 hx("post", "/gamedays/${gameDay.id}/ask")
                 hx("vals", """{"owner": "${row.owner}", "game": "${row.game.id}", "named": "$named"}""")
                 hx("target", "#$rowId")
                 hx("swap", "outerHTML")
-                +"Ask"
             }
             AskState.ASKED -> span("gf-tag gf-tag--olive") { icon("check"); +"Asked" }
             AskState.BRINGING -> span("gf-tag gf-tag--olive") { icon("check"); +"Bringing it" }
@@ -146,13 +144,13 @@ fun TagConsumer<*>.myRequests(gameDay: GameDaySummary, rows: List<MyRequest>) = 
                             }
                         }
                     }
-                    if (row.status == RequestStatus.OPEN) button(type = ButtonType.button, classes = buttonClasses(ButtonStyle.GHOST, ButtonSize.SMALL)) {
-                        attributes["aria-label"] = "Take back the request to ${row.ownerName} for ${row.game.name}"
+                    if (row.status == RequestStatus.OPEN) actionButton(
+                        "Take it back", ButtonStyle.GHOST, ButtonSize.SMALL, says = "Take back the request to ${row.ownerName} for ${row.game.name}",
+                    ) {
                         hx("post", "/gamedays/${gameDay.id}/ask/withdraw")
                         hx("vals", """{"owner": "${row.owner}", "game": "${row.game.id}"}""")
                         hx("target", "#my-requests")
                         hx("swap", "outerHTML")
-                        +"Take it back"
                     }
                     else if (row.status == RequestStatus.ANSWERED) span("gf-tag gf-tag--olive") { icon("check"); +"Bringing it" }
                 }
@@ -185,21 +183,17 @@ fun TagConsumer<*>.bringRequests(gameDay: GameDaySummary, rows: List<OwnerReques
                         span("gf-row__title") { +"${names.joinNames()} ${if (names.size == 1) "asks" else "ask"} if you can bring ${row.game.name}" }
                         span("gf-row__sub") { +row.game.facts }
                     }
-                    button(type = ButtonType.button, classes = buttonClasses(ButtonStyle.PRIMARY, ButtonSize.SMALL)) {
-                        attributes["aria-label"] = "Bring ${row.game.name}"
+                    actionButton("Bring it", ButtonStyle.PRIMARY, ButtonSize.SMALL, says = "Bring ${row.game.name}") {
                         hx("post", "/gamedays/${gameDay.id}/shelf/${row.game.id}")
                         hx("vals", """{"bringing": "true", "row": "request"}""")
                         hx("target", "#bring-requests")
                         hx("swap", "outerHTML")
-                        +"Bring it"
                     }
-                    button(type = ButtonType.button, classes = buttonClasses(ButtonStyle.GHOST, ButtonSize.SMALL)) {
-                        attributes["aria-label"] = "Not this time: ${row.game.name}"
+                    actionButton("Not this time", ButtonStyle.GHOST, ButtonSize.SMALL, says = "Not this time: ${row.game.name}") {
                         hx("post", "/gamedays/${gameDay.id}/ask/decline")
                         hx("vals", """{"game": "${row.game.id}"}""")
                         hx("target", "#bring-requests")
                         hx("swap", "outerHTML")
-                        +"Not this time"
                     }
                 }
             }

@@ -118,8 +118,7 @@ fun TagConsumer<*>.bringSummary(gameDay: GameDaySummary, summary: ShelfSummary) 
 
 private fun FlowContent.fan(games: List<Game>) {
     if (games.isEmpty()) return
-    div("gf-fan") {
-        attributes["aria-hidden"] = "true"
+    decoration("gf-fan") {
         games.take(4).forEachIndexed { i, game -> art(game, extraStyle = "--r:${listOf(-6, 3, -2, 5)[i]}deg") }
     }
 }
@@ -175,14 +174,11 @@ fun TagConsumer<*>.wishItem(gameDay: GameDaySummary, row: WishRow, error: String
     id = rowId
     gameRow(row.game)
     div("gf-wish") {
-        button(type = ButtonType.button, classes = "gf-chip gf-chip--text") {
-            attributes["aria-pressed"] = row.wants.toString()
+        chipToggle(if (row.wants) "I really want to play this" else "I want to play this", pressed = row.wants, icon = "heart", says = "I want to play ${row.game.name}") {
             hx("post", "/gamedays/${gameDay.id}/shelf/${row.game.id}/wish")
             hx("vals", """{"wants": "${!row.wants}"}""")
             hx("target", "#$rowId")
             hx("swap", "outerHTML")
-            icon("heart")
-            span { +if (row.wants) "I really want to play this" else "I want to play this" }
         }
         if (row.wishers > 0) span("gf-small gf-muted") { +"${row.wishers.of("person", "people")} want${if (row.wishers == 1) "s" else ""} this" }
     }

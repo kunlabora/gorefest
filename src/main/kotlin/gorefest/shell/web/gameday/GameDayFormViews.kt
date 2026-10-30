@@ -49,8 +49,7 @@ private val PREVIEW_SYNC = """
 """.trimIndent()
 
 /** What the group chat will show, as a tilted card. Decoration that mirrors the fields; desktop only. */
-private fun FlowContent.invitePreview(host: String, values: Parameters) = div("gf-desk-only gf-pvwrap") {
-    attributes["aria-hidden"] = "true"
+private fun FlowContent.invitePreview(host: String, values: Parameters) = decoration("gf-desk-only gf-pvwrap") {
     val title = values["title"].orEmpty().ifBlank { "Your game day" }
     val date = values["date"]?.let { runCatching { LocalDate.parse(it).full() }.getOrNull() } ?: "Pick a date"
     p("gf-kicker") { +"What your friends see" }
@@ -84,7 +83,7 @@ fun TagConsumer<*>.gameDayForm(view: GameDayFormView, error: String? = null, val
         }
         p("gf-hint gf-newform__hint") { +"Only people who have joined see it, not the invite or its preview. Leave out the house number if you like." }
         if (!view.editing) browserTimeZone()
-        button(type = ButtonType.submit, classes = buttonClasses(ButtonStyle.PRIMARY, ButtonSize.LARGE)) { spinner(); +view.submitLabel }
+        actionButton(view.submitLabel, ButtonStyle.PRIMARY, ButtonSize.LARGE, submit = true, spinner = true)
     }
 
 /** The title input; when creating, an icon button beside it swaps in another generated title. */
@@ -96,13 +95,10 @@ private fun FlowContent.titleFieldContent(value: String, reroll: Boolean) = div(
     field("title", "Title") {
         textInput("title") { placeholder = "Gorefest #7"; required = true; maxLength = MAX_TITLE_LENGTH.toString(); this.value = value }
     }
-    if (reroll) button(type = ButtonType.button, classes = buttonClasses(ButtonStyle.SECONDARY)) {
-        attributes["aria-label"] = "Another title"
-        title = "Another title"
+    if (reroll) iconButton("Another title", "refresh") {
         hx("get", "/gamedays/title")
         hx("include", "#title")
         hx("target", "#title-field")
         hx("swap", "outerHTML")
-        icon("refresh")
     }
 }

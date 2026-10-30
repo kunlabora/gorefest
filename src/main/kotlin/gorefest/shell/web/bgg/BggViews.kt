@@ -18,7 +18,7 @@ fun HTML.bggPage(returnTo: String, linked: String?, me: CurrentPlayer) = page("L
                 linkButton(returnTo, "Back", size = ButtonSize.LARGE)
                 form(action = "/bgg/unlink", method = FormMethod.post, classes = "gf-bgg__unlink") {
                     confirmOnSubmit("Unlink your BGG account? Your collection here is deleted.")
-                    p("gf-hint") { +"Linked the wrong one? "; button(type = ButtonType.submit, classes = "gf-link") { +"Unlink my BGG account" } }
+                    p("gf-hint") { +"Linked the wrong one? "; textButton("Unlink my BGG account", submit = true) }
                 }
             }
         } else {
@@ -37,7 +37,7 @@ fun TagConsumer<*>.usernameStep(returnTo: String, username: String = "", error: 
             div(if (error != null) "gf-signin gf-field--invalid" else "gf-signin") {
                 signinField(
                     "username", "BGG username", error = error,
-                    action = { button(type = ButtonType.submit, classes = buttonClasses(ButtonStyle.PRIMARY, ButtonSize.LARGE)) { spinner(); +"Next" } },
+                    action = { actionButton("Next", ButtonStyle.PRIMARY, ButtonSize.LARGE, submit = true, spinner = true) },
                 ) {
                     textInput("username") {
                         value = username
@@ -63,16 +63,15 @@ fun TagConsumer<*>.codeStep(returnTo: String, username: String, code: String, de
             copyBox(code)
             if (dev) notice("dice", id = "dev-bgg") {
                 +"Dev mode uses a fake BGG. "
-                button(type = ButtonType.button, classes = "gf-link") {
+                textButton("Put the code in the fake profile") {
                     hx("post", "/dev/bgg/profile")
                     hx("vals", Json.encodeToString(mapOf("username" to username, "code" to code)))
                     hx("target", "#dev-bgg")
                     hx("swap", "outerHTML")
-                    +"Put the code in the fake profile"
                 }
             }
             if (error != null) div("gf-field gf-field--invalid") { fieldError(error) }
-            button(type = ButtonType.submit, classes = buttonClasses(ButtonStyle.PRIMARY, ButtonSize.LARGE)) { spinner(); +"I've added it" }
+            actionButton("I've added it", ButtonStyle.PRIMARY, ButtonSize.LARGE, submit = true, spinner = true)
             p("gf-hint") {
                 +"Checking as "; strong { +username }; +" · "
                 a("/bgg?returnTo=${returnTo.urlEncoded()}", classes = "gf-link") { +"Wrong username?" }
@@ -86,8 +85,7 @@ fun TagConsumer<*>.codeStep(returnTo: String, username: String, code: String, de
                 +"Paste it into the "; strong { +"Website/Homepage" }; +" field, like in the picture. BGG asks for your BGG password to save contact information; that's BGG checking it's you, we never see it."
             }) {
                 div("gf-bgg__shot") {
-                    img(src = "/static/bgg-profile-code.webp", alt = "BGG's Contact Information form, with the code pasted into the Website/Homepage field") {
-                        classes = setOf("gf-howto")
+                    image("/static/bgg-profile-code.webp", Alt.Text("BGG's Contact Information form, with the code pasted into the Website/Homepage field"), classes = "gf-howto") {
                         width = "660"; height = "195"; attributes["loading"] = "lazy"
                     }
                 }

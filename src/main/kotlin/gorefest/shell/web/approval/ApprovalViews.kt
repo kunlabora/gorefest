@@ -31,10 +31,10 @@ private fun UL.row(player: Player) = li("gf-row gf-row--approval") {
     }
     div("gf-row__actions") {
         form(action = "/admin/approvals/${player.id.value}/approve", method = FormMethod.post) {
-            button(type = ButtonType.submit, classes = buttonClasses(ButtonStyle.PRIMARY, ButtonSize.NORMAL)) { +"Approve" }
+            actionButton("Approve", ButtonStyle.PRIMARY, submit = true)
         }
         form(action = "/admin/approvals/${player.id.value}/reject", method = FormMethod.post) {
-            button(type = ButtonType.submit, classes = buttonClasses(ButtonStyle.GHOST, ButtonSize.NORMAL)) { +"Reject" }
+            actionButton("Reject", ButtonStyle.GHOST, submit = true)
         }
     }
 }
