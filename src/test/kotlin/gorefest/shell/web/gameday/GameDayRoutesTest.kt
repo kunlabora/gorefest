@@ -1,5 +1,6 @@
 package gorefest.shell.web.gameday
 
+import gorefest.contract.Obligation
 import gorefest.core.PlayerId
 import gorefest.core.PlayerJoined
 import gorefest.core.gameday.anna
@@ -69,6 +70,7 @@ class GameDayRoutesTest {
     }
 
     @Test
+    @Obligation("GD-1")
     fun `creating a game day redirects htmx to its page`() = webTest { client ->
         val response = client.htmxPost("/gamedays", validForm)
 
@@ -77,6 +79,7 @@ class GameDayRoutesTest {
     }
 
     @Test
+    @Obligation("GD-2", "GD-3")
     fun `a missing or garbled date asks for a date, not a later one`() = webTest { client ->
         val noDate = parameters { append("title", "T"); append("place", "x") }
         client.htmxPost("/gamedays", noDate).fragment().one("[role=alert]").text() shouldContain "Pick a date"
@@ -84,6 +87,7 @@ class GameDayRoutesTest {
     }
 
     @Test
+    @Obligation("GD-2", "GD-3")
     fun `a title or place that is too long is refused in the form`() = webTest { client ->
         val long = Parameters.build { appendAll(validForm); set("title", "A".repeat(5000)) }
         client.htmxPost("/gamedays", long).fragment().one("[role=alert]").text() shouldContain "title is a bit long"
@@ -93,6 +97,7 @@ class GameDayRoutesTest {
     }
 
     @Test
+    @Obligation("GD-3")
     fun `a rejected plain form post answers with a full page, not a bare form`() = webTest { client ->
         val page = client.submitForm("/gamedays", Parameters.Empty).page()
 
@@ -110,6 +115,7 @@ class GameDayRoutesTest {
     }
 
     @Test
+    @Obligation("GD-1")
     fun `creating a game day without htmx redirects the browser`() = webTest { client ->
         val response = client.submitForm("/gamedays", validForm)
 
@@ -118,6 +124,7 @@ class GameDayRoutesTest {
     }
 
     @Test
+    @Obligation("GD-1", "GD-13", "GD-20")
     fun `the new game day shows its details, with the host as only player`() = webTest { client ->
         client.htmxPost("/gamedays", validForm)
 
@@ -130,6 +137,7 @@ class GameDayRoutesTest {
     }
 
     @Test
+    @Obligation("GD-21")
     fun `the home page makes the next game day the hero, with the step I still owe it as the one brand button`() = webTest { client ->
         client.htmxPost("/gamedays", validForm)
 
@@ -148,6 +156,7 @@ class GameDayRoutesTest {
     }
 
     @Test
+    @Obligation("GD-21")
     fun `later game days wait in the coming up band, linking to each`() = webTest { client ->
         client.htmxPost("/gamedays", validForm)
         client.htmxPost("/gamedays", Parameters.build {
@@ -168,6 +177,7 @@ class GameDayRoutesTest {
     }
 
     @Test
+    @Obligation("GD-26")
     fun `a cancelled game day sits under Past, not Coming up`() = webTest { client ->
         client.htmxPost("/gamedays", validForm)
         client.htmxPost("/gamedays", Parameters.build {
@@ -187,6 +197,7 @@ class GameDayRoutesTest {
     }
 
     @Test
+    @Obligation("GD-22")
     fun `the home page without game days explains how to get one`() = webTest { client ->
         val page = client.get("/").page()
 
@@ -206,6 +217,7 @@ class GameDayRoutesTest {
     }
 
     @Test
+    @Obligation("GD-5")
     fun `the invite preview mirrors the fields, in the browser`() = webTest { client ->
         val page = client.get("/gamedays/new").page()
 
@@ -219,6 +231,7 @@ class GameDayRoutesTest {
     }
 
     @Test
+    @Obligation("WEB-6")
     fun `the saved theme is applied before anything else loads`() = webTest { client ->
         val head = client.get("/").page().head()
 
@@ -227,6 +240,7 @@ class GameDayRoutesTest {
     }
 
     @Test
+    @Obligation("WEB-7")
     fun `every page ends its app bar with the light and dark toggle`() = webTest { client ->
         client.htmxPost("/gamedays", validForm)
         val pages = listOf("/", "/gamedays/new", "/gamedays/00000000-0000-0000-0000-000000000001", "/gamedays/00000000-0000-0000-0000-000000000001/edit")
@@ -241,6 +255,7 @@ class GameDayRoutesTest {
     }
 
     @Test
+    @Obligation("WEB-7")
     fun `logged-out pages have the toggle too, and the CSS picks the right icon`() = test.webTest { client ->
         client.get("/login").page().select(".gf-appbar .gf-theme-toggle").size shouldBe 1
         client.get("/static/css/gorefest.css").bodyAsText() shouldContain "[data-theme=\"dark\"] .gf-theme-toggle__sun"
@@ -261,6 +276,7 @@ class GameDayRoutesTest {
     }
 
     @Test
+    @Obligation("GD-3")
     fun `a rejection re-renders the form with the reason and what was typed`() = webTest { client ->
         val form = client.htmxPost("/gamedays", parameters {
             append("title", "Gorefest #7")
@@ -274,6 +290,7 @@ class GameDayRoutesTest {
     }
 
     @Test
+    @Obligation("WEB-5")
     fun `a not found answers with a page that says nothing about why, and a way back`() = webTest { client ->
         for (path in listOf("/gamedays/00000000-0000-0000-0000-00000000beef", "/nonexistent")) {
             val response = client.get(path)
@@ -287,12 +304,14 @@ class GameDayRoutesTest {
     }
 
     @Test
+    @Obligation("GD-19")
     fun `unknown game days are not found`() = webTest { client ->
         client.get("/gamedays/00000000-0000-0000-0000-00000000beef").status shouldBe HttpStatusCode.NotFound
         client.get("/gamedays/not-a-uuid").status shouldBe HttpStatusCode.NotFound
     }
 
     @Test
+    @Obligation("GD-20")
     fun `players show as initials and names`() = webTest { client ->
         given(gameDayCreated(host = anna), PlayerJoined(gorefest7, anna), PlayerJoined(gorefest7, timId))
 
@@ -300,6 +319,7 @@ class GameDayRoutesTest {
     }
 
     @Test
+    @Obligation("GD-20", "PR-9")
     fun `players without a name show as someone`() = webTest { client ->
         given(gameDayCreated(host = bram), PlayerJoined(gorefest7, bram), PlayerJoined(gorefest7, timId))
 
@@ -315,6 +335,7 @@ class GameDayRoutesTest {
     }
 
     @Test
+    @Obligation("GD-21")
     fun `the home page only shows game days I host or joined`() = webTest { client ->
         given(gameDayCreated(host = anna), PlayerJoined(gorefest7, anna))
 
@@ -322,6 +343,7 @@ class GameDayRoutesTest {
     }
 
     @Test
+    @Obligation("GD-6")
     fun `the host can edit the details`() = webTest { client ->
         client.htmxPost("/gamedays", validForm)
         val id = "00000000-0000-0000-0000-000000000001"
@@ -346,6 +368,7 @@ class GameDayRoutesTest {
     }
 
     @Test
+    @Obligation("GD-3")
     fun `an edit rejection keeps what was typed`() = webTest { client ->
         client.htmxPost("/gamedays", validForm)
 
@@ -359,6 +382,7 @@ class GameDayRoutesTest {
     }
 
     @Test
+    @Obligation("GD-6")
     fun `other players can't edit`() = webTest { client ->
         given(gameDayCreated(host = anna), PlayerJoined(gorefest7, anna), PlayerJoined(gorefest7, timId))
 
@@ -373,6 +397,7 @@ class GameDayRoutesTest {
         select("#players li").map { row -> row.select(".gf-row__title, .gf-row__sub, .gf-tag").joinToString(" ") { it.text() } }
 
     @Test
+    @Obligation("WEB-4")
     fun `every page configures htmx right after loading it, so rejections get swapped in`() = webTest { client ->
         val scripts = client.get("/").page().head().select("script[src]").map { it.attr("src") }
         scripts.indexOf("/static/js/htmx-config.js") shouldBe scripts.indexOfFirst { it.contains("htmx") } + 1
@@ -382,6 +407,7 @@ class GameDayRoutesTest {
     }
 
     @Test
+    @Obligation("GD-19")
     fun `strangers get a 404 for editing or inviting, not a rejection that confirms the game day exists`() = webTest { client ->
         given(gameDayCreated(host = anna), PlayerJoined(gorefest7, anna))
 
@@ -391,6 +417,7 @@ class GameDayRoutesTest {
 
 
     @Test
+    @Obligation("GD-25", "GD-26")
     fun `the host cancels after a confirm step, and members see Cancelled`() = webTest { client ->
         given(gameDayCreated(host = timId), PlayerJoined(gorefest7, timId), PlayerJoined(gorefest7, anna))
 
@@ -410,6 +437,7 @@ class GameDayRoutesTest {
     }
 
     @Test
+    @Obligation("GD-25")
     fun `only the host can cancel`() = webTest { client ->
         given(gameDayCreated(host = anna), PlayerJoined(gorefest7, anna), PlayerJoined(gorefest7, timId))
 
@@ -420,6 +448,7 @@ class GameDayRoutesTest {
     }
 
     @Test
+    @Obligation("GD-4")
     fun `the create form is prefilled with a fun title the host can re-roll`() = webTest { client ->
         val page = client.get("/gamedays/new").page()
         val title = page.one("#title").`val`()
@@ -436,6 +465,7 @@ class GameDayRoutesTest {
     }
 
     @Test
+    @Obligation("GD-4")
     fun `editing keeps the host's own title and has no re-roll`() = webTest { client ->
         given(gameDayCreated(host = timId), PlayerJoined(gorefest7, timId))
 
@@ -446,6 +476,7 @@ class GameDayRoutesTest {
     }
 
     @Test
+    @Obligation("GD-25")
     fun `a non-host answers a cancel like a stranger, with no form leaked`() = webTest { client ->
         given(gameDayCreated(host = anna), PlayerJoined(gorefest7, anna), PlayerJoined(gorefest7, timId))
 
@@ -454,6 +485,7 @@ class GameDayRoutesTest {
     }
 
     @Test
+    @Obligation("GD-19", "GD-25")
     fun `someone who didn't join can't cancel`() = webTest { client ->
         given(gameDayCreated(host = anna), PlayerJoined(gorefest7, anna))
 
@@ -463,6 +495,7 @@ class GameDayRoutesTest {
     }
 
     @Test
+    @Obligation("GD-27")
     fun `a cancelled game day is read-only, only the hub is reachable`() = webTest { client ->
         given(gameDayCreated(host = timId), PlayerJoined(gorefest7, timId), gorefest.core.GameDayCancelled(gorefest7))
 

@@ -1,11 +1,13 @@
 package gorefest.shell.web
 
+import gorefest.contract.Obligation
 import gorefest.core.Rejection
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
 class RejectionsTest {
     @Test
+    @Obligation("WEB-1")
     fun `every rejection has its sentence`() {
         mapOf(
             Rejection.NoSuchGameDay to "No such game day",

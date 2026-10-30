@@ -1,5 +1,6 @@
 package gorefest.shell.web.components
 
+import gorefest.contract.Obligation
 import gorefest.core.BggId
 import gorefest.core.game.Game
 import gorefest.shell.web.DEFAULT_TIME_ZONE
@@ -21,6 +22,7 @@ class ComponentsTest {
     private fun art(thumbnail: String?) = Jsoup.parseBodyFragment(createHTML().div { art(game(thumbnail)) }).selectFirst(".gf-art")!!
 
     @Test
+    @Obligation("WEB-10")
     fun `box art takes http(s) and our own static paths, with quotes and parentheses encoded`() {
         safeImageUrl("https://cf.geekdo-images.com/a.jpg") shouldBe "https://cf.geekdo-images.com/a.jpg"
         safeImageUrl("/static/covers/azul.webp") shouldBe "/static/covers/azul.webp"
@@ -34,6 +36,7 @@ class ComponentsTest {
     }
 
     @Test
+    @Obligation("WEB-10")
     fun `a hostile image URL can't break out of the inline style`() {
         val hostile = art("https://x.example/a');background:url('https://evil.example/t.gif")
         hostile.attr("style").count { it == '\'' } shouldBe 2
@@ -42,6 +45,7 @@ class ComponentsTest {
     }
 
     @Test
+    @Obligation("WEB-11")
     fun `the dev BGG button carries its values as valid JSON, whatever is in them`() {
         val html = createHTML().apply { codeStep("/", "a\"b'c", "x\"y", dev = true) }.finalize()
         val vals = Jsoup.parseBodyFragment(html).selectFirst("#dev-bgg button")!!.attr("hx-vals")
@@ -52,6 +56,7 @@ class ComponentsTest {
     }
 
     @Test
+    @Obligation("WEB-12")
     fun `initials are whole characters, and an emoji doesn't count as a word`() {
         initials("Tim Schraepen") shouldBe "TS"
         initials("anna-lena") shouldBe "AL"
@@ -62,6 +67,7 @@ class ComponentsTest {
     }
 
     @Test
+    @Obligation("WEB-13")
     fun `facts show a range, or the typical time when the range is wild`() {
         game(null).facts shouldBe "30–45 min · 2–4"
         game(null).copy(minPlaytime = 5, maxPlaytime = 1000, playingTime = 120).facts shouldBe "~120 min · 2–4"
@@ -69,6 +75,7 @@ class ComponentsTest {
     }
 
     @Test
+    @Obligation("WEB-14")
     fun `a game's type is one or two telling words from its categories and mechanics`() {
         fun typeOf(name: String) = gorefest.shell.bgg.DevCatalog.games.first { it.name == name }.typeWords
         typeOf("Pandemic") shouldBe listOf("Cooperative")
@@ -81,6 +88,7 @@ class ComponentsTest {
     }
 
     @Test
+    @Obligation("WEB-15")
     fun `one zone fallback everywhere`() {
         zoneOrDefault(null).id shouldBe DEFAULT_TIME_ZONE
         zoneOrDefault("Not/AZone").id shouldBe DEFAULT_TIME_ZONE

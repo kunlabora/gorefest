@@ -1,5 +1,6 @@
 package gorefest.shell.web.checkpoint
 
+import gorefest.contract.Obligation
 import gorefest.core.Basis
 import gorefest.core.ComparisonRecorded
 import gorefest.core.ComparisonResult
@@ -67,6 +68,7 @@ class CheckpointRoutesTest {
     private val log = "/gamedays/$gorefest7/log"
 
     @Test
+    @Obligation("PL-8")
     fun `on the day, someone with no taste yet is still offered the taste round, with the log one tap away`() = test.webTest(session = kim) { client ->
         val page = client.get("/gamedays/$gorefest7").page()
 
@@ -75,6 +77,7 @@ class CheckpointRoutesTest {
     }
 
     @Test
+    @Obligation("PL-8")
     fun `on the day, once there is a taste the hub asks what you played`() = test.webTest(session = kim) { client ->
         given(*Array(10) { ComparisonRecorded(kimId, azul, cascadia, ComparisonResult.A, Basis.VIBE, test.clock.instant()) })
 
@@ -85,6 +88,7 @@ class CheckpointRoutesTest {
     }
 
     @Test
+    @Obligation("PL-6")
     fun `the log form offers the shelf, me at the table and a duration`() = test.webTest(session = kim) { client ->
         val form = client.get(log).page().one("#log-form")
 
@@ -95,6 +99,7 @@ class CheckpointRoutesTest {
     }
 
     @Test
+    @Obligation("PL-7")
     fun `the log page has three numbered steps, a summary card and a dock that submit the same form`() = test.webTest(session = kim) { client ->
         val page = client.get(log).page()
 
@@ -111,6 +116,7 @@ class CheckpointRoutesTest {
     }
 
     @Test
+    @Obligation("PL-12")
     fun `the quick question page keeps the shell and the duel`() = test.webTest(session = kim) { client ->
         val logged = client.htmxPost(log, parameters { append("game", azul.toString()); append("players", kimId.toString()); append("duration", "45m") })
         given(GamePlayStatusDeclared(kimId, cascadia, played = true))
@@ -122,6 +128,7 @@ class CheckpointRoutesTest {
     }
 
     @Test
+    @Obligation("PL-6")
     fun `a game that isn't on the shelf can be found by search and logged`() = test.webTest(session = kim) { client ->
         val form = client.get(log).page().one("#log-form")
         form.one("input[type=search]").attr("hx-get") shouldBe "$log/search"
@@ -145,6 +152,7 @@ class CheckpointRoutesTest {
     }
 
     @Test
+    @Obligation("PL-2")
     fun `a rejected log keeps the off-shelf game's tile`() = test.webTest(session = kim) { client ->
         val brass = id("Brass: Birmingham")
 
@@ -156,6 +164,7 @@ class CheckpointRoutesTest {
     }
 
     @Test
+    @Obligation("PL-1", "PL-12")
     fun `logging a game asks one comparison, then shows fresh suggestions for that table`() = test.webTest(session = kim) { client ->
         given(GamePlayStatusDeclared(kimId, cascadia, played = true))
 
@@ -179,6 +188,7 @@ class CheckpointRoutesTest {
     }
 
     @Test
+    @Obligation("PL-4", "PL-9", "PL-12")
     fun `after the game day ended, a forgotten play can still be logged, and the hub shows it`() = test.webTest(session = kim) { client ->
         given(GamePlayStatusDeclared(kimId, cascadia, played = true), GameDayEnded(gorefest7))
         test.clock.advance(Duration.ofDays(1))
@@ -203,6 +213,7 @@ class CheckpointRoutesTest {
     }
 
     @Test
+    @Obligation("PL-13")
     fun `logging a table you weren't at asks you nothing and records nothing`() = test.webTest(session = kim) { client ->
         given(GamePlayStatusDeclared(kimId, cascadia, played = true))
 
@@ -218,6 +229,7 @@ class CheckpointRoutesTest {
     }
 
     @Test
+    @Obligation("PL-13")
     fun `with nothing to compare against, it goes straight to suggestions`() = test.webTest(session = kim) { client ->
         client.htmxPost(log, parameters { append("game", azul.toString()); append("players", kimId.toString()); append("duration", "30m") })
 
@@ -226,6 +238,7 @@ class CheckpointRoutesTest {
     }
 
     @Test
+    @Obligation("PL-2")
     fun `a log without players is refused with the form kept`() = test.webTest(session = kim) { client ->
         val form = client.htmxPost(log, parameters { append("game", cascadia.toString()); append("duration", "1h") }).fragment()
 
@@ -236,6 +249,7 @@ class CheckpointRoutesTest {
     }
 
     @Test
+    @Obligation("PL-9")
     fun `the hub lists what was played today`() = test.webTest(session = kim) { client ->
         given(PlayLogged(gorefest7, cascadia, listOf(kimId, anna), 40, kimId, test.clock.instant()))
 
@@ -246,6 +260,7 @@ class CheckpointRoutesTest {
     }
 
     @Test
+    @Obligation("PL-5", "PR-9")
     fun `a player without a name shows as someone in what was played`() = test.webTest(session = kim) { client ->
         val erased = PlayerId(Uuid.random())
         given(PlayLogged(gorefest7, cascadia, listOf(kimId, erased), 40, kimId, test.clock.instant()), PlayerErased(erased))
@@ -254,6 +269,7 @@ class CheckpointRoutesTest {
     }
 
     @Test
+    @Obligation("PL-14")
     fun `the compare link ignores strangers, junk and out-of-range minutes`() = test.webTest(session = kim) { client ->
         val stranger = PlayerId(Uuid.random())
         client.htmxPost(log, parameters { append("game", azul.toString()); append("players", kimId.toString()); append("duration", "30m") })
@@ -263,6 +279,7 @@ class CheckpointRoutesTest {
     }
 
     @Test
+    @Obligation("PL-14")
     fun `minutes out of range show as zero`() = test.webTest(session = kim) { client ->
         given(GamePlayStatusDeclared(kimId, cascadia, played = true))
 
@@ -271,6 +288,7 @@ class CheckpointRoutesTest {
     }
 
     @Test
+    @Obligation("PL-8")
     fun `during the game day a play can be logged, and the hub keeps the log one tap away`() = test.webTest(session = kim) { client ->
         given(*Array(10) { ComparisonRecorded(kimId, azul, cascadia, ComparisonResult.A, Basis.VIBE, test.clock.instant()) })
         val response = client.htmxPost(log, parameters { append("game", azul.toString()); append("players", kimId.toString()); append("duration", "30m") })
@@ -282,6 +300,7 @@ class CheckpointRoutesTest {
     }
 
     @Test
+    @Obligation("PL-3")
     fun `before the game day nothing can be logged`() = test.webTest(session = kim) { client ->
         test.clock.advance(Duration.ofDays(-3))
 
@@ -297,11 +316,13 @@ class CheckpointRoutesTest {
     private val watched = "/gamedays/$gorefest7/watched"
 
     @Test
+    @Obligation("PL-15")
     fun `on the day the hub offers to tell what you watched`() = test.webTest(session = kim) { client ->
         client.get("/gamedays/$gorefest7").page().one("a[href=$watched]").text() shouldBe "Watched a game?"
     }
 
     @Test
+    @Obligation("PL-15")
     fun `the watched page shows the whole shelf except what you played, and a search`() = test.webTest(session = kim) { client ->
         given(GamePlayStatusDeclared(kimId, cascadia, played = true))
 
@@ -313,6 +334,7 @@ class CheckpointRoutesTest {
     }
 
     @Test
+    @Obligation("PL-15")
     fun `a game that isn't on the shelf can be found by search`() = test.webTest(session = kim) { client ->
         val results = client.get("$watched/search?q=Brass") { header("HX-Request", "true") }.fragment()
 
@@ -322,6 +344,7 @@ class CheckpointRoutesTest {
     }
 
     @Test
+    @Obligation("PL-16", "TA-5")
     fun `a watched game is held against one you played, and counts for taste without making it played`() = test.webTest(session = kim) { client ->
         given(GamePlayStatusDeclared(kimId, cascadia, played = true))
 
@@ -340,6 +363,7 @@ class CheckpointRoutesTest {
     }
 
     @Test
+    @Obligation("PL-17")
     fun `can't tell yet records nothing`() = test.webTest(session = kim) { client ->
         client.submitForm("$watched/compare", parameters { append("a", azul.toString()); append("b", cascadia.toString()); append("answer", "UNPLAYED") })
 
@@ -348,11 +372,13 @@ class CheckpointRoutesTest {
     }
 
     @Test
+    @Obligation("PL-17")
     fun `with nothing you played to compare against, it says so`() = test.webTest(session = kim) { client ->
         client.get("$watched/compare?game=$azul").page().one(".gf-empty").text() shouldContain "Nothing to compare yet"
     }
 
     @Test
+    @Obligation("PL-18")
     fun `after the game day nothing can be told anymore`() = test.webTest(session = kim) { client ->
         given(GamePlayStatusDeclared(kimId, cascadia, played = true), GameDayEnded(gorefest7))
 
@@ -362,6 +388,7 @@ class CheckpointRoutesTest {
     }
 
     @Test
+    @Obligation("PL-17")
     fun `a game you only own isn't something you played, so it's not held against the watched one`() = test.webTest(session = kim) { client ->
         app.db.transaction { gorefest.shell.bgg.Collections().replace(kimId, setOf(cascadia)) }
 
@@ -369,6 +396,7 @@ class CheckpointRoutesTest {
     }
 
     @Test
+    @Obligation("PL-17")
     fun `a watched answer only counts for a known game you haven't played, against one you have`() = test.webTest(session = kim) { client ->
         given(GamePlayStatusDeclared(kimId, cascadia, played = true))
         suspend fun answer(a: String, b: String) = client.submitForm("$watched/compare", parameters { append("a", a); append("b", b); append("answer", "A") })

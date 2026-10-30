@@ -1,5 +1,6 @@
 package gorefest.shell.auth
 
+import gorefest.contract.Obligation
 import gorefest.core.auth.LoginCheck
 import gorefest.shell.IdGenerator
 import gorefest.shell.TestClock
@@ -41,6 +42,7 @@ class LoginTest {
     }
 
     @Test
+    @Obligation("ACC-5")
     fun `a code works once`() = runBlocking<Unit> {
         val id = attemptId()
         login.withCode(id, code()).shouldBeInstanceOf<LoginResult.LoggedIn>()
@@ -48,6 +50,7 @@ class LoginTest {
     }
 
     @Test
+    @Obligation("ACC-5")
     fun `a link works once, and kills the code`() = runBlocking<Unit> {
         val id = attemptId()
         login.withLink(token()).shouldBeInstanceOf<LoginResult.LoggedIn>()
@@ -56,6 +59,7 @@ class LoginTest {
     }
 
     @Test
+    @Obligation("ACC-5")
     fun `the link is dead after the code was used`() = runBlocking<Unit> {
         val id = attemptId()
         login.withCode(id, code()).shouldBeInstanceOf<LoginResult.LoggedIn>()
@@ -64,6 +68,7 @@ class LoginTest {
     }
 
     @Test
+    @Obligation("ACC-6")
     fun `an attempt expires after 15 minutes`() = runBlocking<Unit> {
         val id = attemptId()
         clock.advance(Duration.ofMinutes(15))
@@ -72,6 +77,7 @@ class LoginTest {
     }
 
     @Test
+    @Obligation("ACC-7")
     fun `five wrong codes lock the attempt, even for the right code`() = runBlocking<Unit> {
         val id = attemptId()
         val wrong = if (code() == "000000") "111111" else "000000"
@@ -82,12 +88,14 @@ class LoginTest {
     }
 
     @Test
+    @Obligation("ACC-5")
     fun `an unknown attempt or token is unknown`() = runBlocking<Unit> {
         login.withCode(Uuid.random(), "123456") shouldBe LoginResult.UnknownAttempt
         login.withLink("nope") shouldBe LoginResult.UnknownAttempt
     }
 
     @Test
+    @Obligation("ACC-4")
     fun `checking the pending page or link does not use the attempt up`() = runBlocking<Unit> {
         val id = attemptId()
         login.pending(id)!!.email shouldBe email
@@ -96,6 +104,7 @@ class LoginTest {
     }
 
     @Test
+    @Obligation("ACC-8")
     fun `at most five mails per email per hour`() = runBlocking<Unit> {
         repeat(5) { ask("a$it").shouldBeInstanceOf<Login.Requested.Sent>() }
         ask("fresh") shouldBe Login.Requested.TooMany
@@ -104,6 +113,7 @@ class LoginTest {
     }
 
     @Test
+    @Obligation("ACC-8")
     fun `parallel requests cannot get past the per-email limit`() = runBlocking<Unit> {
         val results = (1..12).map { i -> async(Dispatchers.Default) { ask("addr$i") } }.awaitAll()
         results.count { it is Login.Requested.Sent } shouldBe Login.MAILS_PER_EMAIL_PER_HOUR
@@ -111,6 +121,7 @@ class LoginTest {
     }
 
     @Test
+    @Obligation("ACC-8")
     fun `a mail that fails to send does not count against the limit`() = runBlocking<Unit> {
         val failing = Login(TestDatabase.db, test.app.commands, { error("provider down") }, test.app.config, clock, IdGenerator.sequential())
         repeat(10) { shouldThrow<IllegalStateException> { failing.request(email, "/", "a$it") } }
@@ -119,6 +130,7 @@ class LoginTest {
     }
 
     @Test
+    @Obligation("PR-16")
     fun `purge drops expired sessions and day-old attempts only`() = runBlocking<Unit> {
         val id = attemptId()
         login.withCode(id, code()).shouldBeInstanceOf<LoginResult.LoggedIn>() // one live session

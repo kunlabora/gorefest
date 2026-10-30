@@ -1,5 +1,6 @@
 package gorefest.shell.bgg
 
+import gorefest.contract.Obligation
 import gorefest.shell.TestDatabase
 import gorefest.shell.db.Tx
 import io.kotest.matchers.shouldBe
@@ -15,6 +16,7 @@ class CatalogTest {
     fun reset() = kotlinx.coroutines.runBlocking { TestDatabase.reset() }
 
     @Test
+    @Obligation("BGG-18")
     suspend fun `cached games survive a restart, with the stored format unchanged`() {
         Catalog(TestDatabase.db).put(listOf(brass), Instant.EPOCH)
 
@@ -28,6 +30,7 @@ class CatalogTest {
     }
 
     @Test
+    @Obligation("BGG-18")
     suspend fun `refreshing replaces the games we hold and adds none`() {
         val catalog = Catalog(TestDatabase.db)
         val other = DevCatalog.games.first { it.name == "Azul" }

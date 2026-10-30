@@ -1,5 +1,6 @@
 package gorefest.shell.gameday
 
+import gorefest.contract.Obligation
 import gorefest.core.DatePollId
 import gorefest.core.gameday.gorefest7
 import io.kotest.matchers.nulls.shouldBeNull
@@ -11,11 +12,13 @@ class InviteLinksTest {
     private val invites = InviteLinks("test-key")
 
     @Test
+    @Obligation("GD-10")
     fun `a token names its game day and version`() {
         invites.parse(invites.token(gorefest7, 3)) shouldBe (gorefest7 to 3)
     }
 
     @Test
+    @Obligation("GD-10")
     fun `tampered or foreign tokens don't parse`() {
         val token = invites.token(gorefest7, 0)
         invites.parse(token.replace(".0.", ".1.")).shouldBeNull()
@@ -24,6 +27,7 @@ class InviteLinksTest {
     }
 
     @Test
+    @Obligation("GD-10")
     fun `a date poll token names its poll, and is not interchangeable with a game day token`() {
         val poll = DatePollId(Uuid.parse(gorefest7.toString()))
         val token = invites.token(poll)

@@ -1,5 +1,6 @@
 package gorefest.core.player
 
+import gorefest.contract.Obligation
 import gorefest.core.BggAccountLinked
 import gorefest.core.BggAccountLinkedHashed
 import gorefest.core.GameDayCancelled
@@ -20,21 +21,25 @@ import org.junit.jupiter.api.Test
 
 class ErasePlayerTest {
     @Test
+    @Obligation("PR-2")
     fun `a registered player is erased`() {
         ErasePlayerDecider.given(PlayerRegistered(anna), LoggedIn(anna)).whenever(ErasePlayer(anna)).thenEmits(PlayerErased(anna))
     }
 
     @Test
+    @Obligation("PR-3")
     fun `erasing twice records it once`() {
         ErasePlayerDecider.given(PlayerRegistered(anna), PlayerErased(anna)).whenever(ErasePlayer(anna)).thenEmitsNothing()
     }
 
     @Test
+    @Obligation("PR-3")
     fun `somebody who never registered cannot be erased`() {
         ErasePlayerDecider.given(PlayerRegistered(bram)).whenever(ErasePlayer(anna)).thenRejects(Rejection.NoSuchPlayer)
     }
 
     @Test
+    @Obligation("PR-5", "BGG-8")
     fun `an erased player's BGG username can be linked by someone else`() {
         LinkBggAccountDecider
             .given(BggAccountLinkedHashed(bram, "key-of-bramplays"), PlayerErased(bram))
@@ -43,6 +48,7 @@ class ErasePlayerTest {
     }
 
     @Test
+    @Obligation("PR-5")
     fun `an erased player's link is gone from the BGG accounts`() {
         val state = listOf(BggAccountLinked(anna, "AnnaPlays"), BggAccountLinkedHashed(bram, "key-of-bramplays"), PlayerErased(anna))
             .fold(BggAccounts.initialState, BggAccounts::evolve)
@@ -52,6 +58,7 @@ class ErasePlayerTest {
     }
 
     @Test
+    @Obligation("PR-6")
     fun `an erased player leaves the tables still to be played, not the ones that are over`() {
         val upcoming = gorefest.core.GameDayId(kotlin.uuid.Uuid.random())
         val over = gorefest.core.GameDayId(kotlin.uuid.Uuid.random())

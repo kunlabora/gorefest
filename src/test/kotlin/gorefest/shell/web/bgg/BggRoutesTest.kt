@@ -1,5 +1,6 @@
 package gorefest.shell.web.bgg
 
+import gorefest.contract.Obligation
 import gorefest.core.BggAccountLinked
 import gorefest.core.BggAccountLinkedHashed
 import gorefest.core.PlayerId
@@ -45,6 +46,7 @@ class BggRoutesTest {
     private val code get() = app.bggVerification.code(kimId, "KimPlays")
 
     @Test
+    @Obligation("BGG-10")
     fun `the home page suggests linking until it's done`() = test.webTest(session = kim) { client ->
         client.get("/").page().one("#bgg-nudge a").attr("href") shouldBe "/bgg?returnTo=%2F"
 
@@ -56,6 +58,7 @@ class BggRoutesTest {
     }
 
     @Test
+    @Obligation("BGG-1", "BGG-3")
     fun `a known username gets a code to put in the profile`() = test.webTest(session = kim) { client ->
         val step = client.username("KimPlays")
 
@@ -71,6 +74,7 @@ class BggRoutesTest {
     }
 
     @Test
+    @Obligation("BGG-3")
     fun `the username step is a hero with an inline button and Collection as the current nav item`() = test.webTest(session = kim) { client ->
         val page = client.get("/bgg?returnTo=%2F").page()
 
@@ -81,6 +85,7 @@ class BggRoutesTest {
     }
 
     @Test
+    @Obligation("BGG-2")
     fun `unknown or empty usernames are explained`() = test.webTest(session = kim) { client ->
         test.bgg.missingUsers += "nobody"
 
@@ -89,6 +94,7 @@ class BggRoutesTest {
     }
 
     @Test
+    @Obligation("BGG-1")
     fun `verifying before the code is on the profile says so`() = test.webTest(session = kim) { client ->
         client.verify("KimPlays").fragment().one(".gf-error").text() shouldBe
             "We can't see the code on your profile yet. Saved it? Then try again in a minute."
@@ -96,6 +102,7 @@ class BggRoutesTest {
     }
 
     @Test
+    @Obligation("BGG-1", "BGG-9")
     fun `with the code on the profile, the account is linked and you go back`() = test.webTest(session = kim) { client ->
         test.bgg.putInProfile("KimPlays", "My site: https://example.com $code")
 
@@ -106,6 +113,7 @@ class BggRoutesTest {
     }
 
     @Test
+    @Obligation("BGG-6")
     fun `the log holds a hash of the username, never the name`() = test.webTest(session = kim) { client ->
         test.bgg.putInProfile("KimPlays", code)
 
@@ -123,6 +131,7 @@ class BggRoutesTest {
     }
 
     @Test
+    @Obligation("BGG-7")
     fun `unlinking forgets the account and the collection, and frees the username`() = test.webTest(session = kim) { client ->
         test.bgg.putInProfile("KimPlays", code)
         client.verify("KimPlays")
@@ -141,6 +150,7 @@ class BggRoutesTest {
     }
 
     @Test
+    @Obligation("BGG-4")
     fun `an account linked under a hash can't be taken by someone else either`() = test.webTest(session = kim) { client ->
         app.db.transaction { app.store.append(listOf(BggAccountLinkedHashed(bram, app.bggVerification.usernameKey("kimplays")))) }
         test.bgg.putInProfile("KimPlays", code)
@@ -149,6 +159,7 @@ class BggRoutesTest {
     }
 
     @Test
+    @Obligation("BGG-9")
     fun `the collection page offers the way back to where you were going`() = test.webTest(session = kim) { client ->
         test.bgg.putInProfile("KimPlays", code)
         client.verify("KimPlays")
@@ -160,6 +171,7 @@ class BggRoutesTest {
     }
 
     @Test
+    @Obligation("BGG-4")
     fun `someone else's BGG account can't be taken`() = test.webTest(session = kim) { client ->
         app.db.transaction { app.store.append(listOf(BggAccountLinked(bram, "KimPlays"))) }
         test.bgg.putInProfile("KimPlays", code)
@@ -168,6 +180,7 @@ class BggRoutesTest {
     }
 
     @Test
+    @Obligation("BGG-32")
     fun `in dev mode the fake profile can be filled in from the page`() = test.webTest(session = kim) { client ->
         val step = client.username("KimPlays")
         val button = step.one("#dev-bgg button")

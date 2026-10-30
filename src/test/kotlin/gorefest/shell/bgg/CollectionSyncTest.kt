@@ -1,5 +1,6 @@
 package gorefest.shell.bgg
 
+import gorefest.contract.Obligation
 import gorefest.core.BggAccountLinked
 import gorefest.core.BggId
 import gorefest.core.PlayerId
@@ -31,6 +32,7 @@ class CollectionSyncTest {
     }
 
     @Test
+    @Obligation("BGG-14")
     suspend fun `relinking to another username during an in-flight sync ends with the new collection`() {
         test.bgg.setCollection("OldName", setOf(brass))
         test.bgg.setCollection("NewName", setOf(azul))
@@ -46,6 +48,7 @@ class CollectionSyncTest {
     }
 
     @Test
+    @Obligation("BGG-13")
     suspend fun `a rejected token fails the sync at once instead of retrying`() {
         val calls = AtomicInteger()
         val rejecting = object : BggApi by FakeBggApi() {

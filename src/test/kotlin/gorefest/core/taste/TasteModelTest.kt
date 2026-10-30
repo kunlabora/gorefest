@@ -1,5 +1,6 @@
 package gorefest.core.taste
 
+import gorefest.contract.Obligation
 import gorefest.core.Rejection
 import gorefest.core.Basis
 import gorefest.core.BggId
@@ -35,6 +36,7 @@ class TasteModelTest {
     private fun fit(vararg cs: ComparisonRecorded, basis: Basis = Basis.VIBE) = model.fit(cs.toList(), basis, now)
 
     @Test
+    @Obligation("TA-5")
     fun `a watched answer teaches the enjoyment model, not the vibe model, in both models`() {
         val watched = arrayOf(c(brass, azul, A, Basis.WATCHED), c(brass, azul, A, Basis.WATCHED))
         val features = FeatureModel(games = { null })
@@ -46,6 +48,7 @@ class TasteModelTest {
     }
 
     @Test
+    @Obligation("TA-5")
     fun `watching a game doesn't make it played`() {
         val history = listOf<Event>(c(brass, azul, A, Basis.WATCHED)).fold(Tastes.initialState, Tastes::evolve).of(anna)
 
@@ -54,6 +57,7 @@ class TasteModelTest {
     }
 
     @Test
+    @Obligation("TA-2")
     fun `the winner scores higher, and is predicted to win again`() {
         val scores = fit(c(brass, azul, A), c(brass, azul, A), c(azul, brass, B))
 
@@ -62,6 +66,7 @@ class TasteModelTest {
     }
 
     @Test
+    @Obligation("TA-2")
     fun `beating the winner puts you on top`() {
         val scores = fit(c(brass, azul, A), c(azul, catan, A), c(brass, azul, A), c(azul, catan, A))
 
@@ -70,6 +75,7 @@ class TasteModelTest {
     }
 
     @Test
+    @Obligation("TA-3")
     fun `both great lifts both above average, both meh sinks both`() {
         val great = fit(c(brass, azul, BOTH_GREAT))
         val meh = fit(c(brass, azul, BOTH_MEH))
@@ -81,6 +87,7 @@ class TasteModelTest {
     }
 
     @Test
+    @Obligation("TA-7")
     fun `more comparisons mean less uncertainty, unknown games keep the prior`() {
         val once = fit(c(brass, azul, A))
         val often = fit(*Array(6) { c(brass, azul, A) })
@@ -91,6 +98,7 @@ class TasteModelTest {
     }
 
     @Test
+    @Obligation("TA-6")
     fun `recent answers outweigh old ones`() {
         val scores = fit(*Array(3) { c(azul, brass, A, daysAgo = 800) }, *Array(3) { c(brass, azul, A, daysAgo = 1) })
 
@@ -98,6 +106,7 @@ class TasteModelTest {
     }
 
     @Test
+    @Obligation("TA-4")
     fun `vibe and played are separate models`() {
         val cs = arrayOf(c(brass, azul, A, Basis.VIBE), c(azul, brass, A, Basis.PLAYED), c(azul, brass, A, Basis.PLAYED))
 
@@ -106,6 +115,7 @@ class TasteModelTest {
     }
 
     @Test
+    @Obligation("TA-11")
     fun `the taste history keeps comparisons and play status per player`() {
         val events = listOf<Event>(c(brass, azul, A), GamePlayStatusDeclared(anna, catan, played = false))
         val history = events.fold(Tastes.initialState, Tastes::evolve).of(anna)
@@ -116,6 +126,7 @@ class TasteModelTest {
     }
 
     @Test
+    @Obligation("TA-10")
     fun `on a replay, v0 predicts a consistent player far better than a coin flip`() {
         val random = Random(42)
         val truth = (1..20).associate { BggId(it) to random.nextDouble(-2.0, 2.0) }
@@ -137,6 +148,7 @@ class TasteModelTest {
     }
 
     @Test
+    @Obligation("TA-1")
     fun `comparing a game with itself is refused`() {
         RecordComparisonDecider.given().whenever(c(brass, brass, A)).thenRejects(Rejection.SameGameTwice)
     }

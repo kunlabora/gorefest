@@ -1,5 +1,6 @@
 package gorefest.shell.web.gameday
 
+import gorefest.contract.Obligation
 import gorefest.core.GameBrought
 import gorefest.core.PlayerId
 import gorefest.core.PlayerJoined
@@ -44,6 +45,7 @@ class ReadinessRoutesTest {
     private val ready = "/gamedays/$gorefest7/ready"
 
     @Test
+    @Obligation("GD-23", "GD-24")
     fun `the host sees numbers, gaps and who to nudge`() = test.webTest(session = host) { client ->
         client.get("/gamedays/$gorefest7").page().one("a[href=$ready]").text() shouldBe "How ready are we?"
 
@@ -59,6 +61,7 @@ class ReadinessRoutesTest {
     }
 
     @Test
+    @Obligation("GD-23")
     fun `only the host can see it`() = test.webTest(session = kim) { client ->
         client.get(ready).status shouldBe HttpStatusCode.NotFound
         client.get("/gamedays/$gorefest7").page().select("a[href=$ready]") shouldHaveSize 0

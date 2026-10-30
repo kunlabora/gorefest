@@ -1,5 +1,6 @@
 package gorefest.core.datepoll
 
+import gorefest.contract.Obligation
 import gorefest.core.BggId
 import gorefest.core.DatePollAnswered
 import gorefest.core.DatePollBringAnswered
@@ -47,6 +48,7 @@ class PollGamesTest {
     // Proposing
 
     @Test
+    @Obligation("DP-20", "DP-21")
     fun `the host proposes a game and takes it back`() {
         ProposePollGameDecider.given(*open).whenever(ProposePollGame(poll, anna, humanity)).thenEmits(DatePollGameProposed(poll, humanity))
         ProposePollGameDecider.given(*withGames).whenever(ProposePollGame(poll, anna, humanity, proposed = false)).thenEmits(DatePollGameWithdrawn(poll, humanity))
@@ -54,6 +56,7 @@ class PollGamesTest {
     }
 
     @Test
+    @Obligation("DP-19", "DP-20")
     fun `only the host, only in a poll that asks about games, only while it's open, and not too many`() {
         ProposePollGameDecider.given(*open).whenever(ProposePollGame(poll, bram, humanity)).thenRejects(Rejection.OnlyHostProposesGames)
         ProposePollGameDecider.given(created(games = false)).whenever(ProposePollGame(poll, anna, humanity)).thenRejects(Rejection.PollAsksNoGames)
@@ -64,6 +67,7 @@ class PollGamesTest {
     }
 
     @Test
+    @Obligation("DP-19", "DP-20")
     fun `games ticked on the form go into the poll with it, but only when it asks about games`() {
         val create = CreateDatePoll(poll, anna, "Small night", "Anna's", listOf(fri, sat), "Europe/Brussels", today, asksAboutGames = true, games = listOf(brass, humanity, brass))
         CreateDatePollDecider.given().whenever(create).thenEmits(created(), DatePollJoined(poll, anna), DatePollGameProposed(poll, brass), DatePollGameProposed(poll, humanity))
@@ -74,6 +78,7 @@ class PollGamesTest {
     // Answering
 
     @Test
+    @Obligation("DP-22")
     fun `a joined player says yes or no per game, and can change it`() {
         AnswerPollGameDecider.given(*withGames).whenever(AnswerPollGame(poll, bram, brass, yes = true)).thenEmits(DatePollGameAnswered(poll, bram, brass, true))
         AnswerPollGameDecider.given(*withGames, DatePollGameAnswered(poll, bram, brass, true)).whenever(AnswerPollGame(poll, bram, brass, yes = false))
@@ -82,6 +87,7 @@ class PollGamesTest {
     }
 
     @Test
+    @Obligation("DP-21", "DP-22")
     fun `a yes is a wish, three at most, and a game taken off frees its yes`() {
         val three = arrayOf(*withGames, DatePollGameProposed(poll, catan), DatePollGameAnswered(poll, bram, brass, true), DatePollGameAnswered(poll, bram, humanity, true), DatePollGameAnswered(poll, bram, azul, true))
         AnswerPollGameDecider.given(*three).whenever(AnswerPollGame(poll, bram, catan, yes = true)).thenRejects(Rejection.TooManyPollYeses)
@@ -91,6 +97,7 @@ class PollGamesTest {
     }
 
     @Test
+    @Obligation("DP-23")
     fun `only joined players answer, only about the poll's games`() {
         AnswerPollGameDecider.given(*withGames).whenever(AnswerPollGame(poll, kim, brass, yes = true)).thenRejects(Rejection.NotInDatePoll)
         AnswerPollGameDecider.given(*withGames).whenever(AnswerPollGame(poll, bram, catan, yes = true)).thenRejects(Rejection.NotInPoll)
@@ -98,6 +105,7 @@ class PollGamesTest {
     }
 
     @Test
+    @Obligation("DP-24")
     fun `anyone in the poll offers to bring a game, or says not this time`() {
         AnswerBringDecider.given(*withGames).whenever(AnswerBring(poll, ruben, humanity, true)).thenEmits(DatePollBringAnswered(poll, ruben, humanity, true))
         AnswerBringDecider.given(*withGames).whenever(AnswerBring(poll, ruben, humanity, false)).thenEmits(DatePollBringAnswered(poll, ruben, humanity, false))
@@ -105,6 +113,7 @@ class PollGamesTest {
     }
 
     @Test
+    @Obligation("DP-10")
     fun `answers about games don't conflict with each other`() {
         val bramsQuery = AnswerPollGameDecider.query(AnswerPollGame(poll, bram, brass, true))
         val rubens = DatePollGameAnswered(poll, ruben, brass, true)
@@ -124,6 +133,7 @@ class PollGamesTest {
     )
 
     @Test
+    @Obligation("DP-25")
     fun `a game is missing on a date when nobody who offered to bring it can come`() {
         val poll = summary(*answered)
 
@@ -137,6 +147,7 @@ class PollGamesTest {
     }
 
     @Test
+    @Obligation("DP-26")
     fun `the first one who offered and can come brings it, and taking it back hands it on`() {
         val both = summary(*answered, DatePollBringAnswered(poll, bram, humanity, true))
         both.bringers(humanity) shouldBe listOf(ruben, bram)
@@ -149,6 +160,7 @@ class PollGamesTest {
     }
 
     @Test
+    @Obligation("DP-21")
     fun `a game taken off the poll takes its answers and offers with it`() {
         val poll = summary(*answered, DatePollGameWithdrawn(poll, humanity))
         poll.proposals shouldBe listOf(brass, azul)
@@ -163,6 +175,7 @@ class PollGamesTest {
     private val pick = PickDate(poll, anna, sat, GameDayId(Uuid.random()), today, night)
 
     @Test
+    @Obligation("DP-29")
     fun `picking a date in a poll with games makes a game night with its plan`() {
         PickDateDecider.given(*answered).whenever(pick).thenEmits(
             DatePollPickedForGameNight(poll, sat, night),
@@ -176,12 +189,14 @@ class PollGamesTest {
     }
 
     @Test
+    @Obligation("DP-17")
     fun `a late offer is inside the pick's boundary`() {
         PickDateDecider.query(pick).matches("DatePollBringAnswered", DatePollBringAnswered(poll, kim, azul, true).tags) shouldBe true
         PickDateDecider.query(pick).matches("DatePollGameAnswered", DatePollGameAnswered(poll, kim, azul, true).tags) shouldBe true
     }
 
     @Test
+    @Obligation("DP-18")
     fun `a picked poll takes no more answers about games`() {
         val picked = arrayOf(*answered, DatePollPickedForGameNight(poll, sat, night))
         AnswerPollGameDecider.given(*picked).whenever(AnswerPollGame(poll, bram, azul, true)).thenRejects(Rejection.DatePollClosed)
@@ -194,6 +209,7 @@ class PollGamesTest {
     // The game night
 
     @Test
+    @Obligation("DP-34", "PR-8")
     fun `an erased player leaves the game night, and a game they were to bring goes missing`() {
         val created = GameNightCreated(
             night, poll, anna, "Small night", sat, "Anna's", "Europe/Brussels", listOf(anna, bram, ruben),
@@ -210,6 +226,7 @@ class PollGamesTest {
     // Erasure before the pick (BUG-027, BUG-028)
 
     @Test
+    @Obligation("DP-33", "PR-8")
     fun `someone erased before the pick isn't on the game night, and their yeses and offers go with them`() {
         PickDateDecider.given(*answered, PlayerErased(ruben)).whenever(pick).thenEmits(
             DatePollPickedForGameNight(poll, sat, night),
@@ -228,6 +245,7 @@ class PollGamesTest {
     }
 
     @Test
+    @Obligation("DP-33", "PR-8")
     fun `someone erased before the pick of a poll without games isn't on the game day`() {
         val plain = arrayOf<Event>(created(games = false), DatePollJoined(poll, anna), DatePollJoined(poll, bram), DatePollAnswered(poll, bram, listOf(sat)))
         val day = GameDayId(Uuid.random())
@@ -239,6 +257,7 @@ class PollGamesTest {
     }
 
     @Test
+    @Obligation("DP-35", "PR-8")
     fun `a poll whose host was erased is over, with no joining, answering, offering or picking`() {
         val gone = arrayOf(*answered, PlayerErased(anna))
         JoinDatePollDecider.given(*gone).whenever(JoinDatePoll(poll, kim)).thenRejects(Rejection.DatePollHostGone)
@@ -250,6 +269,7 @@ class PollGamesTest {
     }
 
     @Test
+    @Obligation("DP-29", "DP-34")
     fun `the plan remembers who else coming offered, and an erased bringer hands the game on`() {
         val both = arrayOf(*answered, DatePollBringAnswered(poll, bram, humanity, true))
         PickDateDecider.given(*both).whenever(pick).thenEmits(

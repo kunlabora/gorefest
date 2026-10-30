@@ -1,5 +1,6 @@
 package gorefest.shell.web.suggestions
 
+import gorefest.contract.Obligation
 import gorefest.core.matching.SuggestionReason
 import gorefest.core.matching.Suggestions
 import io.kotest.matchers.shouldBe
@@ -7,6 +8,7 @@ import org.junit.jupiter.api.Test
 
 class SuggestionTextsTest {
     @Test
+    @Obligation("SU-15")
     fun `every reason has its sentence`() {
         mapOf(
             SuggestionReason.EagerOwner("Kim") to "Kim brought it and has been itching to play.",
@@ -28,6 +30,7 @@ class SuggestionTextsTest {
     }
 
     @Test
+    @Obligation("SU-15", "SU-20")
     fun `nothing fits says why`() {
         Suggestions.NothingFits.NoPlayers.title() shouldBe "Who's playing?"
         Suggestions.NothingFits.NoPlayers.text() shouldBe "Tick the players at your table."

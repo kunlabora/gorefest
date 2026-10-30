@@ -1,5 +1,6 @@
 package gorefest.core.gameday
 
+import gorefest.contract.Obligation
 import gorefest.core.BggId
 import gorefest.core.Event
 import gorefest.core.GameDayId
@@ -19,11 +20,13 @@ class CancelGameDayTest {
     private val cancelled = GameDayCancelled(gorefest7)
 
     @Test
+    @Obligation("GD-25")
     fun `the host cancels a running game day`() {
         CancelGameDayDecider.given(gameDayCreated()).whenever(CancelGameDay(gorefest7, anna)).thenEmits(cancelled)
     }
 
     @Test
+    @Obligation("GD-25")
     fun `only the host, not twice, not after it ended`() {
         CancelGameDayDecider.given(gameDayCreated()).whenever(CancelGameDay(gorefest7, bram)).thenRejects(Rejection.OnlyHostCanCancel)
         CancelGameDayDecider.given(gameDayCreated(), cancelled).whenever(CancelGameDay(gorefest7, anna)).thenRejects(Rejection.GameDayCancelled)
@@ -32,6 +35,7 @@ class CancelGameDayTest {
     }
 
     @Test
+    @Obligation("GD-27", "SH-15")
     fun `a cancelled game day is read-only`() {
         val given = arrayOf(gameDayCreated(), PlayerJoined(gorefest7, anna), PlayerJoined(gorefest7, bram), cancelled)
         JoinGameDayDecider.given(*given).whenever(JoinGameDay(gorefest7, bram)).thenRejects(Rejection.GameDayCancelled)
@@ -45,12 +49,14 @@ class CancelGameDayTest {
     }
 
     @Test
+    @Obligation("GD-27", "SH-15")
     fun `unbringing is refused on a cancelled game day too`() {
         BringGameDecider.given(gameDayCreated(), PlayerJoined(gorefest7, anna), GameBrought(gorefest7, anna, BggId(13)), cancelled)
             .whenever(BringGame(gorefest7, anna, BggId(13), false)).thenRejects(Rejection.GameDayCancelled)
     }
 
     @Test
+    @Obligation("GD-26")
     fun `a cancelled game day lists with the past ones, even with a date ahead`() {
         fun day(offset: Long): Pair<GameDayId, List<Event>> {
             val id = GameDayId(Uuid.random())
@@ -65,6 +71,7 @@ class CancelGameDayTest {
     }
 
     @Test
+    @Obligation("GD-29")
     fun `a stray end after the cancel changes nothing`() {
         val state = listOf(gameDayCreated(), cancelled, GameDayEnded(gorefest7)).fold(GameDays.initialState, GameDays::evolve)
         state.getValue(gorefest7).cancelled shouldBe true
@@ -74,6 +81,7 @@ class CancelGameDayTest {
     }
 
     @Test
+    @Obligation("GD-29")
     fun `ending a cancelled game day does nothing, and it is never due`() {
         EndGameDayDecider.given(gameDayCreated(), cancelled).whenever(EndGameDay(gorefest7)).thenEmitsNothing()
 
@@ -82,6 +90,7 @@ class CancelGameDayTest {
     }
 
     @Test
+    @Obligation("GD-26", "GD-29")
     fun `the read model carries the cancelled state`() {
         val state = listOf(gameDayCreated(), PlayerJoined(gorefest7, anna), cancelled).fold(GameDays.initialState, GameDays::evolve)
 

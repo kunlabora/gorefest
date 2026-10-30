@@ -1,5 +1,6 @@
 package gorefest.shell.account
 
+import gorefest.contract.Obligation
 import gorefest.core.Basis
 import gorefest.core.BggId
 import gorefest.core.BringRequested
@@ -46,6 +47,7 @@ class PersonalDataTest {
     private val file get() = PersonalData.of(kim, profile, events, lookups)
 
     @Test
+    @Obligation("PR-11")
     fun `it holds the profile, the collection and what they did, in words`() {
         val about = file["about"]!!.jsonObject
         about["name"]!!.jsonPrimitive.content shouldBe "Kim"
@@ -62,6 +64,7 @@ class PersonalDataTest {
     }
 
     @Test
+    @Obligation("PR-12")
     fun `it never holds another person's id or things only they chose to share`() {
         val text = file.toString()
 
@@ -72,6 +75,7 @@ class PersonalDataTest {
     }
 
     @Test
+    @Obligation("PR-12")
     fun `a game night and a poll's games hold only your own part`() {
         val poll = gorefest.core.DatePollId(Uuid.random())
         val night = gorefest.core.GameNightId(Uuid.random())

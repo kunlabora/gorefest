@@ -1,5 +1,6 @@
 package gorefest.shell.web.bgg
 
+import gorefest.contract.Obligation
 import gorefest.core.BggAccountLinked
 import gorefest.core.BggId
 import gorefest.core.PlayerId
@@ -44,6 +45,7 @@ class CollectionTest {
     }
 
     @Test
+    @Obligation("BGG-11")
     suspend fun `a sync stores owned games and their details`() {
         sync.request(kimId, "KimPlays", BggPriority.LINK).join()
 
@@ -53,6 +55,7 @@ class CollectionTest {
     }
 
     @Test
+    @Obligation("BGG-12")
     suspend fun `BGG saying 'queued' is retried until the collection is ready`() {
         test.bgg.queuedFor["kimplays"] = 2
 
@@ -63,6 +66,7 @@ class CollectionTest {
     }
 
     @Test
+    @Obligation("BGG-13")
     suspend fun `an unknown BGG user fails with a reason`() {
         test.bgg.missingUsers += "kimplays"
 
@@ -72,6 +76,7 @@ class CollectionTest {
     }
 
     @Test
+    @Obligation("BGG-11")
     suspend fun `games removed on BGG disappear on the next sync`() {
         sync.request(kimId, "KimPlays", BggPriority.LINK).join()
         test.bgg.setCollection("KimPlays", setOf(azul))
@@ -82,6 +87,7 @@ class CollectionTest {
     }
 
     @Test
+    @Obligation("BGG-17")
     suspend fun `details are fetched once per game, for everyone`() {
         test.bgg.setCollection("BramPlays", setOf(azul, catan))
 
@@ -92,6 +98,7 @@ class CollectionTest {
     }
 
     @Test
+    @Obligation("BGG-15")
     suspend fun `old collections are due for a refresh`() {
         sync.request(kimId, "KimPlays", BggPriority.LINK).join()
         suspend fun due() = app.db.transaction { gorefest.shell.bgg.Collections().due(before = test.clock.instant() - Duration.ofDays(7)) }
@@ -102,6 +109,7 @@ class CollectionTest {
     }
 
     @Test
+    @Obligation("BGG-16")
     fun `the page polls while importing, then lists the games alphabetically`() = test.webTest(session = kim) { client ->
         app.db.transaction { gorefest.shell.bgg.Collections().setStatus(kimId, "KimPlays", SyncStatus.QUEUED, "BGG is preparing your collection", test.clock.instant()) }
 
@@ -122,6 +130,7 @@ class CollectionTest {
     }
 
     @Test
+    @Obligation("BGG-13")
     fun `a failed import offers to try again`() = test.webTest(session = kim) { client ->
         test.bgg.missingUsers += "kimplays"
         sync.request(kimId, "KimPlays", BggPriority.LINK).join()
@@ -132,6 +141,7 @@ class CollectionTest {
     }
 
     @Test
+    @Obligation("BGG-10")
     fun `without a linked account the collection page sends you to link one`() {
         val other = kotlinx.coroutines.runBlocking { test.loggedIn("Other") }
         test.webTest(session = other) { client ->

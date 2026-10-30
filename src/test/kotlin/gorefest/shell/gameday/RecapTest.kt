@@ -1,5 +1,6 @@
 package gorefest.shell.gameday
 
+import gorefest.contract.Obligation
 import gorefest.core.BggId
 import gorefest.core.PlayLogged
 import gorefest.core.PlayerId
@@ -17,6 +18,7 @@ class RecapTest {
         PlayLogged(gorefest7, game, players, minutes, anna, Instant.EPOCH)
 
     @Test
+    @Obligation("GD-31")
     fun `lines say who played what for how long, and totals add up`() {
         val recap = Recap.of(
             listOf(play(azul, 40, listOf(anna, bram)), play(azul, 25, listOf(anna))),
@@ -30,6 +32,7 @@ class RecapTest {
     }
 
     @Test
+    @Obligation("GD-32")
     fun `unknown games and players get a stand-in name`() {
         val recap = Recap.of(listOf(play(unknown, 30, listOf(bram))), gameName = { null }, playerName = { null })
 

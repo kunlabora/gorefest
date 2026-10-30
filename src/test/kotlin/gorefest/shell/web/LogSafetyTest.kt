@@ -3,6 +3,7 @@ package gorefest.shell.web
 import ch.qos.logback.classic.Logger
 import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.core.read.ListAppender
+import gorefest.contract.Obligation
 import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
@@ -22,6 +23,7 @@ class LogSafetyTest {
     fun reset() = kotlinx.coroutines.runBlocking { test.reset() }
 
     @Test
+    @Obligation("PR-17")
     fun `a request line keeps the route and drops the query and the token`() {
         "/login/link?token=SECRET".loggable() shouldBe "/login/link"
         "/i/SECRET2".loggable() shouldBe "/i/{token}"
@@ -32,6 +34,7 @@ class LogSafetyTest {
     }
 
     @Test
+    @Obligation("PR-17")
     fun `no token, code or return path reaches the log`() = test.webTest { client ->
         val captured = ListAppender<ILoggingEvent>().also { it.start() }
         val root = LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME) as Logger
@@ -57,6 +60,7 @@ class LogSafetyTest {
     }
 
     @Test
+    @Obligation("PR-17")
     fun `a login mail leaves neither the address nor the code in the log`() = test.webTest { client ->
         val captured = ListAppender<ILoggingEvent>().also { it.start() }
         val root = LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME) as Logger

@@ -1,5 +1,6 @@
 package gorefest.shell.bgg
 
+import gorefest.contract.Obligation
 import gorefest.core.BggId
 import gorefest.core.game.Game
 import gorefest.shell.TestClock
@@ -33,6 +34,7 @@ class GameSearchTest {
     private fun search() = GameSearch(Catalog(TestDatabase.db), gateway, clock)
 
     @Test
+    @Obligation("BGG-22")
     suspend fun `a search BGG had nothing for isn't repeated until the entry expires`() {
         val search = search()
 
@@ -47,6 +49,7 @@ class GameSearchTest {
     }
 
     @Test
+    @Obligation("BGG-21", "BGG-22")
     suspend fun `a failed search is remembered briefly and still reports BGG as unavailable`() {
         val search = search()
         failing = true

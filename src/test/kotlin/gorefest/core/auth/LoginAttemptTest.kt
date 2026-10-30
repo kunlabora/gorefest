@@ -1,5 +1,6 @@
 package gorefest.core.auth
 
+import gorefest.contract.Obligation
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 import java.time.Duration
@@ -10,6 +11,7 @@ class LoginAttemptTest {
     private val fresh = LoginAttempt.startingAt(now)
 
     @Test
+    @Obligation("ACC-5")
     fun `a right code within 15 minutes logs in and uses up the attempt`() {
         val (check, attempt) = fresh.checkCode(now + Duration.ofMinutes(14), codeMatches = true)
 
@@ -18,6 +20,7 @@ class LoginAttemptTest {
     }
 
     @Test
+    @Obligation("ACC-5")
     fun `a used attempt works for neither code nor link`() {
         val used = fresh.checkLink(now).attempt
 
@@ -26,6 +29,7 @@ class LoginAttemptTest {
     }
 
     @Test
+    @Obligation("ACC-6")
     fun `after 15 minutes the attempt has expired`() {
         val later = now + LoginAttempt.TTL
 
@@ -34,6 +38,7 @@ class LoginAttemptTest {
     }
 
     @Test
+    @Obligation("ACC-7")
     fun `wrong codes count down, and the fifth locks the attempt for the link too`() {
         var attempt = fresh
         val checks = (1..5).map { attempt.checkCode(now, codeMatches = false).also { attempt = it.attempt }.check }
@@ -47,6 +52,7 @@ class LoginAttemptTest {
     }
 
     @Test
+    @Obligation("ACC-7")
     fun `failed checks on a dead attempt don't change it`() {
         val expired = now + LoginAttempt.TTL
         fresh.checkCode(expired, codeMatches = false).attempt shouldBe fresh

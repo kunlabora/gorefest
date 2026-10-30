@@ -1,5 +1,6 @@
 package gorefest.shell.web
 
+import gorefest.contract.Obligation
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
@@ -20,6 +21,7 @@ class PrivacyTest {
     fun reset() = kotlinx.coroutines.runBlocking { test.reset() }
 
     @Test
+    @Obligation("PR-27")
     fun `robots txt disallows everything`() = test.webTest { client ->
         val response = client.get("/robots.txt")
         response.status shouldBe HttpStatusCode.OK
@@ -27,6 +29,7 @@ class PrivacyTest {
     }
 
     @Test
+    @Obligation("PR-27")
     fun `robots txt lets Slack's link preview read pages`() = test.webTest { client ->
         client.get("/robots.txt").bodyAsText() shouldContain "User-agent: Slackbot-LinkExpanding\nUser-agent: Slackbot\nAllow: /"
     }
@@ -40,12 +43,14 @@ class PrivacyTest {
     }
 
     @Test
+    @Obligation("PR-27")
     fun `every response says noindex`() = test.webTest { client ->
         val header = client.get("/login").headers["X-Robots-Tag"]
         header.shouldContainAll("noindex", "nofollow", "noarchive")
     }
 
     @Test
+    @Obligation("PR-27", "BGG-29")
     fun `pages carry a robots meta tag and credit BoardGameGeek`() = test.webTest { client ->
         val page = client.get("/login").page()
         page.one("meta[name=robots]").attr("content") shouldContain "noindex"
@@ -67,11 +72,13 @@ class PrivacyTest {
     private fun String?.shouldContainAll(vararg parts: String) = parts.forEach { this.orEmpty() shouldContain it }
 
     @Test
+    @Obligation("BGG-29")
     fun `the powered by BGG logo is served`() = test.webTest { client ->
         client.get("/static/poweredbybgg.webp").status shouldBe HttpStatusCode.OK
     }
 
     @Test
+    @Obligation("PR-28")
     fun `fonts come from us, kept for a year, and nothing calls Google`() = test.webTest { client ->
         val page = client.get("/login").page()
         page.select("link[rel=preload][as=font]").map { it.attr("href") } shouldBe
@@ -88,6 +95,7 @@ class PrivacyTest {
         }
 
     @Test
+    @Obligation("WEB-8")
     fun `static assets carry validators, revalidate, and answer HEAD`() = test.webTest { client ->
         val first = client.get("/static/css/gorefest.css")
         first.headers[HttpHeaders.CacheControl] shouldBe "no-cache"
@@ -102,6 +110,7 @@ class PrivacyTest {
     }
 
     @Test
+    @Obligation("ACC-13")
     fun `pages are never stored, so Back after logout shows nothing`() = kotlinx.coroutines.runBlocking {
         val session = test.loggedIn("Tim")
         test.webTest(session = session) { client ->

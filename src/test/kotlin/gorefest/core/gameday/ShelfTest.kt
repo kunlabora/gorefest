@@ -1,5 +1,6 @@
 package gorefest.core.gameday
 
+import gorefest.contract.Obligation
 import gorefest.core.Rejection
 import gorefest.core.BggId
 import gorefest.core.Event
@@ -20,6 +21,7 @@ class ShelfTest {
     private val joined = arrayOf<Event>(gameDayCreated(), PlayerJoined(gorefest7, anna), PlayerJoined(gorefest7, bram))
 
     @Test
+    @Obligation("SH-1")
     fun `a joined player brings and unbrings a game`() {
         BringGameDecider.given(*joined).whenever(BringGame(gorefest7, bram, brass, true)).thenEmits(GameBrought(gorefest7, bram, brass))
         BringGameDecider
@@ -29,12 +31,14 @@ class ShelfTest {
     }
 
     @Test
+    @Obligation("SH-2")
     fun `ticking what's already ticked changes nothing`() {
         BringGameDecider.given(*joined, GameBrought(gorefest7, bram, brass)).whenever(BringGame(gorefest7, bram, brass, true)).thenEmitsNothing()
         BringGameDecider.given(*joined).whenever(BringGame(gorefest7, bram, brass, false)).thenEmitsNothing()
     }
 
     @Test
+    @Obligation("SH-3")
     fun `someone else bringing the same game doesn't count as mine`() {
         BringGameDecider
             .given(*joined, GameBrought(gorefest7, anna, brass))
@@ -43,6 +47,7 @@ class ShelfTest {
     }
 
     @Test
+    @Obligation("SH-14", "SH-15")
     fun `only joined players, only while it's on`() {
         BringGameDecider.given(gameDayCreated()).whenever(BringGame(gorefest7, bram, brass, true)).thenRejects(Rejection.NotJoined)
         BringGameDecider.given(*joined, GameDayEnded(gorefest7)).whenever(BringGame(gorefest7, bram, brass, true)).thenRejects(Rejection.GameDayOver)
@@ -53,12 +58,14 @@ class ShelfTest {
     private val onShelf = arrayOf<Event>(*joined, GameBrought(gorefest7, anna, brass))
 
     @Test
+    @Obligation("SH-16")
     fun `any joined player can want a game somebody else brought`() {
         SetPlayWishDecider.given(*onShelf).whenever(SetPlayWish(gorefest7, bram, brass, true)).thenEmits(PlayWishChanged(gorefest7, bram, brass, true))
         SetPlayWishDecider.given(*onShelf).whenever(SetPlayWish(gorefest7, anna, brass, true)).thenEmits(PlayWishChanged(gorefest7, anna, brass, true))
     }
 
     @Test
+    @Obligation("SH-18")
     fun `wanting needs the game on the shelf, a joined player and a game day that's on`() {
         SetPlayWishDecider.given(*joined).whenever(SetPlayWish(gorefest7, bram, brass, true)).thenRejects(Rejection.NotOnShelf)
         SetPlayWishDecider.given(gameDayCreated(), GameBrought(gorefest7, anna, brass)).whenever(SetPlayWish(gorefest7, bram, brass, true)).thenRejects(Rejection.NotJoined)
@@ -66,6 +73,7 @@ class ShelfTest {
     }
 
     @Test
+    @Obligation("SH-16")
     fun `wanting what you already want, or not wanting what you don't, changes nothing`() {
         SetPlayWishDecider.given(*onShelf, PlayWishChanged(gorefest7, bram, brass, true)).whenever(SetPlayWish(gorefest7, bram, brass, true)).thenEmitsNothing()
         SetPlayWishDecider.given(*onShelf).whenever(SetPlayWish(gorefest7, bram, brass, false)).thenEmitsNothing()
@@ -76,6 +84,7 @@ class ShelfTest {
     }
 
     @Test
+    @Obligation("SH-17")
     fun `a player gets a few wishes, and giving one back frees it`() {
         val shelf = arrayOf<Event>(*joined, *listOf(brass, azul, catan, ark).map { GameBrought(gorefest7, anna, it) }.toTypedArray())
         val wished = listOf(brass, azul, catan).map { PlayWishChanged(gorefest7, bram, it, true) }.toTypedArray()
@@ -88,6 +97,7 @@ class ShelfTest {
     }
 
     @Test
+    @Obligation("SH-19")
     fun `a game that left the shelf takes the wishes with it, so bringing it again starts neutral and frees the slot`() {
         val shelf = arrayOf<Event>(*joined, *listOf(brass, azul, catan, ark).map { GameBrought(gorefest7, anna, it) }.toTypedArray())
         val wished = listOf(brass, azul, catan).map { PlayWishChanged(gorefest7, bram, it, true) }.toTypedArray()
@@ -105,6 +115,7 @@ class ShelfTest {
     }
 
     @Test
+    @Obligation("SH-3")
     fun `the shelf shows each game once, with all owners`() {
         val shelf = listOf(
             GameBrought(gorefest7, anna, brass), GameBrought(gorefest7, bram, azul), GameBrought(gorefest7, bram, brass),
@@ -115,6 +126,7 @@ class ShelfTest {
     }
 
     @Test
+    @Obligation("SH-20")
     fun `an owner stepping back drops their own wish but not other people's`() {
         val events = listOf(
             GameBrought(gorefest7, anna, brass), GameBrought(gorefest7, bram, brass),
@@ -128,6 +140,7 @@ class ShelfTest {
     }
 
     @Test
+    @Obligation("SH-19")
     fun `a non-owner's wish survives the owners changing, but not the game leaving`() {
         val events = listOf(GameBrought(gorefest7, anna, brass), PlayWishChanged(gorefest7, bram, brass, true), GameBrought(gorefest7, anna, azul), GameUnbrought(gorefest7, anna, azul))
         events.fold(Shelves.initialState, Shelves::evolve).of(gorefest7) shouldBe listOf(ShelfGame(brass, owners = listOf(anna), eager = setOf(bram)))
@@ -139,6 +152,7 @@ class ShelfTest {
     // Erasure
 
     @Test
+    @Obligation("SH-34", "PR-7")
     fun `an erased player's games and wishes leave a shelf still to be played`() {
         val events = listOf(
             *joined, GameBrought(gorefest7, anna, brass), GameBrought(gorefest7, bram, azul), GameBrought(gorefest7, bram, brass),
@@ -151,12 +165,14 @@ class ShelfTest {
     }
 
     @Test
+    @Obligation("SH-34", "PR-7")
     fun `a game only an erased player brought leaves the shelf`() {
         listOf(*joined, GameBrought(gorefest7, anna, brass), GameBrought(gorefest7, bram, azul), PlayerErased(anna))
             .fold(Shelves.initialState, Shelves::evolve).of(gorefest7).map { it.game } shouldBe listOf(azul)
     }
 
     @Test
+    @Obligation("SH-34", "PR-7")
     fun `a closed game day keeps an erased player's games`() {
         for (closed in listOf(GameDayEnded(gorefest7), GameDayCancelled(gorefest7))) {
             listOf(*joined, GameBrought(gorefest7, anna, brass), closed, PlayerErased(anna)).fold(Shelves.initialState, Shelves::evolve).of(gorefest7) shouldBe
@@ -165,11 +181,13 @@ class ShelfTest {
     }
 
     @Test
+    @Obligation("SH-34")
     fun `a game only an erased player brought can't be wished for`() {
         SetPlayWishDecider.given(*onShelf, PlayerErased(anna)).whenever(SetPlayWish(gorefest7, bram, brass, true)).thenRejects(Rejection.NotOnShelf)
     }
 
     @Test
+    @Obligation("SH-34")
     fun `a wish for an erased player's game stops counting against the limit`() {
         SetPlayWishDecider
             .given(

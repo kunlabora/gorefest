@@ -1,5 +1,6 @@
 package gorefest.shell.web.suggestions
 
+import gorefest.contract.Obligation
 import gorefest.shell.web.components.idSlug
 import gorefest.core.GameBrought
 import gorefest.core.PlayerId
@@ -46,11 +47,13 @@ class SuggestionsRoutesTest {
     private val table = "/gamedays/$gorefest7/table"
 
     @Test
+    @Obligation("SU-16")
     fun `the hub has a way to pick a game`() = test.webTest(session = kim) { client ->
         client.get("/gamedays/$gorefest7").page().select("a[href=$table]") shouldHaveSize 1
     }
 
     @Test
+    @Obligation("SU-6", "SU-17", "SU-18")
     fun `everyone who joined starts at the table, and suggestions show right away`() = test.webTest(session = kim) { client ->
         val page = client.get(table).page()
 
@@ -63,6 +66,7 @@ class SuggestionsRoutesTest {
     }
 
     @Test
+    @Obligation("SU-18")
     fun `a table of one is not "the 1 of you"`() = test.webTest(session = kim) { client ->
         val picks = client.get("/gamedays/$gorefest7/suggestions?players=$kimId").fragment()
         picks.select("#suggestions article .gf-game__meta, article .gf-game__meta").map { it.text() }.forEach {
@@ -72,6 +76,7 @@ class SuggestionsRoutesTest {
     }
 
     @Test
+    @Obligation("SU-18")
     fun `the top pick stands alone, the other two are compact, and the table bar says who and how long`() = test.webTest(session = kim) { client ->
         val page = client.get(table).page()
 
@@ -88,6 +93,7 @@ class SuggestionsRoutesTest {
     }
 
     @Test
+    @Obligation("SU-19")
     fun `a suggestion says what kind of game it is`() = test.webTest(session = kim) { client ->
         val cards = client.get("/gamedays/$gorefest7/suggestions?players=$kimId&players=$anna&time=45m").fragment().select("article")
 
@@ -96,6 +102,7 @@ class SuggestionsRoutesTest {
     }
 
     @Test
+    @Obligation("SU-17")
     fun `changing the table asks for new suggestions`() = test.webTest(session = kim) { client ->
         val fragment = client.get("/gamedays/$gorefest7/suggestions?players=$kimId&players=$anna&time=45m").fragment()
 
@@ -104,6 +111,7 @@ class SuggestionsRoutesTest {
     }
 
     @Test
+    @Obligation("SU-17", "SU-22")
     fun `when nothing fits, a button loosens the time`() = test.webTest(session = kim) { client ->
         val fragment = client.get("/gamedays/$gorefest7/suggestions?players=$kimId&players=$anna&time=45m&players=${PlayerId(Uuid.random())}").fragment()
         fragment.select("article") shouldHaveSize 3 // strangers are ignored
@@ -118,6 +126,7 @@ class SuggestionsRoutesTest {
     }
 
     @Test
+    @Obligation("SU-23")
     fun `without anyone's taste, the page says what the picks go by and offers the taste round`() = test.webTest(session = kim) { client ->
         val fragment = client.get("/gamedays/$gorefest7/suggestions").fragment()
 
@@ -127,6 +136,7 @@ class SuggestionsRoutesTest {
     }
 
     @Test
+    @Obligation("SU-23")
     fun `when only others are unknown, it names them and leaves the viewer's own round out`() = test.webTest(session = kim) { client ->
         val answers = List(Matcher.KNOWN_AFTER) { gorefest.core.ComparisonRecorded(kimId, id("Azul"), id("Brass: Birmingham"), gorefest.core.ComparisonResult.A, gorefest.core.Basis.VIBE, test.clock.instant()) }
         app.db.transaction { app.store.append(answers) }
@@ -139,6 +149,7 @@ class SuggestionsRoutesTest {
     }
 
     @Test
+    @Obligation("SU-20")
     fun `unticking everybody means nobody, not everybody`() = test.webTest(session = kim) { client ->
         val page = client.get(table).page()
         page.one("#table-form input[type=hidden][name=tableSet]").`val`() shouldBe "1"
@@ -151,6 +162,7 @@ class SuggestionsRoutesTest {
     }
 
     @Test
+    @Obligation("SU-22")
     fun `every time option has an id a selector can use, and the relax button targets it`() = test.webTest(session = kim) { client ->
         val page = client.get(table).page()
         val ids = page.select("input[name=time]").map { it.id() }

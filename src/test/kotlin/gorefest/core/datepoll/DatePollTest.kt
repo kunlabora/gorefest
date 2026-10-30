@@ -1,5 +1,6 @@
 package gorefest.core.datepoll
 
+import gorefest.contract.Obligation
 import gorefest.core.DatePollAnswered
 import gorefest.core.DatePollClosed
 import gorefest.core.DatePollCreated
@@ -35,11 +36,13 @@ class CreateDatePollTest {
     private val create = CreateDatePoll(poll, anna, " Boardfest #8 ", " Anna's place ", listOf(sun, fri, sat, fri), "Europe/Brussels", today)
 
     @Test
+    @Obligation("DP-1", "DP-2")
     fun `a poll starts with the host in it, dates tidied up`() {
         CreateDatePollDecider.given().whenever(create).thenEmits(created(), DatePollJoined(poll, anna))
     }
 
     @Test
+    @Obligation("DP-1")
     fun `a poll needs a title, two to fourteen distinct dates in the future, and a real time zone`() {
         CreateDatePollDecider.given().whenever(create.copy(title = " ")).thenRejects(Rejection.TitleMissing)
         CreateDatePollDecider.given().whenever(create.copy(dates = listOf(fri, fri))).thenRejects(Rejection.TooFewDates)
@@ -49,6 +52,7 @@ class CreateDatePollTest {
     }
 
     @Test
+    @Obligation("DP-1")
     fun `today is a fine date`() {
         CreateDatePollDecider.given().whenever(create.copy(dates = listOf(today, fri))).thenEmits(created(dates = listOf(today, fri)), DatePollJoined(poll, anna))
     }
@@ -61,12 +65,14 @@ class CreateDatePollTest {
 
 class JoinDatePollTest {
     @Test
+    @Obligation("DP-7")
     fun `a player joins an open poll once`() {
         JoinDatePollDecider.given(*open).whenever(JoinDatePoll(poll, bram)).thenEmits(DatePollJoined(poll, bram))
         JoinDatePollDecider.given(*open, DatePollJoined(poll, bram)).whenever(JoinDatePoll(poll, bram)).thenEmitsNothing()
     }
 
     @Test
+    @Obligation("DP-7")
     fun `unknown and closed polls refuse`() {
         JoinDatePollDecider.given().whenever(JoinDatePoll(poll, bram)).thenRejects(Rejection.NoSuchDatePoll)
         JoinDatePollDecider.given(*open, DatePollClosed(poll, fri, GameDayId(Uuid.random()))).whenever(JoinDatePoll(poll, bram)).thenRejects(Rejection.DatePollClosed)
@@ -77,11 +83,13 @@ class AnswerDatePollTest {
     private val joined = arrayOf(*open, DatePollJoined(poll, bram))
 
     @Test
+    @Obligation("DP-8")
     fun `a player says which dates they can make`() {
         AnswerDatePollDecider.given(*joined).whenever(AnswerDatePoll(poll, bram, setOf(sun, fri))).thenEmits(DatePollAnswered(poll, bram, listOf(fri, sun)))
     }
 
     @Test
+    @Obligation("DP-8")
     fun `answering nothing is an answer, and the same answer again changes nothing`() {
         AnswerDatePollDecider.given(*joined).whenever(AnswerDatePoll(poll, bram, emptySet())).thenEmits(DatePollAnswered(poll, bram, emptyList()))
         AnswerDatePollDecider.given(*joined, DatePollAnswered(poll, bram, listOf(fri)))
@@ -91,6 +99,7 @@ class AnswerDatePollTest {
     }
 
     @Test
+    @Obligation("DP-9")
     fun `only joined players answer, and only with the poll's dates`() {
         AnswerDatePollDecider.given(*open).whenever(AnswerDatePoll(poll, bram, setOf(fri))).thenRejects(Rejection.NotInDatePoll)
         AnswerDatePollDecider.given(*joined).whenever(AnswerDatePoll(poll, bram, setOf(today))).thenRejects(Rejection.NotAnOption)
@@ -99,6 +108,7 @@ class AnswerDatePollTest {
     }
 
     @Test
+    @Obligation("DP-10")
     fun `someone else's answer is outside the boundary`() {
         // Anna's answer must not stop Bram answering the same dates (nor count as his previous one).
         AnswerDatePollDecider.given(*joined, DatePollAnswered(poll, anna, listOf(fri)))
@@ -115,6 +125,7 @@ class PickDateTest {
     )
 
     @Test
+    @Obligation("DP-16")
     fun `picking a date closes the poll and creates the game day with everyone who can make it`() {
         PickDateDecider.given(*answered).whenever(pick).thenEmits(
             DatePollClosed(poll, sat, gameDay),
@@ -125,6 +136,7 @@ class PickDateTest {
     }
 
     @Test
+    @Obligation("DP-16")
     fun `a later answer replaces an earlier one when deciding who comes`() {
         PickDateDecider.given(*answered, DatePollAnswered(poll, bram, listOf(sun))).whenever(pick).thenEmits(
             DatePollClosed(poll, sat, gameDay),
@@ -134,6 +146,7 @@ class PickDateTest {
     }
 
     @Test
+    @Obligation("DP-15")
     fun `only the host picks, from the options, not from the past, and only once`() {
         PickDateDecider.given(*answered).whenever(pick.copy(host = bram)).thenRejects(Rejection.OnlyHostCanPickDate)
         PickDateDecider.given(*answered).whenever(pick.copy(date = LocalDate.of(2026, 11, 1))).thenRejects(Rejection.NotAnOption)
@@ -143,6 +156,7 @@ class PickDateTest {
     }
 
     @Test
+    @Obligation("DP-17")
     fun `an answer after the pick was read conflicts, because it is inside the boundary`() {
         val query = PickDateDecider.query(pick)
         query.matches("DatePollAnswered", DatePollAnswered(poll, kim, listOf(sat)).tags) shouldBe true
@@ -155,6 +169,7 @@ class DatePollBoardTest {
     private fun board(vararg events: gorefest.core.Event) = events.fold(DatePolls.initialState, DatePolls::evolve)
 
     @Test
+    @Obligation("DP-12", "DP-13")
     fun `the best date is the one most people can make, ties to the earliest, none while nobody can`() {
         val joins = arrayOf(created(), DatePollJoined(poll, anna), DatePollJoined(poll, bram), DatePollJoined(poll, kim))
         board(*joins).of(poll)!!.best() shouldBe null
@@ -169,6 +184,7 @@ class DatePollBoardTest {
     }
 
     @Test
+    @Obligation("DP-14", "DP-18")
     fun `a closed poll remembers its pick, and lists put open polls first`() {
         val other = DatePollId(Uuid.random())
         val gameDay = GameDayId(Uuid.random())

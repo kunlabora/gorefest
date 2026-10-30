@@ -1,5 +1,6 @@
 package gorefest.core.gameday
 
+import gorefest.contract.Obligation
 import gorefest.core.Event
 import gorefest.core.GameDayDetailsChanged
 import gorefest.core.GameDayEnded
@@ -15,6 +16,7 @@ class GameDaysTest {
     private fun project(vararg events: Event) = events.fold(GameDays.initialState, GameDays::evolve)
 
     @Test
+    @Obligation("GD-6")
     fun `details changes update the summary`() {
         val state = project(gameDayCreated(), GameDayDetailsChanged(gorefest7, "Boardfest #8", today, "Kim's"))
 
@@ -23,6 +25,7 @@ class GameDaysTest {
     }
 
     @Test
+    @Obligation("GD-21")
     fun `a player sees only joined game days, upcoming soonest first, then past latest first`() {
         fun day(offset: Long, host: gorefest.core.PlayerId = anna): Pair<GameDayId, List<Event>> {
             val id = GameDayId(Uuid.random())

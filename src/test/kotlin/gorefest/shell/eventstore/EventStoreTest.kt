@@ -1,5 +1,6 @@
 package gorefest.shell.eventstore
 
+import gorefest.contract.Obligation
 import gorefest.core.GameDayCreated
 import gorefest.core.GameDayId
 import gorefest.core.PlayerJoined
@@ -32,6 +33,7 @@ class EventStoreTest {
     fun reset() = kotlinx.coroutines.runBlocking { TestDatabase.reset() }
 
     @Test
+    @Obligation("EV-2")
     suspend fun `reads back only events matching the query, in order`() {
         db.transaction {
             store.append(listOf(gameDayCreated(), gameDayCreated(gameDay = otherGameDay), PlayerJoined(gorefest7, bram)))
@@ -44,6 +46,7 @@ class EventStoreTest {
     }
 
     @Test
+    @Obligation("EV-1")
     suspend fun `events with timestamps and enums survive the round trip`() {
         val comparison = gorefest.core.ComparisonRecorded(
             anna, gorefest.core.BggId(1), gorefest.core.BggId(2), gorefest.core.ComparisonResult.BOTH_GREAT,
@@ -55,6 +58,7 @@ class EventStoreTest {
     }
 
     @Test
+    @Obligation("EV-2")
     suspend fun `a query item needs every tag`() {
         db.transaction { store.append(listOf(PlayerJoined(gorefest7, anna), PlayerJoined(gorefest7, bram))) }
 
@@ -67,6 +71,7 @@ class EventStoreTest {
     }
 
     @Test
+    @Obligation("EV-3")
     suspend fun `append fails when a matching event was appended after the read position`() {
         db.transaction { store.append(listOf(gameDayCreated())) }
         val (_, position) = db.transaction { store.read(gorefest7Query) }
@@ -80,6 +85,7 @@ class EventStoreTest {
     }
 
     @Test
+    @Obligation("EV-4")
     suspend fun `events outside the boundary don't conflict`() {
         db.transaction { store.append(listOf(gameDayCreated())) }
         val (_, position) = db.transaction { store.read(gorefest7Query) }

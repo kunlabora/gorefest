@@ -1,5 +1,6 @@
 package gorefest.core.taste
 
+import gorefest.contract.Obligation
 import gorefest.core.Basis
 import gorefest.core.BggId
 import gorefest.core.ComparisonRecorded
@@ -26,6 +27,7 @@ class WizardTest {
     private val nobody = PlayerGames(TasteHistory(), owned = emptySet())
 
     @Test
+    @Obligation("TA-15")
     fun `pairs come from the game day's games, never twice`() {
         var round = RoundState()
         val seen = mutableSetOf<Set<BggId>>()
@@ -38,6 +40,7 @@ class WizardTest {
     }
 
     @Test
+    @Obligation("TA-15")
     fun `every fifth pair includes a popular anchor`() {
         val pair = wizard.next(shelf, anchors, nobody, RoundState(asked = listOf(0 to 1, 0 to 2, 0 to 3, 1 to 2).map { (i, j) -> setOf(shelf[i].id, shelf[j].id) }.toSet()), now).shouldNotBeNull()
 
@@ -45,6 +48,7 @@ class WizardTest {
     }
 
     @Test
+    @Obligation("TA-15")
     fun `a tiny shelf is topped up with anchors`() {
         val pair = wizard.next(shelf.take(1), anchors, nobody, RoundState(), now).shouldNotBeNull()
 
@@ -52,6 +56,7 @@ class WizardTest {
     }
 
     @Test
+    @Obligation("TA-14")
     fun `owned games count as played, unless the player said otherwise`() {
         val owner = PlayerGames(TasteHistory(), owned = shelf.map { it.id }.toSet())
         wizard.next(shelf, anchors, owner, RoundState(), now)!!.basis shouldBe Basis.PLAYED
@@ -62,6 +67,7 @@ class WizardTest {
     }
 
     @Test
+    @Obligation("TA-16")
     fun `the most uncertain pair goes first`() {
         val (azul, cascadia) = shelf
         val known = PlayerGames(TasteHistory(List(6) { ComparisonRecorded(anna, azul.id, cascadia.id, ComparisonResult.A, Basis.VIBE, now) }), emptySet())
@@ -72,12 +78,14 @@ class WizardTest {
     }
 
     @Test
+    @Obligation("TA-19")
     fun `when every pair was asked, the round is over`() {
         val two = shelf.take(2)
         wizard.next(two, emptyList(), nobody, RoundState(asked = setOf(two.map { it.id }.toSet())), now).shouldBeNull()
     }
 
     @Test
+    @Obligation("TA-30")
     fun `a focused round only asks pairs with an uncertain game in them`() {
         val focus = setOf(shelf[3].id)
         var round = RoundState()
@@ -93,6 +101,7 @@ class WizardTest {
     }
 
     @Test
+    @Obligation("TA-16")
     fun `well-compared games are no longer uncertain`() {
         val (azul, cascadia) = shelf
         val known = PlayerGames(TasteHistory(List(8) { ComparisonRecorded(anna, azul.id, cascadia.id, ComparisonResult.A, Basis.VIBE, now) }), emptySet())
@@ -101,6 +110,7 @@ class WizardTest {
     }
 
     @Test
+    @Obligation("TA-31")
     fun `an old answer that wasn't asked again recently is stale`() {
         val (azul, cascadia) = shelf
         val old = ComparisonRecorded(anna, azul.id, cascadia.id, ComparisonResult.A, Basis.VIBE, now - java.time.Duration.ofDays(200))
@@ -111,6 +121,7 @@ class WizardTest {
     }
 
     @Test
+    @Obligation("TA-19")
     fun `the round stops at 15, or from 10 once the top 3 settled`() {
         wizard.shouldStop(RoundState(step = 15)) shouldBe true
         wizard.shouldStop(RoundState(step = 10, stableSteps = 3)) shouldBe true
@@ -120,6 +131,7 @@ class WizardTest {
     }
 
     @Test
+    @Obligation("TA-19")
     fun `a player who never learned anything still finishes, and never ends early while pairs remain`() {
         var round = RoundState()
         var asked = 0
@@ -134,6 +146,7 @@ class WizardTest {
     }
 
     @Test
+    @Obligation("TA-19")
     fun `advancing counts steps and how long the top stayed the same`() {
         val pair = WizardPair(shelf[0], shelf[1], Basis.VIBE)
         val top = listOf(shelf[0].id)
@@ -145,6 +158,7 @@ class WizardTest {
     }
 
     @Test
+    @Obligation("TA-24", "TA-25")
     fun `favourites are the best predicted compared games, with a reason from the answers`() {
         val (azul, cascadia, brass, root) = shelf
         val history = TasteHistory(listOf(
@@ -162,6 +176,7 @@ class WizardTest {
     }
 
     @Test
+    @Obligation("TA-26")
     fun `played games are predicted from how much they were enjoyed`() {
         val (azul, cascadia) = shelf
         val history = TasteHistory(
@@ -179,6 +194,7 @@ class WizardTest {
 
 
     @Test
+    @Obligation("TA-31")
     fun `a stale pair that was re-answered doesn't hide the next stale pair`() {
         val (azul, cascadia, brass, root) = shelf
         val lookup = shelf.associateBy { it.id }::get

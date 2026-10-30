@@ -1,5 +1,6 @@
 package gorefest.shell.auth
 
+import gorefest.contract.Obligation
 import gorefest.core.PlayerId
 import gorefest.shell.AppConfig
 import gorefest.shell.IdGenerator
@@ -35,6 +36,7 @@ class AdminNotifierTest {
     }
 
     @Test
+    @Obligation("PR-20")
     fun `the Discord post carries the message and can't ping anyone`() {
         val request = DiscordWebhook(hook).request("Fresh wants into Boardfest", "Waiting for your approval: https://boardfest.be/admin/approvals")
 
@@ -46,6 +48,7 @@ class AdminNotifierTest {
     }
 
     @Test
+    @Obligation("PR-20")
     fun `only a Discord webhook address is accepted`() {
         shouldThrow<IllegalArgumentException> { DiscordWebhook("https://example.com/hook") }
         shouldThrow<IllegalArgumentException> { DiscordWebhook("http://discord.com/api/webhooks/1/x") }
@@ -53,6 +56,7 @@ class AdminNotifierTest {
     }
 
     @Test
+    @Obligation("PR-21")
     fun `the fallback hears about it when the first channel fails`() = runBlocking {
         val heard = mutableListOf<String>()
         FallbackNotifier({ _, _ -> error("discord down") }, { subject, _ -> heard += subject }).notify("hello", "text")
@@ -61,6 +65,7 @@ class AdminNotifierTest {
     }
 
     @Test
+    @Obligation("ACC-22")
     fun `a notification that fails never stops someone from signing up`() = runBlocking {
         val login = Login(TestDatabase.db, test.app.commands, test.mailbox, test.app.config, test.clock, IdGenerator.sequential(), admin = { _, _ -> error("down") })
         val id = PlayerId(Uuid.random())
@@ -72,6 +77,7 @@ class AdminNotifierTest {
     }
 
     @Test
+    @Obligation("PR-19")
     fun `the default is a mail to the admin, without the newcomer's email address`() = runBlocking {
         val id = PlayerId(Uuid.random())
         test.app.db.transaction { Players().findOrCreate("fresh@example.com", id, approved = false) }

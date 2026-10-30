@@ -1,5 +1,6 @@
 package gorefest.shell.eventstore
 
+import gorefest.contract.Obligation
 import gorefest.core.Basis
 import gorefest.core.BggAccountLinked
 import gorefest.core.BggAccountLinkedHashed
@@ -136,6 +137,7 @@ class EventCompatibilityTest {
     )
 
     @Test
+    @Obligation("EV-9")
     fun `every stored shape still decodes`() {
         for ((json, expected) in stored) {
             EventStore.json.decodeFromString(Event.serializer(), json) shouldBe expected
@@ -143,6 +145,7 @@ class EventCompatibilityTest {
     }
 
     @Test
+    @Obligation("EV-10")
     fun `every event type has a stored sample`() {
         val allTypes = Event.serializer().descriptor.getElementDescriptor(1).elementNames.toSet()
         (allTypes - stored.map { (_, event) -> event.type }.toSet()).shouldBeEmpty()

@@ -1,5 +1,6 @@
 package gorefest.shell.bgg
 
+import gorefest.contract.Obligation
 import gorefest.core.BggId
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.nulls.shouldBeNull
@@ -10,6 +11,7 @@ import org.junit.jupiter.api.Test
 /** Fixtures follow the XML API2 format as documented; they're not captured from the live API. */
 class BggXmlTest {
     @Test
+    @Obligation("BGG-1")
     fun `a user's profile fields are searchable text`() {
         val user = BggXml.user(BggXml.parse("""
             <user id="123" name="AnnaPlays" termsofuse="https://boardgamegeek.com/xmlapi/termsofuse">
@@ -23,11 +25,13 @@ class BggXmlTest {
     }
 
     @Test
+    @Obligation("BGG-2")
     fun `an unknown user has an empty id`() {
         BggXml.user(BggXml.parse("""<user id="" name="nobody"><firstname value=""/></user>""")).shouldBeNull()
     }
 
     @Test
+    @Obligation("BGG-11", "BGG-13")
     fun `a collection lists owned game ids, or an error for unknown users`() {
         BggXml.collection(BggXml.parse("""
             <items totalitems="2" termsofuse="…" pubdate="…">
@@ -40,6 +44,7 @@ class BggXmlTest {
     }
 
     @Test
+    @Obligation("BGG-19")
     fun `a thing carries player counts, the player poll, playtime, weight, links and rank`() {
         val game = BggXml.things(BggXml.parse("""
             <items termsofuse="…">
@@ -87,6 +92,7 @@ class BggXmlTest {
     }
 
     @Test
+    @Obligation("BGG-19")
     fun `a campaign game keeps BGG's playing time even when it repeats the max`() {
         val game = BggXml.things(BggXml.parse("""
             <items><item type="boardgame" id="1"><name type="primary" value="Seventh Continent"/><minplayers value="1"/><maxplayers value="4"/>
@@ -98,6 +104,7 @@ class BggXmlTest {
     }
 
     @Test
+    @Obligation("BGG-19")
     fun `unranked games have no rank`() {
         BggXml.things(BggXml.parse("""
             <items><item type="boardgame" id="1"><name type="primary" value="Homebrew"/><minplayers value="2"/><maxplayers value="2"/>
@@ -106,6 +113,7 @@ class BggXmlTest {
     }
 
     @Test
+    @Obligation("BGG-20")
     fun `search hits have id, name and year`() {
         BggXml.search(BggXml.parse("""
             <items total="2" termsofuse="…">
@@ -115,6 +123,7 @@ class BggXmlTest {
     }
 
     @Test
+    @Obligation("BGG-28")
     fun `XML with a DOCTYPE is refused`() {
         runCatching { BggXml.parse("""<?xml version="1.0"?><!DOCTYPE x [<!ENTITY e SYSTEM "file:///etc/passwd">]><user id="1" name="&e;"/>""") }
             .isFailure shouldBe true

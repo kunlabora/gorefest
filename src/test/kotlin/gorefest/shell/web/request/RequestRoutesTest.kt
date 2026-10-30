@@ -1,5 +1,6 @@
 package gorefest.shell.web.request
 
+import gorefest.contract.Obligation
 import gorefest.core.BggAccountLinked
 import gorefest.core.BggId
 import gorefest.core.BringRequestDeclined
@@ -77,6 +78,7 @@ class RequestRoutesTest {
     private fun asks(game: BggId, owner: PlayerId = anna) = parameters { append("owner", owner.toString()); append("game", game.toString()) }
 
     @Test
+    @Obligation("SH-22")
     fun `the ask screen lists the other members, and links to their collections`() = test.webTest(session = kim) { client ->
         val page = client.get(ask).page()
 
@@ -85,6 +87,7 @@ class RequestRoutesTest {
     }
 
     @Test
+    @Obligation("SH-22")
     fun `a member's collection is listed with an ask button per game`() = test.webTest(session = kim) { client ->
         val page = client.get("$ask/from/$anna").page()
 
@@ -95,6 +98,7 @@ class RequestRoutesTest {
     }
 
     @Test
+    @Obligation("SH-22")
     fun `filtering a member's games answers with the list`() = test.webTest(session = kim) { client ->
         val list = client.get("$ask/from/$anna/games?q=bra").fragment()
 
@@ -103,6 +107,7 @@ class RequestRoutesTest {
     }
 
     @Test
+    @Obligation("SH-21")
     fun `asking puts a request with the owner, and the row says Asked`() = test.webTest(session = kim) { client ->
         val response = client.htmxPost(ask, asks(brass))
         val row = response.fragment()
@@ -115,6 +120,7 @@ class RequestRoutesTest {
     }
 
     @Test
+    @Obligation("SH-23")
     fun `asking twice counts once`() = test.webTest(session = kim) { client ->
         client.htmxPost(ask, asks(brass))
         client.htmxPost(ask, asks(brass)).status shouldBe HttpStatusCode.OK
@@ -123,6 +129,7 @@ class RequestRoutesTest {
     }
 
     @Test
+    @Obligation("SH-21")
     fun `a game the owner doesn't have can't be asked for`() = test.webTest(session = kim) { client ->
         client.htmxPost(ask, asks(catan)).status shouldBe HttpStatusCode.NotFound
 
@@ -130,6 +137,7 @@ class RequestRoutesTest {
     }
 
     @Test
+    @Obligation("SH-22")
     fun `searching for a game shows who has it`() = test.webTest(session = kim) { client ->
         val results = client.get("/gamedays/$gorefest7/ask-search?q=catan").fragment()
 
@@ -140,6 +148,7 @@ class RequestRoutesTest {
     }
 
     @Test
+    @Obligation("SH-24")
     fun `a game somebody already brings shows as bringing`() = test.webTest(session = kim) { client ->
         given(GameBrought(gorefest7, anna, brass))
 
@@ -148,6 +157,7 @@ class RequestRoutesTest {
     }
 
     @Test
+    @Obligation("SH-25")
     fun `an asker gets three requests, and the fourth says why not`() = test.webTest(session = kim) { client ->
         given(PlayerJoined(gorefest7, outsiderId))
         app.db.transaction { Collections().replace(outsiderId, setOf(catan, brass, azul)) }
@@ -163,6 +173,7 @@ class RequestRoutesTest {
     }
 
     @Test
+    @Obligation("SH-25", "SH-30")
     fun `taking a request back frees the slot`() = test.webTest(session = kim) { client ->
         client.htmxPost(ask, asks(brass))
         client.htmxPost(ask, asks(azul))
@@ -177,6 +188,7 @@ class RequestRoutesTest {
     }
 
     @Test
+    @Obligation("SH-32")
     fun `an owner who turned requests off isn't listed and can't be asked`() = test.webTest(session = kim) { client ->
         given(BringRequestsAllowedChanged(anna, false))
 
@@ -189,6 +201,7 @@ class RequestRoutesTest {
     }
 
     @Test
+    @Obligation("SH-30")
     fun `my requests show how they went`() = test.webTest(session = kim) { client ->
         given(
             BringRequested(gorefest7, kimId, anna, brass), BringRequested(gorefest7, kimId, anna, azul), BringRequested(gorefest7, kimId, bramId, catan),
@@ -204,6 +217,7 @@ class RequestRoutesTest {
     }
 
     @Test
+    @Obligation("SH-28")
     fun `the owner sees who asks on the bring page and brings it with one tap`() = test.webTest(session = annaSession) { client ->
         given(BringRequested(gorefest7, kimId, anna, brass), BringRequested(gorefest7, bramId, anna, brass), BringRequested(gorefest7, kimId, anna, azul))
 
@@ -227,6 +241,7 @@ class RequestRoutesTest {
     }
 
     @Test
+    @Obligation("SH-28")
     fun `ticking the game from the collection list answers the request too`() = test.webTest(session = annaSession) { client ->
         given(BringRequested(gorefest7, kimId, anna, brass))
 
@@ -237,6 +252,7 @@ class RequestRoutesTest {
     }
 
     @Test
+    @Obligation("SH-29")
     fun `not this time declines every asker of the row, quietly`() = test.webTest(session = annaSession) { client ->
         given(BringRequested(gorefest7, kimId, anna, brass), BringRequested(gorefest7, bramId, anna, brass))
 
@@ -249,6 +265,7 @@ class RequestRoutesTest {
     }
 
     @Test
+    @Obligation("SH-29")
     fun `an owner can't decline for somebody else`() = test.webTest(session = annaSession) { client ->
         given(BringRequested(gorefest7, kimId, bramId, catan))
 
@@ -258,6 +275,7 @@ class RequestRoutesTest {
     }
 
     @Test
+    @Obligation("SH-31")
     fun `the hub's next step tells the owner something is waiting, and the home hero tags it`() = test.webTest(session = annaSession) { client ->
         given(BringRequested(gorefest7, kimId, anna, brass))
 
@@ -270,6 +288,7 @@ class RequestRoutesTest {
     }
 
     @Test
+    @Obligation("SH-31")
     fun `the host's readiness view counts the open requests`() = test.webTest(session = annaSession) { client ->
         client.get("/gamedays/$gorefest7/ready").page().select(".gf-notice").map { it.text() }.none { "bring request" in it } shouldBe true
         given(BringRequested(gorefest7, kimId, bramId, catan), BringRequested(gorefest7, bramId, anna, brass))
@@ -278,6 +297,7 @@ class RequestRoutesTest {
     }
 
     @Test
+    @Obligation("SH-33")
     fun `somebody who didn't join sees nothing and can ask nothing`() = test.webTest(session = outsider) { client ->
         client.get(ask).status shouldBe HttpStatusCode.NotFound
         client.get("$ask/from/$anna").status shouldBe HttpStatusCode.NotFound
@@ -290,6 +310,7 @@ class RequestRoutesTest {
     }
 
     @Test
+    @Obligation("SH-33")
     fun `an ended game day is read-only`() = test.webTest(session = kim) { client ->
         given(BringRequested(gorefest7, kimId, anna, brass), GameDayEnded(gorefest7))
 
@@ -302,6 +323,7 @@ class RequestRoutesTest {
     }
 
     @Test
+    @Obligation("SH-33")
     fun `a cancelled game day is gone`() = test.webTest(session = kim) { client ->
         given(GameDayCancelled(gorefest7))
 
@@ -310,6 +332,7 @@ class RequestRoutesTest {
     }
 
     @Test
+    @Obligation("SH-32")
     fun `the collection page has the switch, on by default, and flipping it opts out`() = test.webTest(session = kim) { client ->
         val page = client.get("/collection").page()
         val switch = page.one("#bring-requests-switch input.gf-switch")

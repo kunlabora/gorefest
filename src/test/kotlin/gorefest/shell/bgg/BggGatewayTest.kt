@@ -1,5 +1,6 @@
 package gorefest.shell.bgg
 
+import gorefest.contract.Obligation
 import gorefest.core.BggId
 import gorefest.core.game.Game
 import io.kotest.matchers.shouldBe
@@ -32,6 +33,7 @@ class BggGatewayTest {
     }
 
     @Test
+    @Obligation("BGG-25")
     suspend fun `live calls jump ahead of queued routine ones`() {
         val api = Recording()
         val gateway = BggGateway(api, interval = Duration.ZERO)
@@ -54,6 +56,7 @@ class BggGatewayTest {
     }
 
     @Test
+    @Obligation("BGG-24")
     suspend fun `after a burst, calls are paced`() {
         val api = FakeBggApi()
         val gateway = BggGateway(api, interval = Duration.ofMillis(100), burst = 2)
@@ -69,6 +72,7 @@ class BggGatewayTest {
     }
 
     @Test
+    @Obligation("BGG-26")
     suspend fun `a cancelled caller's job is skipped without costing a rate-limit token`() {
         val api = Recording()
         // one token refills per hour: only a skipped job lets the third call through in time
@@ -95,6 +99,7 @@ class BggGatewayTest {
     }
 
     @Test
+    @Obligation("BGG-27")
     suspend fun `a full queue fails fast`() {
         val api = Recording()
         val gateway = BggGateway(api, interval = Duration.ZERO, maxQueue = 2)
@@ -117,6 +122,7 @@ class BggGatewayTest {
     }
 
     @Test
+    @Obligation("BGG-27")
     suspend fun `a call that hangs times out as unavailable`() {
         val hanging = object : BggApi by FakeBggApi() {
             override suspend fun search(query: String): List<SearchHit> = CompletableDeferred<List<SearchHit>>().await()
@@ -130,6 +136,7 @@ class BggGatewayTest {
     }
 
     @Test
+    @Obligation("BGG-27")
     suspend fun `a caller stops waiting after the wait timeout`() {
         val gateway = BggGateway(FakeBggApi(), interval = Duration.ZERO, waitTimeout = Duration.ofMillis(50))
         // the worker is never started, so the call just sits in the queue
@@ -137,6 +144,7 @@ class BggGatewayTest {
     }
 
     @Test
+    @Obligation("BGG-27")
     suspend fun `failures reach the caller`() {
         val gateway = BggGateway(FakeBggApi(), interval = Duration.ZERO)
         val scope = CoroutineScope(Dispatchers.Default)

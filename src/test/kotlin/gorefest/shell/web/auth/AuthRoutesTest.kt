@@ -1,5 +1,6 @@
 package gorefest.shell.web.auth
 
+import gorefest.contract.Obligation
 import gorefest.core.LoggedIn
 import gorefest.core.PlayerRegistered
 import gorefest.core.auth.LoginAttempt
@@ -60,17 +61,20 @@ class AuthRoutesTest {
     private val HttpResponse.location get() = headers[HttpHeaders.Location]
 
     @Test
+    @Obligation("ACC-1")
     fun `pages send you to log in, remembering where you were going`() = test.webTest { client ->
         client.get("/gamedays/new").location shouldBe "/login?returnTo=%2Fgamedays%2Fnew"
     }
 
     @Test
+    @Obligation("ACC-2")
     fun `the login page explains the flow, unless you came through an invite`() = test.webTest { client ->
         client.get("/login?returnTo=%2F").page().select(".gf-stepper__item") shouldHaveSize 3
         client.get("/login?returnTo=%2Fgamedays%2Fnew").page().select(".gf-stepper__item") shouldHaveSize 0
     }
 
     @Test
+    @Obligation("ACC-2")
     fun `the landing offers a log in button and says sign-up is the same step`() = test.webTest { client ->
         val page = client.get("/login?returnTo=%2F").page()
 
@@ -81,6 +85,7 @@ class AuthRoutesTest {
     }
 
     @Test
+    @Obligation("ACC-1")
     fun `htmx requests go to login from the page they were made on`() = test.webTest { client ->
         val response = client.htmxPost("/gamedays/abc/invite", currentUrl = "http://localhost/gamedays/abc")
 
@@ -88,6 +93,7 @@ class AuthRoutesTest {
     }
 
     @Test
+    @Obligation("ACC-3")
     fun `asking for a code sends one mail with a 6-digit code and a link`() = test.webTest { client ->
         val response = client.askForCode(email = "  Kim@Example.com ")
 
@@ -101,6 +107,7 @@ class AuthRoutesTest {
     }
 
     @Test
+    @Obligation("ACC-3")
     fun `the code page shows where the mail went and posts the code with htmx`() = test.webTest { client ->
         client.askForCode()
 
@@ -117,6 +124,7 @@ class AuthRoutesTest {
     }
 
     @Test
+    @Obligation("ACC-9")
     fun `an invalid email re-renders the form with what was typed`() = test.webTest { client ->
         val form = client.htmxPost("/login", parameters { append("email", "kim-at-home") }).fragment()
 
@@ -127,6 +135,7 @@ class AuthRoutesTest {
     }
 
     @Test
+    @Obligation("ACC-9")
     fun `an invite's sign-in keeps its own button label when the email is rejected`() = test.webTest { client ->
         val form = client.htmxPost("/login", parameters { append("email", "kim-at-home"); append("submitLabel", "Join Gorefest #7") }).fragment()
 
@@ -134,6 +143,7 @@ class AuthRoutesTest {
     }
 
     @Test
+    @Obligation("ACC-1")
     fun `the code logs a new player in, asks their name, then goes where they were going`() = test.webTest { client ->
         client.askForCode(returnTo = "/gamedays/new")
 
@@ -150,6 +160,7 @@ class AuthRoutesTest {
     }
 
     @Test
+    @Obligation("ACC-10")
     fun `the welcome step needs a name`() = test.webTest { client ->
         client.askForCode()
         client.enterCode(code())
@@ -161,6 +172,7 @@ class AuthRoutesTest {
     }
 
     @Test
+    @Obligation("ACC-10")
     fun `the first login registers the player, later ones only log in`() = test.webTest { client ->
         client.askForCode()
         client.enterCode(code())
@@ -176,6 +188,7 @@ class AuthRoutesTest {
     }
 
     @Test
+    @Obligation("ACC-4")
     fun `the link asks for a tap before logging in, so mail scanners can't use it up`() = test.webTest { client ->
         client.askForCode()
 
@@ -188,6 +201,7 @@ class AuthRoutesTest {
     }
 
     @Test
+    @Obligation("ACC-5")
     fun `once the link is used, the code is dead too, and the other way round`() = test.webTest { client ->
         client.askForCode()
         client.submitForm("/login/link", parameters { append("token", token()) })
@@ -201,6 +215,7 @@ class AuthRoutesTest {
     }
 
     @Test
+    @Obligation("ACC-6")
     fun `codes and links expire after 15 minutes`() = test.webTest { client ->
         client.askForCode()
         test.clock.advance(LoginAttempt.TTL)
@@ -211,6 +226,7 @@ class AuthRoutesTest {
     }
 
     @Test
+    @Obligation("ACC-7")
     fun `five wrong codes lock the attempt, even for the right code`() = test.webTest { client ->
         client.askForCode()
         val wrong = if (code() == "000000") "111111" else "000000"
@@ -226,6 +242,7 @@ class AuthRoutesTest {
     }
 
     @Test
+    @Obligation("ACC-12")
     fun `tokens, codes and sessions are only stored hashed`() = test.webTest { client ->
         client.askForCode()
         val session = client.enterCode(code()).headers[HttpHeaders.SetCookie]!!.substringAfter("=").substringBefore(";")
@@ -251,6 +268,7 @@ class AuthRoutesTest {
     }
 
     @Test
+    @Obligation("ACC-13")
     fun `logging out ends the session, also for a copied cookie`() = test.webTest { client ->
         client.askForCode()
         val session = client.enterCode(code()).headers[HttpHeaders.SetCookie]!!.substringAfter("=").substringBefore(";")
@@ -263,6 +281,7 @@ class AuthRoutesTest {
     }
 
     @Test
+    @Obligation("ACC-11")
     fun `logged-in players skip the login page`() {
         val kim = kotlinx.coroutines.runBlocking { test.loggedIn("Kim") }
         test.webTest(session = kim) { client -> assertSkipsLogin(client) }
@@ -273,12 +292,14 @@ class AuthRoutesTest {
     }
 
     @Test
+    @Obligation("ACC-11")
     fun `returnTo can't point at another site`() = test.webTest { client ->
         client.askForCode(returnTo = "//evil.example/steal")
         client.enterCode(code()).location shouldBe "/welcome?returnTo=%2F"
     }
 
     @Test
+    @Obligation("ACC-9")
     fun `send it again mails a fresh code for the same email and destination`() = test.webTest { client ->
         client.askForCode(returnTo = "/gamedays/new")
 
@@ -289,6 +310,7 @@ class AuthRoutesTest {
     }
 
     @Test
+    @Obligation("ACC-14")
     fun `in dev mode the code page points at the dev mailbox, which shows the mail`() = test.webTest { client ->
         client.askForCode()
 
@@ -299,6 +321,7 @@ class AuthRoutesTest {
     }
 
     @Test
+    @Obligation("ACC-8")
     fun `at most five codes per email per hour`() = test.webTest { client ->
         repeat(5) { client.askForCode().location shouldStartWith "/login/code" }
 
@@ -311,6 +334,7 @@ class AuthRoutesTest {
     }
 
     @Test
+    @Obligation("ACC-8")
     fun `at most twenty codes per address per hour, whatever the email`() = test.webTest { client ->
         suspend fun ask(i: Int, from: String) = client.submitForm("/login", parameters { append("email", "p$i@example.com"); append("returnTo", "/") }) {
             header("X-Forwarded-For", from)
@@ -322,6 +346,7 @@ class AuthRoutesTest {
     }
 
     @Test
+    @Obligation("ACC-14")
     fun `outside dev mode there is no dev mailbox`() {
         val prod = TestApp(AppConfig.dev().copy(dev = false))
         prod.webTest { client ->
@@ -330,6 +355,7 @@ class AuthRoutesTest {
     }
 
     @Test
+    @Obligation("ACC-9")
     fun `the resend form replaces itself, so a refusal doesn't nest a form inside it`() = test.webTest { client ->
         client.askForCode()
         val resend = client.get(firstAttempt).page().one("form#resend")

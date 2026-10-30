@@ -1,5 +1,6 @@
 package gorefest.shell.gameday
 
+import gorefest.contract.Obligation
 import gorefest.core.GameBrought
 import gorefest.core.GameDayId
 import gorefest.core.Tags
@@ -46,6 +47,7 @@ class GameDayCloserTest {
     }
 
     @Test
+    @Obligation("GD-30")
     suspend fun `before midnight nothing closes`() {
         test.clock.now = Instant.parse("2026-09-27T21:59:00Z") // 23:59 in Brussels
 
@@ -56,6 +58,7 @@ class GameDayCloserTest {
     }
 
     @Test
+    @Obligation("GD-30", "GD-31")
     suspend fun `after midnight the game day ends and everyone gets one summary`() {
         test.clock.now = Instant.parse("2026-09-27T22:00:00Z")
 
@@ -73,6 +76,7 @@ class GameDayCloserTest {
     }
 
     @Test
+    @Obligation("GD-33")
     suspend fun `one recipient failing does not stop the others getting their recap`() {
         val delivered = mutableListOf<String>()
         val flaky = gorefest.shell.auth.Mailer { mail ->
@@ -87,6 +91,7 @@ class GameDayCloserTest {
     }
 
     @Test
+    @Obligation("GD-33")
     suspend fun `one game day failing to close does not block the others`() {
         val broken = GameDayId(Uuid.random())
         app.db.transaction {
@@ -106,6 +111,7 @@ class GameDayCloserTest {
     }
 
     @Test
+    @Obligation("GD-34", "SH-15", "PL-4")
     fun `after closing, the shelf is closed too, while a forgotten play can still be logged`() {
         kotlinx.coroutines.runBlocking {
             test.clock.now = Instant.parse("2026-09-28T08:00:00Z")

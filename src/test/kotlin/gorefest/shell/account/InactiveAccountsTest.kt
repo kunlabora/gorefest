@@ -1,5 +1,6 @@
 package gorefest.shell.account
 
+import gorefest.contract.Obligation
 import gorefest.core.GameDayCreated
 import gorefest.core.GameDayId
 import gorefest.core.PlayerId
@@ -37,6 +38,7 @@ class InactiveAccountsTest {
     private fun days(n: Long) = test.clock.advance(Duration.ofDays(n))
 
     @Test
+    @Obligation("PR-13")
     fun `after 24 months without signing in there is a warning, and 30 days later the account is erased`() = runBlocking {
         days(24 * 31)
 
@@ -56,6 +58,7 @@ class InactiveAccountsTest {
     }
 
     @Test
+    @Obligation("PR-13")
     fun `signing in after the warning keeps the account`() = runBlocking<Unit> {
         days(24 * 31)
         app.inactiveAccounts.sweep()
@@ -70,6 +73,7 @@ class InactiveAccountsTest {
     }
 
     @Test
+    @Obligation("PR-14")
     fun `somebody hosting a game day still to come is left alone, and the admin always is`() = runBlocking<Unit> {
         val day = GameDayId(Uuid.random())
         days(24 * 31)
@@ -87,6 +91,7 @@ class InactiveAccountsTest {
     }
 
     @Test
+    @Obligation("PR-15")
     fun `it can be switched off`() = runBlocking<Unit> {
         val off = TestApp(AppConfig.dev().copy(inactiveAccountMonths = 0))
         off.reset()
@@ -97,6 +102,7 @@ class InactiveAccountsTest {
     }
 
     @Test
+    @Obligation("PR-10")
     fun `an erasure is announced by id only, and re-applying after a restore erases again`() = runBlocking<Unit> {
         app.accountEraser.erase(kim) shouldBe AccountEraser.Result.Erased
         val note = test.mailbox.latestTo("tim@example.com")!!

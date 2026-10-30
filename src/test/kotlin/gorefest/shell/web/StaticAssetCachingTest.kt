@@ -1,5 +1,6 @@
 package gorefest.shell.web
 
+import gorefest.contract.Obligation
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.ktor.client.request.get
@@ -32,6 +33,7 @@ class StaticAssetCachingTest {
     fun reset() = kotlinx.coroutines.runBlocking { test.reset() }
 
     @Test
+    @Obligation("WEB-9")
     fun `after a deploy the browser gets the new file, not a 304 for its old one`() {
         val before = jar("v1", ".probe { padding: 0 }")
         val after = jar("v2", ".probe { padding: 16px }")
@@ -61,6 +63,7 @@ class StaticAssetCachingTest {
     }
 
     @Test
+    @Obligation("WEB-9")
     fun `assets served from a jar carry no Last-Modified`() = test.webTest(classLoader = jar("v1", ".probe {}")) { client ->
         val response = client.get(PROBE)
         response.status shouldBe HttpStatusCode.OK

@@ -1,5 +1,6 @@
 package gorefest.shell.web.invite
 
+import gorefest.contract.Obligation
 import gorefest.core.GameBrought
 import gorefest.core.GameDayEnded
 import gorefest.core.InviteLinkRotated
@@ -62,6 +63,7 @@ class InviteRoutesTest {
     }
 
     @Test
+    @Obligation("GD-12")
     fun `the landing page shows the game day without logging in`() = test.webTest { client ->
         val page = client.get(link).page()
 
@@ -71,6 +73,7 @@ class InviteRoutesTest {
     }
 
     @Test
+    @Obligation("GD-13")
     fun `the place stays off the landing page, the preview text and the image until you have joined`() = test.webTest { client ->
         val page = client.get(link).page()
 
@@ -79,6 +82,7 @@ class InviteRoutesTest {
     }
 
     @Test
+    @Obligation("GD-15")
     fun `a logged-out visitor starts signing in on the invite itself and comes back to join`() = test.webTest { client ->
         val page = client.get(link).page()
 
@@ -93,6 +97,7 @@ class InviteRoutesTest {
     }
 
     @Test
+    @Obligation("GD-16")
     fun `a logged-in player sees the site bar and just a join button`() = test.webTest(session = kim) { client ->
         val page = client.get(link).page()
 
@@ -102,6 +107,7 @@ class InviteRoutesTest {
     }
 
     @Test
+    @Obligation("GD-12")
     fun `the shelf shows as a hand of covers, each with who brings it`() = test.webTest { client ->
         app.catalog.put(DevCatalog.games, test.clock.instant())
         given(GameBrought(gorefest7, anna, DevCatalog.games.first { it.name == "Azul" }.id))
@@ -114,6 +120,7 @@ class InviteRoutesTest {
     }
 
     @Test
+    @Obligation("GD-14")
     fun `the link previews nicely in chat apps`() = test.webTest { client ->
         val page = client.get(link).page()
         fun og(property: String) = page.one("meta[property=og:$property]").attr("content")
@@ -128,11 +135,13 @@ class InviteRoutesTest {
     }
 
     @Test
+    @Obligation("GD-15")
     fun `joining needs a login, which comes back to the invite`() = test.webTest { client ->
         client.submitForm("$link/join", parameters {}).headers[HttpHeaders.Location] shouldBe "/login?returnTo=${"$link?join=1".urlEncoded()}"
     }
 
     @Test
+    @Obligation("GD-16")
     fun `a logged-in player joins and lands on the game day`() = test.webTest(session = kim) { client ->
         client.submitForm("$link/join", parameters {}).headers[HttpHeaders.Location] shouldBe "/gamedays/$gorefest7"
 
@@ -141,6 +150,7 @@ class InviteRoutesTest {
     }
 
     @Test
+    @Obligation("GD-10")
     fun `a tampered link doesn't work`() = test.webTest(session = kim) { client ->
         val response = client.get(link.dropLast(2) + "xx")
 
@@ -150,6 +160,7 @@ class InviteRoutesTest {
     }
 
     @Test
+    @Obligation("GD-9")
     fun `a new link replaces the old one`() = test.webTest(session = kim) { client ->
         val old = link
         given(InviteLinkRotated(gorefest7, 1))
@@ -160,6 +171,7 @@ class InviteRoutesTest {
     }
 
     @Test
+    @Obligation("GD-11")
     fun `an ended game day's link says so`() = test.webTest(session = kim) { client ->
         given(GameDayEnded(gorefest7))
 
@@ -169,11 +181,13 @@ class InviteRoutesTest {
     }
 
     @Test
+    @Obligation("GD-19")
     fun `players who haven't joined can't see the game day page`() = test.webTest(session = kim) { client ->
         client.get("/gamedays/$gorefest7").status shouldBe HttpStatusCode.NotFound
     }
 
     @Test
+    @Obligation("GD-9")
     fun `members see the invite link, the host can replace it`() {
         test.webTest(session = annaSession) { client ->
             val page = client.get("/gamedays/$gorefest7").page()
@@ -190,6 +204,7 @@ class InviteRoutesTest {
     }
 
     @Test
+    @Obligation("GD-9")
     fun `other members can copy the link but not replace it`() {
         kotlinx.coroutines.runBlocking { given(PlayerJoined(gorefest7, kimId)) }
         test.webTest(session = kim) { client ->
@@ -202,6 +217,7 @@ class InviteRoutesTest {
 
 
     @Test
+    @Obligation("GD-28")
     fun `a cancelled game day's link says so, and joining is refused`() = test.webTest(session = kim) { client ->
         val link = link
         given(gorefest.core.GameDayCancelled(gorefest7))
@@ -235,6 +251,7 @@ class InviteRoutesTest {
     } == setOf("Anna", name) // a set: the database returns rows in no promised order
 
     @Test
+    @Obligation("GD-15")
     fun `a new player goes invite, email, code, name and lands joined on the game day`() = test.webTest { client ->
         val returnTo = client.askForCodeFromInvite()
 
@@ -251,6 +268,7 @@ class InviteRoutesTest {
     }
 
     @Test
+    @Obligation("GD-15")
     fun `a returning player who isn't logged in joins straight after the code`() = test.webTest { client ->
         mail = "kim@example.com"
         val returnTo = client.askForCodeFromInvite()
@@ -265,6 +283,7 @@ class InviteRoutesTest {
     }
 
     @Test
+    @Obligation("GD-15")
     fun `the magic link can open in another browser than the invite`() = test.webTest { client ->
         val returnTo = client.askForCodeFromInvite()
 
@@ -283,6 +302,7 @@ class InviteRoutesTest {
     }
 
     @Test
+    @Obligation("GD-17")
     fun `a crafted link can't join anyone, it only shows the landing page`() = test.webTest(session = kim) { client ->
         client.get("$link?join=1").status shouldBe HttpStatusCode.OK
         client.get("$link?join=garbage").status shouldBe HttpStatusCode.OK
@@ -295,6 +315,7 @@ class InviteRoutesTest {
     }
 
     @Test
+    @Obligation("GD-28")
     fun `members opening a cancelled game day's link land on the hub`() = test.webTest(session = annaSession) { client ->
         val link = link
         given(gorefest.core.GameDayCancelled(gorefest7))
@@ -304,6 +325,7 @@ class InviteRoutesTest {
     }
 
     @Test
+    @Obligation("GD-11")
     fun `an invite that died while signing up says so instead of joining`() = test.webTest(session = kim) { client ->
         val returnTo = "$link?join=1"
         given(GameDayEnded(gorefest7))

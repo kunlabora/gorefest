@@ -1,5 +1,6 @@
 package gorefest.shell.gameday
 
+import gorefest.contract.Obligation
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -16,6 +17,7 @@ class TitleGeneratorTest {
     }
 
     @Test
+    @Obligation("GD-4")
     fun `a title is words from the lists, ending in a party word`() {
         val generator = TitleGenerator(Random(7))
         repeat(50) {
@@ -27,6 +29,7 @@ class TitleGeneratorTest {
     }
 
     @Test
+    @Obligation("GD-4")
     fun `another one is never the same title`() {
         val generator = TitleGenerator(Random(1))
         var title = generator.next()

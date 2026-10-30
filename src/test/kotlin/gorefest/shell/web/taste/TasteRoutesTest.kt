@@ -1,5 +1,6 @@
 package gorefest.shell.web.taste
 
+import gorefest.contract.Obligation
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
 import gorefest.core.BggId
@@ -68,11 +69,13 @@ class TasteRoutesTest {
     })
 
     @Test
+    @Obligation("TA-12")
     fun `the game day points newcomers to the taste round`() = test.webTest(session = kim) { client ->
         client.get("/gamedays/$gorefest7").page().one(".gf-next a").attr("href") shouldBe taste
     }
 
     @Test
+    @Obligation("TA-13", "TA-17")
     fun `the round shows two games and the ways to answer`() = test.webTest(session = kim) { client ->
         val page = client.get(taste).page()
         val wizard = page.one("main#wizard")
@@ -92,6 +95,7 @@ class TasteRoutesTest {
     }
 
     @Test
+    @Obligation("TA-22")
     fun `the question and the pair sit in a split, with key hints and ids for the 1 and 2 keys`() = test.webTest(session = kim) { client ->
         val wizard = client.get(taste).page().one("main#wizard")
 
@@ -105,6 +109,7 @@ class TasteRoutesTest {
     }
 
     @Test
+    @Obligation("TA-13")
     fun `each game in the duel says what kind of game it is`() = test.webTest(session = kim) { client ->
         val wizard = client.get(taste).page().one("main#wizard")
 
@@ -116,6 +121,7 @@ class TasteRoutesTest {
     }
 
     @Test
+    @Obligation("TA-17")
     fun `an answer is recorded and the next pair is dealt`() = test.webTest(session = kim) { client ->
         val first = client.get(taste).page().one("#wizard")
         val a = BggId(first.one("input[name=a]").`val`().toInt())
@@ -134,6 +140,7 @@ class TasteRoutesTest {
     }
 
     @Test
+    @Obligation("TA-14", "TA-18")
     fun `played pairs ask about enjoyment, and 'haven't played' is remembered`() {
         kotlinx.coroutines.runBlocking { app.db.transaction { Collections().replace(kimId, shelf.toSet()) } }
         test.webTest(session = kim) { client ->
@@ -150,6 +157,7 @@ class TasteRoutesTest {
     }
 
     @Test
+    @Obligation("TA-18")
     fun `'haven't played this' on one card remembers only that game, and the round moves on`() = test.webTest(session = kim) { client ->
         val first = client.get(taste).page().one("#wizard")
         val a = BggId(first.one("input[name=a]").`val`().toInt())
@@ -167,6 +175,7 @@ class TasteRoutesTest {
     }
 
     @Test
+    @Obligation("TA-24", "TA-25", "TA-28")
     fun `after the last pair the payoff shows favourites from the shelf`() = test.webTest(session = kim) { client ->
         var wizard = client.get(taste).page().one("#wizard")
         var redirect: String? = null
@@ -204,6 +213,7 @@ class TasteRoutesTest {
     }
 
     @Test
+    @Obligation("TA-20", "SU-23")
     fun `a finished round that included 'haven't played' pairs still counts as a taste we learned`() = test.webTest(session = kim) { client ->
         client.finishRound("A", "UNPLAYED_A")
 
@@ -214,11 +224,13 @@ class TasteRoutesTest {
     }
 
     @Test
+    @Obligation("TA-20")
     fun `answering 'haven't played' every time still ends the round`() = test.webTest(session = kim) { client ->
         client.finishRound("UNPLAYED") shouldStartWith "/gamedays/$gorefest7/favourites"
     }
 
     @Test
+    @Obligation("TA-21")
     fun `reloading mid-round carries on where it was, and the payoff counts every answer`() = test.webTest(session = kim) { client ->
         var wizard = client.get(taste).page().one("#wizard")
         val answered = mutableSetOf<Set<String>>()
@@ -236,6 +248,7 @@ class TasteRoutesTest {
     }
 
     @Test
+    @Obligation("TA-27")
     fun `the payoff says one answer in the singular`() = test.webTest(session = kim) { client ->
         client.get("/gamedays/$gorefest7/favourites?answers=1").page().one(".gf-kicker").text() shouldBe "Round done · 1 answer"
         client.get("/gamedays/$gorefest7/favourites?answers=12").page().one(".gf-kicker").text() shouldBe "Round done · 12 answers"
@@ -243,6 +256,7 @@ class TasteRoutesTest {
     }
 
     @Test
+    @Obligation("TA-21")
     fun `going back mid-round and answering a stale pair again doesn't derail the round`() = test.webTest(session = kim) { client ->
         val first = client.get(taste).page().one("#wizard")
         val second = client.answer(first, "A").fragment()
@@ -259,6 +273,7 @@ class TasteRoutesTest {
     }
 
     @Test
+    @Obligation("TA-29")
     fun `with an empty shelf the payoff says so`() {
         val other = kotlinx.coroutines.runBlocking {
             val id = PlayerId(Uuid.random())
@@ -275,6 +290,7 @@ class TasteRoutesTest {
     }
 
     @Test
+    @Obligation("TA-30")
     fun `after a round, uncertain shelf games lead to a short top-up`() = test.webTest(session = kim) { client ->
         given(*List(10) { ComparisonRecorded(kimId, shelf[0], shelf[1], ComparisonResult.A, gorefest.core.Basis.VIBE, test.clock.instant()) }.toTypedArray())
 
@@ -291,6 +307,7 @@ class TasteRoutesTest {
     }
 
     @Test
+    @Obligation("TA-32")
     fun `when the whole shelf is well known, the game day points to the favourites`() = test.webTest(session = kim) { client ->
         val answers = (0 until 4).flatMap { round -> shelf.zipWithNext().map { (a, b) -> ComparisonRecorded(kimId, a, b, ComparisonResult.A, gorefest.core.Basis.VIBE, test.clock.instant()) } }
         given(*answers.toTypedArray())
@@ -300,6 +317,7 @@ class TasteRoutesTest {
     }
 
     @Test
+    @Obligation("TA-31")
     fun `a top-up re-asks an answer from long ago first`() = test.webTest(session = kim) { client ->
         val longAgo = test.clock.instant() - java.time.Duration.ofDays(400)
         given(
@@ -313,6 +331,7 @@ class TasteRoutesTest {
     }
 
     @Test
+    @Obligation("TA-22")
     fun `the A and B keys ignore shortcuts, key repeat and typing in fields`() = test.webTest(session = kim) { client ->
         val script = client.get(taste).page().one("main#wizard form").attr("_")
 
@@ -321,6 +340,7 @@ class TasteRoutesTest {
     }
 
     @Test
+    @Obligation("TA-23", "BGG-29")
     fun `the BGG credit is in the page footer, outside the swapped wizard`() = test.webTest(session = kim) { client ->
         val page = client.get(taste).page()
         page.select("footer.gf-footer .gf-credit .gf-credit__logo img") shouldHaveSize 1

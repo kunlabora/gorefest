@@ -1,5 +1,6 @@
 package gorefest.shell.web.datepoll
 
+import gorefest.contract.Obligation
 import gorefest.core.DatePollAnswered
 import gorefest.core.DatePollCreated
 import gorefest.core.DatePollId
@@ -68,6 +69,7 @@ class DatePollRoutesTest {
     private fun token() = app.invites.token(poll)
 
     @Test
+    @Obligation("DP-3")
     fun `the form asks for a title, a place and dates, and can add more dates`() = test.webTest(session = anna) { client ->
         val form = client.get("/polls/new").page().one("#poll-form")
 
@@ -78,6 +80,7 @@ class DatePollRoutesTest {
     }
 
     @Test
+    @Obligation("DP-3")
     fun `add another date stops at the most dates a poll takes`() = test.webTest(session = anna) { client ->
         client.get("/polls/new").page().one("button[hx-get]").hasAttr("disabled") shouldBe false
         // The button also disables itself once the form it has grown has that many fields.
@@ -92,6 +95,7 @@ class DatePollRoutesTest {
     }
 
     @Test
+    @Obligation("DP-1", "DP-2", "WEB-3")
     fun `starting a poll puts the host in it, with the dates in order`() = test.webTest(session = anna) { client ->
         val response = client.htmxPost("/polls", parameters {
             append("title", "Boardfest #8"); append("place", "Anna's place"); append("timeZone", "Europe/Brussels")
@@ -105,6 +109,7 @@ class DatePollRoutesTest {
     }
 
     @Test
+    @Obligation("DP-4", "WEB-2")
     fun `a poll with fewer than two dates says so and keeps what was typed`() = test.webTest(session = anna) { client ->
         val form = client.htmxPost("/polls", parameters {
             append("title", "Boardfest #8"); append("dates", fri.toString()); append("dates", "")
@@ -116,6 +121,7 @@ class DatePollRoutesTest {
     }
 
     @Test
+    @Obligation("DP-6", "DP-8", "DP-15")
     fun `the poll page offers my dates, the results, and the invite link`() = test.webTest(session = bram) { client ->
         annasPoll()
 
@@ -134,6 +140,7 @@ class DatePollRoutesTest {
     }
 
     @Test
+    @Obligation("DP-5")
     fun `strangers can't see a poll, only people who joined through the invite`() = test.webTest(session = kim) { client ->
         annasPoll()
 
@@ -143,6 +150,7 @@ class DatePollRoutesTest {
     }
 
     @Test
+    @Obligation("DP-6")
     fun `the invite shows the poll, and joining takes you to it`() = test.webTest(session = kim) { client ->
         annasPoll()
 
@@ -159,6 +167,7 @@ class DatePollRoutesTest {
     }
 
     @Test
+    @Obligation("DP-5", "DP-6")
     fun `without a session, joining goes through login first, and a bad link is a dead end`() = test.webTest { client ->
         annasPoll()
 
@@ -169,6 +178,7 @@ class DatePollRoutesTest {
     }
 
     @Test
+    @Obligation("DP-8", "DP-12")
     fun `answering shows who can make which date, and the best one so far`() = test.webTest(session = bram) { client ->
         annasPoll()
         given(DatePollAnswered(poll, annaId, listOf(sat, sun)))
@@ -185,6 +195,7 @@ class DatePollRoutesTest {
     }
 
     @Test
+    @Obligation("DP-9", "WEB-1")
     fun `a date that isn't an option is refused`() = test.webTest(session = bram) { client ->
         annasPoll()
 
@@ -195,6 +206,7 @@ class DatePollRoutesTest {
     }
 
     @Test
+    @Obligation("DP-13")
     fun `the host sees who is still to answer and can pick a date`() = test.webTest(session = anna) { client ->
         annasPoll()
         given(DatePollAnswered(poll, annaId, listOf(sat)))
@@ -211,6 +223,7 @@ class DatePollRoutesTest {
     }
 
     @Test
+    @Obligation("DP-16", "DP-18")
     fun `picking a date creates the game day with the host and everyone who can make it`() {
         kotlinx.coroutines.runBlocking {
             annasPoll()
@@ -239,6 +252,7 @@ class DatePollRoutesTest {
     }
 
     @Test
+    @Obligation("DP-15")
     fun `only the host picks, once, and only from the options`() = test.webTest(session = bram) { client ->
         annasPoll()
 
@@ -249,6 +263,7 @@ class DatePollRoutesTest {
     }
 
     @Test
+    @Obligation("DP-7")
     fun `a closed poll's invite says the date is picked`() = test.webTest(session = kim) { client ->
         annasPoll()
         test.webTest(session = anna) { host -> host.htmxPost("$pollPage/pick", parameters { append("date", fri.toString()) }) }
@@ -260,6 +275,7 @@ class DatePollRoutesTest {
     }
 
     @Test
+    @Obligation("DP-7")
     fun `someone in the poll who follows its link after the pick lands on the poll, not on a dead end`() {
         kotlinx.coroutines.runBlocking {
             annasPoll()
@@ -270,6 +286,7 @@ class DatePollRoutesTest {
     }
 
     @Test
+    @Obligation("DP-11")
     fun `a date that has passed can't be changed, but an answer already given for it is kept`() {
         kotlinx.coroutines.runBlocking {
             annasPoll()
@@ -291,6 +308,7 @@ class DatePollRoutesTest {
     }
 
     @Test
+    @Obligation("DP-14", "DP-18")
     fun `a closed poll marks the picked date, and drops off the home page`() {
         kotlinx.coroutines.runBlocking { annasPoll() }
         test.webTest(session = anna) { client -> client.htmxPost("$pollPage/pick", parameters { append("date", sun.toString()) }) }
@@ -305,6 +323,7 @@ class DatePollRoutesTest {
     }
 
     @Test
+    @Obligation("DP-14")
     fun `the home page lists my open polls and offers to start one`() = test.webTest(session = bram) { client ->
         annasPoll()
 
@@ -316,6 +335,7 @@ class DatePollRoutesTest {
     }
 
     @Test
+    @Obligation("DP-6")
     fun `a new player signing up from a poll invite lands joined on the poll`() = test.webTest { client ->
         annasPoll()
         val returnTo = "/p/${token()}?join=1"
@@ -332,6 +352,7 @@ class DatePollRoutesTest {
     }
 
     @Test
+    @Obligation("DP-5")
     fun `a crafted poll link can't join anyone`() = test.webTest(session = kim) { client ->
         annasPoll()
 
@@ -340,6 +361,7 @@ class DatePollRoutesTest {
     }
 
     @Test
+    @Obligation("DP-18")
     fun `if the picked game day was cancelled, the poll says so`() {
         kotlinx.coroutines.runBlocking { annasPoll() }
         test.webTest(session = anna) { client -> client.htmxPost("$pollPage/pick", parameters { append("date", sun.toString()) }) }

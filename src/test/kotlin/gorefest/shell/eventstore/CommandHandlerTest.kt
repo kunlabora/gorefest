@@ -1,5 +1,6 @@
 package gorefest.shell.eventstore
 
+import gorefest.contract.Obligation
 import gorefest.core.BggId
 import gorefest.core.BringRequested
 import gorefest.core.PlayerId
@@ -51,6 +52,7 @@ class CommandHandlerTest {
     }
 
     @Test
+    @Obligation("EV-5")
     suspend fun `keeps retrying through several conflicts, backing off between them`() {
         val backoffs = mutableListOf<Int>()
         val handler = CommandHandler(db, store, afterAppend = { gameDays.catchUp() }, backoff = { backoffs += it })
@@ -63,6 +65,7 @@ class CommandHandlerTest {
     }
 
     @Test
+    @Obligation("EV-7")
     suspend fun `a failing catch-up does not make the stored command look failed`() {
         val handler = CommandHandler(db, store, afterAppend = { error("projection down") }, backoff = {})
         val bram = PlayerId(Uuid.random())
@@ -74,6 +77,7 @@ class CommandHandlerTest {
     }
 
     @Test
+    @Obligation("EV-8")
     suspend fun `a poison event is skipped by the projector and later events still apply`() {
         val poison = object : gorefest.core.eventsourcing.Projection<Int> {
             override val initialState = 0
@@ -95,6 +99,7 @@ class CommandHandlerTest {
     private val poisoned = PlayerId(Uuid.random())
 
     @Test
+    @Obligation("EV-6")
     suspend fun `concurrent joins by different players all land`() {
         val players = List(8) { PlayerId(Uuid.random()) }
 
@@ -106,6 +111,7 @@ class CommandHandlerTest {
     }
 
     @Test
+    @Obligation("EV-6")
     suspend fun `concurrent duplicate joins land once`() {
         val bram = PlayerId(Uuid.random())
 
@@ -118,6 +124,7 @@ class CommandHandlerTest {
     }
 
     @Test
+    @Obligation("EV-6", "SH-27")
     suspend fun `concurrent bring requests can't slip past the asker's cap`() {
         val asker = PlayerId(Uuid.random())
         val owners = List(8) { PlayerId(Uuid.random()) }
@@ -133,6 +140,7 @@ class CommandHandlerTest {
     }
 
     @Test
+    @Obligation("EV-6", "SH-27")
     suspend fun `concurrent bring requests can't slip past the owner's cap`() {
         val owner = PlayerId(Uuid.random())
         val askers = List(8) { PlayerId(Uuid.random()) }

@@ -1,5 +1,6 @@
 package gorefest.shell.web.approval
 
+import gorefest.contract.Obligation
 import gorefest.core.PlayerId
 import gorefest.core.PlayerJoined
 import gorefest.core.gameday.anna
@@ -52,12 +53,14 @@ class ApprovalRoutesTest {
     }
 
     @Test
+    @Obligation("ACC-16")
     fun `an unapproved account is sent to wait, wherever it goes`() = test.webTest(session = newcomer) { client ->
         client.get("/").location shouldStartWith "/pending"
         client.get("/gamedays/new").location shouldStartWith "/pending"
     }
 
     @Test
+    @Obligation("ACC-16")
     fun `the waiting page says so, and an approved player doesn't see it`() {
         test.webTest(session = newcomer) { client ->
             client.get("/pending").page().select("h1").text() shouldContain "Waiting"
@@ -66,6 +69,7 @@ class ApprovalRoutesTest {
     }
 
     @Test
+    @Obligation("ACC-16", "ACC-17")
     fun `a new sign-up waits, the admin gets a mail, approves, and the newcomer is in`() {
         test.webTest { client ->
             client.signUp("fresh@example.com", "Fresh")
@@ -90,6 +94,7 @@ class ApprovalRoutesTest {
     }
 
     @Test
+    @Obligation("ACC-17")
     fun `rejecting removes the account and says so`() = test.webTest(session = tim) { admin ->
         admin.post("/admin/approvals/$newcomerId/reject").location shouldBe "/admin/approvals"
 
@@ -98,6 +103,7 @@ class ApprovalRoutesTest {
     }
 
     @Test
+    @Obligation("ACC-18")
     fun `only the admin sees the approvals, everyone else gets a 404`() {
         test.webTest(session = newcomer) { it.get("/admin/approvals").status shouldBe HttpStatusCode.NotFound }
         test.webTest(session = kotlinx.coroutines.runBlocking { test.loggedIn("Kim") }) { kim ->
@@ -109,6 +115,7 @@ class ApprovalRoutesTest {
     }
 
     @Test
+    @Obligation("ACC-19")
     fun `the admin's own account is approved on first login`() = test.webTest { client ->
         client.signUp("tim2@example.com", "Tim") // not the admin: waits
         client.get("/").location shouldStartWith "/pending"
@@ -122,6 +129,7 @@ class ApprovalRoutesTest {
     }
 
     @Test
+    @Obligation("ACC-20")
     fun `joining through an invite waits for approval and doesn't join`() = test.webTest(session = newcomer) { client ->
         app.db.transaction { app.store.append(listOf(gameDayCreated(host = anna), PlayerJoined(gorefest7, anna))) }
         app.catchUp()
@@ -133,6 +141,7 @@ class ApprovalRoutesTest {
     }
 
     @Test
+    @Obligation("ACC-21")
     fun `outside dev the admin email is required`() {
         shouldThrow<IllegalStateException> { AppConfig.fromEnv { if (it == "GOREFEST_ENV") "prod" else if (it == "SECRET_KEY") "x" else null } }
         AppConfig.fromEnv { if (it == "GOREFEST_ENV") "prod" else if (it == "SECRET_KEY") "x" else if (it == "ADMIN_EMAIL") " Tim@Example.com " else null }

@@ -1,5 +1,6 @@
 package gorefest.shell.auth
 
+import gorefest.contract.Obligation
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
@@ -18,6 +19,7 @@ class HttpMailerTest {
     private val mail = Mail("kim@example.com", "Your Boardfest code: 391740", "Your code is 391740.", Instant.EPOCH)
 
     @Test
+    @Obligation("ACC-15")
     fun `postmark gets its token header and a text body`() {
         val request = PostmarkMailer("pm-token", "Boardfest <hi@gorefest.app>").request(mail)
 
@@ -30,6 +32,7 @@ class HttpMailerTest {
     }
 
     @Test
+    @Obligation("ACC-15")
     fun `resend gets a bearer token and a list of recipients`() {
         val request = ResendMailer("re-key", "hi@gorefest.app").request(mail)
 
@@ -39,6 +42,7 @@ class HttpMailerTest {
     }
 
     @Test
+    @Obligation("ACC-15")
     fun `scaleway gets its token, a from object, recipients and the project`() {
         val request = ScalewayMailer("scw-secret", "Boardfest <hello@gorefest.example.org>", "project-123").request(mail)
 
@@ -53,12 +57,14 @@ class HttpMailerTest {
     }
 
     @Test
+    @Obligation("ACC-15")
     fun `a bare from address has no name`() {
         val body = body(ScalewayMailer("k", "hello@gorefest.example.org", "p").request(mail))
         body.getValue("from").jsonObject.keys shouldBe setOf("email")
     }
 
     @Test
+    @Obligation("ACC-15")
     fun `the provider comes from the environment`() {
         val env = mapOf("MAIL_PROVIDER" to "resend", "MAIL_API_KEY" to "k", "MAIL_FROM" to "hi@gorefest.app")
         HttpMailer.fromEnv(env::get).shouldBeInstanceOf<ResendMailer>()
@@ -82,6 +88,7 @@ class HttpMailerTest {
     }
 
     @Test
+    @Obligation("PR-18")
     fun `a refused mail names the status, not what the provider echoed back`() {
         val server = com.sun.net.httpserver.HttpServer.create(java.net.InetSocketAddress("127.0.0.1", 0), 0)
         server.createContext("/") { exchange ->

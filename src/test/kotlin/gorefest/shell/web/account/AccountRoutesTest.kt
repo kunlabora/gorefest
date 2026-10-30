@@ -1,5 +1,6 @@
 package gorefest.shell.web.account
 
+import gorefest.contract.Obligation
 import gorefest.core.GameDayCreated
 import gorefest.core.GameDayId
 import gorefest.core.PlayerId
@@ -50,6 +51,7 @@ class AccountRoutesTest {
     private fun adminMails() = test.mailbox.all.filter { it.to == "tim@example.com" }
 
     @Test
+    @Obligation("ACC-23")
     fun `the account page shows who you are, and needs a login`() {
         test.webTest { it.get("/account").location shouldStartWith "/login" }
         test.webTest(session = kim) { client ->
@@ -63,6 +65,7 @@ class AccountRoutesTest {
     }
 
     @Test
+    @Obligation("ACC-24", "PR-19")
     fun `asking tells the admin once, with a name and a link but no email address`() = test.webTest(session = kim) { client ->
         client.submitForm("/account/delete", Parameters.Empty).location shouldBe "/account#request-delete"
         client.submitForm("/account/delete", Parameters.Empty)
@@ -79,6 +82,7 @@ class AccountRoutesTest {
     }
 
     @Test
+    @Obligation("ACC-25")
     fun `a host is warned that their upcoming game days stay`() = test.webTest(session = kim) { client ->
         val day = GameDayId(Uuid.random())
         app.db.transaction {
@@ -90,6 +94,7 @@ class AccountRoutesTest {
     }
 
     @Test
+    @Obligation("ACC-18")
     fun `only the admin sees the requests`() {
         test.webTest(session = kim) { client ->
             client.get("/admin/requests").status shouldBe HttpStatusCode.NotFound
@@ -99,6 +104,7 @@ class AccountRoutesTest {
     }
 
     @Test
+    @Obligation("ACC-26")
     fun `the admin deletes the account, the person is told, and their old session is dead`() {
         test.webTest(session = kim) { it.submitForm("/account/delete", Parameters.Empty) }
 
@@ -114,6 +120,7 @@ class AccountRoutesTest {
     }
 
     @Test
+    @Obligation("ACC-28")
     fun `the delete confirm keeps any name as text, a backslash and a quote included`() {
         val zedId = PlayerId(Uuid.random())
         val zed = runBlocking { test.loggedIn("Zed\\", id = zedId) }
@@ -127,6 +134,7 @@ class AccountRoutesTest {
     }
 
     @Test
+    @Obligation("ACC-18", "ACC-27", "PR-11")
     fun `the admin downloads the person's data as a file, nobody else can`() {
         test.webTest(session = kim) { it.submitForm("/account/export", Parameters.Empty) }
 
@@ -144,6 +152,7 @@ class AccountRoutesTest {
     }
 
     @Test
+    @Obligation("ACC-27")
     fun `a data request stays open until the admin says it was sent`() {
         test.webTest(session = kim) { it.submitForm("/account/export", Parameters.Empty) }
 

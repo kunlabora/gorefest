@@ -1,5 +1,6 @@
 package gorefest.core.gameday
 
+import gorefest.contract.Obligation
 import gorefest.core.Basis
 import gorefest.core.ComparisonRecorded
 import gorefest.core.ComparisonResult
@@ -28,6 +29,7 @@ class ReadinessTest {
     private fun shelf(vararg names: String) = names.map { g(it) to ShelfGame(g(it).id, listOf(anna)) }
 
     @Test
+    @Obligation("GD-24")
     fun `players who need a nudge come first, with their answer counts`() {
         val readiness = Readiness.of(gameDay, shelf("Azul"), tastes(anna to 12, bram to 3, kim to 10))
 
@@ -38,6 +40,7 @@ class ReadinessTest {
     }
 
     @Test
+    @Obligation("GD-23")
     fun `gaps are table sizes that fewer than three shelf games serve`() {
         val readiness = Readiness.of(gameDay, shelf("Azul", "Cascadia", "Brass: Birmingham", "Codenames"), tastes())
 

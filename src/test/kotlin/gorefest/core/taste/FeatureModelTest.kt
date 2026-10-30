@@ -1,5 +1,6 @@
 package gorefest.core.taste
 
+import gorefest.contract.Obligation
 import gorefest.core.Basis
 import gorefest.core.ComparisonRecorded
 import gorefest.core.ComparisonResult
@@ -29,6 +30,7 @@ class FeatureModelTest {
     }
 
     @Test
+    @Obligation("TA-10")
     fun `v1 beats v0 on a replay of a player whose taste follows game features`() {
         val random = Random(7)
         val truth = trueTaste(random)
@@ -47,6 +49,7 @@ class FeatureModelTest {
     }
 
     @Test
+    @Obligation("TA-8")
     fun `taste carries over to games never compared`() {
         val answers = listOf("Dominion" to "Power Grid", "Lost Ruins of Arnak" to "Puerto Rico", "Great Western Trail" to "Twilight Struggle")
             .flatMap { (a, b) -> List(3) { ComparisonRecorded(anna, g(a).id, g(b).id, ComparisonResult.A, Basis.VIBE, now) } }
@@ -59,6 +62,7 @@ class FeatureModelTest {
     }
 
     @Test
+    @Obligation("TA-9")
     fun `vibe trust grows when vibes predicted enjoyment, and shrinks when they didn't`() {
         val (a, b) = g("Azul") to g("Cascadia")
         val vibe = List(3) { ComparisonRecorded(anna, a.id, b.id, ComparisonResult.A, Basis.VIBE, now) }
@@ -70,6 +74,7 @@ class FeatureModelTest {
     }
 
     @Test
+    @Obligation("TA-8")
     fun `features describe a game's tags, weight, length and best counts`() {
         val f = features(g("Azul"))
 
@@ -80,6 +85,7 @@ class FeatureModelTest {
 
 
     @Test
+    @Obligation("TA-8")
     fun `a game missing from the catalog is not cached as having no features`() {
         val azul = g("Azul")
         val cascadia = g("Cascadia")
@@ -98,6 +104,7 @@ class FeatureModelTest {
     }
 
     @Test
+    @Obligation("TA-9")
     fun `vibes that predict nothing leave trust at one half whatever the answers`() {
         val (a, b) = g("Azul") to g("Cascadia")
         val played = List(4) { ComparisonRecorded(anna, a.id, b.id, ComparisonResult.B, Basis.PLAYED, now) }

@@ -1,5 +1,6 @@
 package gorefest.shell.web.shelf
 
+import gorefest.contract.Obligation
 import gorefest.core.BggId
 import gorefest.core.PlayerId
 import gorefest.core.PlayerJoined
@@ -49,6 +50,7 @@ class ShelfSearchTest {
         get("/gamedays/$gorefest7/bring/search?q=${q.urlEncoded()}").fragment()
 
     @Test
+    @Obligation("SH-8")
     fun `the bring page has a debounced search box`() = test.webTest(session = kim) { client ->
         val input = client.get("/gamedays/$gorefest7/bring").page().one(".gf-search input")
 
@@ -58,6 +60,7 @@ class ShelfSearchTest {
     }
 
     @Test
+    @Obligation("SH-8")
     fun `the search box shows a spinner while a request is in flight`() = test.webTest(session = kim) { client ->
         val search = client.get("/gamedays/$gorefest7/bring").page().one(".gf-search")
 
@@ -66,6 +69,7 @@ class ShelfSearchTest {
     }
 
     @Test
+    @Obligation("SH-5", "BGG-20")
     fun `games we don't know yet come from BGG and are cached`() = test.webTest(session = kim) { client ->
         val results = client.search("wingspan")
 
@@ -76,6 +80,7 @@ class ShelfSearchTest {
     }
 
     @Test
+    @Obligation("SH-4")
     fun `a game found by search can be brought, and stays on my bring page`() = test.webTest(session = kim) { client ->
         client.search("wingspan")
 
@@ -88,6 +93,7 @@ class ShelfSearchTest {
     }
 
     @Test
+    @Obligation("SH-7", "BGG-23")
     fun `a search that finds nothing says so`() = test.webTest(session = kim) { client ->
         val results = client.search("zzzzzz")
 
@@ -97,6 +103,7 @@ class ShelfSearchTest {
     }
 
     @Test
+    @Obligation("SH-7", "BGG-23")
     fun `short queries don't search`() = test.webTest(session = kim) { client ->
         client.search("w").select("li").shouldBeEmpty()
         client.search("w").select(".gf-search-empty").shouldBeEmpty()
@@ -104,6 +111,7 @@ class ShelfSearchTest {
     }
 
     @Test
+    @Obligation("SH-5", "BGG-20")
     suspend fun `enough local matches skip BGG`() {
         app.catalog.put(DevCatalog.games, test.clock.instant())
 
@@ -112,6 +120,7 @@ class ShelfSearchTest {
     }
 
     @Test
+    @Obligation("SH-6", "BGG-21")
     suspend fun `when BGG is down, local matches still show`() {
         val down = TestApp()
         down.reset()

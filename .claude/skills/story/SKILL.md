@@ -5,7 +5,7 @@ description: Build a Boardfest backlog story from idea to commit - request doc w
 
 # Story
 
-A story is done when every criterion in its request doc is ticked and covered by a test: a decider given/when/then where there's a decision, a web test where there's a page (`docs/backlog.md`). CLAUDE.md holds the rules; this is the order to apply them in. Read CLAUDE.md's Architecture and conventions sections before starting if they aren't in context.
+A story is done when every criterion in its request doc is ticked and every obligation it adds to the Contract (`docs/contract/`) is proven by a test tagged `@Obligation(...)`: a decider given/when/then where there's a decision, a web test where there's a page (`docs/backlog.md`). CLAUDE.md holds the rules; this is the order to apply them in. Read CLAUDE.md's Architecture and conventions sections before starting if they aren't in context.
 
 ## 0. Find the story
 
@@ -22,11 +22,11 @@ Write or complete the request doc, in the shape of `docs/requests/u20-ask-someon
 - `## Behaviour`: what people see and can do, in plain words
 - `## Design`: **Events** (new types only; tags; ids only, no names, emails, usernames or addresses), **Deciders** (which file, query, rejections as `Rejection` cases), **Read model** (class and its queries, exposed on `App`), **Web** (package, routes, fragments and their ids, components to reuse), **Privacy** (who newly sees what, and what `PlayerErased` does to it), **Matcher** (change or "no change")
 - `## Open questions`, each with a recommendation
-- `## Criteria` as `- [ ]` lines, each one testable. Always include: event evolution (new types only, `CLAUDE.md` updated), erasure behaviour, members-only/closed-day web tests, and "design mockup in `docs/design/` and the screens use existing components" when there's a screen.
+- `## Criteria` as `- [ ]` lines, each one testable. A criterion that is a lasting promise (not a chore like "mockup exists") also goes into the area's file in `docs/contract/` as a new obligation (next free number, one plain sentence); the criterion names its id (`- [ ] SH-35: …`). Check the area's existing obligations first: a story that changes one says so, and strikes the old one through rather than renumbering. Always include: event evolution (new types only, `CLAUDE.md` updated), erasure behaviour, members-only/closed-day web tests, and "design mockup in `docs/design/` and the screens use existing components" when there's a screen.
 
 When the product owner has a real choice between shapes, write options instead (`docs/requests/u11-options.html`: two or three options, each with a clickable screen flow; add it to `.claude/launch.json` to preview) and stop.
 
-**Stop and ask** before building when there are open questions, or when the design adds events or shows data to new people. Record the answers in the doc as `**Decided (date):**`. Commit the design on its own: `U21 design: <title>`.
+**Stop and ask** before building when there are open questions, or when the design adds events or shows data to new people. Record the answers in the doc as `**Decided (date):**`. Commit the design on its own: `refine: U21 design: <title>`.
 
 ## 2. Mockup and microcopy (screens only)
 
@@ -41,37 +41,40 @@ When the product owner has a real choice between shapes, write options instead (
 - Every `when` over events ends with `else -> state`.
 - **Erasure:** decide what `PlayerErased` does to the new state (on days still to be played: take the person out; closed days keep history). Handle it in the projection and test it.
 - **Rejections** get a sentence in `shell/web/Rejections.kt` (`Rejection.message()`), pinned in `RejectionsTest`.
-- Tests: given/when/then per decision, one per rejection and per no-op; projection tests for the read model.
+- Tests: given/when/then per decision, one per rejection and per no-op; projection tests for the read model. Tag each with the obligations it proves (`@Obligation("SH-35")`).
+- Breathe out before committing (IMP Rule 12): fold what the story taught back into the existing code (a second copy becomes a shared helper, a special case becomes the rule), so the core stays as simple as before. `ArchitectureTest` and detekt must stay green without touching `config/detekt/baseline.xml`.
+- Touched a decider or the matcher: run `./gradlew mutationTest` and `scripts/kill_matrix.py --survivors`; a survivor in the new code is a missing test or obligation.
 
 Then, in the shell:
 - `EventCompatibilityTest`: a stored JSON sample for every new type (the test fails without one).
 - `PersonalData.describe`: a case for each event carrying the player's own data. An event naming another player must not echo their name or id.
 - Concurrency invariants (caps): an interleaved-append test in `CommandHandlerTest`.
 
-Run `./gradlew test`. Commit: `U21 core: <what>`.
+Run `./gradlew check`. Commit: `refine: U21 core: <what>`.
 
 ## 4. Web (`gorefest.shell.web.<feature>`)
 
 - `XRoutes.kt`: parse, run the decider, build a small view model, pick the view. htmx requests get one-root fragments, plain requests a page or redirect. Register routes in `Server.kt`.
 - `XViews.kt`: `HTML.xPage(view)` and `TagConsumer<*>.fragment(...)`, from `web/components/` (`page(site = SiteBar(me, Nav.X))`, `notice`, `field`, `primaryButton`, `playerChips`, `nextStep`, `rankedGame`, …). New CSS only in the screen's block in `docs/design/css/gorefest.css`; a second use moves it to the shared block.
 - Game names link with `bggNameLink`. Members-only pages use `memberGameDay`. Anything new that logs a URL goes through `loggable()`.
-- Web tests with `webTest(session = test.loggedIn("Tim"))`, Jsoup + CSS selectors (`page()`, `fragment()`, `shouldReplace`), never substrings. Cover: the happy path, every rejection's wording, outsiders get nothing, closed/cancelled days are read-only.
+- Web tests (tagged with their obligations) with `webTest(session = test.loggedIn("Tim"))`, Jsoup + CSS selectors (`page()`, `fragment()`, `shouldReplace`), never substrings. Cover: the happy path, every rejection's wording, outsiders get nothing, closed/cancelled days are read-only.
 - Look at it in the browser: `./gradlew buildFatJar`, then `preview_start` with `gorefest` (port 8080, from `.claude/launch.json`), log in via the code at `/dev/mailbox`, walk the flow on desktop and at phone width, light and dark. Check the console for errors.
 
-Run `./gradlew test`. Commit: `U21 web: <what>`.
+Run `./gradlew check`. Commit: `refine: U21 web: <what>`.
 
 ## 5. Docs
 
 - `CLAUDE.md`: vocabulary for new terms, the events list, the web package list for a new package, matching notes if the matcher changed. Keep it to what a future reader needs.
+- Contract: `build/reports/contract/coverage.md` shows the area fully proven; a promise you found but couldn't test goes under "Known gaps" in `docs/contract/README.md`.
 - Request doc: tick every criterion, set `Status: ✅ built`, add a `Built as designed, with these notes:` list for anything that turned out different.
 - The milestone table: row to ✅ with Done today; update the summary line above the table if it lists decisions.
 
 ## 6. Privacy check
 
-Run the `privacy-check` agent on the story's commit range (give it the range, e.g. `<design commit>^..HEAD`). Review what it changed and commit it separately: `Privacy check after U21: <what changed>`.
+Run the `privacy-check` agent on the story's commit range (give it the range, e.g. `<design commit>^..HEAD`). Review what it changed and commit it separately: `refine: Privacy check after U21: <what changed>`.
 
 ## 7. Commit and report
 
-Commit finished, tested work on `main` without asking; split as above or one `U21: <title>` commit for a small story. Messages are plain, user-facing sentences (see `git log`). Don't push: pushing deploys; the `release` skill does that when the user asks.
+Commit finished, tested work on `main` without asking; split as above or one `refine: U21: <title>` commit for a small story. Messages start with `refine:` (or `fix:` only for a defect in live production), then a plain, user-facing sentence (see `git log`). Don't push: pushing deploys; the `release` skill does that when the user asks.
 
 Report: what was built, the commits, any "built differently" notes, and anything left unticked or unverified.

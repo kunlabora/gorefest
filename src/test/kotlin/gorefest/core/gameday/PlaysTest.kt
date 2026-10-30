@@ -1,5 +1,6 @@
 package gorefest.core.gameday
 
+import gorefest.contract.Obligation
 import gorefest.core.Rejection
 import gorefest.core.BggId
 import gorefest.core.GameDayDetailsChanged
@@ -25,11 +26,13 @@ class PlaysTest {
     private val joined = arrayOf(gameDayCreated(), PlayerJoined(gorefest7, anna), PlayerJoined(gorefest7, bram))
 
     @Test
+    @Obligation("PL-1")
     fun `a joined player logs a play for joined players`() {
         LogPlayDecider.given(*joined).whenever(log(45)).thenEmits(log(45))
     }
 
     @Test
+    @Obligation("PL-2", "PL-4")
     fun `logs need joined players, a real duration and a game day that wasn't cancelled`() {
         val stranger = gorefest.core.PlayerId(kotlin.uuid.Uuid.random())
         LogPlayDecider.given(*joined).whenever(log(45, listOf(anna, stranger))).thenRejects(Rejection.PlayersNotAtGameDay)
@@ -40,16 +43,19 @@ class PlaysTest {
     }
 
     @Test
+    @Obligation("PL-4")
     fun `a play can still be logged after the game day ended`() {
         LogPlayDecider.given(*joined, GameDayEnded(gorefest7)).whenever(log(45)).thenEmits(log(45))
     }
 
     @Test
+    @Obligation("PL-5", "PR-9")
     fun `a play never names someone who was erased, also on an ended game day that still shows them`() {
         LogPlayDecider.given(*joined, GameDayEnded(gorefest7), PlayerErased(bram)).whenever(log(45)).thenRejects(Rejection.PlayersNotAtGameDay)
     }
 
     @Test
+    @Obligation("PL-3")
     fun `plays can be logged during the game day, from its date in its own time zone`() {
         fun at(instant: String) = log(45).copy(at = Instant.parse(instant))
         // 27 Sep, Europe/Brussels (UTC+2): the day starts at 26 Sep 22:00 UTC.
@@ -59,12 +65,14 @@ class PlaysTest {
     }
 
     @Test
+    @Obligation("PL-3")
     fun `moving the game day moves when logging opens`() {
         val moved = GameDayDetailsChanged(gorefest7, "Gorefest #7", today.plusDays(10), "Anna's place")
         LogPlayDecider.given(*joined, moved).whenever(log(45)).thenRejects(Rejection.GameDayNotStarted)
     }
 
     @Test
+    @Obligation("PL-10")
     fun `a logged play means everyone at the table has played it`() {
         val tastes = listOf(log(45)).fold(Tastes.initialState, Tastes::evolve)
 
@@ -72,6 +80,7 @@ class PlaysTest {
     }
 
     @Test
+    @Obligation("PL-11")
     fun `group speed is the median ratio to the box time, for mostly the same table`() {
         val games = DevCatalog.games.associateBy { it.id }::get
         val slow = listOf(log(45), log(60), log(40))   // ÷ 30 → 1.5, 2.0, 1.33
@@ -83,6 +92,7 @@ class PlaysTest {
     }
 
     @Test
+    @Obligation("PL-12")
     fun `after a play, compare it with a played game we know least about`() {
         val cascadia = DevCatalog.games.first { it.name == "Cascadia" }
         val brass = DevCatalog.games.first { it.name == "Brass: Birmingham" }
@@ -94,6 +104,7 @@ class PlaysTest {
 
 
     @Test
+    @Obligation("PL-11")
     fun `games without a playtime don't skew the group's speed`() {
         val unknown = azul.copy(id = BggId(999_001), minPlaytime = 0, maxPlaytime = 0)
         val games = (DevCatalog.games + unknown).associateBy { it.id }::get

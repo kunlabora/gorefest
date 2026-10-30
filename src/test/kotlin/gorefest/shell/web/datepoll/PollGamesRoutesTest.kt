@@ -1,5 +1,6 @@
 package gorefest.shell.web.datepoll
 
+import gorefest.contract.Obligation
 import gorefest.core.BggId
 import gorefest.core.DatePollAnswered
 import gorefest.core.DatePollBringAnswered
@@ -78,6 +79,7 @@ class PollGamesRoutesTest {
     private val pollPage get() = "/polls/$poll"
 
     @Test
+    @Obligation("DP-19")
     fun `starting a poll can switch on the games`() = test.webTest(session = anna) { client ->
         client.get("/polls/new").page().one("#poll-form input[name=games][role=switch]").attr("value") shouldBe "true"
 
@@ -91,6 +93,7 @@ class PollGamesRoutesTest {
     }
 
     @Test
+    @Obligation("DP-20")
     fun `the host adds one of their own games, or any game by search, and never sees friends' collections`() = test.webTest(session = anna) { client ->
         val page = client.get(pollPage).page()
         page.select(".gf-pollgames__pool .gf-game__name").map { it.text() } shouldBe listOf("Azul")
@@ -103,6 +106,7 @@ class PollGamesRoutesTest {
     }
 
     @Test
+    @Obligation("DP-20")
     fun `the poll form suggests the host's own games to tick, and the ticked ones go in with the poll`() = test.webTest(session = anna) { client ->
         val form = client.get("/polls/new").page().one("#poll-form")
         form.select(".gf-poll-form__gamepick input[name=game][type=checkbox]").map { it.`val`() } shouldBe listOf(azul.toString())
@@ -123,6 +127,7 @@ class PollGamesRoutesTest {
     }
 
     @Test
+    @Obligation("DP-4")
     fun `a refused form keeps the games ticked, the searched ones too`() = test.webTest(session = anna) { client ->
         val refused = client.htmxPost("/polls", parameters {
             append("title", " "); append("dates", fri.toString()); append("dates", sat.toString()); append("timeZone", "Europe/Brussels")
@@ -134,6 +139,7 @@ class PollGamesRoutesTest {
     }
 
     @Test
+    @Obligation("DP-27")
     fun `the host's add buttons take them to the search, which is right there when there are no games yet`() = test.webTest(session = anna) { client ->
         val empty = client.get(pollPage).page()
         empty.one(".gf-poll-signpost a[href=#add-game-q]").text() shouldBe "Add games"
@@ -148,6 +154,7 @@ class PollGamesRoutesTest {
     }
 
     @Test
+    @Obligation("DP-20")
     fun `only the host adds games`() = test.webTest(session = bram) { client ->
         client.submitForm("$pollPage/games", parameters { append("game", humanity.toString()) }).status shouldBe HttpStatusCode.Conflict
         client.get(pollPage).page().select(".gf-pollgames__add") shouldHaveSize 0
@@ -155,6 +162,7 @@ class PollGamesRoutesTest {
     }
 
     @Test
+    @Obligation("DP-24")
     fun `a friend who has a proposed game is asked to bring it, and anyone can offer`() {
         kotlinx.coroutines.runBlocking { given(DatePollGameProposed(poll, humanity), DatePollGameProposed(poll, brass)) }
         test.webTest(session = ruben) { client ->
@@ -174,6 +182,7 @@ class PollGamesRoutesTest {
     }
 
     @Test
+    @Obligation("DP-24")
     fun `not this time answers the prompt without offering`() = test.webTest(session = ruben) { client ->
         given(DatePollGameProposed(poll, humanity))
 
@@ -184,6 +193,7 @@ class PollGamesRoutesTest {
     }
 
     @Test
+    @Obligation("DP-22")
     fun `a yes is a heart, three at most, and the refusal says so`() = test.webTest(session = bram) { client ->
         val games = listOf(brass, azul, humanity, id("Cascadia"))
         given(*games.map { DatePollGameProposed(poll, it) }.toTypedArray(), *games.take(3).map { DatePollGameAnswered(poll, bramId, it, true) }.toTypedArray())
@@ -195,6 +205,7 @@ class PollGamesRoutesTest {
     }
 
     @Test
+    @Obligation("DP-25")
     fun `each game says who brings it, or that nobody can yet`() = test.webTest(session = anna) { client ->
         given(DatePollGameProposed(poll, humanity), DatePollGameProposed(poll, azul), DatePollBringAnswered(poll, rubenId, humanity, true), DatePollGameAnswered(poll, bramId, humanity, true))
 
@@ -206,6 +217,7 @@ class PollGamesRoutesTest {
     }
 
     @Test
+    @Obligation("DP-25")
     fun `a date card says which games that day would lose, and why`() = test.webTest(session = anna) { client ->
         given(
             DatePollGameProposed(poll, humanity), DatePollGameProposed(poll, azul), DatePollBringAnswered(poll, rubenId, humanity, true),
@@ -223,6 +235,7 @@ class PollGamesRoutesTest {
     }
 
     @Test
+    @Obligation("DP-27")
     fun `the games are signposted next to the dates, so nobody misses them`() = test.webTest(session = bram) { client ->
         given(DatePollGameProposed(poll, humanity), DatePollGameProposed(poll, azul), DatePollGameAnswered(poll, bramId, azul, true))
 
@@ -233,6 +246,7 @@ class PollGamesRoutesTest {
     }
 
     @Test
+    @Obligation("DP-22")
     fun `an answer shows as a pressed chip`() = test.webTest(session = bram) { client ->
         given(DatePollGameProposed(poll, azul), DatePollGameAnswered(poll, bramId, azul, true))
 
@@ -243,6 +257,7 @@ class PollGamesRoutesTest {
     }
 
     @Test
+    @Obligation("DP-29", "DP-31")
     fun `picking the date makes the game night, with its plan, and the poll links to it`() {
         kotlinx.coroutines.runBlocking {
             given(
@@ -270,6 +285,7 @@ class PollGamesRoutesTest {
     }
 
     @Test
+    @Obligation("DP-32")
     fun `the game night's table suggests from its plan, and wishes come from the yeses`() {
         kotlinx.coroutines.runBlocking {
             given(
@@ -288,6 +304,7 @@ class PollGamesRoutesTest {
     }
 
     @Test
+    @Obligation("DP-30")
     fun `a game night is for the people on it`() {
         kotlinx.coroutines.runBlocking { given(DatePollAnswered(poll, rubenId, listOf(sat))) }
         test.webTest(session = anna) { client -> client.htmxPost("$pollPage/pick", parameters { append("date", sat.toString()) }) }
@@ -301,6 +318,7 @@ class PollGamesRoutesTest {
     }
 
     @Test
+    @Obligation("DP-35")
     fun `a poll whose host's account was deleted says it's over, and its link takes nobody in`() {
         kotlinx.coroutines.runBlocking { given(gorefest.core.PlayerErased(annaId)) }
         test.webTest(session = bram) { client ->
@@ -313,6 +331,7 @@ class PollGamesRoutesTest {
     }
 
     @Test
+    @Obligation("DP-28")
     fun `each game card's buttons say which game they're about`() = test.webTest(session = anna) { client ->
         given(DatePollGameProposed(poll, azul), DatePollGameProposed(poll, brass))
 
@@ -325,6 +344,7 @@ class PollGamesRoutesTest {
     }
 
     @Test
+    @Obligation("DP-12", "DP-18")
     fun `date cards list who can't in a sentence, and the top says when the date is picked`() = test.webTest(session = anna) { client ->
         given(DatePollAnswered(poll, annaId, emptyList()), DatePollAnswered(poll, bramId, emptyList()), DatePollAnswered(poll, rubenId, listOf(sat)))
 
@@ -335,6 +355,7 @@ class PollGamesRoutesTest {
     }
 
     @Test
+    @Obligation("DP-19", "WEB-1")
     fun `a game change on a poll without games says why it was refused`() = test.webTest(session = anna) { client ->
         val plain = DatePollId(Uuid.random())
         given(DatePollCreated(plain, annaId, "Plain", "", listOf(fri, sat), "Europe/Brussels"), DatePollJoined(plain, annaId))
@@ -346,6 +367,7 @@ class PollGamesRoutesTest {
     }
 
     @Test
+    @Obligation("DP-20")
     fun `the poll form stops at 12 ticked games, and the invite says game night`() {
         test.webTest(session = anna) { client ->
             client.get("/polls/new").page().one(".gf-poll-form__gamepick").attr("_") shouldContain "length > 12 set target.checked to false"

@@ -1,5 +1,6 @@
 package gorefest.core.matching
 
+import gorefest.contract.Obligation
 import gorefest.core.Basis
 import gorefest.core.BggId
 import gorefest.core.ComparisonRecorded
@@ -45,6 +46,7 @@ class MatcherTest {
     private fun Suggestions.names() = (this as Suggestions.Found).top.map { it.game.name }
 
     @Test
+    @Obligation("SU-1")
     fun `games must suit the table size and the time budget`() {
         val table = List(3) { player("P$it") }
 
@@ -53,6 +55,7 @@ class MatcherTest {
     }
 
     @Test
+    @Obligation("SU-6", "SU-7")
     fun `one miserable player sinks a game that others love`() {
         val table = listOf(player("Anna", brass, azul), player("Bram", brass, azul), player("Kim", azul, brass, times = 6))
 
@@ -62,6 +65,7 @@ class MatcherTest {
     }
 
     @Test
+    @Obligation("SU-11")
     fun `an eager owner at the table gets their game, with a reason naming them`() {
         val kim = player("Kim")
         val result = matcher.suggest(listOf(kim, player("Bram")), shelf(azul, brass, eager = mapOf(brass to kim.id)), null, now) as Suggestions.Found
@@ -71,6 +75,7 @@ class MatcherTest {
     }
 
     @Test
+    @Obligation("SU-8")
     fun `games nobody played get a novelty bonus and say so`() {
         val table = listOf(player("Anna", azul, brass, times = Matcher.KNOWN_AFTER, played = true), player("Bram"))
 
@@ -80,6 +85,7 @@ class MatcherTest {
     }
 
     @Test
+    @Obligation("SU-14")
     fun `players with too few answers are reported, and the picks only talk about fit when nobody is known`() {
         val bram = player("Bram")
         val strangers = matcher.suggest(listOf(bram, player("Kim")), shelf(azul, brass), null, now) as Suggestions.Found
@@ -95,6 +101,7 @@ class MatcherTest {
     }
 
     @Test
+    @Obligation("SU-9")
     fun `when everyone who played it rated it highly, it's a safe bet`() {
         val table = List(4) { player("P$it", azul, brass, codenames, times = Matcher.KNOWN_AFTER, played = true) }
 
@@ -104,6 +111,7 @@ class MatcherTest {
     }
 
     @Test
+    @Obligation("SU-22")
     fun `nothing fitting in time suggests a longer budget`() {
         val result = matcher.suggest(List(4) { player("P$it") }, shelf(brass), timeBudget = 45, now)
 
@@ -111,6 +119,7 @@ class MatcherTest {
     }
 
     @Test
+    @Obligation("SU-21")
     fun `nothing for this many players says so`() {
         val result = matcher.suggest(List(7) { player("P$it") }, shelf(azul, brass), null, now)
 
@@ -118,6 +127,7 @@ class MatcherTest {
     }
 
     @Test
+    @Obligation("SU-2")
     fun `duration follows the player count, rounded to 5 minutes, scaled by group speed`() {
         Matcher.estimatedMinutes(brass, 2) shouldBe 60
         Matcher.estimatedMinutes(brass, 3) shouldBe 90
@@ -129,6 +139,7 @@ class MatcherTest {
 
 
     @Test
+    @Obligation("SU-3")
     fun `a game without a playtime is assumed to take an hour, not a few minutes`() {
         val mystery = codenames.copy(id = BggId(999_002), name = "Mystery", minPlaytime = 0, maxPlaytime = 0)
         val table = List(3) { player("P$it") }
@@ -140,6 +151,7 @@ class MatcherTest {
     }
 
     @Test
+    @Obligation("SU-13")
     fun `a game you watched but never played gets an enjoyment guess and keeps its novelty`() {
         val id = PlayerId(Uuid.random())
         // Kim said they hadn't played Codenames, then watched a table play it and liked it better than Azul, which they played.
@@ -154,6 +166,7 @@ class MatcherTest {
     }
 
     @Test
+    @Obligation("SU-12")
     fun `a game a player said they haven't played is no more than a novelty, whatever its features say`() {
         val featureMatcher = Matcher(Predictor(FeatureModel(games = { id -> DevCatalog.games.firstOrNull { it.id == id } })))
         val cascadia = g("Cascadia") // shares its mechanics with Azul
@@ -172,6 +185,7 @@ class MatcherTest {
     }
 
     @Test
+    @Obligation("SU-4")
     fun `a campaign game with a wild playtime range counts as its typical time, for any table size`() {
         val seventhContinent = codenames.copy(id = BggId(999_003), name = "The 7th Continent", minPlayers = 1, maxPlayers = 4, minPlaytime = 5, maxPlaytime = 1000, playingTime = 120)
         val brassLike = brass.copy(id = BggId(999_004), name = "Fat Euro", minPlaytime = 60, maxPlaytime = 300) // wide, but not wild
@@ -187,11 +201,13 @@ class MatcherTest {
     }
 
     @Test
+    @Obligation("SU-4")
     fun `without BGG's typical time, a wild range falls back to the geometric mean`() {
         codenames.copy(minPlaytime = 5, maxPlaytime = 1000).typicalMinutes shouldBe 71
     }
 
     @Test
+    @Obligation("SU-10")
     fun `a game the table wants to play gets a bonus per person, and says who wants it`() {
         val kim = player("Kim")
         val bram = player("Bram")
@@ -209,6 +225,7 @@ class MatcherTest {
     }
 
     @Test
+    @Obligation("SU-10")
     fun `wishes of people who aren't at the table don't count`() {
         val away = PlayerId(Uuid.random())
         val table = List(2) { player("P$it") }
@@ -220,6 +237,7 @@ class MatcherTest {
     }
 
     @Test
+    @Obligation("SU-10")
     fun `the wish bonus counts three people at most`() {
         val table = List(5) { player("P$it") }
         val three = matcher.suggest(table, shelf(codenames, wanted = mapOf(codenames to table.take(3).map { it.id }.toSet())), null, now) as Suggestions.Found
@@ -229,6 +247,7 @@ class MatcherTest {
     }
 
     @Test
+    @Obligation("SU-4")
     fun `BGG's playing time that just repeats the max is not trusted for a wild range`() {
         val repeated = codenames.copy(minPlaytime = 5, maxPlaytime = 1000, playingTime = 1000)
         repeated.hasWildPlaytimeRange shouldBe true
@@ -238,6 +257,7 @@ class MatcherTest {
     }
 
     @Test
+    @Obligation("SU-5")
     fun `honest wide ranges aren't wild, and keep interpolating by player count`() {
         listOf(20 to 120, 30 to 180, 60 to 240, 60 to 480, 30 to 240).forEach { (min, max) ->
             codenames.copy(minPlaytime = min, maxPlaytime = max).hasWildPlaytimeRange shouldBe false
@@ -259,6 +279,7 @@ class MatcherTest {
     }
 
     @Test
+    @Obligation("SU-12")
     fun `one player new to a game among enthusiasts is neutral for them, scored on the others, and named`() {
         val withDeclared = matcher.suggest(mixedTable(declared = true), shelf(azul), null, now) as Suggestions.Found
         val reason = withDeclared.top.single().reason
@@ -270,6 +291,7 @@ class MatcherTest {
     }
 
     @Test
+    @Obligation("SU-12")
     fun `new to someone and wanted by someone else says who wants it`() {
         val table = mixedTable(declared = true)
         val result = matcher.suggest(table, shelf(azul, wanted = mapOf(azul to setOf(table[0].id))), null, now) as Suggestions.Found

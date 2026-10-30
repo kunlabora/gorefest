@@ -1,5 +1,6 @@
 package gorefest.shell.web.privacy
 
+import gorefest.contract.Obligation
 import gorefest.shell.AppConfig
 import gorefest.shell.web.TestApp
 import gorefest.shell.web.one
@@ -23,6 +24,7 @@ class PrivacyNoticeTest {
     fun reset() = kotlinx.coroutines.runBlocking { test.reset() }
 
     @Test
+    @Obligation("PR-22", "PR-27")
     fun `the notice is public, stays out of search engines and has its sections`() = test.webTest { client ->
         val response = client.get("/privacy")
         response.status shouldBe HttpStatusCode.OK
@@ -34,6 +36,7 @@ class PrivacyNoticeTest {
     }
 
     @Test
+    @Obligation("PR-24")
     fun `the contact comes from the admin address in config`() = test.webTest { client ->
         val page = client.get("/privacy").page()
         page.one("#who a[href=/account]").text() shouldBe "your account page"
@@ -43,6 +46,7 @@ class PrivacyNoticeTest {
     }
 
     @Test
+    @Obligation("PR-24")
     fun `the notice names the mail provider in use`() = test.webTest { client ->
         client.get("/privacy").page().one("#others").text() shouldContain "Scaleway Transactional Email, in the EU"
         MailProvider.of("postmark").label shouldBe "Postmark"
@@ -51,6 +55,7 @@ class PrivacyNoticeTest {
     }
 
     @Test
+    @Obligation("PR-25")
     fun `the notice says what you can change yourself and what the admin channel gets`() = test.webTest { client ->
         val page = client.get("/privacy").page()
         page.one("#ask").text() shouldContain "change your email address yourself"
@@ -65,6 +70,7 @@ class PrivacyNoticeTest {
     }
 
     @Test
+    @Obligation("PR-24")
     fun `without an admin address it says to ask whoever invited you`() {
         val bare = TestApp()
         kotlinx.coroutines.runBlocking { bare.reset() }
@@ -77,12 +83,14 @@ class PrivacyNoticeTest {
     }
 
     @Test
+    @Obligation("PR-23")
     fun `every page links to the notice in its footer, the sign-in page included`() = test.webTest { client ->
         client.get("/login").page().one("footer a[href=/privacy]").text() shouldBe "Privacy"
         client.get("/privacy").page().one("footer a[href=/privacy]").text() shouldBe "Privacy"
     }
 
     @Test
+    @Obligation("PR-26")
     fun `the notice names the cookies and says what it does not keep`() = test.webTest { client ->
         val text = client.get("/privacy").page().text()
         text shouldContain "no banner"
@@ -90,6 +98,7 @@ class PrivacyNoticeTest {
     }
 
     @Test
+    @Obligation("PR-24")
     fun `with a Discord webhook the notice names the channel, without one it says mail`() {
         val withDiscord = TestApp(AppConfig.dev().copy(adminEmail = "tim@example.com", discordNotifications = true))
         runBlocking { withDiscord.reset() }

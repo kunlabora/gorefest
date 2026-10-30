@@ -1,5 +1,6 @@
 package gorefest.core.gameday
 
+import gorefest.contract.Obligation
 import gorefest.core.Rejection
 import gorefest.core.GameDayCreated
 import gorefest.core.PlayerJoined
@@ -18,6 +19,7 @@ class CreateGameDayTest {
     )
 
     @Test
+    @Obligation("GD-1")
     fun `host creates a game day and joins it`() {
         CreateGameDayDecider
             .given()
@@ -39,11 +41,13 @@ class CreateGameDayTest {
     }
 
     @Test
+    @Obligation("GD-2")
     fun `title is required`() {
         CreateGameDayDecider.given().whenever(create.copy(title = " ")).thenRejects(Rejection.TitleMissing)
     }
 
     @Test
+    @Obligation("GD-2")
     fun `title and place have a maximum length`() {
         CreateGameDayDecider.given().whenever(create.copy(title = "A".repeat(MAX_TITLE_LENGTH + 1))).thenRejects(Rejection.TitleTooLong)
         CreateGameDayDecider.given().whenever(create.copy(place = "A".repeat(MAX_PLACE_LENGTH + 1))).thenRejects(Rejection.PlaceTooLong)
@@ -54,11 +58,13 @@ class CreateGameDayTest {
     }
 
     @Test
+    @Obligation("GD-2")
     fun `date cannot be in the past`() {
         CreateGameDayDecider.given().whenever(create.copy(date = today.minusDays(1))).thenRejects(Rejection.DateInPast)
     }
 
     @Test
+    @Obligation("GD-2")
     fun `time zone must exist`() {
         CreateGameDayDecider.given().whenever(create.copy(timeZone = "Mars/Olympus")).thenRejects(Rejection.UnknownTimeZone)
     }

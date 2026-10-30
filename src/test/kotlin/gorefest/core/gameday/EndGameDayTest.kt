@@ -1,5 +1,6 @@
 package gorefest.core.gameday
 
+import gorefest.contract.Obligation
 import gorefest.core.Rejection
 import gorefest.core.GameDayEnded
 import gorefest.core.GameDayId
@@ -11,6 +12,7 @@ import kotlin.uuid.Uuid
 
 class EndGameDayTest {
     @Test
+    @Obligation("GD-30")
     fun `ending is idempotent`() {
         EndGameDayDecider.given(gameDayCreated()).whenever(EndGameDay(gorefest7)).thenEmits(GameDayEnded(gorefest7))
         EndGameDayDecider.given(gameDayCreated(), GameDayEnded(gorefest7)).whenever(EndGameDay(gorefest7)).thenEmitsNothing()
@@ -18,6 +20,7 @@ class EndGameDayTest {
     }
 
     @Test
+    @Obligation("GD-30")
     fun `a game day is due at midnight after its date, in its own time zone`() {
         val tokyo = GameDayId(Uuid.random())
         val state = listOf(

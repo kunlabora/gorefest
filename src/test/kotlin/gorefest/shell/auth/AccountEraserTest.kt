@@ -1,5 +1,6 @@
 package gorefest.shell.auth
 
+import gorefest.contract.Obligation
 import gorefest.core.GameDayCreated
 import gorefest.core.PlayerId
 import gorefest.core.PlayerJoined
@@ -53,6 +54,7 @@ class AccountEraserTest {
     }
 
     @Test
+    @Obligation("PR-1")
     fun `erasing removes every row that says who they were and keeps everyone else's`() = runBlocking<Unit> {
         playersAtATable()
 
@@ -70,6 +72,7 @@ class AccountEraserTest {
     }
 
     @Test
+    @Obligation("PR-2")
     fun `the log is not rewritten, an erasure is one more event`() = runBlocking<Unit> {
         playersAtATable()
         val before = rows("select data::text from events order by seq")
@@ -83,6 +86,7 @@ class AccountEraserTest {
     }
 
     @Test
+    @Obligation("PR-6")
     fun `the erased player leaves the game day and the others stay`() = runBlocking<Unit> {
         playersAtATable()
 
@@ -93,6 +97,7 @@ class AccountEraserTest {
     }
 
     @Test
+    @Obligation("PR-3")
     fun `erasing again, or somebody unknown, changes nothing`() = runBlocking<Unit> {
         playersAtATable()
 
@@ -104,6 +109,7 @@ class AccountEraserTest {
     }
 
     @Test
+    @Obligation("PR-4")
     fun `the same email can sign up again afterwards as a new person`() = runBlocking<Unit> {
         playersAtATable()
         app.accountEraser.erase(kim)

@@ -1,5 +1,6 @@
 package gorefest.shell.web.account
 
+import gorefest.contract.Obligation
 import gorefest.core.PlayerId
 import gorefest.shell.AppConfig
 import gorefest.shell.web.TestApp
@@ -40,6 +41,7 @@ class EmailChangeRoutesTest {
     private fun emailOfKim() = runBlocking { app.db.transaction { app.login.players.find(kimId)!!.email } }
 
     @Test
+    @Obligation("ACC-29")
     fun `a code goes to the new address, entering it changes the email, the old address hears and the session stays`() = test.webTest(session = kim) { client ->
         client.ask("Kim.New@Example.com").location shouldBe "/account/email"
         client.get("/account/email").page().one("strong").text() shouldBe "kim.new@example.com"
@@ -54,6 +56,7 @@ class EmailChangeRoutesTest {
     }
 
     @Test
+    @Obligation("ACC-30")
     fun `a wrong code is refused, five lock the change even for the right one`() = test.webTest(session = kim) { client ->
         client.ask("kim.new@example.com")
         val right = codeFor("kim.new@example.com")
@@ -66,6 +69,7 @@ class EmailChangeRoutesTest {
     }
 
     @Test
+    @Obligation("ACC-31")
     fun `an address somebody else has looks the same as any other, and gets no mail`() = test.webTest(session = kim) { client ->
         val before = test.mailbox.all.size
 
@@ -78,6 +82,7 @@ class EmailChangeRoutesTest {
     }
 
     @Test
+    @Obligation("ACC-32")
     fun `a bad or unchanged address is explained, and codes are rationed`() = test.webTest(session = kim) { client ->
         client.ask("nonsense").let { runBlocking { it.status.value } } shouldBe 200
         client.get("/account").page().select("#email-change.gf-field--invalid").size shouldBe 0
@@ -89,12 +94,14 @@ class EmailChangeRoutesTest {
     }
 
     @Test
+    @Obligation("ACC-29")
     fun `the change page needs a pending change, and a login`() {
         test.webTest(session = kim) { it.get("/account/email").location shouldBe "/account" }
         test.webTest { it.get("/account/email").location shouldStartWith "/login" }
     }
 
     @Test
+    @Obligation("ACC-33")
     fun `the admin can't change the address the admin is known by`() {
         val tim = runBlocking { test.loggedIn("Tim") }
         val before = test.mailbox.all.size
@@ -106,6 +113,7 @@ class EmailChangeRoutesTest {
     }
 
     @Test
+    @Obligation("ACC-30")
     fun `the last try is worded in the singular`() = test.webTest(session = kim) { client ->
         client.ask("kim.new@example.com")
         val right = codeFor("kim.new@example.com")

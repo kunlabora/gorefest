@@ -1,5 +1,6 @@
 package gorefest.shell.web.shelf
 
+import gorefest.contract.Obligation
 import gorefest.core.BggAccountLinked
 import gorefest.core.BggId
 import gorefest.core.GameBrought
@@ -65,11 +66,13 @@ class ShelfRoutesTest {
     private val bringPage = "/gamedays/$gorefest7/bring"
 
     @Test
+    @Obligation("SH-9")
     fun `a linked player is told where to sync their collection`() = test.webTest(session = kim) { client ->
         client.get(bringPage).page().select(".gf-bring__head a[href=/collection]").text() shouldBe "Sync your BGG collection"
     }
 
     @Test
+    @Obligation("SH-4")
     fun `the collection count leaves out games found by search`() = test.webTest(session = kim) { client ->
         val wingspan = BggId(266192)
         given(GameBrought(gorefest7, kimId, wingspan))
@@ -81,6 +84,7 @@ class ShelfRoutesTest {
     }
 
     @Test
+    @Obligation("SH-1")
     fun `my collection is listed with a switch per game`() = test.webTest(session = kim) { client ->
         val page = client.get(bringPage).page()
 
@@ -92,6 +96,7 @@ class ShelfRoutesTest {
     }
 
     @Test
+    @Obligation("SH-1")
     fun `ticking a game puts it on the shelf`() = test.webTest(session = kim) { client ->
         val row = client.htmxPost("/gamedays/$gorefest7/shelf/$brass", parameters { append("bringing", "true") }).fragment()
 
@@ -102,6 +107,7 @@ class ShelfRoutesTest {
     }
 
     @Test
+    @Obligation("SH-1")
     fun `unticking takes it off again`() = test.webTest(session = kim) { client ->
         client.htmxPost("/gamedays/$gorefest7/shelf/$brass", parameters { append("bringing", "true") })
 
@@ -113,6 +119,7 @@ class ShelfRoutesTest {
     }
 
     @Test
+    @Obligation("SH-16")
     fun `the bring page lists the whole shelf under 'What do you want to play', with a heart per game`() = test.webTest(session = kim) { client ->
         given(GameBrought(gorefest7, anna, azul), GameBrought(gorefest7, kimId, brass), PlayWishChanged(gorefest7, anna, azul, true))
 
@@ -129,6 +136,7 @@ class ShelfRoutesTest {
     }
 
     @Test
+    @Obligation("SH-16")
     fun `any member can heart a game somebody else brought, and take it back`() = test.webTest(session = kim) { client ->
         given(GameBrought(gorefest7, anna, azul))
 
@@ -148,6 +156,7 @@ class ShelfRoutesTest {
     }
 
     @Test
+    @Obligation("SH-17")
     fun `a fourth heart is refused, saying why`() = test.webTest(session = kim) { client ->
         val games = listOf("Azul", "Brass: Birmingham", "CATAN", "Root").map { name -> DevCatalog.games.first { it.name == name }.id }
         given(*games.map { GameBrought(gorefest7, anna, it) }.toTypedArray(), *games.take(3).map { PlayWishChanged(gorefest7, kimId, it, true) }.toTypedArray())
@@ -160,6 +169,7 @@ class ShelfRoutesTest {
     }
 
     @Test
+    @Obligation("SH-18")
     fun `a game nobody brought can't be hearted`() = test.webTest(session = kim) { client ->
         val response = client.htmxPost("/gamedays/$gorefest7/shelf/$azul/wish", parameters { append("wants", "true") })
 
@@ -168,6 +178,7 @@ class ShelfRoutesTest {
     }
 
     @Test
+    @Obligation("SH-10")
     fun `the sidebar counts the table's shelf, says who brought what and what I'm adding, and Done goes back to the hub`() = test.webTest(session = kim) { client ->
         given(GameBrought(gorefest7, kimId, brass), GameBrought(gorefest7, anna, azul), GameBrought(gorefest7, anna, BggId(13)))
 
@@ -188,6 +199,7 @@ class ShelfRoutesTest {
     }
 
     @Test
+    @Obligation("SH-11")
     fun `the summary reloads from the server when the shelf changes`() = test.webTest(session = kim) { client ->
         client.htmxPost("/gamedays/$gorefest7/shelf/$brass", parameters { append("bringing", "true") })
 
@@ -200,6 +212,7 @@ class ShelfRoutesTest {
     }
 
     @Test
+    @Obligation("SH-11")
     fun `the wish list reloads from the server,and ticking in the list asks for it`() = test.webTest(session = kim) { client ->
         client.htmxPost("/gamedays/$gorefest7/shelf/$brass", parameters { append("bringing", "true") }).headers["HX-Trigger"] shouldBe "shelf-changed"
 
@@ -210,6 +223,7 @@ class ShelfRoutesTest {
     }
 
     @Test
+    @Obligation("SH-12")
     fun `the game day shows the shelf with who brings what`() = test.webTest(session = kim) { client ->
         given(GameBrought(gorefest7, kimId, brass), GameBrought(gorefest7, anna, azul), GameBrought(gorefest7, anna, BggId(13)))
 
@@ -224,6 +238,7 @@ class ShelfRoutesTest {
     }
 
     @Test
+    @Obligation("SH-13")
     fun `the invite shows the shelf size`() = test.webTest { client ->
         given(GameBrought(gorefest7, kimId, brass), GameBrought(gorefest7, anna, azul))
         val link = "/i/" + app.invites.token(app.gameDaysById.getValue(gorefest7))
@@ -235,6 +250,7 @@ class ShelfRoutesTest {
     }
 
     @Test
+    @Obligation("SH-4", "SH-11")
     fun `a game brought from a search result shows up in the list below`() {
         val catan = BggId(13)
         val bram = kotlinx.coroutines.runBlocking {
@@ -258,6 +274,7 @@ class ShelfRoutesTest {
     }
 
     @Test
+    @Obligation("SH-11")
     fun `ticking a game in the list itself doesn't reload that list, only the wish list`() = test.webTest(session = kim) { client ->
         val response = client.htmxPost("/gamedays/$gorefest7/shelf/$brass", parameters { append("bringing", "true") })
 
@@ -265,6 +282,7 @@ class ShelfRoutesTest {
     }
 
     @Test
+    @Obligation("SH-9")
     fun `without BGG, the page says how to get the collection`() {
         val bram = kotlinx.coroutines.runBlocking {
             val id = PlayerId(Uuid.random())
@@ -278,6 +296,7 @@ class ShelfRoutesTest {
     }
 
     @Test
+    @Obligation("SH-15")
     fun `after the game day the shelf is read-only`() = test.webTest(session = kim) { client ->
         given(GameBrought(gorefest7, kimId, brass), GameDayEnded(gorefest7))
 
@@ -286,6 +305,7 @@ class ShelfRoutesTest {
     }
 
     @Test
+    @Obligation("SH-14")
     fun `players who didn't join can't bring`() {
         val stranger = kotlinx.coroutines.runBlocking { test.loggedIn("Stranger") }
         test.webTest(session = stranger) { client ->
