@@ -1,0 +1,9 @@
+# Builds on detekt's defaults (buildUponDefaultConfig). Only what this codebase deliberately does differently is here;
+# existing findings sit in baseline.xml, so new code meets the rules and old code is fixed as it is touched.
+style:
+  MaxLineLength:
+    active: false # long lines are house style (one statement, one line); reviews read them fine
+  MagicNumber:
+    active: false # caps, timeouts and model constants are named where they matter; the rule mostly flags test data
+  WildcardImport:
+    active: false # kotlinx.html.* and friends

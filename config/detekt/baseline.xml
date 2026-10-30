@@ -1,0 +1,105 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:Admin.kt:player == null || name == null || !player.approved || !config.isAdmin(player.email)</ID>
+    <ID>ComplexCondition:BringRequests.kt:BringRequests$it.asker == event.asker &amp;&amp; it.owner == event.owner &amp;&amp; it.game == event.game &amp;&amp; it.status == RequestStatus.OPEN</ID>
+    <ID>ComplexCondition:BringRequests.kt:BringRequests$requests.any { it.asker == event.asker &amp;&amp; it.owner == event.owner &amp;&amp; it.game == event.game &amp;&amp; it.status == RequestStatus.OPEN }</ID>
+    <ID>ComplexCondition:GameDayViews.kt:view.later.isNotEmpty() || view.polls.isNotEmpty() || view.nights.isNotEmpty() || !view.bggLinked</ID>
+    <ID>ComplexCondition:LinkBggAccount.kt:LinkBggAccountDecider$event is BggAccountLinked || event is BggAccountLinkedHashed || event is BggAccountUnlinked || event is PlayerErased</ID>
+    <ID>ComplexCondition:Responses.kt:path != null &amp;&amp; path.startsWith("/") &amp;&amp; !path.startsWith("//") &amp;&amp; !path.startsWith("/\\")</ID>
+    <ID>CyclomaticComplexMethod:AccountRoutes.kt:context(login: Login, config: AppConfig) fun Route.accountRoutes</ID>
+    <ID>CyclomaticComplexMethod:AuthRoutes.kt:context(login: Login, config: AppConfig) fun Route.authRoutes</ID>
+    <ID>CyclomaticComplexMethod:BringRequests.kt:BringRequests$override fun evolve: GameDayBringRequests</ID>
+    <ID>CyclomaticComplexMethod:CheckpointRoutes.kt:context(login: Login) fun Route.checkpointRoutes</ID>
+    <ID>CyclomaticComplexMethod:CheckpointRoutes.kt:context(login: Login) private fun Route.watchedRoutes</ID>
+    <ID>CyclomaticComplexMethod:DatePollRoutes.kt:context(ids: IdGenerator, clock: Clock, login: Login, config: AppConfig) fun Route.datePollRoutes</ID>
+    <ID>CyclomaticComplexMethod:DatePollViews.kt:fun HTML.datePollPage</ID>
+    <ID>CyclomaticComplexMethod:DatePollViews.kt:fun TagConsumer&lt;*>.datePollResults</ID>
+    <ID>CyclomaticComplexMethod:DatePollViews.kt:private fun FlowContent.pollGameCard</ID>
+    <ID>CyclomaticComplexMethod:DatePolls.kt:DatePollSummary$fun after: DatePollSummary</ID>
+    <ID>CyclomaticComplexMethod:EditGameDay.kt:EditGameDayDecider$override fun decide: Decision&lt;GameDayDetailsChanged></ID>
+    <ID>CyclomaticComplexMethod:FeatureModel.kt:FeatureModel$override fun fit: Scores</ID>
+    <ID>CyclomaticComplexMethod:GameDayRoutes.kt:context(ids: IdGenerator, clock: Clock, login: Login, config: AppConfig) fun Route.gameDayRoutes</ID>
+    <ID>CyclomaticComplexMethod:GameDayViews.kt:context(me: CurrentPlayer) fun HTML.gameDayPage</ID>
+    <ID>CyclomaticComplexMethod:GameDayViews.kt:context(me: CurrentPlayer) fun HTML.homePage</ID>
+    <ID>CyclomaticComplexMethod:GameNightViews.kt:fun HTML.gameNightPage</ID>
+    <ID>CyclomaticComplexMethod:InviteRoutes.kt:context(login: Login, config: AppConfig) fun Route.inviteRoutes</ID>
+    <ID>CyclomaticComplexMethod:Matcher.kt:Matcher$private fun reason: SuggestionReason</ID>
+    <ID>CyclomaticComplexMethod:PersonalData.kt:PersonalData$private fun describe: JsonElement?</ID>
+    <ID>CyclomaticComplexMethod:Rejections.kt:fun Rejection.message: String</ID>
+    <ID>CyclomaticComplexMethod:RequestRoutes.kt:context(login: Login) fun Route.requestRoutes</ID>
+    <ID>CyclomaticComplexMethod:SuggestionTexts.kt:fun SuggestionReason.text: String</ID>
+    <ID>CyclomaticComplexMethod:TasteRoutes.kt:context(login: Login) fun Route.tasteRoutes</ID>
+    <ID>DestructuringDeclarationWithTooManyEntries:BringRequests.kt:RequestBringDecider$val (gameDay, asker, owner, game) = command</ID>
+    <ID>DestructuringDeclarationWithTooManyEntries:TasteViews.kt:val (gameDay, pair, round, total) = step</ID>
+    <ID>DestructuringDeclarationWithTooManyEntries:WizardTest.kt:WizardTest$val (azul, cascadia, brass, root) = shelf</ID>
+    <ID>EmptyElseBlock:TasteViews.kt:if (i > 0) +" and "</ID>
+    <ID>LongMethod:AccountRoutes.kt:context(login: Login, config: AppConfig) fun Route.accountRoutes</ID>
+    <ID>LongMethod:AuthRoutes.kt:context(login: Login, config: AppConfig) fun Route.authRoutes</ID>
+    <ID>LongMethod:CheckpointRoutes.kt:context(login: Login) fun Route.checkpointRoutes</ID>
+    <ID>LongMethod:DatePollRoutes.kt:context(ids: IdGenerator, clock: Clock, login: Login, config: AppConfig) fun Route.datePollRoutes</ID>
+    <ID>LongMethod:DatePollViews.kt:fun TagConsumer&lt;*>.datePollResults</ID>
+    <ID>LongMethod:GameDayRoutes.kt:context(ids: IdGenerator, clock: Clock, login: Login, config: AppConfig) fun Route.gameDayRoutes</ID>
+    <ID>LongMethod:GameDayViews.kt:context(me: CurrentPlayer) fun HTML.gameDayPage</ID>
+    <ID>LongMethod:RequestRoutes.kt:context(login: Login) fun Route.requestRoutes</ID>
+    <ID>LongMethod:Server.kt:fun Application.web</ID>
+    <ID>LongMethod:ShelfRoutes.kt:context(login: Login) fun Route.shelfRoutes</ID>
+    <ID>LongMethod:TasteRoutes.kt:context(login: Login) fun Route.tasteRoutes</ID>
+    <ID>LoopWithTooManyJumpStatements:BggGateway.kt:BggGateway$while</ID>
+    <ID>MatchingDeclarationName:AccountViews.kt:AccountView</ID>
+    <ID>MatchingDeclarationName:CollectionViews.kt:CollectionView</ID>
+    <ID>MatchingDeclarationName:Feedback.kt:NoticeKind</ID>
+    <ID>MatchingDeclarationName:GameDayFormViews.kt:GameDayFormView</ID>
+    <ID>MatchingDeclarationName:GameNightViews.kt:GameNightView</ID>
+    <ID>MatchingDeclarationName:InviteViews.kt:InviteLanding</ID>
+    <ID>MatchingDeclarationName:ReadinessViews.kt:ReadinessView</ID>
+    <ID>MatchingDeclarationName:Steps.kt:StepTone</ID>
+    <ID>MatchingDeclarationName:WebTest.kt:TestApp</ID>
+    <ID>MayBeConstant:CheckpointViews.kt:/** Updates the summary card and the dock label as choices change, in the browser: no round trip. */ private val LOG_SUMMARY_SCRIPT = """def update() js(me) const g = me.querySelector('input[name=game]:checked'); const name = g ? g.closest('label').querySelector('.gf-tile__name').textContent : ''; const n = me.querySelectorAll('input[name=players]:checked').length; const d = (me.querySelector('input[name=duration]:checked') || {}).value || ''; const m = /^(\d+)(m|h)(\+)?$/.exec(d); const time = !m ? 'no time chosen' : m[2] === 'h' ? (m[3] ? m[1] + ' h or more' : 'about ' + m[1] + ' h') : 'about ' + m[1] + ' min'; const who = n + (n === 1 ? ' player' : ' players'); const say = function (key, text) { document.querySelectorAll('[data-log=' + key + ']').forEach(function (el) { el.textContent = text; }); }; say('game', name || 'Pick a game'); say('about', who + ' · ' + time); say('dock', name ? 'Log ' + name + ' · ' + who + ' · ' + d : 'Log it'); end end init call update() on change call update()"""</ID>
+    <ID>ReturnCount:AccountRequests.kt:AccountRequests$suspend fun erase: Boolean</ID>
+    <ID>ReturnCount:BringRequests.kt:DeclineBringRequestDecider$override fun decide: Decision&lt;BringRequestDeclined></ID>
+    <ID>ReturnCount:BringRequests.kt:RequestBringDecider$override fun decide: Decision&lt;BringRequested></ID>
+    <ID>ReturnCount:BringRequests.kt:WithdrawBringRequestDecider$override fun decide: Decision&lt;BringRequestWithdrawn></ID>
+    <ID>ReturnCount:CurrentPlayer.kt:context(login: Login) suspend fun RoutingContext.authenticated</ID>
+    <ID>ReturnCount:EmailChange.kt:EmailChange$suspend fun request: Requested</ID>
+    <ID>ReturnCount:FakeBggApi.kt:FakeBggApi$override suspend fun collection: CollectionResult</ID>
+    <ID>ReturnCount:FeatureModel.kt:FeatureModel$private fun f: Features</ID>
+    <ID>ReturnCount:FeatureModel.kt:fun vibeTrust: Double</ID>
+    <ID>ReturnCount:GameDayRoutes.kt:context(clock: Clock) private suspend fun nextStep: NextStep?</ID>
+    <ID>ReturnCount:GameSearch.kt:GameSearch$suspend fun search: Result</ID>
+    <ID>ReturnCount:InviteLinks.kt:InviteLinks$fun parse: Pair&lt;GameDayId, Int>?</ID>
+    <ID>ReturnCount:InviteLinks.kt:InviteLinks$fun parsePoll: DatePollId?</ID>
+    <ID>ReturnCount:InviteRoutes.kt:fun resolve: Invite</ID>
+    <ID>ReturnCount:LoginAttempt.kt:fun LoginAttempt.checkCode: Verification</ID>
+    <ID>ReturnCount:Matcher.kt:Matcher$fun suggest: Suggestions</ID>
+    <ID>ReturnCount:Responses.kt:fun RoutingContext.currentPage: String</ID>
+    <ID>ReturnCount:Shelf.kt:SetPlayWishDecider$override fun decide: Decision&lt;PlayWishChanged></ID>
+    <ID>ReturnCount:ShelfRoutes.kt:private fun RoutingContext.shelfTarget: Pair&lt;GameDaySummary, Game>?</ID>
+    <ID>ReturnCount:XmlBggApi.kt:BggXml$fun user: BggUser?</ID>
+    <ID>SwallowedException:BggGateway.kt:BggGateway$e: TimeoutCancellationException</ID>
+    <ID>TooGenericExceptionCaught:AccountEraser.kt:AccountEraser$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:AccountRequests.kt:AccountRequests$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:AdminNotifier.kt:FallbackNotifier$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:BggGateway.kt:BggGateway$e: Throwable</ID>
+    <ID>TooGenericExceptionCaught:CollectionSync.kt:CollectionSync$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:CommandHandler.kt:CommandHandler$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:Database.kt:Database$e: Throwable</ID>
+    <ID>TooGenericExceptionCaught:Database.kt:Database$rollbackFailure: Throwable</ID>
+    <ID>TooGenericExceptionCaught:GameDayCloser.kt:GameDayCloser$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:InactiveAccounts.kt:InactiveAccounts$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:Login.kt:Login$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:Login.kt:Login$e: Throwable</ID>
+    <ID>TooGenericExceptionCaught:Projector.kt:Projector$ex: Exception</ID>
+    <ID>TooGenericExceptionCaught:RecapMailer.kt:RecapMailer$e: Exception</ID>
+    <ID>TooManyFunctions:AuthViews.kt:gorefest.shell.web.auth.AuthViews.kt</ID>
+    <ID>TooManyFunctions:DatePollViews.kt:gorefest.shell.web.datepoll.DatePollViews.kt</ID>
+    <ID>TooManyFunctions:Forms.kt:gorefest.shell.web.components.Forms.kt</ID>
+    <ID>TooManyFunctions:Games.kt:gorefest.shell.web.components.Games.kt</ID>
+    <ID>TooManyFunctions:InviteViews.kt:gorefest.shell.web.invite.InviteViews.kt</ID>
+    <ID>TooManyFunctions:Login.kt:Login</ID>
+    <ID>TooManyFunctions:Page.kt:gorefest.shell.web.components.Page.kt</ID>
+    <ID>TooManyFunctions:Repositories.kt:LoginAttempts</ID>
+    <ID>TooManyFunctions:Repositories.kt:Players</ID>
+  </CurrentIssues>
+</SmellBaseline>
