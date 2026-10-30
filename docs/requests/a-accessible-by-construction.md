@@ -99,8 +99,8 @@ The pairs list lives next to the test with a line saying which component uses ea
 | A11Y-9 | Ids on a page are unique, and every reference to one (labels, descriptions, controls, htmx targets) resolves. | A3 |
 | A11Y-10 | A result htmx swaps in is announced to a screen reader; a refusal is announced at once. | A3 |
 | A11Y-11 | Text has at least 4.5:1 contrast on every surface it's used on, in the light and the dark theme. | A4 |
-| A11Y-12 | Borders that mark a control and the focus ring have at least 3:1 contrast on every surface, in both themes. | A4 |
+| A11Y-12 | Borders that are a control's only edge (inputs, chips, secondary buttons, answers, the switch) and the focus ring have at least 3:1 contrast on every surface, in both themes. | A4 |
 | A11Y-13 | The keyboard focus is always visible, and motion calms down when the device asks for less. | A4 |
-| A11Y-14 | Every button, chip and icon button is at least 24px in both directions. | A4 |
+| A11Y-14 | Every button, chip and icon button is at least 24px in both directions, except a text button inside a sentence. | A4 |
 
 A manual VoiceOver and keyboard pass is the one check not automated; A4 lists it under Known gaps in `docs/contract/README.md`.

@@ -69,7 +69,7 @@ class ColourAndMotionTest {
     @Obligation("A11Y-13")
     fun `keyboard focus always shows a ring, also on inputs hidden inside a tile, chip or segment`() {
         css.rules.single { it.selector == ":focus-visible" }.body shouldBe "outline: 3px solid var(--focus); outline-offset: 2px;"
-        css.rules.filter { OUTLINE_OFF.containsMatchIn(it.body) }.map { it.selector }.shouldBeEmpty()
+        css.everywhere.filter { OUTLINE_OFF.containsMatchIn(it.body) }.map { it.selector }.shouldBeEmpty()
         css.rules.filter { "outline:" in it.body }.filterNot { "var(--focus" in it.body }.map { it.selector }.shouldBeEmpty()
 
         val hidden = css.rules.filter { it.selector.endsWith(" input") && "opacity: 0" in it.body }
@@ -85,10 +85,11 @@ class ColourAndMotionTest {
     @Test
     @Obligation("A11Y-13")
     fun `everything that moves is calmed when the device asks for less motion`() {
-        val calm = css.reducedMotion.map { it.selector }.toSet()
-        val moving = css.rules.filter { MOTION.containsMatchIn(it.body) && it !in css.reducedMotion }.map { it.selector }
+        val moving = css.rules.flatMap { rule -> MOTION.findAll(rule.body).map { rule.selector to it.groupValues[1] } }
         moving.shouldNotBeEmpty()
-        moving.filterNot { it in calm }.shouldBeEmpty()
+        moving.filterNot { (selector, property) ->
+            css.reducedMotion.any { it.selector == selector && Regex("""(?<![\w-])$property(?::\s*none|-duration:)""").containsMatchIn(it.body) }
+        }.map { (selector, property) -> "$selector $property" }.shouldBeEmpty()
     }
 
     @Test
@@ -122,8 +123,8 @@ class ColourAndMotionTest {
         val DECORATIVE = listOf(".gf-answer--great .gf-icon")
         val TARGETS = listOf(".gf-btn", ".gf-btn--sm", ".gf-btn--lg", ".gf-chip", ".gf-iconbtn", ".gf-answer", ".gf-seg label")
         val SIZE = Regex("""(?<![\w-])(?:min-)?(height|width):\s*(\d+)px""")
-        val MOTION = Regex("""(?<![\w-])(?:transition|animation):\s*(?!none)""")
-        val OUTLINE_OFF = Regex("""outline:\s*(?:none|0)\b""")
+        val MOTION = Regex("""(?<![\w-])(transition|animation):\s*(?!none)""")
+        val OUTLINE_OFF = Regex("""outline(?:-width|-style|-color)?:\s*(?:none|0(?:px)?|transparent)\s*(?:;|$)""")
     }
 }
 
