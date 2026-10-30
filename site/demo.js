@@ -396,9 +396,6 @@
     setAutoplay(on);
     if (on) show(current === STEPS.length - 1 ? 0 : current);
   });
-  document.querySelectorAll('[data-start-demo]').forEach(function (a) {
-    a.addEventListener('click', function () { setAutoplay(true); show(0); });
-  });
 
   // Start the first step only once the demo scrolls into view, so its animation isn't missed.
   show(0, true);
