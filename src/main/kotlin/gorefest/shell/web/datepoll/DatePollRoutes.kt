@@ -239,7 +239,7 @@ fun Route.datePollRoutes(app: App) {
         if (!poll.open) return@get call.respondHtml(HttpStatusCode.Gone) { deadInvitePage(if (poll.hostGone) "This poll is over" else "The host already picked a date") }
         // Back from signing up or logging in for this invite: join without asking again.
         if (me?.name != null && app.invites.isJoinMarker(call.parameters["join"], me.id, "/p/${call.parameters["token"]}")) {
-            return@get if (me.approved) join(poll, me) else redirect("/pending?returnTo=${"/p/${call.parameters["token"]}".urlEncoded()}")
+            return@get join(poll, me)
         }
         val path = "/p/${call.parameters["token"]}"
         val landing = PollInviteView(poll, login.names(poll.participants), loggedIn = me != null, path = path)
@@ -253,7 +253,6 @@ fun Route.datePollRoutes(app: App) {
         val comeBack = "/p/$token?join=1".urlEncoded()
         val me = sessionPlayer() ?: return@post redirect("/login?returnTo=$comeBack")
         if (me.name == null) return@post redirect("/welcome?returnTo=$comeBack")
-        if (!me.approved) return@post redirect("/pending?returnTo=${"/p/$token".urlEncoded()}")
         join(poll, me)
     }
 }

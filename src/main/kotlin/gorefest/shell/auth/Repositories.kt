@@ -10,22 +10,20 @@ import kotlin.uuid.Uuid
 import kotlin.uuid.toJavaUuid
 import kotlin.uuid.toKotlinUuid
 
-/** [approved]: the admin let this account in (see [AppConfig.approvalRequired]). */
-data class Player(val id: PlayerId, val email: String, val name: String?, val approved: Boolean = true)
+data class Player(val id: PlayerId, val email: String, val name: String?)
 
 class Players {
     /** The player with this email, created with [newId] if there's none yet. */
     context(tx: Tx)
-    fun findOrCreate(email: String, newId: PlayerId, approved: Boolean = true): Player {
+    fun findOrCreate(email: String, newId: PlayerId): Player {
         tx.connection.prepareStatement(
-            "insert into players (id, email, approved_at) values (?, ?, case when ? then now() end) on conflict (email) do nothing",
+            "insert into players (id, email) values (?, ?) on conflict (email) do nothing",
         ).use {
             it.setObject(1, newId.value.toJavaUuid())
             it.setString(2, email)
-            it.setBoolean(3, approved)
             it.executeUpdate()
         }
-        return tx.connection.prepareStatement("select id, email, name, approved_at is not null as approved from players where email = ?").use {
+        return tx.connection.prepareStatement("select id, email, name from players where email = ?").use {
             it.setString(1, email)
             it.executeQuery().use { rs -> rs.next(); rs.toPlayer() }
         }
@@ -33,14 +31,14 @@ class Players {
 
     context(tx: Tx)
     fun find(id: PlayerId): Player? =
-        tx.connection.prepareStatement("select id, email, name, approved_at is not null as approved from players where id = ?").use {
+        tx.connection.prepareStatement("select id, email, name from players where id = ?").use {
             it.setObject(1, id.value.toJavaUuid())
             it.executeQuery().use { rs -> if (rs.next()) rs.toPlayer() else null }
         }
 
     context(tx: Tx)
     fun findByEmail(email: String): Player? =
-        tx.connection.prepareStatement("select id, email, name, approved_at is not null as approved from players where email = ?").use {
+        tx.connection.prepareStatement("select id, email, name from players where email = ?").use {
             it.setString(1, email)
             it.executeQuery().use { rs -> if (rs.next()) rs.toPlayer() else null }
         }
@@ -70,7 +68,7 @@ class Players {
     context(tx: Tx)
     fun toWarn(cutoff: Instant): List<Player> =
         tx.connection.prepareStatement(
-            "select id, email, name, approved_at is not null as approved from players where last_login_at < ? and inactive_warned_at is null order by last_login_at",
+            "select id, email, name from players where last_login_at < ? and inactive_warned_at is null order by last_login_at",
         ).use {
             it.setTimestamp(1, Timestamp.from(cutoff))
             it.executeQuery().use { rs -> buildList { while (rs.next()) add(rs.toPlayer()) } }
@@ -89,7 +87,7 @@ class Players {
     context(tx: Tx)
     fun toErase(cutoff: Instant): List<Player> =
         tx.connection.prepareStatement(
-            "select id, email, name, approved_at is not null as approved from players where inactive_warned_at < ? and last_login_at < inactive_warned_at order by inactive_warned_at",
+            "select id, email, name from players where inactive_warned_at < ? and last_login_at < inactive_warned_at order by inactive_warned_at",
         ).use {
             it.setTimestamp(1, Timestamp.from(cutoff))
             it.executeQuery().use { rs -> buildList { while (rs.next()) add(rs.toPlayer()) } }
@@ -103,27 +101,12 @@ class Players {
             it.executeQuery().use { rs -> if (rs.next()) rs.getTimestamp(1).toInstant() else null }
         }
 
-    /** Named accounts still waiting for approval, oldest first. */
+    /** The [limit] latest named accounts, newest first. */
     context(tx: Tx)
-    fun waiting(): List<Player> =
-        tx.connection.prepareStatement(
-            "select id, email, name, approved_at is not null as approved from players where approved_at is null and name is not null order by created_at",
-        ).use { it.executeQuery().use { rs -> buildList { while (rs.next()) add(rs.toPlayer()) } } }
-
-    /** True if [id] was waiting and is now in. */
-    context(tx: Tx)
-    fun approve(id: PlayerId): Boolean =
-        tx.connection.prepareStatement("update players set approved_at = now() where id = ? and approved_at is null").use {
-            it.setObject(1, id.value.toJavaUuid())
-            it.executeUpdate() > 0
-        }
-
-    /** Removes an account that was never approved (sessions and collection rows go with it). True if there was one. */
-    context(tx: Tx)
-    fun deleteUnapproved(id: PlayerId): Boolean =
-        tx.connection.prepareStatement("delete from players where id = ? and approved_at is null").use {
-            it.setObject(1, id.value.toJavaUuid())
-            it.executeUpdate() > 0
+    fun newest(limit: Int): List<Player> =
+        tx.connection.prepareStatement("select id, email, name from players where name is not null order by created_at desc limit ?").use {
+            it.setInt(1, limit)
+            it.executeQuery().use { rs -> buildList { while (rs.next()) add(rs.toPlayer()) } }
         }
 
     /** Removes the account whatever its state (sessions, collection and sync rows go with it). True if there was one. */
@@ -163,7 +146,7 @@ class Players {
         }
     }
 
-    private fun ResultSet.toPlayer() = Player(playerId("id"), getString("email"), getString("name"), getBoolean("approved"))
+    private fun ResultSet.toPlayer() = Player(playerId("id"), getString("email"), getString("name"))
 }
 
 data class StoredLoginAttempt(

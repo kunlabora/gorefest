@@ -41,7 +41,7 @@ fun `only the host can edit`() { … }
 
 | File | Prefix | Covers |
 |---|---|---|
-| [accounts.md](accounts.md) | `ACC` | Sign-in, sessions, approval, account page, email change |
+| [accounts.md](accounts.md) | `ACC` | Sign-in, sessions, new accounts, account page, email change |
 | [bgg.md](bgg.md) | `BGG` | Linking a BGG account, collections, metadata, search, attribution |
 | [game-days.md](game-days.md) | `GD` | Creating, editing, inviting, joining, cancelling and ending a game day, the recap |
 | [shelf.md](shelf.md) | `SH` | Bringing games, wishes, bring requests |
@@ -58,7 +58,7 @@ fun `only the host can edit`() { … }
 
 Promises stated in CLAUDE.md or a request doc that no test proves yet, found when the Contract was seeded (2026-10-30). Each becomes an obligation once a test proves it; drop it here when it does.
 
-- **Accounts:** `email_changes` rows are purged by `Login.purge` (only sessions and attempts are tested); the session cookie's lifetime; approval times come from the database's `now()` rather than the injected clock (`shell/auth/Repositories.kt`), so tests can't pin them.
+- **Accounts:** `email_changes` rows are purged by `Login.purge` (only sessions and attempts are tested); the session cookie's lifetime.
 - **Privacy:** the notice's wording on logs (kept 14 days, no links or addresses); inactive accounts are warned once only; G3 and G4 request docs still have unticked criteria for work that is built.
 - **Accessibility:** the status line really being read out (`htmx-config.js` runs in a browser, not in the tests; checked by hand in the in-app browser, 2026-10-30); focus after a swap where the control goes away ("Ask" becomes "Asked", "Bring it", "Take it back", "Not this time") falls back to the page. The manual pass stays out of CI: VoiceOver and the keyboard alone through sign-in, the wizard, bringing games and a suggestion, in both themes and at phone width, before a release that changes a screen.
 - **BGG:** game names link to their BGG page (`bggNameLink`); the monthly top-ranked refresh; fresh account links jump ahead of routine refreshes; the collection refresh loop; every request sends the bearer token (`XmlBggApi`).

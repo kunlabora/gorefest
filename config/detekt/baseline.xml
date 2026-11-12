@@ -2,7 +2,6 @@
 <SmellBaseline>
   <ManuallySuppressedIssues/>
   <CurrentIssues>
-    <ID>ComplexCondition:Admin.kt:player == null || name == null || !player.approved || !config.isAdmin(player.email)</ID>
     <ID>ComplexCondition:BringRequests.kt:BringRequests$it.asker == event.asker &amp;&amp; it.owner == event.owner &amp;&amp; it.game == event.game &amp;&amp; it.status == RequestStatus.OPEN</ID>
     <ID>ComplexCondition:BringRequests.kt:BringRequests$requests.any { it.asker == event.asker &amp;&amp; it.owner == event.owner &amp;&amp; it.game == event.game &amp;&amp; it.status == RequestStatus.OPEN }</ID>
     <ID>ComplexCondition:GameDayViews.kt:view.later.isNotEmpty() || view.polls.isNotEmpty() || view.nights.isNotEmpty() || !view.bggLinked</ID>

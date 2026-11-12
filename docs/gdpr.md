@@ -48,9 +48,9 @@ Ordered by how much they matter.
 
 Fine as is: hashed single-use tokens, `noindex`, no third-party fonts (self-hosted, so no IP leak to Google), no analytics/trackers, EU hosting, rate limiting, no guests, `no-store` caching on pages.
 
-## Household exemption: approval flow (G9, done)
+## Household exemption: approval flow (G9, done), now a rejection flow
 
-New accounts are approved by hand by the admin (`ADMIN_EMAIL`) before they can do anything. This makes the closed, personal circle visible and demonstrable, which is what the Art. 2(2)(c) argument rests on. It does **not** settle it: Recital 18 says people providing the *means* for others' personal activity can still be controllers, and a link to Kunlabora (hosting, billing, work time) undermines "no professional connection". Keep G1 to G8 regardless.
+New accounts were approved by hand by the admin (`ADMIN_EMAIL`) before they could do anything. Since 2026-11-12 everyone is in at once: the admin hears about every sign-up (name and a link, no email address) and rejects the people they don't know at `/admin/newcomers`, which erases the account (`Newcomers.reject`, through `AccountEraser`) and mails the person. Joining anything still needs an invite from someone in the group. This keeps the circle closed and personal, which is what the Art. 2(2)(c) argument rests on, but less strictly than before: a stranger who gets hold of an invite sees that game day (names, shelf, place) until the admin rejects them, so the admin should act on the notice promptly. It does **not** settle it: Recital 18 says people providing the *means* for others' personal activity can still be controllers, and a link to Kunlabora (hosting, billing, work time) undermines "no professional connection". Keep G1 to G8 regardless.
 
 ## Open questions (need a human)
 

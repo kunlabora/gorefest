@@ -2,7 +2,7 @@
 
 Prefix: `ACC`
 
-Signing in, sessions, account approval, the account page and changing an email address.
+Signing in, sessions, new accounts, the account page and changing an email address.
 
 ## Signing in
 
@@ -22,15 +22,20 @@ Signing in, sessions, account approval, the account page and changing an email a
 - **ACC-14** In dev mode mail goes to a dev mailbox that the code page points at; outside dev mode there is no dev mailbox.
 - **ACC-15** Login mail goes out through the mail provider the config names: Scaleway TEM, Postmark or Resend.
 
-## Account approval
+## New accounts
 
-- **ACC-16** A new account waits on the waiting page, wherever it goes, until the admin approves it; an approved player never sees that page.
-- **ACC-17** The admin approves or rejects a newcomer, who gets a mail either way; rejecting deletes the account.
-- **ACC-18** Only the admin sees and works the approvals and the account requests; everyone else gets a 404.
-- **ACC-19** The admin's own email is approved at its first login.
-- **ACC-20** Someone waiting for approval can't join a game day through an invite.
+Until 2026-11-12 the admin approved every new account by hand; now everyone is in at once and the admin rejects the ones they don't know.
+
+- ~~**ACC-16**~~ A new account waits on the waiting page until the admin approves it, dropped 2026-11-12: there is no approval any more (ACC-34).
+- ~~**ACC-17**~~ The admin approves or rejects a newcomer, dropped 2026-11-12: the admin only rejects now (ACC-36).
+- **ACC-18** Only the admin sees and works the new accounts and the account requests; everyone else gets a 404.
+- ~~**ACC-19**~~ The admin's own email is approved at its first login, dropped 2026-11-12: nothing is approved any more.
+- ~~**ACC-20**~~ Someone waiting for approval can't join through an invite, dropped 2026-11-12: nobody waits (ACC-34).
 - **ACC-21** Outside dev mode the app won't start without an admin email.
 - **ACC-22** A notice to the admin that fails never stops someone from signing up.
+- **ACC-34** A new account is in as soon as it has a name: it goes wherever it was headed and can join a game day or a date poll through an invite straight away.
+- **ACC-35** The first time someone names themselves, the admin hears it, with the name and a link to the new accounts; the admin's own sign-up says nothing.
+- **ACC-36** The admin's new accounts page lists the latest sign-ups, newest first; rejecting one, after a confirmation, erases the account (as any erasure: email, name and sessions gone, upcoming game days lose them) and mails the person that the group is by invitation only.
 
 ## Account page
 

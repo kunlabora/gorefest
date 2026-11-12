@@ -23,6 +23,7 @@ import gorefest.core.taste.TasteModel
 import gorefest.core.taste.Tastes
 import gorefest.core.taste.Wizard
 import gorefest.shell.account.AccountRequests
+import gorefest.shell.account.Newcomers
 import gorefest.shell.account.InactiveAccounts
 import gorefest.shell.account.PersonalDataExport
 import gorefest.shell.auth.AccountEraser
@@ -109,6 +110,7 @@ class App(
         hostsUpcomingGameDay = { player -> gameDaysById.values.any { it.host == player && !it.closed } },
     )
     val emailChange = EmailChange(db, login.players, mailer, config, clock)
+    val newcomers = Newcomers(db, login.players, accountEraser, mailer, clock)
     val accountRequests = AccountRequests(db, login.players, admin, accountEraser, mailer, config, clock)
     val invites = InviteLinks(config.secretKey)
     val titles = TitleGenerator(random)

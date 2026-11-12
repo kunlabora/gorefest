@@ -165,7 +165,7 @@ fun TagConsumer<*>.emailForm(returnTo: String, email: String = "", error: String
         if (submitLabel != "Send me a code") hiddenInput("submitLabel", submitLabel)
         signinField(
             "email", "Email address", error = error,
-            hint = "Log in or sign up with the same step: we email a sign-in link and a 6-digit code. No password. New accounts are approved by hand, so a first sign-in may have to wait a little.",
+            hint = "Log in or sign up with the same step: we email a sign-in link and a 6-digit code. No password. It's a private group, so an account nobody knows is removed.",
             action = { actionButton(submitLabel, ButtonStyle.PRIMARY, ButtonSize.LARGE, submit = true, spinner = true) },
         ) {
             fieldInput("email", InputType.email) {
@@ -208,12 +208,4 @@ private fun TagConsumer<*>.singleFieldForm(
     hx("swap", "outerHTML")
     content()
     actionButton(button, ButtonStyle.PRIMARY, ButtonSize.LARGE, submit = true, spinner = true)
-}
-
-/** Signed in and named, but the admin hasn't approved the account yet. [returnTo] is where they were headed. */
-fun HTML.pendingPage(name: String, returnTo: String) = authHero("Waiting for approval", "Almost there, $name", "Waiting for a thumbs up") {
-    p("gf-lede gf-muted") { +"Boardfest is a private group, so a person lets every new account in by hand. You'll get an email as soon as it's done." }
-    div("gf-signin") {
-        linkButton(returnTo, "Check again", ButtonStyle.SECONDARY, ButtonSize.LARGE)
-    }
 }

@@ -80,7 +80,7 @@ class AuthRoutesTest {
 
         page.select(".gf-appbar a[href=#email]").text() shouldBe "Log in"
         page.one(".gf-hero-band__copy .gf-kicker").text() shouldContain "Log in or sign up"
-        page.one("#email-form .gf-hint").text() shouldContain "approved by hand"
+        page.one("#email-form .gf-hint").text() shouldContain "nobody knows is removed"
         client.get("/login?returnTo=%2Fgamedays%2Fnew").page().select(".gf-appbar a[href=#email]") shouldHaveSize 0
     }
 

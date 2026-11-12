@@ -72,7 +72,7 @@ fun Route.inviteRoutes(app: App, invites: InviteLinks) {
         if (me != null && me.id in gameDay.players) return@get redirect("/gamedays/${gameDay.id}")
         // Back from signing up or logging in for this invite: the player already said yes, so join without asking again.
         if (me?.name != null && invites.isJoinMarker(call.parameters["join"], me.id, "/i/$token")) {
-            return@get if (me.approved) join(gameDay, me) else redirect("/pending?returnTo=${"/i/$token".urlEncoded()}")
+            return@get join(gameDay, me)
         }
 
         val shelf = app.shelves.of(gameDay.id).mapNotNull { entry -> app.catalog[entry.game]?.let { it to entry } }
@@ -102,7 +102,6 @@ fun Route.inviteRoutes(app: App, invites: InviteLinks) {
         val comeBack = "/i/$token?join=1".urlEncoded()
         val me = sessionPlayer() ?: return@post redirect("/login?returnTo=$comeBack")
         if (me.name == null) return@post redirect("/welcome?returnTo=$comeBack")
-        if (!me.approved) return@post redirect("/pending?returnTo=${"/i/$token".urlEncoded()}")
         join(gameDay, me)
     }
 

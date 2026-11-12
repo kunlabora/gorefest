@@ -3,7 +3,6 @@ package gorefest.shell.web
 import gorefest.shell.App
 import gorefest.shell.auth.DevMailbox
 import gorefest.shell.bgg.FakeBggApi
-import gorefest.shell.web.approval.approvalRoutes
 import gorefest.shell.web.account.accountRoutes
 import gorefest.shell.web.privacy.privacyRoutes
 import gorefest.shell.web.auth.authRoutes
@@ -16,6 +15,7 @@ import gorefest.shell.web.gamenight.gameNightRoutes
 import gorefest.shell.web.dev.devRoutes
 import gorefest.shell.web.gameday.gameDayRoutes
 import gorefest.shell.web.gameday.readinessRoutes
+import gorefest.shell.web.newcomer.newcomerRoutes
 import gorefest.shell.web.invite.inviteRoutes
 import gorefest.shell.web.request.requestRoutes
 import gorefest.shell.web.shelf.shelfRoutes
@@ -146,7 +146,7 @@ fun Application.web(app: App) {
             }
         }
         context(app.login, app.config) { authRoutes() }
-        context(app.login, app.config) { approvalRoutes() }
+        context(app.login, app.config) { newcomerRoutes(app.newcomers) }
         context(app.config) { privacyRoutes() }
         context(app.login, app.config) { accountRoutes(app) }
         context(app.ids, app.clock, app.login, app.config) { gameDayRoutes(app) }

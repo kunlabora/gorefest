@@ -11,6 +11,6 @@ context(login: Login, config: AppConfig)
 suspend fun RoutingContext.admin(block: suspend context(CurrentPlayer) RoutingContext.() -> Unit) {
     val player = sessionPlayer()
     val name = player?.name
-    if (player == null || name == null || !player.approved || !config.isAdmin(player.email)) return call.respond(HttpStatusCode.NotFound)
+    if (player == null || name == null || !config.isAdmin(player.email)) return call.respond(HttpStatusCode.NotFound)
     block(CurrentPlayer(player.id, name), this)
 }

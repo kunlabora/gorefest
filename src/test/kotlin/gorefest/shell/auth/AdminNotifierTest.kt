@@ -38,12 +38,12 @@ class AdminNotifierTest {
     @Test
     @Obligation("PR-20")
     fun `the Discord post carries the message and can't ping anyone`() {
-        val request = DiscordWebhook(hook).request("Fresh wants into Boardfest", "Waiting for your approval: https://boardfest.be/admin/approvals")
+        val request = DiscordWebhook(hook).request("Fresh signed up for Boardfest", "Don't know them? Reject them here: https://boardfest.be/admin/newcomers")
 
         request.uri().toString() shouldBe hook
         val body = request.body()
-        body shouldContain "Fresh wants into Boardfest"
-        body shouldContain "/admin/approvals"
+        body shouldContain "Fresh signed up for Boardfest"
+        body shouldContain "/admin/newcomers"
         body shouldContain """"allowed_mentions":{"parse":[]}"""
     }
 
@@ -69,7 +69,7 @@ class AdminNotifierTest {
     fun `a notification that fails never stops someone from signing up`() = runBlocking {
         val login = Login(TestDatabase.db, test.app.commands, test.mailbox, test.app.config, test.clock, IdGenerator.sequential(), admin = { _, _ -> error("down") })
         val id = PlayerId(Uuid.random())
-        TestDatabase.db.transaction { Players().findOrCreate("fresh@example.com", id, approved = false) }
+        TestDatabase.db.transaction { Players().findOrCreate("fresh@example.com", id) }
 
         login.rename(id, "Fresh")
 
@@ -80,13 +80,13 @@ class AdminNotifierTest {
     @Obligation("PR-19")
     fun `the default is a mail to the admin, without the newcomer's email address`() = runBlocking {
         val id = PlayerId(Uuid.random())
-        test.app.db.transaction { Players().findOrCreate("fresh@example.com", id, approved = false) }
+        test.app.db.transaction { Players().findOrCreate("fresh@example.com", id) }
 
         test.app.login.rename(id, "Fresh")
 
         val mail = test.mailbox.latestTo("tim@example.com")!!
         mail.subject shouldContain "Fresh"
-        mail.text shouldContain "/admin/approvals"
+        mail.text shouldContain "/admin/newcomers"
         mail.text shouldNotContain "fresh@example.com"
     }
 }

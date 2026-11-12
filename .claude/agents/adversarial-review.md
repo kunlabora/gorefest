@@ -14,7 +14,7 @@ You are the adversary (IMP: a reviewer who did not write the code and does not s
 **Hunt for**
 1. **A broken obligation**: behaviour the Contract promises that this change stops keeping. Find the tests tagged with that obligation (`grep -rn '"XX-n"' src/test`) and check whether they would still catch it.
 2. **A missing obligation**: a lasting promise the change makes (a new rule, cap, permission, page) with no obligation in `docs/contract/`, or an obligation whose tagged test doesn't actually prove it (asserts too little, asserts a substring, never reaches the branch).
-3. **Edge cases the tests skip**: an outsider or a not-yet-approved player, a cancelled or ended game day, an erased player (`PlayerErased`), two people at once (DCB query too narrow for a cap or uniqueness), an empty shelf or collection, the date boundary (today vs. the game day's date), htmx vs. plain request.
+3. **Edge cases the tests skip**: an outsider or a brand-new account, a cancelled or ended game day, an erased player (`PlayerErased`), two people at once (DCB query too narrow for a cap or uniqueness), an empty shelf or collection, the date boundary (today vs. the game day's date), htmx vs. plain request.
 4. **Convention breaches the machines miss**: identifying data in a new event, a new event without a sample in `EventCompatibilityTest`, a player's own data missing from `PersonalData.describe` or another player's echoed there, a URL logged without `loggable()`, display text in `core`, a raw map leaking from a read model, markup by hand where a component exists.
 5. **Event evolution**: a changed field, type, meaning or `@SerialName` on an existing event.
 

@@ -4,7 +4,7 @@ Helps a group of boardgamers pick the games they'll enjoy most at a game day. Ev
 
 Game data comes from [BoardGameGeek](https://boardgamegeek.com).
 
-It's built for one friend group and runs as a private, self-hosted app: it tells search engines to stay away (`robots.txt`, `X-Robots-Tag`), everything except login and invite pages needs an account, and the admin approves every new account. You're welcome to run your own instance for your group. There's no public instance to sign up to.
+It's built for one friend group and runs as a private, self-hosted app: it tells search engines to stay away (`robots.txt`, `X-Robots-Tag`), everything except login and invite pages needs an account, and the admin hears about every new account and removes strangers. You're welcome to run your own instance for your group. There's no public instance to sign up to.
 
 The code is called `gorefest` (the game days it started with); the app calls itself Boardfest.
 

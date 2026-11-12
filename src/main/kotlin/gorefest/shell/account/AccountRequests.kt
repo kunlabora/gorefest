@@ -101,16 +101,16 @@ class AccountRequests(
         context(tx: Tx)
         fun open(): List<OpenRequest> =
             tx.connection.prepareStatement(
-                "select p.id, p.email, p.name, p.approved_at is not null as approved, r.kind, r.requested_at " +
+                "select p.id, p.email, p.name, r.kind, r.requested_at " +
                     "from account_requests r join players p on p.id = r.player_id order by r.requested_at",
             ).use {
                 it.executeQuery().use { rs ->
                     buildList {
                         while (rs.next()) add(
                             OpenRequest(
-                                Player(PlayerId(rs.getObject(1, java.util.UUID::class.java).toKotlinUuid()), rs.getString(2), rs.getString(3), rs.getBoolean(4)),
-                                RequestKind.valueOf(rs.getString(5)),
-                                rs.getTimestamp(6).toInstant(),
+                                Player(PlayerId(rs.getObject(1, java.util.UUID::class.java).toKotlinUuid()), rs.getString(2), rs.getString(3)),
+                                RequestKind.valueOf(rs.getString(4)),
+                                rs.getTimestamp(5).toInstant(),
                             ),
                         )
                     }

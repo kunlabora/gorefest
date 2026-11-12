@@ -4,7 +4,7 @@ An internal list of where personal data lives, kept short because the household 
 
 | Store | What | Why | Who sees it | How long |
 |---|---|---|---|---|
-| `players` | Email, display name, signup and approval time, last sign-in and inactivity-warning time | Sign-in, mail, showing names to the group | Admin; names to people on the same game day | Until the account is deleted (`AccountEraser`, from `/account` through the admin) or 24 months pass without a sign-in (warning first) |
+| `players` | Email, display name, signup time, last sign-in and inactivity-warning time | Sign-in, mail, showing names to the group | Admin; names to people on the same game day | Until the account is deleted (`AccountEraser`, from `/account` through the admin) or 24 months pass without a sign-in (warning first) |
 | `email_changes` | The new address typed (in clear), hashed code | Proving a new address is yours before it replaces the old one | Nobody | Purged a day after it expires; gone with the account |
 | `login_attempts` | Email, hashed code and token, return path | Magic-link and code login | Nobody (hashed) | 1 day (`ATTEMPT_RETENTION`) |
 | `account_requests` | Who asked to delete their account or get their data, and when | Handling those requests | Admin | Until handled ("Sent it" closes a data request, erasure removes the account and with it the request) |
