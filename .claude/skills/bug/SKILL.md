@@ -12,6 +12,15 @@ A bug means the Contract (`docs/contract/`) didn't promise the right thing, or a
 - Reproduce it: a failing test, the dev app (`preview_start` with `gorefest`), or the user's steps. If you can't reproduce it, say so and ask for what's missing; don't fix by guessing.
 - **`fix:` or `refine:`**: `fix:` only for a defect in the code running in production now (`git describe --tags` is the release; check the bug exists there, not only in unreleased commits on `main`). A defect in unreleased work is `refine:`, and it goes in the story it belongs to.
 - Find the area (`docs/contract/README.md` → Areas) and read its obligations.
+- **`fix:` means a failure issue.** forsgren (our DORA metrics page, run from its own repository) counts change fail rate and recovery time from GitHub issues labelled `failure`, so open one as soon as you know it's live, before the fix. Title: what people see, in plain words. Body: a sentence on the symptom, a blank line, then the record block, each key on its own line:
+
+  ```
+  failure-start: 2026-11-12T19:30+01:00
+  failed-build: v2.4.0
+  service: App
+  ```
+
+  `failure-start` is when people were first hit (the report's time, or the deploy that brought it if that's clearer; ISO time with offset). `failed-build` is the release tag that has the bug (`git describe --tags`). `service` is `App`, or `Site` for the onboarding site. No names, emails or BGG usernames: the issue is not a place for personal data. Use `gh issue create --label failure --title … --body …` (create the label once if it's missing); without `gh`, give the user the title and body to file, and ask for the number.
 
 ## 2. The obligation
 
@@ -37,6 +46,6 @@ If the bug is a kind (not a one-off), add a check that makes the kind impossible
 
 ## 6. Commit
 
-One commit: `fix: <what people see now, in plain words>` (or `refine:` per step 1), with the obligation id in the body. Commit on `main` without asking; don't push (pushing deploys: offer the `release` skill, a patch bump).
+One commit: `fix: <what people see now, in plain words>` (or `refine:` per step 1), with the obligation id in the body, and for a `fix:` a `Fixes #N` line naming the failure issue: GitHub closes it when the commit reaches `main`, which is when the fix deploys, so the issue's open time is the recovery time. Commit on `main` without asking; don't push (pushing deploys: offer the `release` skill, a patch bump).
 
-Report: the cause in a sentence, the obligation (new, sharpened or replaced), the test, the fix, and whether a guardrail was added.
+Report: the cause in a sentence, the failure issue (for a `fix:`), the obligation (new, sharpened or replaced), the test, the fix, and whether a guardrail was added.
