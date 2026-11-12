@@ -102,7 +102,7 @@
     {
       kicker: 'The invite',
       title: 'One link in the group chat',
-      text: 'Anna hosts Gorefest #7 and shares one link where the group already talks. Kim sees who\'s coming and how many games are on the shelf before signing up for anything.',
+      text: 'Anna hosts Gorefest #7 and drops the invite link in the group chat. Before signing up, Kim can see who\'s coming and how many games are on the shelf.',
       screen: function () {
         return '<main class="gf-body" style="padding-top:var(--space-5)">' +
           '<div style="display:flex;align-items:center;gap:var(--space-3)">' + avatar(PEOPLE[0], 'lg') + '<p style="margin:0" class="gf-muted"><strong style="color:var(--ink)">Anna</strong> invites you to a game day</p></div>' +
@@ -120,7 +120,7 @@
     {
       kicker: 'Sign in',
       title: 'No password, no app',
-      text: 'An email with a link and a 6-digit code. The code also works in the in-app browsers of WhatsApp and Signal, where magic links tend to break.',
+      text: 'Kim gets an email with a link and a 6-digit code. Links often break in the WhatsApp and Signal browsers. The code works there.',
       screen: function () {
         return appbar('Gorefest #7') + '<main class="gf-body"><div class="gf-stack"><p class="gf-h1">What\'s your email?</p><p class="gf-muted" style="margin:0">We\'ll send a link and a 6-digit code. No password to remember.</p></div>' +
           '<div class="gf-field"><span class="gf-label">Email</span><input class="gf-input" data-demo="email" placeholder="you@example.com"></div>' +
@@ -141,7 +141,7 @@
     {
       kicker: 'Taste round',
       title: 'Which would you rather play?',
-      text: 'Rating forty games is a chore. Choosing between two is easy. A dozen quick pairs are enough to learn Kim\'s taste: which games look appealing, and which were fun once played.',
+      text: 'Nobody wants to rate forty games, but picking one of two is easy. About a dozen pairs tell the app which games Kim likes the look of, and which Kim enjoyed after playing.',
       screen: function () {
         return appbar('Gorefest #7 · Taste round', 'Done for now') +
           '<main class="gf-body gf-wizard"><div data-demo="progress">' + progress(4, 12) + '</div>' +
@@ -175,7 +175,7 @@
     {
       kicker: 'The payoff',
       title: 'Your likely favourites today',
-      text: 'Right away, Kim sees the games on this shelf most likely to land, each with a reason in plain words. The answers also carry over to games Kim has never seen, through what they have in common: mechanics, weight, length.',
+      text: 'Kim gets the three games on this shelf most likely to go down well, each with a short reason. The answers also help with games Kim has never seen, because games share mechanics, weight and length.',
       screen: function () {
         return '<main class="gf-body" style="padding-top:var(--space-6)"><div class="gf-stack"><p class="gf-kicker">Round done · 12 answers</p><p class="gf-hero">Your likely favourites today</p></div>' +
           '<div class="gf-podium" data-demo="podium">' +
@@ -190,7 +190,7 @@
     {
       kicker: 'The shelf',
       title: 'Tick what you\'re bringing',
-      text: 'Kim\'s collection comes from a linked BoardGameGeek account. Bringing a game is one switch, so the shelf fills up before the day and the host can spot the gaps, like "nothing plays well at 6".',
+      text: 'Kim\'s collection comes from a linked BoardGameGeek account, and bringing a game is one switch. The shelf fills up before the day, so the host sees gaps in time, like "nothing plays well at 6".',
       screen: function () {
         return appbar('Gorefest #7') + '<main class="gf-body"><div class="gf-stack"><p class="gf-h1">What are you bringing?</p><p class="gf-muted" style="margin:0" data-demo="count">From your collection. 2 ticked.</p></div>' +
           '<div class="gf-search">' + ic('search') + '<input class="gf-input" placeholder="Search your collection or BGG"></div>' +
@@ -209,7 +209,7 @@
     {
       kicker: 'On the day',
       title: 'Who\'s at this table?',
-      text: 'It\'s Saturday. Four people are free, there\'s an hour and a half before dinner, and nobody wants to be the one who picks. Tick who\'s playing and how long you have.',
+      text: 'It\'s Saturday. Four people are free and dinner is in an hour and a half. Nobody wants to pick, so Kim ticks who\'s playing and how long they have.',
       screen: function () {
         return appbar('Gorefest #7 · Pick a game') + '<main class="gf-body"><div class="gf-stack"><p class="gf-h1">Who\'s at the table?</p></div>' +
           chips(['Anna', 'Bram', 'Kim', 'Jonas', 'Sofie'], ['Kim']) +
@@ -226,7 +226,7 @@
     {
       kicker: 'Suggestions',
       title: 'Three games, each with a reason',
-      text: 'Only games that fit four players and 90 minutes. Ranked by how much the whole table is likely to enjoy them, not just the loudest player, with a bonus for games nobody has played and games someone really wants to play.',
+      text: 'The app only looks at games that play well with four and fit in 90 minutes. It ranks them by how much everyone at the table should enjoy them. Games nobody has played get a bonus, and so do games someone really wants to play.',
       screen: function () {
         return appbar('Gorefest #7 · Pick a game') + '<main class="gf-body"><div class="gf-tablebar"><span class="gf-avatars">' +
           PEOPLE.slice(0, 4).map(function (p) { return avatar(p, 'sm'); }).join('') +
@@ -241,7 +241,7 @@
     {
       kicker: 'Checkpoint',
       title: 'What did you play?',
-      text: 'At lunch and in the evening the app asks what was played, by whom and for how long. It\'s three taps, because the likeliest answers are already filled in. That keeps the time estimates honest for this group.',
+      text: 'At lunch and in the evening the app asks what you played, with whom and for how long. The likeliest answers are already filled in, so it takes three taps. The logged times make the next estimates fit this group.',
       screen: function () {
         return appbar('Gorefest #7', 'Skip') + '<main class="gf-body"><div class="gf-stack"><p class="gf-kicker">Lunch checkpoint</p><p class="gf-h1">What did you play?</p></div>' +
           '<div class="gf-tiles">' + ['heat', 'cascadia', 'crew'].map(function (k) {
@@ -257,8 +257,8 @@
     },
     {
       kicker: 'One more answer',
-      title: 'Every game played sharpens the next pick',
-      text: 'One comparison after each play: did you enjoy it more than the last one? Over a day, and over many game days, the suggestions keep getting closer to what your group actually loves.',
+      title: 'After each game, one more question',
+      text: 'The app shows one more pair: did you like this game more than the other one? Each answer goes into your taste profile, so the suggestions get better the more the group plays.',
       screen: function () {
         return appbar('Gorefest #7') + '<main class="gf-body gf-wizard"><div class="gf-notice gf-notice--good">' + ic('check') + '<p>Logged Heat: Pedal to the Metal: 4 players, 1 h.</p></div>' +
           '<div class="gf-stack"><p class="gf-kicker">One quick question</p><p class="gf-h1">Which did you enjoy more?</p></div>' +

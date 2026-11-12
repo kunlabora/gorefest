@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Welcome to Boardfest</title>
-<meta name="description" content="New to Boardfest? A short guided tour: what the app does for a game day, how it's built, how it runs, and how we work on it.">
+<meta name="description" content="New to Boardfest? Fifteen minutes on what the app does at a game day and how we build and run it.">
 <script>
   // Before paint: apply the theme picked on this site, else follow the device (tokens.css).
   try { var t = localStorage.getItem('bf-theme'); if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; } catch (e) {}
@@ -43,16 +43,16 @@
   <div class="welcome__copy">
     <p class="gf-kicker">Welcome aboard</p>
     <h1 class="gf-h1 welcome__title" id="welcome-title">New to Boardfest? Start here.</h1>
-    <p class="gf-lede">Boardfest helps a group of friends pick the board games they'll enjoy most at a game day. This tour shows you what it does, how it's built, and how we work on it. It takes about fifteen minutes.</p>
+    <p class="gf-lede">Boardfest helps a group of friends pick which board games to play at a game day. Here's what it does and how the code works. Give it fifteen minutes.</p>
     <a class="gf-btn gf-btn--primary gf-btn--lg" href="#idea">Start the tour</a>
   </div>
   <nav class="tour-map" aria-label="What the tour covers">
     <ol>
-      <li><a href="#idea"><span class="tour-map__num">1</span><span><strong>The idea</strong><span class="tour-map__sub">What problem it solves · 1 min</span></span></a></li>
+      <li><a href="#idea"><span class="tour-map__num">1</span><span><strong>The idea</strong><span class="tour-map__sub">Why we built it · 1 min</span></span></a></li>
       <li><a href="#demo-section"><span class="tour-map__num">2</span><span><strong>Try it</strong><span class="tour-map__sub">A game day, start to finish · 3 min</span></span></a></li>
-      <li><a href="#stack"><span class="tour-map__num">3</span><span><strong>How it's built</strong><span class="tour-map__sub">Events, Kotlin HTML, a pure core · 4 min</span></span></a></li>
-      <li><a href="#a11y"><span class="tour-map__num">4</span><span><strong>Accessible by construction</strong><span class="tour-map__sub">How WCAG is kept · 2 min</span></span></a></li>
-      <li><a href="#deploy"><span class="tour-map__num">5</span><span><strong>How it runs</strong><span class="tour-map__sub">One small server on Scaleway · 2 min</span></span></a></li>
+      <li><a href="#stack"><span class="tour-map__num">3</span><span><strong>How it's built</strong><span class="tour-map__sub">What to know before reading the code · 4 min</span></span></a></li>
+      <li><a href="#a11y"><span class="tour-map__num">4</span><span><strong>Accessible by construction</strong><span class="tour-map__sub">How the build keeps it that way · 2 min</span></span></a></li>
+      <li><a href="#deploy"><span class="tour-map__num">5</span><span><strong>How it runs</strong><span class="tour-map__sub">One small server in Paris · 2 min</span></span></a></li>
       <li><a href="#imp"><span class="tour-map__num">6</span><span><strong>How we work</strong><span class="tour-map__sub">Impatient Programming · 3 min</span></span></a></li>
     </ol>
   </nav>
@@ -62,12 +62,12 @@
 <section class="chapter chapter--sunk" id="idea" aria-labelledby="idea-title">
   <div class="chapter__inner">
     <p class="gf-kicker">Chapter 1 of 6</p>
-    <h2 class="gf-h1 chapter__title" id="idea-title">Game days have a picking problem</h2>
-    <p class="gf-lede chapter__lede">Forty games on the table, eight friends, and an hour of "I don't mind, what do you want?".</p>
+    <h2 class="gf-h1 chapter__title" id="idea-title">Picking a game takes too long</h2>
+    <p class="gf-lede chapter__lede">Eight friends stand around forty games and spend an hour saying "I don't mind, what do you want?".</p>
     <dl class="problems">
-      <div><dt>The shelf is long</dt><dd>Boardfest only suggests games that fit who's at the table and the time you have.</dd></div>
-      <div><dt>Nobody wants to pick</dt><dd>It ranks for the whole table, not for whoever talks loudest.</dd></div>
-      <div><dt>Taste is invisible</dt><dd>A dozen "which of these two?" questions make a taste profile, and every game you play sharpens it.</dd></div>
+      <div><dt>There are too many games</dt><dd>Boardfest only suggests games that work for the people at the table and fit the time you have.</dd></div>
+      <div><dt>Nobody wants to pick</dt><dd>It ranks the games for everyone at the table. The loudest player gets no extra say.</dd></div>
+      <div><dt>Nobody knows what the others like</dt><dd>You answer about a dozen "which of these two?" questions. After each game you play, it asks one more.</dd></div>
     </dl>
   </div>
 </section>
@@ -78,7 +78,7 @@
     <div class="demo-copy">
       <p class="gf-kicker">Chapter 2 of 6</p>
       <h2 class="gf-h1 chapter__title" id="demo-title">Try it: one game day</h2>
-      <p class="gf-muted">Follow Kim from the invite to the first game. Nothing to type: press Play, or go step by step.</p>
+      <p class="gf-muted">Kim gets invited and plays the first game. Press Play to watch, or click through it yourself.</p>
     </div>
     <div class="demo-phone">
       <div class="phone" inert aria-hidden="true">
@@ -107,13 +107,13 @@
   <div class="chapter__inner">
     <p class="gf-kicker">Chapter 3 of 6</p>
     <h2 class="gf-h1 chapter__title" id="stack-title">How it's built</h2>
-    <p class="gf-lede chapter__lede">Kotlin, Ktor and Postgres, with HTML rendered on the server. No SPA and no framework for the domain. Three ideas carry most of the weight.</p>
+    <p class="gf-lede chapter__lede">Kotlin, Ktor and Postgres, with the HTML rendered on the server. There's no single-page app and no framework in the domain code. Three things are worth knowing before you open it.</p>
 
     <div class="ideas">
       <article class="idea">
         <p class="idea__num">1</p>
         <h3 class="gf-h2 idea__title">One event log, no aggregates</h3>
-        <p>Every change is an event, like <code>GameBrought</code> or <code>ComparisonRecorded</code>. Each decision names exactly the events it depends on (a Dynamic Consistency Boundary), so only those can conflict with it. Read models are rebuilt in memory on startup.</p>
+        <p>Every change is an event, like <code>GameBrought</code> or <code>ComparisonRecorded</code>. Each decision lists the events it depends on (a Dynamic Consistency Boundary), and only those can conflict with it. Read models live in memory and are rebuilt from the log on startup.</p>
         <details class="code">
           <summary>Show the code</summary>
 <pre tabindex="0"><code><span class="k">object</span> BringGameDecider : Decider&lt;BringGame, BringState, Event&gt; {
@@ -141,7 +141,7 @@
       <article class="idea">
         <p class="idea__num">2</p>
         <h3 class="gf-h2 idea__title">HTML written in Kotlin</h3>
-        <p>Views are plain functions in <code>kotlinx.html</code>, so the compiler checks them and a component is just another function. htmx swaps in one fragment per interaction, and everything still works as plain pages.</p>
+        <p>Views are Kotlin functions written with <code>kotlinx.html</code>. The compiler checks them, and a component is a function like any other. htmx swaps in one fragment per click, and the pages work without it too.</p>
         <details class="code">
           <summary>Show the code</summary>
 <pre tabindex="0"><code><span class="k">fun</span> TagConsumer&lt;*&gt;.suggestions(view: TableView) = section(<span class="s">"gf-picker__answer"</span>) {
@@ -161,7 +161,7 @@
       <article class="idea">
         <p class="idea__num">3</p>
         <h3 class="gf-h2 idea__title">A pure core, a thin shell</h3>
-        <p><code>gorefest.core</code> decides: no database, no clock, no randomness. <code>gorefest.shell</code> does the IO: Postgres, BoardGameGeek, mail and the web. The core is tested as given / when / then without mocks, and a test fails the build if it ever reaches for the shell.</p>
+        <p><code>gorefest.core</code> decides: no database, no clock, no randomness. <code>gorefest.shell</code> does the IO: Postgres, BoardGameGeek, mail and the web. Core tests are given / when / then, with no mocks. An architecture test fails the build if the core imports anything from the shell.</p>
         <div class="layers" role="img" aria-label="The imperative shell (web, Postgres, BoardGameGeek, mail) wraps the functional core (deciders, read models, taste model, matcher).">
           <div class="layers__shell">
             <p class="layers__name">Shell</p>
@@ -182,12 +182,12 @@
   <div class="chapter__inner">
     <p class="gf-kicker">Chapter 4 of 6</p>
     <h2 class="gf-h1 chapter__title" id="a11y-title">Accessible by construction</h2>
-    <p class="gf-lede chapter__lede">Game days happen in dim rooms, on old phones, and sometimes with a screen reader. So the code makes the inaccessible version hard to write, and the build fails when someone writes it anyway.</p>
+    <p class="gf-lede chapter__lede">People use the app in dim rooms and on old phones, and some use a screen reader. The code makes an inaccessible page hard to write, and the build fails if you manage it anyway.</p>
     <ol class="steps">
-      <li><strong>Promised.</strong> WCAG 2.2 AA's basics are written down as obligations in the Contract, each with a test.</li>
-      <li><strong>Built in.</strong> Components like <code>field</code> and <code>actionButton</code> render the labels and ARIA, and refuse a blank name.</li>
-      <li><strong>Enforced.</strong> An architecture test fails when a view writes a raw <code>input</code>, <code>button</code>, <code>img</code> or <code>aria-*</code> itself.</li>
-      <li><strong>Checked everywhere.</strong> Every web test parses its page and checks names, unique ids, labels and heading order.</li>
+      <li><strong>The Contract.</strong> The basics of WCAG 2.2 AA are obligations there, each with a test.</li>
+      <li><strong>Components.</strong> Shared ones like <code>field</code> and <code>actionButton</code> add the labels and ARIA for you, and won't take a blank name.</li>
+      <li><strong>Architecture test.</strong> It fails when a view writes a raw <code>input</code>, <code>button</code>, <code>img</code> or <code>aria-*</code> itself.</li>
+      <li><strong>Web tests.</strong> Each one parses the page it gets back and checks names, unique ids, labels and heading order.</li>
     </ol>
   </div>
 </section>
@@ -197,14 +197,14 @@
   <div class="chapter__inner">
     <p class="gf-kicker">Chapter 5 of 6</p>
     <h2 class="gf-h1 chapter__title" id="deploy-title">One small server on Scaleway</h2>
-    <p class="gf-lede chapter__lede">A group of friends doesn't need Kubernetes. One fat jar on a small Scaleway instance in Paris, and every push to <code>main</code> is live a few minutes later.</p>
+    <p class="gf-lede chapter__lede">A group of friends doesn't need Kubernetes. The app is one fat jar on a small Scaleway instance in Paris. A push to <code>main</code> is live a few minutes later.</p>
     <ol class="flow">
       <li><strong>Push</strong><span>GitHub Actions runs every check and builds the jar.</span></li>
-      <li><strong>Switch</strong><span>The jar lands in a new release folder and systemd restarts.</span></li>
-      <li><strong>Verify</strong><span>If <code>/health</code> doesn't answer, it rolls back to the last release.</span></li>
-      <li><strong>Serve</strong><span>Caddy handles TLS, and <code>pg_dump</code> backs up nightly.</span></li>
+      <li><strong>Install</strong><span>The jar goes into a new release folder and systemd restarts the app.</span></li>
+      <li><strong>Check</strong><span>If <code>/health</code> doesn't answer, the deploy rolls back to the previous release.</span></li>
+      <li><strong>Run</strong><span>Caddy handles TLS. <code>pg_dump</code> makes a backup every night.</span></li>
     </ol>
-    <p class="gf-muted chapter__note">The step-by-step setup is in <code>deploy/scaleway.md</code>, and <code>provision.sh</code> does the rest on the server.</p>
+    <p class="gf-muted chapter__note"><code>deploy/scaleway.md</code> walks through the setup, and <code>provision.sh</code> does the rest on the server.</p>
   </div>
 </section>
 
@@ -213,12 +213,12 @@
   <div class="chapter__inner">
     <p class="gf-kicker">Chapter 6 of 6</p>
     <h2 class="gf-h1 chapter__title" id="imp-title">How we work: Impatient Programming</h2>
-    <p class="gf-lede chapter__lede">Boardfest is mostly written by AI agents, following <a class="gf-link" href="https://impatientprogramming.org/">Impatient Programming</a>: Extreme Programming for agentic development. Code is cheap. What counts is what it promises, and the checks that hold it to that.</p>
+    <p class="gf-lede chapter__lede">AI agents write most of Boardfest. We follow <a class="gf-link" href="https://impatientprogramming.org/">Impatient Programming</a>, which is Extreme Programming adapted to working with agents. Writing code is cheap now. The real work is saying what the app must do and testing that it does.</p>
     <dl class="practices">
-      <div><dt>The Contract</dt><dd>305 numbered promises, like <q>GD-1 Only the host changes a game day's title, date and place.</q> Each is proven by a tagged test, and the build fails on any promise without one.</dd></div>
-      <div><dt>Machines enforce the rules</dt><dd>A convention a machine can check goes into an architecture test, not a README. Mutation testing shows which tests actually catch anything.</dd></div>
-      <div><dt>Bugs are missing promises</dt><dd>Write the promise first, then a failing test, then the fix. Only those commits start with <code>fix:</code>.</dd></div>
-      <div><dt>Guardrails and skills</dt><dd>Hooks ask before a push or a risky change. Skills run the loop: <code>story</code>, <code>bug</code>, <code>spike</code>, an adversarial review, and <code>exhale</code> to simplify afterwards.</dd></div>
+      <div><dt>The Contract</dt><dd>305 numbered promises, like <q>GD-1 Only the host changes a game day's title, date and place.</q> Each has a tagged test, and the build fails if one doesn't.</dd></div>
+      <div><dt>Rules live in tests</dt><dd>If a machine can check a convention, it goes into an architecture test. Mutation testing shows which tests actually catch anything.</dd></div>
+      <div><dt>A bug is a missing promise</dt><dd>Add the promise, then a test that fails, then the fix. Only bug fixes for production start with <code>fix:</code>.</dd></div>
+      <div><dt>Hooks and skills</dt><dd>Hooks ask before a push or a risky change. Skills such as <code>story</code>, <code>bug</code> and <code>spike</code> walk an agent through the work. There's also an adversarial review agent, and <code>exhale</code> to tidy up afterwards.</dd></div>
     </dl>
   </div>
 </section>
@@ -229,10 +229,10 @@
     <p class="gf-kicker">That's the tour</p>
     <h2 class="gf-h1 chapter__title" id="next-title">Your first hour</h2>
     <ol class="steps">
-      <li><strong>Run it.</strong> Start Postgres with <code>podman compose up -d</code>, then the jar. Dev mode needs no accounts: login mail lands in <code>/dev/mailbox</code>.</li>
+      <li><strong>Run it.</strong> Start Postgres with <code>podman compose up -d</code>, then the jar. Dev mode sends no real mail. Login mail shows up at <code>/dev/mailbox</code>.</li>
       <li><strong>Check it.</strong> <code>./gradlew check</code> runs the tests, the Contract, the architecture rules and detekt.</li>
-      <li><strong>Read two files.</strong> <code>CLAUDE.md</code> for the vocabulary and conventions, <code>docs/contract/</code> for what the app promises.</li>
-      <li><strong>Pick a story.</strong> <code>docs/backlog.md</code> lists what's next.</li>
+      <li><strong>Read two things.</strong> <code>CLAUDE.md</code> has the vocabulary and conventions. <code>docs/contract/</code> has what the app promises.</li>
+      <li><strong>Pick a story.</strong> <code>docs/backlog.md</code> says what's up next.</li>
     </ol>
     <a class="gf-btn gf-btn--primary gf-btn--lg" href="https://github.com/kunlabora/gorefest">Open the code on GitHub</a>
   </div>
@@ -241,8 +241,8 @@
 </main>
 
 <footer class="site-footer">
-  <p>Boardfest runs privately for one group of friends; there's no public instance to sign up for. The code is MIT-licensed, so you can run your own.</p>
-  <p class="gf-muted">Game data in the app comes from <a class="gf-link" href="https://boardgamegeek.com">BoardGameGeek</a>. Fonts under the SIL Open Font License, served from this site.</p>
+  <p>Boardfest runs privately for one group of friends, so there's nowhere public to sign up. The code is MIT-licensed if you want to run your own.</p>
+  <p class="gf-muted">Game data in the app comes from <a class="gf-link" href="https://boardgamegeek.com">BoardGameGeek</a>. The fonts are under the SIL Open Font License and served from this site.</p>
 </footer>
 
 <script src="site.js"></script>
