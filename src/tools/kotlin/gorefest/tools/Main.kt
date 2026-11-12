@@ -5,18 +5,18 @@ import java.time.Clock
 import kotlin.system.exitProcess
 
 /**
- * Developer tools, not part of the app: run through `scripts/tool` (or its links `scripts/flow` and
- * `scripts/kill-matrix`), which builds `build/tools/tools.jar` when its sources changed.
+ * Developer tools, not part of the app. Each has a Gradle task (build.gradle.kts, group "tools") that names it in the
+ * `gorefest.tool` property and passes `--args` through: `./gradlew -q flow --args="--when 8"`.
  */
 fun main(args: Array<String>) {
-    val rest = args.drop(1)
-    when (args.firstOrNull()) {
+    val rest = args.toList()
+    when (System.getProperty("gorefest.tool")) {
         "flow" -> Flow.run(rest, Clock.systemDefaultZone())
-        "kill-matrix" -> KillMatrix.run(rest)
+        "killMatrix" -> KillMatrix.run(rest)
         "guard" -> Guard.run()
-        "check-reminder" -> CheckReminder.run()
+        "checkReminder" -> CheckReminder.run()
         else -> {
-            System.err.println("Usage: scripts/tool flow|kill-matrix|guard|check-reminder [args]")
+            System.err.println("Run a tool through its Gradle task: ./gradlew -q flow|killMatrix|guard|checkReminder")
             exitProcess(USAGE)
         }
     }
@@ -24,6 +24,6 @@ fun main(args: Array<String>) {
 
 private const val USAGE = 64
 
-/** The repository root: Claude Code's project dir for hooks, else what `scripts/tool` passes, else here. */
+/** The repository root: Claude Code's project dir for hooks, else the Gradle project dir, else here. */
 internal val root: Path =
     Path.of(System.getenv("CLAUDE_PROJECT_DIR") ?: System.getProperty("gorefest.root") ?: ".").toAbsolutePath().normalize()

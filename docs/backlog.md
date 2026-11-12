@@ -38,19 +38,19 @@ From these:
 - **Throughput** = stories done (✅) per day or week.
 - **Work in progress** = stories in 🚧, and how long each has been there.
 
-`scripts/flow` reports them and runs Monte Carlo forecasts by resampling daily throughput (calendar days, idle ones
+`./gradlew -q flow` reports them and runs Monte Carlo forecasts by resampling daily throughput (calendar days, idle ones
 included):
 
 ```bash
-scripts/flow
+./gradlew -q flow
 ```
 
 ```bash
-scripts/flow --when 8 --since 2026-10-01
+./gradlew -q flow --args="--when 8 --since 2026-10-01"
 ```
 
 ```bash
-scripts/flow --how-many-by 2026-12-01
+./gradlew -q flow --args="--how-many-by 2026-12-01"
 ```
 
 `--when` without a number forecasts everything not done yet. The sample defaults to the last 28 days; pick `--since` so

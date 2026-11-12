@@ -28,7 +28,7 @@ Write the test that fails because of the bug, tagged `@Obligation("XX-n")`: a de
 
 The smallest change that makes it pass. Then:
 - `./gradlew check` (tests, Contract coverage, architecture, detekt).
-- Touched a decider or the matcher: `./gradlew mutationTest` and `scripts/kill-matrix --survivors` for the class you changed.
+- Touched a decider or the matcher: `./gradlew mutationTest` and `./gradlew -q killMatrix --args=--survivors` for the class you changed.
 - Run the `adversarial-review` agent on the working tree. Give it nothing but "the working tree". Address what it finds or say why not.
 
 ## 5. Could it happen again?

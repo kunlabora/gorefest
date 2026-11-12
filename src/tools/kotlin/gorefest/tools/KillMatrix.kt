@@ -10,7 +10,7 @@ import javax.xml.parsers.DocumentBuilderFactory
  * Reads build/reports/pitest/mutations.xml from `./gradlew mutationTest` (run with --fullMutationMatrix)
  * and prints, per test class, the tests that kill nothing on their own: candidates to merge or delete.
  * A test that proves a Contract obligation stays even when it kills nothing unique; say so in its name.
- * Usage: scripts/kill-matrix [mutations.xml] [--survivors]
+ * Usage: ./gradlew -q killMatrix --args="[mutations.xml] [--survivors]"
  */
 object KillMatrix {
     private val METHOD = Regex("""\[class:([^\]]+)]/\[method:([^\]]+)\(\)]""")

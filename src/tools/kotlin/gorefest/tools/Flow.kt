@@ -21,10 +21,10 @@ import kotlin.system.exitProcess
 object Flow {
     private const val HELP = """Flow metrics and Monte Carlo forecasts from the milestone tables in docs/.
 
-    scripts/flow                          cycle time, lead time, throughput, work in progress
-    scripts/flow --when 8                 when will 8 more stories be done? (default: everything not done)
-    scripts/flow --how-many-by 2026-12-01 how many stories will be done by then?
-    scripts/flow --since 2026-10-01       sample throughput from this day on (default: the last 28 days)
+    ./gradlew -q flow                                       cycle time, lead time, throughput, work in progress
+    ./gradlew -q flow --args="--when 8"                     when will 8 more stories be done? (default: everything not done)
+    ./gradlew -q flow --args="--how-many-by 2026-12-01"     how many stories will be done by then?
+    ./gradlew -q flow --args="--since 2026-10-01"           sample throughput from this day on (default: the last 28 days)
 
 Other options: --today YYYY-MM-DD, --runs N (default 10000), --seed N (for repeatable forecasts).
 Days are calendar days. Cycle time counts a story started and done on the same day as 1 day."""

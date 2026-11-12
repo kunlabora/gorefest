@@ -44,8 +44,7 @@ repositories {
 
 val pitest by configurations.creating
 
-// Developer tools (flow metrics, the kill matrix, the agent hooks), never shipped in the app. scripts/tool runs them
-// from build/tools/tools.jar and rebuilds it when src/tools changes.
+// Developer tools (flow metrics, the kill matrix, the agent hooks), never shipped in the app; the tasks below run them.
 val tools by sourceSets.creating
 sourceSets.test {
     compileClasspath += tools.output
@@ -87,15 +86,24 @@ dependencies {
     "toolsImplementation"(libs.serialization.json)
 }
 
-val toolsJar by tasks.registering(Jar::class) {
-    description = "Builds the developer tools into one runnable jar for scripts/tool."
-    archiveFileName = "tools.jar"
-    destinationDirectory = layout.buildDirectory.dir("tools")
-    manifest { attributes("Main-Class" to "gorefest.tools.MainKt") }
-    from(tools.output)
-    from({ tools.runtimeClasspath.filter { it.name.endsWith(".jar") }.map { zipTree(it) } })
-    exclude("META-INF/*.SF", "META-INF/*.DSA", "META-INF/*.RSA", "META-INF/versions/**/module-info.class", "module-info.class")
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+// One task per tool: `./gradlew -q flow --args="--when 8"`. The hooks read Claude Code's event on stdin, and -q keeps
+// stdout to the JSON the tool prints.
+mapOf(
+    "flow" to "Flow metrics and Monte Carlo forecasts from the milestone tables (--args=\"--help\").",
+    "killMatrix" to "The kill matrix over build/reports/pitest/mutations.xml (--args=\"--survivors\").",
+    "guard" to "PreToolUse hook: asks before a push, a migration change, a lost @SerialName or Contract id.",
+    "checkReminder" to "Stop hook: nudges when Kotlin or the Contract changed since the last test run.",
+).forEach { (tool, about) ->
+    tasks.register<JavaExec>(tool) {
+        group = "tools"
+        description = about
+        mainClass = "gorefest.tools.MainKt"
+        classpath = tools.runtimeClasspath
+        systemProperty("gorefest.tool", tool)
+        systemProperty("gorefest.root", projectDir.path)
+        jvmArgs("-XX:TieredStopAtLevel=1")
+        standardInput = System.`in`
+    }
 }
 
 // The design system in docs/design is the single source for the app's CSS and icons.

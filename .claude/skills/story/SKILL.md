@@ -43,7 +43,7 @@ When the product owner has a real choice between shapes, write options instead (
 - **Rejections** get a sentence in `shell/web/Rejections.kt` (`Rejection.message()`), pinned in `RejectionsTest`.
 - Tests: given/when/then per decision, one per rejection and per no-op; projection tests for the read model. Tag each with the obligations it proves (`@Obligation("SH-35")`).
 - `ArchitectureTest` and detekt must stay green without touching `config/detekt/baseline.xml`.
-- Touched a decider or the matcher: run `./gradlew mutationTest` and `scripts/kill-matrix --survivors`; a survivor in the new code is a missing test or obligation.
+- Touched a decider or the matcher: run `./gradlew mutationTest` and `./gradlew -q killMatrix --args=--survivors`; a survivor in the new code is a missing test or obligation.
 
 Then, in the shell:
 - `EventCompatibilityTest`: a stored JSON sample for every new type (the test fails without one).
