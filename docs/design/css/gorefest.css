@@ -190,6 +190,7 @@ button.gf-link { display: inline-flex; align-items: center; min-height: 44px; pa
 .gf-list { list-style: none; margin: 0; padding: 0; background: var(--surface-raised); border: 1px solid var(--line); border-radius: var(--radius-lg); overflow: hidden; }
 .gf-row { display: flex; align-items: center; gap: var(--space-3); min-height: 60px; padding: var(--space-2) var(--space-3) var(--space-2) var(--space-4); }
 .gf-list > li + li { border-top: 1px solid var(--line); }
+.gf-list__note { margin: 0; padding: var(--space-3) var(--space-4); }
 .gf-row--me { background: var(--accent-soft); }
 .gf-row__main { flex: 1; min-width: 0; }
 .gf-row__title { display: block; font: 700 16px/22px var(--font-sans); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -377,6 +378,7 @@ div.gf-tile { cursor: default; }
 .gf-band > .gf-wrap { padding-block: 28px var(--space-6); }
 .gf-split { display: grid; gap: 28px; }
 .gf-split__copy { display: flex; flex-direction: column; align-items: flex-start; gap: 14px; }
+.gf-split__copy > .gf-search, .gf-split__copy > .gf-list { align-self: stretch; }
 .gf-phone-only { display: flex; }
 .gf-desk-only { display: none; }
 @media (min-width: 720px) {

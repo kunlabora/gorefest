@@ -170,7 +170,7 @@ fun TagConsumer<*>.wishList(gameDay: GameDaySummary, rows: List<WishRow>) = ul("
     hx("get", "/gamedays/${gameDay.id}/bring/wishes")
     hx("trigger", "$BRING_LIST_CHANGED from:body, $SHELF_CHANGED from:body")
     hx("swap", "outerHTML")
-    if (rows.isEmpty()) li { p("gf-small gf-muted") { +"Nothing on the shelf yet. Tick the games you're bringing." } }
+    if (rows.isEmpty()) li("gf-list__note gf-small gf-muted") { +"Nothing on the shelf yet. Tick the games you're bringing." }
     rows.forEach { wishItem(gameDay, it) }
 }
 

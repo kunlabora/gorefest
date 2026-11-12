@@ -91,7 +91,7 @@ fun HTML.askMemberPage(gameDay: GameDaySummary, owner: AskMember, rows: List<Ask
 fun TagConsumer<*>.askList(gameDay: GameDaySummary, rows: List<AskRow>, named: Boolean) = ul("gf-list") {
     id = "ask-list"
     announce(if (rows.isEmpty()) "No games to show" else rows.size.of("game"))
-    if (rows.isEmpty()) li { p("gf-small gf-muted") { +"No games to show." } }
+    if (rows.isEmpty()) li("gf-list__note gf-small gf-muted") { +"No games to show." }
     rows.forEach { askRow(gameDay, it, named) }
 }
 
