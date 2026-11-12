@@ -8,7 +8,7 @@ on:
       - docs/design/css/**
       - docs/design/fonts/**
       - docs/design/icons/**
-      - scripts/build_site.sh
+      - build.gradle.kts
       - .github/workflows/pages.yml
   workflow_dispatch:
 permissions:
@@ -26,7 +26,12 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v5
-      - run: scripts/build_site.sh
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 25
+      - uses: gradle/actions/setup-gradle@v5
+      - run: ./gradlew buildSite
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

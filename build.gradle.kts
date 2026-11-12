@@ -106,6 +106,21 @@ mapOf(
     }
 }
 
+// The onboarding site (site/) with the app's own design system, in build/site for GitHub Pages (.github/workflows/pages.yml).
+// docs/design stays the single source for the CSS, fonts and icons, as it is for the app (processResources below).
+val buildSite by tasks.registering(Sync::class) {
+    group = "site"
+    description = "Assembles the onboarding site into build/site."
+    val out = layout.buildDirectory.dir("site")
+    into(out)
+    from("site") { include("*.html", "*.css", "*.js") }
+    from("docs/design/css") { include("tokens.css", "gorefest.css"); into("css") }
+    from("docs/design/fonts") { include("*.woff2", "OFL.txt"); into("fonts") }
+    from("docs/design/icons") { include("favicon.svg", "apple-touch-icon.png"); into("icons") }
+    // GitHub Pages runs Jekyll unless the site says not to.
+    doLast { out.get().file(".nojekyll").asFile.createNewFile() }
+}
+
 // The design system in docs/design is the single source for the app's CSS and icons.
 tasks.processResources {
     inputs.property("version", project.version.toString())

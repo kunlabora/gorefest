@@ -89,6 +89,7 @@ Tag convention: `player:{id}`, `gameday:{id}`, `game:{bggId}`, `datepoll:{id}`, 
 - `./gradlew check`: tests, contract coverage, architecture rules and detekt (what CI runs)
 - `./gradlew mutationTest && ./gradlew -q killMatrix`: mutation testing on the core and the kill matrix
 - `./gradlew -q flow`, `./gradlew -q killMatrix` (`--args="…"` passes options): the developer tools in `src/tools`; `./gradlew tasks --group tools` lists them
+- `./gradlew buildSite`: the onboarding site (`site/`) into `build/site`, as GitHub Pages gets it (`.github/workflows/pages.yml`)
 - `./gradlew buildFatJar && java --sun-misc-unsafe-memory-access=allow -jar build/libs/gorefest.jar`: run on http://localhost:8080
 
 ## BGG integration
