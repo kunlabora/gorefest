@@ -44,6 +44,14 @@ repositories {
 
 val pitest by configurations.creating
 
+// Developer tools (flow metrics, the kill matrix, the agent hooks), never shipped in the app. scripts/tool runs them
+// from build/tools/tools.jar and rebuilds it when src/tools changes.
+val tools by sourceSets.creating
+sourceSets.test {
+    compileClasspath += tools.output
+    runtimeClasspath += tools.output
+}
+
 dependencies {
     implementation(libs.ktor.server.core)
     implementation(libs.ktor.server.netty)
@@ -75,6 +83,19 @@ dependencies {
 
     pitest(libs.pitest.command.line)
     pitest(libs.pitest.junit5.plugin)
+
+    "toolsImplementation"(libs.serialization.json)
+}
+
+val toolsJar by tasks.registering(Jar::class) {
+    description = "Builds the developer tools into one runnable jar for scripts/tool."
+    archiveFileName = "tools.jar"
+    destinationDirectory = layout.buildDirectory.dir("tools")
+    manifest { attributes("Main-Class" to "gorefest.tools.MainKt") }
+    from(tools.output)
+    from({ tools.runtimeClasspath.filter { it.name.endsWith(".jar") }.map { zipTree(it) } })
+    exclude("META-INF/*.SF", "META-INF/*.DSA", "META-INF/*.RSA", "META-INF/versions/**/module-info.class", "module-info.class")
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
 // The design system in docs/design is the single source for the app's CSS and icons.
@@ -90,6 +111,7 @@ detekt {
     buildUponDefaultConfig = true
     config.setFrom("config/detekt/detekt.yml")
     baseline = file("config/detekt/baseline.xml")
+    source.from("src/tools/kotlin")
 }
 
 tasks.test {

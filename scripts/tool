@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# Runs a developer tool from src/tools/kotlin/gorefest/tools: `scripts/tool flow|kill-matrix|guard|check-reminder [args]`,
+# or through its link, `scripts/flow` and `scripts/kill-matrix`. Rebuilds build/tools/tools.jar first when it is missing
+# or older than its sources. Gradle talks on stderr, so a hook's stdout stays the JSON Claude Code reads.
+set -euo pipefail
+
+root="$(cd "$(dirname "$0")/.." && pwd)"
+jar="$root/build/tools/tools.jar"
+
+name="$(basename "$0")"
+if [[ "$name" == tool ]]; then
+  name="${1:-}"
+  shift || true
+fi
+
+if [[ ! -f "$jar" || -n "$(find "$root/src/tools" "$root/build.gradle.kts" "$root/gradle/libs.versions.toml" -newer "$jar" -print -quit)" ]]; then
+  (cd "$root" && ./gradlew --quiet toolsJar </dev/null >&2)
+fi
+
+exec java -XX:TieredStopAtLevel=1 -Dgorefest.root="$root" -jar "$jar" "$name" "$@"

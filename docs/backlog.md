@@ -38,19 +38,19 @@ From these:
 - **Throughput** = stories done (✅) per day or week.
 - **Work in progress** = stories in 🚧, and how long each has been there.
 
-`scripts/flow.py` reports them and runs Monte Carlo forecasts by resampling daily throughput (calendar days, idle ones
+`scripts/flow` reports them and runs Monte Carlo forecasts by resampling daily throughput (calendar days, idle ones
 included):
 
 ```bash
-scripts/flow.py
+scripts/flow
 ```
 
 ```bash
-scripts/flow.py --when 8 --since 2026-10-01
+scripts/flow --when 8 --since 2026-10-01
 ```
 
 ```bash
-scripts/flow.py --how-many-by 2026-12-01
+scripts/flow --how-many-by 2026-12-01
 ```
 
 `--when` without a number forecasts everything not done yet. The sample defaults to the last 28 days; pick `--since` so

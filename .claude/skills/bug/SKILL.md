@@ -28,12 +28,12 @@ Write the test that fails because of the bug, tagged `@Obligation("XX-n")`: a de
 
 The smallest change that makes it pass. Then:
 - `./gradlew check` (tests, Contract coverage, architecture, detekt).
-- Touched a decider or the matcher: `./gradlew mutationTest` and `scripts/kill_matrix.py --survivors` for the class you changed.
+- Touched a decider or the matcher: `./gradlew mutationTest` and `scripts/kill-matrix --survivors` for the class you changed.
 - Run the `adversarial-review` agent on the working tree. Give it nothing but "the working tree". Address what it finds or say why not.
 
 ## 5. Could it happen again?
 
-If the bug is a kind (not a one-off), add a check that makes the kind impossible: a rule in `ArchitectureTest`, a guard in `.claude/hooks/guard.py`, or a component that carries the right thing. If an agent wrote the bug and the same mistake has happened before, this step isn't optional.
+If the bug is a kind (not a one-off), add a check that makes the kind impossible: a rule in `ArchitectureTest`, a check in `Guard` (`src/tools/kotlin/gorefest/tools/Guard.kt`), or a component that carries the right thing. If an agent wrote the bug and the same mistake has happened before, this step isn't optional.
 
 ## 6. Commit
 
