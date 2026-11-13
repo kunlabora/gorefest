@@ -66,7 +66,7 @@ class EmailChange(
             mailer.send(
                 Mail(
                     email, "Your Boardfest code: $code",
-                    "Your code is $code.\n\nEnter it to make this your Boardfest address. It works once, for the next 15 minutes.\nDidn't ask for this? Then you can ignore this mail.\n",
+                    "Your code is $code.\n\nEnter it to make this your Boardfest address. It works once, for the next ${LoginAttempt.TTL.toMinutes()} minutes.\nDidn't ask for this? Then you can ignore this mail.\n",
                     clock.instant(),
                 ),
             )

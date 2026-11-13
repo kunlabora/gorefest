@@ -110,7 +110,7 @@ Tag convention: `player:{id}`, `gameday:{id}`, `game:{bggId}`, `datepoll:{id}`, 
 ## Auth
 
 - Email magic link **plus** a 6-digit code in the same email (in-app browsers of WhatsApp/Signal break cookie-based magic links).
-- Tokens: random, stored hashed, single-use, ~15 min expiry. Long-lived session cookie afterwards.
+- Tokens: random, stored hashed, single-use, 60 min expiry (`LoginAttempt.TTL`; slow mail delivery made 15 too short). Long-lived session cookie afterwards.
 - The code is in the mail subject too. The link opens a confirm page and logs in on POST, because mail scanners pre-fetch GET links.
 - Email and display name live in the plain `players` table; events only carry player ids, so a player can be erased.
 - `GOREFEST_ENV=dev` (the default for now) sends mail to an in-memory dev mailbox at `/dev/mailbox`. Production needs `SECRET_KEY` and a mail provider (S1).

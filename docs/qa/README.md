@@ -25,7 +25,7 @@ Method: curl with cookie jars for ~12 players (Tim, Anna, Bram, Cara, Dan, Eve, 
 | [BUG-019](bugs/BUG-019-plain-form-post-error-returns-bare-fragment.md) | A validation error on a plain (non-htmx) form post returns a bare `<form>` fragment, not a page | minor | Web layer | fixed |
 
 ## Verified working (no bug)
-Magic link and code login (wrong code lockout, expiry after 15 min, link reuse), invite join incl. rotate/cancel/tampered tokens, non-member access (404, no leaks), date poll create/join/answer/pick/closed, play wishes (limit 3), readiness gaps, suggestions for 1 to 8 players and all time budgets, home grouping (cancelled and ended days land in "Past" and "Next up" moves on after midnight; recap mail sent), light/dark contrast (scripted check on the main pages), no horizontal overflow at 375px, no console errors or failing requests.
+Magic link and code login (wrong code lockout, expiry after 60 min, link reuse), invite join incl. rotate/cancel/tampered tokens, non-member access (404, no leaks), date poll create/join/answer/pick/closed, play wishes (limit 3), readiness gaps, suggestions for 1 to 8 players and all time budgets, home grouping (cancelled and ended days land in "Past" and "Next up" moves on after midnight; recap mail sent), light/dark contrast (scripted check on the main pages), no horizontal overflow at 375px, no console errors or failing requests.
 
 ## Not covered
 - Real BGG behaviour (fake only), collection "queued" state, BGG unavailable states.

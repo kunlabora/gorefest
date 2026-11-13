@@ -1,5 +1,6 @@
 package gorefest.shell.web.auth
 
+import gorefest.core.auth.LoginAttempt
 import gorefest.shell.web.components.*
 import gorefest.shell.web.urlEncoded
 import kotlinx.html.*
@@ -117,7 +118,7 @@ private fun FlowContent.mailCard() = decoration("gf-card gf-mailcard") {
     p("gf-kicker") { +"Inbox · just now" }
     heading(Level.H3, "gf-mailcard__subject") { +"Your Boardfest code: 482913" }
     p("gf-mailcard__code") { +"482913" }
-    p("gf-muted gf-small") { +"Type it in the app, or tap the button. It works once, for 15 minutes." }
+    p("gf-muted gf-small") { +"Type it in the app, or tap the button. It works once, for ${LoginAttempt.TTL.toMinutes()} minutes." }
     span("gf-mailcard__link") { +"Log me in" }
 }
 
@@ -131,7 +132,7 @@ fun HTML.confirmLinkPage(email: String, token: String) = authHero("Log in", "Sig
 }
 
 fun HTML.deadLinkPage() = authHero("Link expired", "Sign in", "This link has expired") {
-    p("gf-lede gf-muted") { +"Login links work once, for 15 minutes. Ask for a fresh one and you're in." }
+    p("gf-lede gf-muted") { +"Login links work once, for ${LoginAttempt.TTL.toMinutes()} minutes. Ask for a fresh one and you're in." }
     div("gf-signin") { linkButton("/login", "Send me a new code", ButtonStyle.PRIMARY, ButtonSize.LARGE) }
 }
 

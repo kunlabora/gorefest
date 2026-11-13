@@ -9,7 +9,7 @@ import java.time.Instant
  */
 data class LoginAttempt(val expiresAt: Instant, val usedAt: Instant? = null, val wrongCodes: Int = 0) {
     companion object {
-        val TTL: Duration = Duration.ofMinutes(15)
+        val TTL: Duration = Duration.ofMinutes(60)
         const val MAX_WRONG_CODES = 5
 
         fun startingAt(now: Instant) = LoginAttempt(expiresAt = now + TTL)

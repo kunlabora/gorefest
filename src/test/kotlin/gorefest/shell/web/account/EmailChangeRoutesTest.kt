@@ -19,6 +19,7 @@ import io.ktor.http.parameters
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import java.time.Duration
 import kotlin.uuid.Uuid
 
 class EmailChangeRoutesTest {
@@ -53,6 +54,28 @@ class EmailChangeRoutesTest {
         test.mailbox.latestTo("kim@example.com")!!.text shouldContain "kim.new@example.com"
         client.get("/account").page().one("#email-change").text() shouldContain "New email address"
         client.get("/account?emailChanged=1").page().text() shouldContain "That's your address now"
+    }
+
+    @Test
+    @Obligation("ACC-37")
+    fun `the email-change code works for 60 minutes, as the mail and the page say`() = test.webTest(session = kim) { client ->
+        client.ask("kim.new@example.com")
+        test.mailbox.latestTo("kim.new@example.com")!!.text shouldContain "It works once, for the next 60 minutes."
+        client.get("/account/email").page().one(".gf-lede").text() shouldContain "It works for 60 minutes."
+
+        test.clock.advance(Duration.ofMinutes(59))
+        client.confirm(codeFor("kim.new@example.com")).location shouldBe "/account?emailChanged=1"
+    }
+
+    @Test
+    @Obligation("ACC-37")
+    fun `after 60 minutes the email-change code is refused`() = test.webTest(session = kim) { client ->
+        client.ask("kim.new@example.com")
+        test.clock.advance(Duration.ofMinutes(60))
+
+        client.confirm(codeFor("kim.new@example.com")).location shouldBe null
+        emailOfKim() shouldBe "kim@example.com"
+        app.emailChange.pending(kimId) shouldBe null
     }
 
     @Test

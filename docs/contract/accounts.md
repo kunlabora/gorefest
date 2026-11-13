@@ -11,7 +11,8 @@ Signing in, sessions, new accounts, the account page and changing an email addre
 - **ACC-3** Asking with an email address sends one mail holding a 6-digit code, also in the subject, and a link, and the code page shows where the mail went.
 - **ACC-4** The link opens a confirm page and logs in only on a tap, so a mail scanner opening it can't use it up.
 - **ACC-5** A code or a link logs in once, and using one kills the other.
-- **ACC-6** Codes and links expire after 15 minutes.
+- ~~**ACC-6**~~ Codes and links expire after 15 minutes, dropped 2026-11-13: slow mail delivery (Scaleway TEM took up to 32 minutes) left people with dead codes (ACC-37).
+- **ACC-37** Login codes and links, and email-change codes, expire after 60 minutes, and every mail and page that mentions it says so.
 - **ACC-7** Five wrong codes lock the attempt, even for the right code and the link.
 - **ACC-8** At most five login mails go to one email and twenty to one internet address per hour, even when requests arrive at once; a mail that failed to send doesn't count.
 - **ACC-9** A refused email address re-renders the form with what was typed, keeping an invite's own wording, and "send it again" mails a fresh code for the same email and destination.

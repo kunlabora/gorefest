@@ -227,14 +227,19 @@ class AuthRoutesTest {
     }
 
     @Test
-    @Obligation("ACC-6")
-    fun `codes and links expire after 15 minutes`() = test.webTest { client ->
+    @Obligation("ACC-37")
+    fun `codes and links expire after 60 minutes, and the mail and pages say so`() = test.webTest { client ->
         client.askForCode()
-        test.clock.advance(LoginAttempt.TTL)
+        mailbox.latestTo("kim@example.com")!!.text shouldContain "The code and the link work once, for the next 60 minutes."
+        client.get(firstAttempt).page().one(".gf-mailcard").text() shouldContain "It works once, for 60 minutes."
+        test.clock.advance(Duration.ofMinutes(60))
 
-        client.get(link()).page().one("h1").text() shouldBe "This link has expired"
+        client.get(link()).page().let { dead ->
+            dead.one("h1").text() shouldBe "This link has expired"
+            dead.one(".gf-lede").text() shouldBe "Login links work once, for 60 minutes. Ask for a fresh one and you're in."
+        }
         client.htmxPost("/login/code", parameters { append("attempt", "00000000-0000-0000-0000-000000000001"); append("code", code()) })
-            .fragment().one(".gf-error").text() shouldBe "That code has expired. Codes work for 15 minutes, so send it again for a fresh one."
+            .fragment().one(".gf-error").text() shouldBe "That code has expired. Codes work for 60 minutes, so send it again for a fresh one."
     }
 
     @Test

@@ -92,7 +92,7 @@ class Login(
                     |Or tap this link to log in:
                     |${config.baseUrl}/login/link?token=$token
                     |
-                    |The code and the link work once, for the next 15 minutes.
+                    |The code and the link work once, for the next ${LoginAttempt.TTL.toMinutes()} minutes.
                     |Didn't ask for this? Then you can ignore this mail.
                     """.trimMargin(),
                 sentAt = clock.instant(),

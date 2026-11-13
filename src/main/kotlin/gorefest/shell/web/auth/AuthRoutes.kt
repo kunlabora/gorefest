@@ -1,5 +1,6 @@
 package gorefest.shell.web.auth
 
+import gorefest.core.auth.LoginAttempt
 import io.ktor.http.Parameters
 import gorefest.core.auth.LoginCheck
 import gorefest.core.PlayerId
@@ -139,7 +140,7 @@ private fun sessionCookie(value: String, maxAgeSeconds: Int) = Cookie(
 private fun LoginCheck.message() = when (this) {
     is LoginCheck.WrongCode -> "That code doesn't match. ${triesLeft.inWords()} more ${if (triesLeft == 1) "try" else "tries"}, then you'll need a fresh code."
     LoginCheck.TooManyTries -> "Too many wrong codes. Send it again for a fresh one."
-    LoginCheck.Expired -> "That code has expired. Codes work for 15 minutes, so send it again for a fresh one."
+    LoginCheck.Expired -> "That code has expired. Codes work for ${LoginAttempt.TTL.toMinutes()} minutes, so send it again for a fresh one."
     LoginCheck.AlreadyUsed -> "That code was already used. Send it again for a fresh one."
     LoginCheck.Ok -> error("Not a failure")
 }

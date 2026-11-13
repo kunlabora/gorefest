@@ -12,11 +12,11 @@ class LoginAttemptTest {
 
     @Test
     @Obligation("ACC-5")
-    fun `a right code within 15 minutes logs in and uses up the attempt`() {
-        val (check, attempt) = fresh.checkCode(now + Duration.ofMinutes(14), codeMatches = true)
+    fun `a right code before it expires logs in and uses up the attempt`() {
+        val (check, attempt) = fresh.checkCode(now + Duration.ofMinutes(59), codeMatches = true)
 
         check shouldBe LoginCheck.Ok
-        attempt.usedAt shouldBe now + Duration.ofMinutes(14)
+        attempt.usedAt shouldBe now + Duration.ofMinutes(59)
     }
 
     @Test
@@ -29,9 +29,12 @@ class LoginAttemptTest {
     }
 
     @Test
-    @Obligation("ACC-6")
-    fun `after 15 minutes the attempt has expired`() {
-        val later = now + LoginAttempt.TTL
+    @Obligation("ACC-37")
+    fun `the attempt works for 59 minutes and has expired after 60`() {
+        fresh.checkLink(now + Duration.ofMinutes(59)).check shouldBe LoginCheck.Ok
+        fresh.checkCode(now + Duration.ofMinutes(59), codeMatches = true).check shouldBe LoginCheck.Ok
+
+        val later = now + Duration.ofMinutes(60)
 
         fresh.checkCode(later, codeMatches = true).check shouldBe LoginCheck.Expired
         fresh.checkLink(later).check shouldBe LoginCheck.Expired

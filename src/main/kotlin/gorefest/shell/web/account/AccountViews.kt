@@ -1,5 +1,6 @@
 package gorefest.shell.web.account
 
+import gorefest.core.auth.LoginAttempt
 import gorefest.shell.account.OpenRequest
 import gorefest.shell.account.RequestKind
 import gorefest.shell.web.CurrentPlayer
@@ -133,7 +134,7 @@ fun HTML.emailCodePage(newEmail: String, error: String? = null) = page("Confirm 
         div("gf-split__copy") {
             p("gf-kicker") { +"Your email" }
             pageHeading("Check your mail")
-            p("gf-lede gf-muted") { +"We sent a 6-digit code to "; strong { +newEmail }; +". It works for 15 minutes." }
+            p("gf-lede gf-muted") { +"We sent a 6-digit code to "; strong { +newEmail }; +". It works for ${LoginAttempt.TTL.toMinutes()} minutes." }
             form(action = "/account/email/confirm", method = FormMethod.post, classes = if (error != null) "gf-signin gf-field--invalid" else "gf-signin") {
                 id = "email-code"
                 signinField(

@@ -68,10 +68,13 @@ class LoginTest {
     }
 
     @Test
-    @Obligation("ACC-6")
-    fun `an attempt expires after 15 minutes`() = runBlocking<Unit> {
+    @Obligation("ACC-37")
+    fun `an attempt still works after 59 minutes and expires after 60`() = runBlocking<Unit> {
         val id = attemptId()
-        clock.advance(Duration.ofMinutes(15))
+        clock.advance(Duration.ofMinutes(59))
+        login.emailForLink(token()) shouldBe email
+
+        clock.advance(Duration.ofMinutes(1))
         login.withCode(id, code()).shouldBeInstanceOf<LoginResult.Failed>().check shouldBe LoginCheck.Expired
         login.withLink(token()).shouldBeInstanceOf<LoginResult.Failed>().check shouldBe LoginCheck.Expired
     }
