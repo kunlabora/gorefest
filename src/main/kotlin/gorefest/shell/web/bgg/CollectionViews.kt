@@ -67,13 +67,7 @@ fun TagConsumer<*>.collectionItem(game: Game, canExplain: Boolean, announcement:
     id = rowId
     if (announcement != null) announce(announcement)
     gameRow(game, level = Level.H2) {
-        chipToggle("I can explain this", pressed = canExplain, says = "I can explain ${game.name}") {
-            id = "$rowId-explain"
-            hx("post", "/collection/${game.id}/explain")
-            hx("vals", """{"canExplain": "${!canExplain}"}""")
-            hx("target", "#$rowId")
-            hx("swap", "outerHTML")
-        }
+        explainToggle(game, canExplain, "/collection/${game.id}/explain", rowId)
     }
 }
 

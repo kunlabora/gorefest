@@ -232,6 +232,19 @@ private fun FlowContent.answer(value: String, label: String, iconName: String, g
         +label
     }
 
+/**
+ * "I can explain this" on a game row (U22): posts the other answer to [action] and swaps the row [rowId] for the answer,
+ * so the toggle keeps an id and focus comes back to it.
+ */
+fun FlowContent.explainToggle(game: Game, canExplain: Boolean, action: String, rowId: String) =
+    chipToggle("I can explain this", pressed = canExplain, says = "I can explain ${game.name}") {
+        id = "$rowId-explain"
+        hx("post", action)
+        hx("vals", """{"canExplain": "${!canExplain}"}""")
+        hx("target", "#$rowId")
+        hx("swap", "outerHTML")
+    }
+
 /** What an "I can explain this" toggle announces once it saved (U22). */
 fun explainAnnouncement(game: Game, canExplain: Boolean) =
     if (canExplain) "You can explain ${game.name}" else "${game.name} is no longer marked as one you can explain"

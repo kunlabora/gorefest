@@ -196,13 +196,7 @@ fun TagConsumer<*>.wishItem(gameDay: GameDaySummary, row: WishRow, error: String
         if (row.wishers > 0) span("gf-small gf-muted") { +"${row.wishers.of("person", "people")} want${if (row.wishers == 1) "s" else ""} this" }
     }
     div("gf-wish") {
-        chipToggle("I can explain this", pressed = row.canExplain, says = "I can explain ${row.game.name}") {
-            id = "$rowId-explain"
-            hx("post", "/gamedays/${gameDay.id}/shelf/${row.game.id}/explain")
-            hx("vals", """{"canExplain": "${!row.canExplain}"}""")
-            hx("target", "#$rowId")
-            hx("swap", "outerHTML")
-        }
+        explainToggle(row.game, row.canExplain, "/gamedays/${gameDay.id}/shelf/${row.game.id}/explain", rowId)
         if (row.explainers.isNotEmpty()) span("gf-small gf-muted") { +canExplainText(row.explainers) }
     }
     if (error != null) fieldError(error)

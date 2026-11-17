@@ -77,9 +77,9 @@ fun Route.collectionRoutes(app: App) {
     }
 }
 
-private suspend fun collectionView(app: App, me: CurrentPlayer) = CollectionView(
-    sync = app.collectionSync.status(me.id),
-    games = app.collectionSync.collection(me.id).mapNotNull(app.catalog::get).sortedBy { it.name.lowercase() },
-    explains = app.explainers.gamesOf(me.id),
-    explainsElsewhere = (app.explainers.gamesOf(me.id) - app.collectionSync.collection(me.id)).mapNotNull(app.catalog::get).sortedBy { it.name.lowercase() },
-)
+private suspend fun collectionView(app: App, me: CurrentPlayer): CollectionView {
+    val owned = app.collectionSync.collection(me.id)
+    val explains = app.explainers.gamesOf(me.id)
+    fun games(ids: Set<BggId>) = ids.mapNotNull(app.catalog::get).sortedBy { it.name.lowercase() }
+    return CollectionView(app.collectionSync.status(me.id), games(owned), explains, explainsElsewhere = games(explains - owned))
+}

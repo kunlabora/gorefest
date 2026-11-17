@@ -65,11 +65,8 @@ fun Route.checkpointRoutes(app: App) {
         authenticated {
             val me = contextOf<CurrentPlayer>()
             val gameDay = memberGameDay(app, me) ?: return@authenticated call.respond(HttpStatusCode.NotFound)
-            val shelf = logChoices(app, gameDay)
             val game = call.parameters["game"]?.toIntOrNull()?.let(::BggId)?.let(app.catalog::get)
-            // A game from a suggestion is on the shelf; one logged again after removing it may have come from a search.
-            val offShelf = listOfNotNull(game?.takeIf { g -> shelf.none { it.id == g.id } })
-            val view = LogFormView(gameDay, shelf + offShelf, login.names(gameDay.players), offShelf.map { it.id })
+            val view = logFormView(app, gameDay, game)
             val values = logValues(app, gameDay, me, game)
             val removed = game?.name?.takeIf { call.parameters["removed"] == "true" }
             call.respondHtml { logPage(view, checkpointLabel(gameDay, app.clock), me, values, removed) }
@@ -97,15 +94,12 @@ fun Route.checkpointRoutes(app: App) {
             val game = form["game"]?.toIntOrNull()?.let(::BggId)?.let(app.catalog::get)
             val players = form.getAll("players").orEmpty().mapNotNull { runCatching { PlayerId(Uuid.parse(it)) }.getOrNull() }
             val minutes = DURATIONS.firstOrNull { it.first == form["duration"] }?.second ?: 0
-            // A game that isn't on the shelf can be logged too (found by search): keep its tile when the form comes back.
-            val shelf = logChoices(app, gameDay)
-            val offShelf = listOfNotNull(game?.takeIf { g -> shelf.none { it.id == g.id } })
-            val view = LogFormView(gameDay, shelf + offShelf, login.names(gameDay.players), offShelf.map { it.id })
+            val view = logFormView(app, gameDay, game)
             if (game == null) return@authenticated respondFragment { logForm(view, me, form, "Pick the game you played") }
             val log = PlayLogged(gameDay.id, game.id, players, minutes, me.id, app.clock.instant())
             when (val decision = app.commands.handle(LogPlayDecider, LogPlay(log, game.minPlayers))) {
                 // Logging the same game again, by whoever was asked about it the first time, asks nothing more (U23).
-                is Decision.Accepted -> if (form["again"] == game.id.toString()) redirect(tableLink(gameDay, players.filter { it in gameDay.players }.distinct()))
+                is Decision.Accepted -> if (form["again"] == game.id.toString()) redirect(tableLink(gameDay, form.playersAt(gameDay)))
                 else redirect("/gamedays/${gameDay.id}/log/compare?game=${game.id}&minutes=$minutes&${players.joinToString("&") { "players=$it" }}")
                 is Decision.Rejected -> respondFragment { logForm(view, me, form, decision.reason.message()) }
             }
@@ -117,8 +111,7 @@ fun Route.checkpointRoutes(app: App) {
             val me = contextOf<CurrentPlayer>()
             val gameDay = memberGameDay(app, me) ?: return@authenticated call.respond(HttpStatusCode.NotFound)
             val game = call.parameters["game"]?.toIntOrNull()?.let(::BggId)?.let(app.catalog::get) ?: return@authenticated redirect("/gamedays/${gameDay.id}")
-            val players = call.parameters.getAll("players").orEmpty()
-                .mapNotNull { runCatching { PlayerId(Uuid.parse(it)) }.getOrNull() }.filter { it in gameDay.players }.distinct()
+            val players = call.parameters.playersAt(gameDay)
             val minutes = call.parameters["minutes"]?.toIntOrNull()?.takeIf { it in 0..MAX_MINUTES } ?: 0
             val tableLink = tableLink(gameDay, players)
             // "Which did you enjoy more?" is about your own play: logging someone else's table asks nothing.
@@ -181,6 +174,20 @@ fun Route.checkpointRoutes(app: App) {
     watchedRoutes(app)
 }
 
+/** The players named in [this] who are at [gameDay], each once. */
+private fun Parameters.playersAt(gameDay: GameDaySummary) = getAll("players").orEmpty().mapNotNull { runCatching { PlayerId(Uuid.parse(it)) }.getOrNull() }.filter { it in gameDay.players }.distinct()
+
+/**
+ * The log form's games: the shelf, plus [game] if it isn't on it (found by search, or a removed play's) so its tile
+ * stays when the form comes back.
+ */
+context(login: Login)
+private suspend fun logFormView(app: App, gameDay: GameDaySummary, game: Game?): LogFormView {
+    val shelf = logChoices(app, gameDay)
+    val offShelf = listOfNotNull(game?.takeIf { g -> shelf.none { it.id == g.id } })
+    return LogFormView(gameDay, shelf + offShelf, login.names(gameDay.players), offShelf.map { it.id })
+}
+
 /** After logging: suggestions for that table, or the hub once the game day is over (no next game to pick there). */
 private fun tableLink(gameDay: GameDaySummary, players: List<PlayerId>) = if (gameDay.ended) "/gamedays/${gameDay.id}"
 else "/gamedays/${gameDay.id}/table?" + players.joinToString("&") { "players=${it.toString().urlEncoded()}" }
@@ -190,7 +197,7 @@ else "/gamedays/${gameDay.id}/table?" + players.joinToString("&") { "players=${i
  * otherwise the table of my last play on this game day; otherwise just me. Nobody outside the game day, no unknown length.
  */
 private fun RoutingContext.logValues(app: App, gameDay: GameDaySummary, me: CurrentPlayer, game: Game?): Parameters {
-    val asked = call.parameters.getAll("players").orEmpty().mapNotNull { runCatching { PlayerId(Uuid.parse(it)) }.getOrNull() }.filter { it in gameDay.players }.distinct()
+    val asked = call.parameters.playersAt(gameDay)
     val lastTable = app.plays.on(gameDay.id).lastOrNull { me.id in it.players }?.players?.filter { it in gameDay.players }
     val players = asked.ifEmpty { lastTable.orEmpty() }
     val duration = call.parameters["duration"]?.takeIf { d -> DURATIONS.any { it.first == d } }
