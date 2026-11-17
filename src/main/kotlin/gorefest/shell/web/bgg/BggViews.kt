@@ -26,7 +26,12 @@ fun HTML.bggPage(returnTo: String, linked: String?, me: CurrentPlayer) = page("L
 
 /** In the login's hero pattern: the username and its button in one row on a wide screen. */
 fun TagConsumer<*>.linkForm(returnTo: String, username: String = "", error: String? = null) =
-    bggForm("/bgg/username", returnTo, "gf-bgg gf-bgg--username", "Link your BGG account") {
+    form(action = "/bgg/username", method = FormMethod.post, classes = "gf-bgg") {
+        id = "bgg-form"
+        announce("Link your BGG account")
+        hx("post", "/bgg/username")
+        hx("swap", "outerHTML")
+        hiddenInput("returnTo", returnTo)
         div("gf-bgg__copy") {
             p("gf-kicker") { +"Link BoardGameGeek" }
             pageHeading("Link your BGG account")
@@ -46,14 +51,4 @@ fun TagConsumer<*>.linkForm(returnTo: String, username: String = "", error: Stri
                 p("gf-hint") { a(returnTo, classes = "gf-link") { +"Not now" } }
             }
         }
-    }
-
-private fun TagConsumer<*>.bggForm(action: String, returnTo: String, classes: String, announcement: String, content: FORM.() -> Unit) =
-    form(action = action, method = FormMethod.post, classes = classes) {
-        id = "bgg-form"
-        announce(announcement)
-        hx("post", action)
-        hx("swap", "outerHTML")
-        hiddenInput("returnTo", returnTo)
-        content()
     }
