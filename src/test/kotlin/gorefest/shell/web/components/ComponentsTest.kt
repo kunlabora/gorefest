@@ -4,15 +4,11 @@ import gorefest.contract.Obligation
 import gorefest.core.BggId
 import gorefest.core.game.Game
 import gorefest.shell.web.DEFAULT_TIME_ZONE
-import gorefest.shell.web.bgg.codeStep
 import gorefest.shell.web.components.initials
 import gorefest.shell.web.zoneOrDefault
 import io.kotest.matchers.shouldBe
 import kotlinx.html.div
 import kotlinx.html.stream.createHTML
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
 import org.jsoup.Jsoup
 import org.junit.jupiter.api.Test
 
@@ -42,17 +38,6 @@ class ComponentsTest {
         hostile.attr("style").count { it == '\'' } shouldBe 2
 
         art("javascript:alert(1)").hasClass("gf-art--missing") shouldBe true
-    }
-
-    @Test
-    @Obligation("WEB-11")
-    fun `the dev BGG button carries its values as valid JSON, whatever is in them`() {
-        val html = createHTML().apply { codeStep("/", "a\"b'c", "x\"y", dev = true) }.finalize()
-        val vals = Jsoup.parseBodyFragment(html).selectFirst("#dev-bgg button")!!.attr("hx-vals")
-        val json = Json.parseToJsonElement(vals).jsonObject
-
-        json["username"]!!.jsonPrimitive.content shouldBe "a\"b'c"
-        json["code"]!!.jsonPrimitive.content shouldBe "x\"y"
     }
 
     @Test

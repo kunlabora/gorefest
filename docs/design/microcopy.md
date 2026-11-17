@@ -89,6 +89,6 @@ One line, about 60 characters, naming people where it helps:
 - Taste round hints: **A / B** to pick · **1** both great · **2** both meh
 - Pick a game: **Who's at the table?** · **How long?** · **Play this** · phone bar "n at the table" with **Change**
 - Log a play: steps **The game** · **Who played?** · **Roughly how long?** · summary "You're logging" · **Log it** · "Then one quick question about it."
-- Link BGG: step 1 **Link your BGG account** · **Next** · **Not now**; step 2 **Prove it's your account** · **I've added it** · "Checking as {name} · Wrong username?". After linking, with somewhere to go: **Back to bringing games** (else **Carry on**).
+- Link BGG: **Link your BGG account** · "Type your BGG username and your collection comes along, so you can bring games straight from it." · **Link** · **Not now** · hint "Sharing a collection at home? You can both link the same account." After linking, with somewhere to go: **Back to bringing games** (else **Carry on**).
 - Find a date: tag **Most can come** · buttons **Pick this date** (the best one) and **Pick this one** · "n can · x can't · k haven't answered"
 - Check your mail: kicker **Step 2 of 2** · **Check your mail** · button **Let me in** · "No mail after a minute? Send it again · Change email"

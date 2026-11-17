@@ -39,16 +39,7 @@ class ErasePlayerTest {
     }
 
     @Test
-    @Obligation("PR-5", "BGG-8")
-    fun `an erased player's BGG username can be linked by someone else`() {
-        LinkBggAccountDecider
-            .given(BggAccountLinkedHashed(bram, "key-of-bramplays"), PlayerErased(bram))
-            .whenever(LinkBggAccount(anna, "bramplays", "key-of-bramplays"))
-            .thenEmits(BggAccountLinkedHashed(anna, "key-of-bramplays"))
-    }
-
-    @Test
-    @Obligation("PR-5")
+    @Obligation("PR-29")
     fun `an erased player's link is gone from the BGG accounts`() {
         val state = listOf(BggAccountLinked(anna, "AnnaPlays"), BggAccountLinkedHashed(bram, "key-of-bramplays"), PlayerErased(anna))
             .fold(BggAccounts.initialState, BggAccounts::evolve)

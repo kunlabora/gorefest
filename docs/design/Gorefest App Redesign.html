@@ -925,14 +925,13 @@ code { font: 600 .88em/1 ui-monospace, "SF Mono", Menlo, monospace; background: 
     <div class="design__head">
       <div class="design__title">
         <span class="tag">10 · Link BGG</span>
-        <h2>The verification as three illustrated steps</h2>
-        <p>The slowest, most confusing screen in the app: it asks you to leave and edit a profile elsewhere.</p>
+        <h2>One field, linked at once (U21)</h2>
+        <p>Type the BGG username and your collection comes along. No code, no trip to BGG.</p>
       </div>
       <ul class="notes">
-        <li><strong>The code is the headline object.</strong> A big dashed copy box with the six characters, copy button attached, instead of a line in a paragraph.</li>
-        <li><strong>The screenshot moves beside the steps</strong> (desktop) so you see where to click while you read; each step is a numbered disc, the same as the login's how-it-works.</li>
-        <li><strong>"I've added it" is the one brand fill</strong>, with its own row so it does not hide under a dock.</li>
-        <li class="was">Was: a paragraph, a small image, a dock button.</li>
+        <li><strong>The login's hero pattern:</strong> the field and its button in one row on a wide screen.</li>
+        <li><strong>Nobody proves the account is theirs.</strong> Collections are public on BGG and the group is invite-only, so a shared household account can be linked by both.</li>
+        <li class="was">Was (until 2026-11-17): a second step with a <code>GORE-</code> code to paste into the BGG profile. A new player gave up there.</li>
       </ul>
     </div>
     <div class="viewport"><div class="device"><div class="chrome"><i></i><i></i><i></i><span>gorefest.kunlabora.ninja/bgg</span></div>
@@ -941,18 +940,12 @@ code { font: 600 .88em/1 ui-monospace, "SF Mono", Menlo, monospace; background: 
         <main class="wrap grow">
           <div class="hero">
             <div class="hero__copy">
-              <p class="kicker">Link BoardGameGeek · step 2 of 2</p>
-              <h1 class="h1">Prove it's your account</h1>
-              <p class="lede">BGG has no "sign in with". Put this code in your BGG profile, tell us when it's there, and your collection comes along.</p>
-              <div class="code" style="width:100%;max-width:420px"><b>GF-7K2Q9</b><a class="btn btn--secondary btn--sm" href="#">Copy</a></div>
-              <a class="btn btn--primary btn--lg" href="#">I've added it</a>
-              <p class="hint">Checking as <strong>kimplays</strong> · <a href="#" style="text-decoration:underline">Wrong username?</a></p>
+              <p class="kicker">Link BoardGameGeek</p>
+              <h1 class="h1">Link your BGG account</h1>
+              <p class="lede">Type your BGG username and your collection comes along, so you can bring games straight from it.</p>
+              <div class="field" style="width:100%;max-width:520px"><label for="b-user">BGG username</label><div class="inline"><input class="input" id="b-user" value="kimplays" tabindex="-1"><button class="btn btn--primary btn--lg" type="button" tabindex="-1">Link</button></div><p class="hint">Sharing a collection at home? You can both link the same account.</p></div>
+              <p class="hint"><a href="#" style="text-decoration:underline">Not now</a></p>
             </div>
-            <ol class="steps">
-              <li><span class="num">1</span><h3>Open your BGG profile settings</h3><p class="muted">Log in to BoardGameGeek, then Profile → Edit.</p></li>
-              <li><span class="num">2</span><h3>Paste the code into "Website"</h3><p class="muted">Contact Information → Website/Homepage. BGG asks for your password to save, which is how we know it's you.</p><div class="body"><div class="shot"><img src="../../src/main/resources/static/bgg-profile-code.webp" alt="Where the code goes on BGG's profile page"></div></div></li>
-              <li><span class="num">3</span><h3>Come back and tap the button</h3><p class="muted">You can remove the code from your profile afterwards.</p></li>
-            </ol>
           </div>
         </main>
         <footer class="footer"><span class="bgg">POWERED BY <b>BGG</b></span><span class="ver">v1.0.0</span></footer>

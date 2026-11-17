@@ -25,7 +25,7 @@ What every page promises, whatever the feature.
 ## Components
 
 - **WEB-10** Box art only loads from the web or our own static files, and a hostile image address can't break out of the page.
-- **WEB-11** Values a button sends stay valid whatever characters they hold.
+- ~~**WEB-11**~~ Values a button sends stay valid whatever characters they hold, dropped 2026-11-17: the only button that sent free text (the dev BGG profile button) is gone; the rest send ids, dates and flags.
 - **WEB-12** Avatars show initials made of whole characters, and an emoji alone doesn't count as a word.
 - **WEB-13** A game's facts show its playtime range and player count, or its typical time when the range is wild.
 - **WEB-14** A game's type shows as one or two telling words from its categories and mechanics.

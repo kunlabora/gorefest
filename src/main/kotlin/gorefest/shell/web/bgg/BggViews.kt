@@ -2,10 +2,7 @@ package gorefest.shell.web.bgg
 
 import gorefest.shell.web.CurrentPlayer
 import gorefest.shell.web.components.*
-import gorefest.shell.web.urlEncoded
 import kotlinx.html.*
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 
 /** The collection nav item is current: linking BGG is how you get a collection. */
 fun HTML.bggPage(returnTo: String, linked: String?, me: CurrentPlayer) = page("Link BGG", site = SiteBar(me, Nav.COLLECTION)) {
@@ -22,22 +19,23 @@ fun HTML.bggPage(returnTo: String, linked: String?, me: CurrentPlayer) = page("L
                 }
             }
         } else {
-            consumer.usernameStep(returnTo)
+            consumer.linkForm(returnTo)
         }
     }
 }
 
-/** Step 1, in the login's hero pattern: the username and its button in one row on a wide screen. */
-fun TagConsumer<*>.usernameStep(returnTo: String, username: String = "", error: String? = null) =
-    bggForm("/bgg/username", returnTo, "gf-bgg gf-bgg--username", "Step 1 of 2: your BGG username") {
+/** In the login's hero pattern: the username and its button in one row on a wide screen. */
+fun TagConsumer<*>.linkForm(returnTo: String, username: String = "", error: String? = null) =
+    bggForm("/bgg/username", returnTo, "gf-bgg gf-bgg--username", "Link your BGG account") {
         div("gf-bgg__copy") {
-            p("gf-kicker") { +"Link BoardGameGeek · step 1 of 2" }
+            p("gf-kicker") { +"Link BoardGameGeek" }
             pageHeading("Link your BGG account")
-            p("gf-lede gf-muted") { +"Then you can bring games straight from your BoardGameGeek collection." }
+            p("gf-lede gf-muted") { +"Type your BGG username and your collection comes along, so you can bring games straight from it." }
             div(if (error != null) "gf-signin gf-field--invalid" else "gf-signin") {
                 signinField(
                     "username", "BGG username", error = error,
-                    action = { actionButton("Next", ButtonStyle.PRIMARY, ButtonSize.LARGE, submit = true, spinner = true) },
+                    hint = "Sharing a collection at home? You can both link the same account.",
+                    action = { actionButton("Link", ButtonStyle.PRIMARY, ButtonSize.LARGE, submit = true, spinner = true) },
                 ) {
                     fieldInput("username") {
                         value = username
@@ -49,52 +47,6 @@ fun TagConsumer<*>.usernameStep(returnTo: String, username: String = "", error: 
             }
         }
     }
-
-/** Step 2: the code to paste into the BGG profile. In dev mode with the fake BGG, a button does the pasting. */
-fun TagConsumer<*>.codeStep(returnTo: String, username: String, code: String, dev: Boolean, error: String? = null) =
-    bggForm("/bgg/verify", returnTo, "gf-bgg gf-bgg--code", "Step 2 of 2: prove it's your account") {
-        hiddenInput("username", username)
-        div("gf-bgg__copy") {
-            p("gf-kicker") { +"Link BoardGameGeek · step 2 of 2" }
-            pageHeading("Prove it's your account")
-            p("gf-lede gf-muted") {
-                +"BGG has no \"sign in with\". Put this code in your BGG profile, tell us when it's there, and your collection comes along."
-            }
-            copyBox(code)
-            if (dev) notice("dice", id = "dev-bgg") {
-                +"Dev mode uses a fake BGG. "
-                textButton("Put the code in the fake profile") {
-                    hx("post", "/dev/bgg/profile")
-                    hx("vals", Json.encodeToString(mapOf("username" to username, "code" to code)))
-                    hx("target", "#dev-bgg")
-                    hx("swap", "outerHTML")
-                }
-            }
-            if (error != null) div("gf-field gf-field--invalid") { fieldError(error) }
-            actionButton("I've added it", ButtonStyle.PRIMARY, ButtonSize.LARGE, submit = true, spinner = true)
-            p("gf-hint") {
-                +"Checking as "; strong { +username }; +" · "
-                a("/bgg?returnTo=${returnTo.urlEncoded()}", classes = "gf-link") { +"Wrong username?" }
-            }
-        }
-        stepper {
-            step(1, "Open your BGG profile settings", text = {
-                +"Log in to BoardGameGeek, then open your profile settings and find the "; strong { +"Contact Information" }; +" section."
-            })
-            step(2, "Paste the code into \"Website\"", text = {
-                +"Paste it into the "; strong { +"Website/Homepage" }; +" field, like in the picture. BGG asks for your BGG password to save contact information; that's BGG checking it's you, we never see it."
-            }) {
-                div("gf-bgg__shot") {
-                    image("/static/bgg-profile-code.webp", Alt.Text("BGG's Contact Information form, with the code pasted into the Website/Homepage field"), classes = "gf-howto") {
-                        width = "660"; height = "195"; attributes["loading"] = "lazy"
-                    }
-                }
-            }
-            step(3, "Come back and tap the button", text = { +"Afterwards you can clear the field again." })
-        }
-    }
-
-fun TagConsumer<*>.devProfileFilled() = p("gf-small") { id = "dev-bgg"; +"Done: the fake BGG profile has the code. Now tap \"I've added it\"." }
 
 private fun TagConsumer<*>.bggForm(action: String, returnTo: String, classes: String, announcement: String, content: FORM.() -> Unit) =
     form(action = action, method = FormMethod.post, classes = classes) {

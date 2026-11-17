@@ -38,7 +38,6 @@ fun Rejection.message(): String = when (this) {
     Rejection.ImplausibleDuration -> "That doesn't look like a real duration"
     Rejection.SameGameTwice -> "Compare two different games"
     Rejection.AlreadyLinked -> "You've already linked a BGG account"
-    Rejection.BggAccountTaken -> "That BGG account is already linked to another player"
     Rejection.NoSuchPlayer -> "No such player"
     Rejection.NoSuchDatePoll -> "No such date poll"
     Rejection.DatePollAlreadyExists -> "That date poll already exists"

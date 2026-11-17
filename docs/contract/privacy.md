@@ -10,7 +10,7 @@ What the app promises the people it holds data about: erasure, their data file, 
 - **PR-2** The event log is never rewritten: an erasure is one more event, and the ids left in the log point at nobody.
 - **PR-3** Erasing someone twice, or someone who never registered, changes nothing.
 - **PR-4** After an erasure the same email address can sign up again, as a new person.
-- **PR-5** An erased player's BGG username is free for someone else to link.
+- ~~**PR-5**~~ An erased player's BGG username is free for someone else to link, dropped 2026-11-17: every username is free for anyone now (BGG-35); what is left of it is PR-29.
 - **PR-6** An erased player leaves the tables of game days still to be played; game days that are over keep their history.
 - **PR-7** On game days still to be played, an erased player's games and wishes leave the shelf and their bring requests, asked or asked of them, go away; closed game days keep them as history.
 - **PR-8** An erased player leaves every game night and date poll, and a date poll whose host was erased is over.
@@ -52,3 +52,4 @@ What the app promises the people it holds data about: erasure, their data file, 
 
 - **PR-27** Search engines are told to stay away: `robots.txt` disallows everything except Slack's link preview, every response says noindex, and every page carries a robots meta tag.
 - **PR-28** No page makes the browser call a third party for fonts.
+- **PR-29** An erased player no longer has a linked BGG account.

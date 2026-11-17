@@ -35,7 +35,7 @@ import gorefest.shell.auth.FallbackNotifier
 import gorefest.shell.auth.Mailer
 import gorefest.shell.bgg.BggApi
 import gorefest.shell.bgg.BggGateway
-import gorefest.shell.bgg.BggVerification
+import gorefest.shell.bgg.BggUsernameKey
 import gorefest.shell.bgg.Catalog
 import gorefest.shell.bgg.CollectionSync
 import gorefest.shell.bgg.GameSearch
@@ -115,7 +115,7 @@ class App(
     val invites = InviteLinks(config.secretKey)
     val titles = TitleGenerator(random)
     val bgg = BggGateway(bggApi, bggInterval)
-    val bggVerification = BggVerification(config.secretKey)
+    val bggUsernameKey = BggUsernameKey(config.secretKey)
     val catalog = Catalog(db)
     val collectionSync = CollectionSync(db, bgg, catalog, clock, scope, bggRetry)
     val gameSearch = GameSearch(catalog, bgg, clock)

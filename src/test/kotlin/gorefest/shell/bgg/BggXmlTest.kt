@@ -5,14 +5,13 @@ import gorefest.core.BggId
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.string.shouldContain
 import org.junit.jupiter.api.Test
 
 /** Fixtures follow the XML API2 format as documented; they're not captured from the live API. */
 class BggXmlTest {
     @Test
-    @Obligation("BGG-1")
-    fun `a user's profile fields are searchable text`() {
+    @Obligation("BGG-33")
+    fun `a known user has an id and BGG's spelling of the name`() {
         val user = BggXml.user(BggXml.parse("""
             <user id="123" name="AnnaPlays" termsofuse="https://boardgamegeek.com/xmlapi/termsofuse">
               <firstname value="Anna"/><lastname value=""/><avatarlink value="N/A"/>
@@ -21,7 +20,6 @@ class BggXmlTest {
 
         user.id shouldBe 123
         user.name shouldBe "AnnaPlays"
-        user.profileText shouldContain "GORE-ABC234"
     }
 
     @Test

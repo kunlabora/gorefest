@@ -16,50 +16,44 @@ import gorefest.core.eventsourcing.Query
 import gorefest.core.typeName
 
 /**
- * The shell has already seen [username]'s BGG profile carry this player's verification code.
- * [usernameKey] is the keyed hash of the lowercased username (shell: `BggVerification.usernameKey`): it is what
- * the log stores, so the name itself never is. [username] is only here to meet links written before that.
+ * The shell has checked that BGG knows [username]; nobody proves the account is theirs (U21).
+ * [usernameKey] is the keyed hash of the lowercased username (shell: `BggUsernameKey`): it is what the log stores, so
+ * the name itself never is. [username] is only here to meet links written before that.
  */
 data class LinkBggAccount(val player: PlayerId, val username: String, val usernameKey: String)
 
 /**
- * The boundary spans two tags: links of this player, and links of this username (under its old plain tag and its
- * hashed one). So two players racing for the same username conflict, and nobody else does.
+ * Only the player's own links count: several players may link the same BGG account (a shared collection), so nobody
+ * else's link can get in the way.
  */
 object LinkBggAccountDecider : Decider<LinkBggAccount, List<Event>, BggAccountLinkedHashed> {
-    /** State: every link, unlink and erasure inside the boundary, in order. */
+    /** State: the player's links, unlinks and erasure, in order. */
     override val initialState = emptyList<Event>()
 
     override fun query(command: LinkBggAccount) = Query.of(
-        Query.Item(setOf(typeName<BggAccountLinked>(), typeName<BggAccountLinkedHashed>(), typeName<BggAccountUnlinked>()), setOf(Tags.player(command.player))),
-        Query.Item(setOf(typeName<BggAccountLinked>()), setOf(Tags.bggUser(command.username))),
-        Query.Item(setOf(typeName<BggAccountLinkedHashed>()), setOf(Tags.bggUserKey(command.usernameKey))),
-        // Anyone's unlink or erasure frees their username.
-        Query.Item(setOf(typeName<PlayerErased>(), typeName<BggAccountUnlinked>()), emptySet()),
+        Query.Item(
+            setOf(typeName<BggAccountLinked>(), typeName<BggAccountLinkedHashed>(), typeName<BggAccountUnlinked>(), typeName<PlayerErased>()),
+            setOf(Tags.player(command.player)),
+        ),
     )
 
     override fun evolve(state: List<Event>, event: Event) =
         if (event is BggAccountLinked || event is BggAccountLinkedHashed || event is BggAccountUnlinked || event is PlayerErased) state + event else state
 
     override fun decide(command: LinkBggAccount, state: List<Event>): Decision<BggAccountLinkedHashed> {
-        // Whose link still holds: the latest one per player, until they unlink or are erased. Each as "is it this account?".
-        val active = mutableMapOf<PlayerId, Boolean>()
-        state.forEach { event ->
+        // The link that still holds, as "is it this account?": null when there is none.
+        val mine = state.fold(null as Boolean?) { linked, event ->
             when (event) {
-                is BggAccountLinked -> active[event.player] = event.username.equals(command.username, ignoreCase = true)
-                is BggAccountLinkedHashed -> active[event.player] = event.usernameKey == command.usernameKey
-                is BggAccountUnlinked -> active.remove(event.player)
-                is PlayerErased -> active.remove(event.player)
-                else -> Unit
+                is BggAccountLinked -> event.username.equals(command.username, ignoreCase = true)
+                is BggAccountLinkedHashed -> event.usernameKey == command.usernameKey
+                is BggAccountUnlinked, is PlayerErased -> null
+                else -> linked
             }
         }
-        val mine = active[command.player]
-        val taken = active.any { (player, same) -> player != command.player && same }
-        return when {
-            mine == true -> Accepted()
-            mine == false -> Rejected(Rejection.AlreadyLinked)
-            taken -> Rejected(Rejection.BggAccountTaken)
-            else -> Accepted(BggAccountLinkedHashed(command.player, command.usernameKey))
+        return when (mine) {
+            true -> Accepted()
+            false -> Rejected(Rejection.AlreadyLinked)
+            null -> Accepted(BggAccountLinkedHashed(command.player, command.usernameKey))
         }
     }
 }

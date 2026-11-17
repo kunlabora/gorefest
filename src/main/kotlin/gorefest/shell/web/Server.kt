@@ -2,13 +2,11 @@ package gorefest.shell.web
 
 import gorefest.shell.App
 import gorefest.shell.auth.DevMailbox
-import gorefest.shell.bgg.FakeBggApi
 import gorefest.shell.web.account.accountRoutes
 import gorefest.shell.web.privacy.privacyRoutes
 import gorefest.shell.web.auth.authRoutes
 import gorefest.shell.web.bgg.bggRoutes
 import gorefest.shell.web.bgg.collectionRoutes
-import gorefest.shell.web.bgg.devBggRoutes
 import gorefest.shell.web.checkpoint.checkpointRoutes
 import gorefest.shell.web.datepoll.datePollRoutes
 import gorefest.shell.web.gamenight.gameNightRoutes
@@ -162,6 +160,5 @@ fun Application.web(app: App) {
         context(app.login) { checkpointRoutes(app) }
         context(app.login, app.config) { readinessRoutes(app) }
         if (app.config.dev && app.mailer is DevMailbox) devRoutes(app.mailer)
-        if (app.config.dev && app.bggApi is FakeBggApi) devBggRoutes(app.bggApi)
     }
 }

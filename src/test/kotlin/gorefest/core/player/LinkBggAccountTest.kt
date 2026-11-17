@@ -4,6 +4,7 @@ import gorefest.contract.Obligation
 import gorefest.core.BggAccountLinked
 import gorefest.core.BggAccountLinkedHashed
 import gorefest.core.BggAccountUnlinked
+import gorefest.core.PlayerErased
 import gorefest.core.Rejection
 import gorefest.core.eventsourcing.given
 import gorefest.core.gameday.anna
@@ -20,21 +21,21 @@ class LinkBggAccountTest {
     }
 
     @Test
-    @Obligation("BGG-4")
-    fun `a username belongs to one player, whatever the case`() {
+    @Obligation("BGG-35")
+    fun `several players can link the same account, whatever the case`() {
         LinkBggAccountDecider
             .given(BggAccountLinkedHashed(bram, "key-of-annaplays"))
             .whenever(link(anna, "AnnaPlays"))
-            .thenRejects(Rejection.BggAccountTaken)
+            .thenEmits(BggAccountLinkedHashed(anna, "key-of-annaplays"))
     }
 
     @Test
-    @Obligation("BGG-4")
-    fun `a link written before names were hashed still holds its username`() {
+    @Obligation("BGG-35")
+    fun `a link written before names were hashed doesn't hold the username either`() {
         LinkBggAccountDecider
             .given(BggAccountLinked(bram, "annaplays"))
             .whenever(link(anna, "AnnaPlays"))
-            .thenRejects(Rejection.BggAccountTaken)
+            .thenEmits(BggAccountLinkedHashed(anna, "key-of-annaplays"))
     }
 
     @Test
@@ -44,15 +45,6 @@ class LinkBggAccountTest {
         LinkBggAccountDecider.given(BggAccountLinkedHashed(anna, "key-of-annaplays")).whenever(link(anna, "Other")).thenRejects(Rejection.AlreadyLinked)
         LinkBggAccountDecider.given(BggAccountLinked(anna, "AnnaPlays")).whenever(link(anna, "annaplays")).thenEmitsNothing()
         LinkBggAccountDecider.given(BggAccountLinked(anna, "AnnaPlays")).whenever(link(anna, "Other")).thenRejects(Rejection.AlreadyLinked)
-    }
-
-    @Test
-    @Obligation("BGG-4")
-    fun `other players' other usernames don't get in the way`() {
-        LinkBggAccountDecider
-            .given(BggAccountLinkedHashed(bram, "key-of-bramplays"))
-            .whenever(link(anna, "AnnaPlays"))
-            .thenEmits(BggAccountLinkedHashed(anna, "key-of-annaplays"))
     }
 
     @Test
@@ -66,11 +58,7 @@ class LinkBggAccountTest {
 
     @Test
     @Obligation("BGG-7")
-    fun `after unlinking, the username is free and the player can link another`() {
-        LinkBggAccountDecider
-            .given(BggAccountLinkedHashed(bram, "key-of-bramplays"), BggAccountUnlinked(bram))
-            .whenever(link(anna, "BramPlays"))
-            .thenEmits(BggAccountLinkedHashed(anna, "key-of-bramplays"))
+    fun `after unlinking, the player can link another`() {
         LinkBggAccountDecider
             .given(BggAccountLinkedHashed(anna, "key-of-annaplays"), BggAccountUnlinked(anna))
             .whenever(link(anna, "Other"))
@@ -84,5 +72,14 @@ class LinkBggAccountTest {
             .given(BggAccountLinkedHashed(anna, "key-of-annaplays"), BggAccountUnlinked(anna), BggAccountLinkedHashed(anna, "key-of-other"))
             .whenever(link(anna, "AnnaPlays"))
             .thenRejects(Rejection.AlreadyLinked)
+    }
+
+    @Test
+    @Obligation("BGG-5")
+    fun `an erased player's link no longer holds`() {
+        LinkBggAccountDecider
+            .given(BggAccountLinkedHashed(anna, "key-of-annaplays"), PlayerErased(anna))
+            .whenever(link(anna, "Other"))
+            .thenEmits(BggAccountLinkedHashed(anna, "key-of-other"))
     }
 }

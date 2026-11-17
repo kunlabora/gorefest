@@ -3,8 +3,8 @@ package gorefest.shell.bgg
 import gorefest.core.BggId
 import gorefest.core.game.Game
 
-/** A BGG user as the XML API shows them. [profileText] is every profile field it returns, joined. */
-data class BggUser(val id: Int, val name: String, val profileText: String)
+/** A BGG user as the XML API shows them: enough to know the username exists, and how BGG spells it. */
+data class BggUser(val id: Int, val name: String)
 
 data class SearchHit(val id: BggId, val name: String, val year: Int?)
 

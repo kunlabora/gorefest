@@ -38,7 +38,6 @@ class RejectionsTest {
             Rejection.ImplausibleDuration to "That doesn't look like a real duration",
             Rejection.SameGameTwice to "Compare two different games",
             Rejection.AlreadyLinked to "You've already linked a BGG account",
-            Rejection.BggAccountTaken to "That BGG account is already linked to another player",
             Rejection.NoSuchDatePoll to "No such date poll",
             Rejection.DatePollAlreadyExists to "That date poll already exists",
             Rejection.DatePollClosed to "The date is already picked",

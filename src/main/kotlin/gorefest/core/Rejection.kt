@@ -61,8 +61,6 @@ sealed interface Rejection {
     /** The player linked another BGG account already. */
     data object AlreadyLinked : Rejection
 
-    /** Another player linked this BGG account. */
-    data object BggAccountTaken : Rejection
 
     /** No such player, or one that was never registered. */
     data object NoSuchPlayer : Rejection

@@ -85,8 +85,7 @@ object BggXml {
     fun user(doc: Document): BggUser? {
         val user = doc.documentElement.takeIf { it.tagName == "user" } ?: return null
         val id = user.getAttribute("id").toIntOrNull() ?: return null
-        val fields = user.children().map { it.getAttribute("value") }.filter { it.isNotBlank() }
-        return BggUser(id, user.getAttribute("name"), fields.joinToString("\n"))
+        return BggUser(id, user.getAttribute("name"))
     }
 
     fun collection(doc: Document): CollectionResult {

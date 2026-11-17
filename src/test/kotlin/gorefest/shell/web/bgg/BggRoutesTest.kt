@@ -6,19 +6,15 @@ import gorefest.core.BggAccountLinkedHashed
 import gorefest.core.PlayerId
 import gorefest.core.gameday.bram
 import gorefest.shell.web.TestApp
-import gorefest.shell.web.components.page
 import gorefest.shell.web.fragment
 import gorefest.shell.web.htmxPost
 import gorefest.shell.web.one
 import gorefest.shell.web.page
-import gorefest.shell.web.shouldReplace
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.shouldNotBe
 import io.ktor.client.request.forms.submitForm
 import io.ktor.http.Parameters
-import io.kotest.matchers.string.shouldMatch
 import io.ktor.client.request.get
 import io.ktor.http.parameters
 import org.junit.jupiter.api.BeforeEach
@@ -37,76 +33,46 @@ class BggRoutesTest {
         kim = test.loggedIn("Kim", id = kimId)
     }
 
-    private suspend fun io.ktor.client.HttpClient.username(name: String) =
-        htmxPost("/bgg/username", parameters { append("username", name); append("returnTo", "/") }).fragment()
-
-    private suspend fun io.ktor.client.HttpClient.verify(name: String) =
-        htmxPost("/bgg/verify", parameters { append("username", name); append("returnTo", "/gamedays/new") })
-
-    private val code get() = app.bggVerification.code(kimId, "KimPlays")
+    private suspend fun io.ktor.client.HttpClient.link(name: String, returnTo: String = "/gamedays/new") =
+        htmxPost("/bgg/username", parameters { append("username", name); append("returnTo", returnTo) })
 
     @Test
     @Obligation("BGG-10")
     fun `the home page suggests linking until it's done`() = test.webTest(session = kim) { client ->
         client.get("/").page().one("#bgg-nudge a").attr("href") shouldBe "/bgg?returnTo=%2F"
 
-        test.bgg.putInProfile("KimPlays", code)
-        client.username("KimPlays")
-        client.verify("KimPlays")
+        client.link("KimPlays")
 
         client.get("/").page().select("#bgg-nudge").shouldBeEmpty()
     }
 
     @Test
-    @Obligation("BGG-1", "BGG-3")
-    fun `a known username gets a code to put in the profile`() = test.webTest(session = kim) { client ->
-        val step = client.username("KimPlays")
-
-        step shouldReplace "bgg-form"
-        step.one("input[name=username]").`val`() shouldBe "KimPlays"
-        step.one(".gf-copy__value").text() shouldBe code
-        code shouldMatch Regex("GORE-[A-Z2-9]{6}")
-        step.attr("hx-post") shouldBe "/bgg/verify"
-        step.one("button[type=submit]").text() shouldBe "I've added it"
-        step.select(".gf-stepper .gf-stepper__num").map { it.text() } shouldBe listOf("1", "2", "3")
-        step.one(".gf-bgg__shot img").attr("src") shouldBe "/static/bgg-profile-code.webp"
-        step.one("a[href='/bgg?returnTo=%2F']").text() shouldBe "Wrong username?"
-    }
-
-    @Test
-    @Obligation("BGG-3")
-    fun `the username step is a hero with an inline button and Collection as the current nav item`() = test.webTest(session = kim) { client ->
+    @Obligation("BGG-34")
+    fun `the link page asks only for the username, with Collection as the current nav item`() = test.webTest(session = kim) { client ->
         val page = client.get("/bgg?returnTo=%2F").page()
 
         page.one(".gf-nav a[aria-current=page]").text() shouldBe "Collection"
-        page.one("#bgg-form .gf-signin__row input[name=username]")
-        page.one("#bgg-form .gf-signin__row button[type=submit]").text() shouldBe "Next"
+        page.select("#bgg-form input:not([type=hidden])").map { it.attr("name") } shouldBe listOf("username")
+        page.one("#bgg-form .gf-signin__row button[type=submit]").text() shouldBe "Link"
+        page.one("#bgg-form").attr("hx-post") shouldBe "/bgg/username"
         page.one("#bgg-form a[href='/']").text() shouldBe "Not now"
+        page.select(".gf-copy__value, .gf-stepper, img.gf-howto").shouldBeEmpty()
     }
 
     @Test
     @Obligation("BGG-2")
-    fun `unknown or empty usernames are explained`() = test.webTest(session = kim) { client ->
+    fun `unknown or empty usernames are explained, and nothing is linked`() = test.webTest(session = kim) { client ->
         test.bgg.missingUsers += "nobody"
 
-        client.username("nobody").one(".gf-error").text() shouldBe "We can't find that BGG username."
-        client.username(" ").one(".gf-error").text() shouldBe "Type your BGG username."
-    }
-
-    @Test
-    @Obligation("BGG-1")
-    fun `verifying before the code is on the profile says so`() = test.webTest(session = kim) { client ->
-        client.verify("KimPlays").fragment().one(".gf-error").text() shouldBe
-            "We can't see the code on your profile yet. Saved it? Then try again in a minute."
+        client.link("nobody").fragment().one(".gf-error").text() shouldBe "We can't find that BGG username."
+        client.link(" ").fragment().one(".gf-error").text() shouldBe "Type your BGG username."
         app.bggAccounts.isLinked(kimId) shouldBe false
     }
 
     @Test
-    @Obligation("BGG-1", "BGG-9")
-    fun `with the code on the profile, the account is linked and you go back`() = test.webTest(session = kim) { client ->
-        test.bgg.putInProfile("KimPlays", "My site: https://example.com $code")
-
-        client.verify("KimPlays").headers["HX-Redirect"] shouldBe "/collection?returnTo=%2Fgamedays%2Fnew"
+    @Obligation("BGG-33", "BGG-9")
+    fun `a known username is linked at once, and you go back`() = test.webTest(session = kim) { client ->
+        client.link("KimPlays").headers["HX-Redirect"] shouldBe "/collection?returnTo=%2Fgamedays%2Fnew"
 
         app.bggAccounts.isLinked(kimId) shouldBe true
         client.get("/bgg").page().one("h1").text() shouldBe "You're linked"
@@ -115,9 +81,7 @@ class BggRoutesTest {
     @Test
     @Obligation("BGG-6")
     fun `the log holds a hash of the username, never the name`() = test.webTest(session = kim) { client ->
-        test.bgg.putInProfile("KimPlays", code)
-
-        client.verify("KimPlays")
+        client.link("KimPlays")
 
         val log = app.db.transaction {
             contextOf<gorefest.shell.db.Tx>().connection.createStatement().use { st ->
@@ -125,16 +89,15 @@ class BggRoutesTest {
             }
         }
         log.lowercase().contains("kimplays") shouldBe false
-        log.contains(app.bggVerification.usernameKey("kimplays")) shouldBe true
+        log.contains(app.bggUsernameKey.of("kimplays")) shouldBe true
         client.get("/collection/status").status shouldBe io.ktor.http.HttpStatusCode.OK
         client.get("/collection").page().text().contains("KimPlays") shouldBe true
     }
 
     @Test
     @Obligation("BGG-7")
-    fun `unlinking forgets the account and the collection, and frees the username`() = test.webTest(session = kim) { client ->
-        test.bgg.putInProfile("KimPlays", code)
-        client.verify("KimPlays")
+    fun `unlinking forgets the account and the collection, and the player can link again`() = test.webTest(session = kim) { client ->
+        client.link("KimPlays")
         kotlinx.coroutines.withTimeout(5000) { while (app.collectionSync.status(kimId) == null) kotlinx.coroutines.delay(20) }
 
         client.get("/bgg").page().select("form[action=/bgg/unlink]").size shouldBe 1
@@ -143,50 +106,39 @@ class BggRoutesTest {
         app.bggAccounts.isLinked(kimId) shouldBe false
         app.collectionSync.collection(kimId).isEmpty() shouldBe true
         app.collectionSync.status(kimId) shouldBe null
-        client.get("/bgg").page().select("form#username-step, input[name=username]").size shouldBe 1
+        client.get("/bgg").page().select("input[name=username]").size shouldBe 1
         client.get("/collection").headers["Location"] shouldBe "/bgg?returnTo=%2Fcollection"
-        // Free again, for Kim and for anyone else.
-        client.verify("KimPlays").headers["HX-Redirect"] shouldNotBe null
+        client.link("OtherPlays").headers["HX-Redirect"] shouldBe "/collection?returnTo=%2Fgamedays%2Fnew"
     }
 
     @Test
-    @Obligation("BGG-4")
-    fun `an account linked under a hash can't be taken by someone else either`() = test.webTest(session = kim) { client ->
-        app.db.transaction { app.store.append(listOf(BggAccountLinkedHashed(bram, app.bggVerification.usernameKey("kimplays")))) }
-        test.bgg.putInProfile("KimPlays", code)
+    @Obligation("BGG-5")
+    fun `a second account is refused until you unlink`() = test.webTest(session = kim) { client ->
+        client.link("KimPlays")
 
-        client.verify("KimPlays").fragment().one(".gf-error").text() shouldBe "That BGG account is already linked to another player"
+        client.link("OtherPlays").fragment().one(".gf-error").text() shouldBe "You've already linked a BGG account"
+    }
+
+    @Test
+    @Obligation("BGG-35")
+    fun `an account someone else linked can be linked too, whatever the case`() = test.webTest(session = kim) { client ->
+        app.db.transaction {
+            app.store.append(listOf(BggAccountLinkedHashed(bram, app.bggUsernameKey.of("kimplays")), BggAccountLinked(PlayerId(Uuid.random()), "KimPlays")))
+        }
+
+        client.link("kimplays").headers["HX-Redirect"] shouldBe "/collection?returnTo=%2Fgamedays%2Fnew"
+        app.bggAccounts.isLinked(kimId) shouldBe true
+        app.bggAccounts.isLinked(bram) shouldBe true
     }
 
     @Test
     @Obligation("BGG-9")
     fun `the collection page offers the way back to where you were going`() = test.webTest(session = kim) { client ->
-        test.bgg.putInProfile("KimPlays", code)
-        client.verify("KimPlays")
+        client.link("KimPlays")
 
         val back = client.get("/collection?returnTo=%2Fgamedays%2Fabc%2Fbring").page().one(".gf-continue a.gf-btn--primary")
         back.attr("href") shouldBe "/gamedays/abc/bring"
         back.text() shouldBe "Back to bringing games"
         client.get("/collection").page().select(".gf-continue") shouldHaveSize 0
-    }
-
-    @Test
-    @Obligation("BGG-4")
-    fun `someone else's BGG account can't be taken`() = test.webTest(session = kim) { client ->
-        app.db.transaction { app.store.append(listOf(BggAccountLinked(bram, "KimPlays"))) }
-        test.bgg.putInProfile("KimPlays", code)
-
-        client.verify("KimPlays").fragment().one(".gf-error").text() shouldBe "That BGG account is already linked to another player"
-    }
-
-    @Test
-    @Obligation("BGG-32")
-    fun `in dev mode the fake profile can be filled in from the page`() = test.webTest(session = kim) { client ->
-        val step = client.username("KimPlays")
-        val button = step.one("#dev-bgg button")
-
-        button.attr("hx-post") shouldBe "/dev/bgg/profile"
-        client.htmxPost("/dev/bgg/profile", parameters { append("username", "KimPlays"); append("code", code) })
-        client.verify("KimPlays").headers["HX-Redirect"] shouldBe "/collection?returnTo=%2Fgamedays%2Fnew"
     }
 }

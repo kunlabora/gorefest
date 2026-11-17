@@ -6,10 +6,9 @@ import java.util.concurrent.ConcurrentHashMap
 
 /**
  * BGG stand-in for dev mode (no `BGG_TOKEN`) and tests. Every username exists; its collection is
- * a stable pick from [DevCatalog]. Profiles start empty, like a real one before you paste a code.
+ * a stable pick from [DevCatalog].
  */
 class FakeBggApi(private val catalog: List<Game> = DevCatalog.games) : BggApi {
-    private val profiles = ConcurrentHashMap<String, String>()
     private val collections = ConcurrentHashMap<String, Set<BggId>>()
     private val byId = catalog.associateBy { it.id }
 
@@ -25,17 +24,12 @@ class FakeBggApi(private val catalog: List<Game> = DevCatalog.games) : BggApi {
     /** The ids asked for in each `things` call. */
     val thingCalls: MutableList<Collection<BggId>> = java.util.Collections.synchronizedList(mutableListOf())
 
-    /** What a player would do on boardgamegeek.com: paste text into a profile field. */
-    fun putInProfile(username: String, text: String) {
-        profiles[username.lowercase()] = text
-    }
-
     fun setCollection(username: String, games: Set<BggId>) {
         collections[username.lowercase()] = games
     }
 
     override suspend fun user(name: String): BggUser? =
-        if (name.isBlank() || name.lowercase() in missingUsers) null else BggUser(id = name.lowercase().hashCode(), name = name, profileText = profiles[name.lowercase()].orEmpty())
+        if (name.isBlank() || name.lowercase() in missingUsers) null else BggUser(id = name.lowercase().hashCode(), name = name)
 
     override suspend fun collection(username: String): CollectionResult {
         val key = username.lowercase()
