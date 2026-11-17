@@ -179,9 +179,8 @@ class MatcherTest {
 
         // Without a declaration the features lift Azul well above an average game ...
         (guessed.top.single().score > 0.3 + 0.1) shouldBe true
-        // ... but once Kim says they haven't played it, all it gets is the novelty bonus (less the push-down for a game
-        // nobody at the table can explain), and the reason says so.
-        declared.top.single().score shouldBe (0.3 - 0.2 plusOrMinus 1e-9)
+        // ... but once Kim says they haven't played it, all it gets is the novelty bonus, and the reason says so.
+        declared.top.single().score shouldBe 0.3
         declared.top.single().reason shouldBe SuggestionReason.NewToSome(listOf("Kim"))
     }
 
@@ -333,20 +332,5 @@ class MatcherTest {
 
         marked.explainers shouldBe emptyList()
         marked.score shouldBe (matcher.suggest(withoutMark, shelf(azul), null, now).pick(azul).score plusOrMinus 1e-9)
-    }
-
-    @Test
-    @Obligation("SU-26")
-    fun `a game nobody at the table has played or can explain is pushed down`() {
-        val table = listOf(newcomer("Anna"), newcomer("Bram"), newcomer("Kim"))
-        val penalised = matcher.suggest(table, shelf(codenames), null, now).pick(codenames).score
-        val unpenalised = Matcher(unteachablePenalty = 0.0).suggest(table, shelf(codenames), null, now).pick(codenames).score
-        penalised shouldBe (unpenalised - 0.2 plusOrMinus 1e-9)
-
-        // Two games nobody has an opinion on: the one Anna can teach beats the one nobody knows.
-        val teacher = listOf(newcomer("Anna", played = setOf(azul), canExplain = setOf(azul)), newcomer("Bram"), newcomer("Kim"))
-        val found = matcher.suggest(teacher, shelf(codenames, azul), null, now) as Suggestions.Found
-        found.names() shouldBe listOf("Azul", "Codenames")
-        found.pick(azul).score shouldBe (found.pick(codenames).score + 0.1 plusOrMinus 1e-9)
     }
 }

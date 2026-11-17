@@ -26,7 +26,7 @@ Which games a table is offered, and why.
 - **SU-15** Every reason and every "nothing fits" case has its own sentence, with the wording pinned.
 - **SU-24** When someone at the table can explain a game and someone at the table hasn't played it, the game is nudged up the suggestions and the pick says who can explain it.
 - **SU-25** A game everyone at the table has played gets no nudge and no explainer line.
-- **SU-26** A game nobody at the table has played and nobody can explain ranks below an otherwise equal game someone at the table can explain.
+- ~~**SU-26** A game nobody at the table has played and nobody can explain ranks below an otherwise equal game someone at the table can explain.~~ Dropped 2026-11-17: marking a game makes it played, so the push-down hit every new game.
 
 ## The table page
 

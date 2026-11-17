@@ -75,7 +75,7 @@ sealed interface Suggestions {
  * - A game a player declared unplayed (and never compared) counts as neutral for them, not as a guess
  *   from its features; it can only win on novelty, and the reason says it's new to them.
  * - Teaching (U22): a game someone at the table can explain, with someone at the table new to it, gets a nudge and names
- *   who can explain it; a game nobody at the table has played and nobody can explain is pushed down.
+ *   who can explain it.
  */
 class Matcher(
     private val predictor: Predictor = Predictor(),
@@ -83,7 +83,6 @@ class Matcher(
     private val noveltyBonus: Double = 0.3,
     private val wishBonus: Double = 0.3,
     private val explainerBonus: Double = 0.2,
-    private val unteachablePenalty: Double = 0.2,
 ) {
     fun suggest(
         table: List<TablePlayer>,
@@ -117,7 +116,7 @@ class Matcher(
                 // Teaching only matters when someone is new to it; marking a game also makes it played, so a novel game has no explainer.
                 val teachable = explainers.isNotEmpty() && table.any { !it.games.hasPlayed(game.id) }
                 val score = mean - spreadPenalty * spread + (if (novel) noveltyBonus else 0.0) + wishBonus * wishers.size.coerceAtMost(MAX_WISH_BONUS_PEOPLE) +
-                    (if (teachable) explainerBonus else 0.0) - (if (novel && explainers.isEmpty()) unteachablePenalty else 0.0)
+                    (if (teachable) explainerBonus else 0.0)
                 val minutes = estimatedMinutes(game, n, speed)
                 val reason = reason(game, table, means, spread, novel, owner?.name, wishers.map { it.name }, minutes, timeBudget, nobodyKnown, strangers.map { it.name })
                 Suggestion(game, minutes, reason, score, if (teachable) explainers.map { it.name } else emptyList())

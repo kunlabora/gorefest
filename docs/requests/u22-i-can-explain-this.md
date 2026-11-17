@@ -24,8 +24,8 @@ the player, not about one game day.
 - On the shelf (bring page, "On the shelf" list) a game with an explainer among the game day's players says so:
   "Anna can explain it", or "Anna and Bram can explain it", or "3 people can explain it".
 - Suggestions: when someone at the table can explain a game and someone at the table hasn't played it, the game gets a
-  small nudge up, and the pick carries an extra line "Anna can explain it" under its reason. A game nobody at the table
-  has played and nobody can explain is pushed down: someone would have to learn it from the rulebook.
+  small nudge up, and the pick carries an extra line "Anna can explain it" under its reason. ~~A game nobody at the table
+  has played and nobody can explain is pushed down.~~ Dropped after review, see below.
 - Marking a game also marks it played for that player (you can't explain a game you never played), which ends its
   novelty for them, as a play log does. It says nothing about enjoying it. Unmarking leaves it played.
 - The mark stays when the game leaves the collection (a BGG re-sync), but it only shows for games on a shelf and only for
@@ -63,7 +63,7 @@ the player, not about one game day.
 - `explainerBonus` (0.2, below the wish and novelty bonuses): added when at least one player at the table can explain
   the game **and** at least one player at the table hasn't played it (`!hasPlayed`). If everyone has played it, nobody
   needs teaching and there's no bonus.
-- `unteachablePenalty` (0.2): subtracted when nobody at the table has played the game and nobody can explain it. With
+- ~~`unteachablePenalty` (0.2)~~ (dropped 2026-11-17, see the notes): subtracted when nobody at the table has played the game and nobody can explain it. With
   the novelty bonus (0.3) such a game still nets +0.1, so a new game nobody knows can still win on taste; it just loses
   ground to one somebody can teach (+0.2: marking a game makes it played, so a game with an explainer is never novel). The reason wording is unchanged ("Nobody has played it").
 - `Suggestion` gains `explainers: List<String>` (names, as `WantedBy` does; default empty), filled whenever someone at
@@ -108,7 +108,7 @@ All answered 2026-11-17.
 - [x] SH-36: On a game day's shelf, a game shows which of the game day's players can explain it; nobody outside the game day sees it.
 - [x] SU-24: When someone at the table can explain a game and someone at the table hasn't played it, the game is nudged up the suggestions and the pick says who can explain it.
 - [x] SU-25: A game everyone at the table has played gets no nudge and no explainer line.
-- [x] SU-26: A game nobody at the table has played and nobody can explain ranks below an otherwise equal game someone can explain.
+- ~~SU-26: A game nobody at the table has played and nobody can explain ranks below an otherwise equal game someone can explain.~~ Dropped.
 - [x] SH-37: When a player is erased, their marks are gone everywhere.
 - [x] TA-33: Marking a game as one you can explain marks it played for you (its novelty ends for you); unmarking leaves it played; it adds no comparison.
 - [x] Event evolution: new type only, sample in `EventCompatibilityTest`, `PersonalData.describe` case, `CLAUDE.md` events list and vocabulary.
@@ -119,8 +119,10 @@ Built as designed, with these notes:
 - The toggle on the bring page sits on the "On the shelf" list (the hearts), which holds every shelf game, mine
   included; the collection grid on that page has no second toggle. On an ended game day that list isn't shown, and the
   route answers 404 for a closed game day or a game not on its shelf.
-- Numbers: a game someone at the table can teach a newcomer gets +0.2; a novel game nobody can teach gets +0.3 − 0.2 =
-  +0.1. A game with an explainer is never novel, because the mark makes it played.
+- **Decided (2026-11-17), after review: no push-down.** Marking a game makes it played, so a game nobody at the table
+  has played never has an explainer there: the penalty hit every new game, cutting the novelty bonus from 0.3 to 0.1
+  even at tables where nobody marked anything. Only the nudge stays: +0.2 for a game someone at the table can teach a
+  newcomer. SU-26 is struck through.
 - The explainer line is `Suggestion.explainers` (names), shown by `rankedGame(note = …)` with the users icon; no new
   `SuggestionReason`.
 - On the shelf, my own mark reads "You": "You and Anna can explain it."
