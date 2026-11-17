@@ -55,7 +55,6 @@
     <ID>MatchingDeclarationName:ReadinessViews.kt:ReadinessView</ID>
     <ID>MatchingDeclarationName:Steps.kt:StepTone</ID>
     <ID>MatchingDeclarationName:WebTest.kt:TestApp</ID>
-    <ID>MayBeConstant:CheckpointViews.kt:/** Updates the summary card and the dock label as choices change, in the browser: no round trip. */ private val LOG_SUMMARY_SCRIPT = """def update() js(me) const g = me.querySelector('input[name=game]:checked'); const name = g ? g.closest('label').querySelector('.gf-tile__name').textContent : ''; const n = me.querySelectorAll('input[name=players]:checked').length; const d = (me.querySelector('input[name=duration]:checked') || {}).value || ''; const m = /^(\d+)(m|h)(\+)?$/.exec(d); const time = !m ? 'no time chosen' : m[2] === 'h' ? (m[3] ? m[1] + ' h or more' : 'about ' + m[1] + ' h') : 'about ' + m[1] + ' min'; const who = n + (n === 1 ? ' player' : ' players'); const say = function (key, text) { document.querySelectorAll('[data-log=' + key + ']').forEach(function (el) { el.textContent = text; }); }; say('game', name || 'Pick a game'); say('about', who + ' · ' + time); say('dock', name ? 'Log ' + name + ' · ' + who + ' · ' + d : 'Log it'); end end init call update() on change call update()"""</ID>
     <ID>ReturnCount:AccountRequests.kt:AccountRequests$suspend fun erase: Boolean</ID>
     <ID>ReturnCount:BringRequests.kt:DeclineBringRequestDecider$override fun decide: Decision&lt;BringRequestDeclined></ID>
     <ID>ReturnCount:BringRequests.kt:RequestBringDecider$override fun decide: Decision&lt;BringRequested></ID>

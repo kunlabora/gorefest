@@ -14,10 +14,16 @@ const val TABLE_SET = "tableSet"
 /** Time options: label to budget in minutes (null: any). */
 val TIMES = listOf("Any" to null, "45m" to 45, "90m" to 90, "2h" to 120, "3h+" to 240)
 
-/** What a table is picked for: a game day or a game night (U11). [base] is its page; [tasteRound] is where to learn your taste for it, if anywhere. */
-data class TableEvent(val base: String, val title: String, val players: List<PlayerId>, val tasteRound: String?) {
+/**
+ * What a table is picked for: a game day or a game night (U11). [base] is its page; [tasteRound] is where to learn your
+ * taste for it, if anywhere; [log] is where to log a play, once plays can be logged (U23).
+ */
+data class TableEvent(val base: String, val title: String, val players: List<PlayerId>, val tasteRound: String?, val log: String? = null) {
     companion object {
-        fun of(gameDay: GameDaySummary) = TableEvent("/gamedays/${gameDay.id}", gameDay.title, gameDay.players, "/gamedays/${gameDay.id}/taste")
+        fun of(gameDay: GameDaySummary, logOpen: Boolean = false) = TableEvent(
+            "/gamedays/${gameDay.id}", gameDay.title, gameDay.players, "/gamedays/${gameDay.id}/taste",
+            log = "/gamedays/${gameDay.id}/log".takeIf { logOpen && !gameDay.cancelled },
+        )
     }
 }
 
@@ -82,10 +88,12 @@ fun TagConsumer<*>.suggestions(view: TableView) = section("gf-picker__answer") {
                 if (suggestions.unknown.isNotEmpty()) unknownTaste(suggestions.unknown, view.tableSize, view.event, view.names, view.me.id)
                 suggestions.top.take(1).forEach { s ->
                     rankedGame(1, s.game, s.reason.text(), note = s.explainerNote()) { icon("clock"); +"~${s.minutes} min ${if (view.tableSize == 1) "for you" else "for the ${view.tableSize} of you"}" }
+                    playedThis(view, s)
                 }
                 if (suggestions.top.size > 1) div("gf-picker__more") {
                     suggestions.top.drop(1).forEachIndexed { i, s ->
                         rankedGame(i + 2, s.game, s.reason.text(), note = s.explainerNote()) { icon("clock"); +"~${s.minutes} min ${if (view.tableSize == 1) "for you" else "for ${view.tableSize}"}" }
+                        playedThis(view, s)
                     }
                 }
             }
@@ -143,3 +151,10 @@ private fun FlowContent.unknownTaste(unknown: List<PlayerId>, tableSize: Int, ev
 
 /** Who at the table can explain it, when someone there is new to it (U22). */
 private fun Suggestion.explainerNote() = explainers.takeIf { it.isNotEmpty() }?.let(::canExplainText)
+
+/** "We played this": the log with this game and this table filled in, so nobody logs a table of one by mistake (U23). */
+private fun FlowContent.playedThis(view: TableView, s: Suggestion) {
+    val log = view.event.log ?: return
+    val href = "$log?game=${s.game.id}&" + view.table.joinToString("&") { "players=$it" }
+    linkButton(href, if (view.tableSize == 1) "I played this" else "We played this", ButtonStyle.GHOST, ButtonSize.SMALL, says = "Log ${s.game.name} for this table")
+}

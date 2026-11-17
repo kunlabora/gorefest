@@ -225,6 +225,24 @@ data class PlayLogged(
     override val tags get() = setOf(Tags.gameDay(gameDay), Tags.game(game)) + players.map(Tags::player)
 }
 
+/**
+ * [removedBy] took back a play logged by mistake (U23). It names the play by what [PlayLogged] holds (game day, game,
+ * who logged it, when), because a play has no id; [players] are the removed play's, so their projections see it.
+ */
+@Serializable
+@SerialName("PlayRemoved")
+data class PlayRemoved(
+    val gameDay: GameDayId,
+    val game: BggId,
+    val loggedBy: PlayerId,
+    @Serializable(with = InstantSerializer::class) val loggedAt: Instant,
+    val players: List<PlayerId>,
+    val removedBy: PlayerId,
+    @Serializable(with = InstantSerializer::class) val at: Instant,
+) : Event {
+    override val tags get() = setOf(Tags.gameDay(gameDay), Tags.game(game), Tags.player(removedBy)) + players.map(Tags::player)
+}
+
 /** The host called the game day off. It stays visible but read-only, and its invite stops working. */
 @Serializable
 @SerialName("GameDayCancelled")

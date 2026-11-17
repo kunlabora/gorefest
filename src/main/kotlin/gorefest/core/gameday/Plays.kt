@@ -8,6 +8,7 @@ import gorefest.core.GameDayDetailsChanged
 import gorefest.core.GameDayCancelled
 import gorefest.core.GameDayId
 import gorefest.core.PlayLogged
+import gorefest.core.PlayRemoved
 import gorefest.core.PlayerId
 import gorefest.core.PlayerErased
 import gorefest.core.PlayerJoined
@@ -21,6 +22,7 @@ import gorefest.core.eventsourcing.Projection
 import gorefest.core.eventsourcing.Query
 import gorefest.core.matching.Matcher
 import gorefest.core.typeName
+import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 
@@ -30,13 +32,22 @@ import java.time.ZoneId
  * the night), but not on a cancelled one. Erased players stay on a closed game day's history, so every erasure is in
  * the boundary too: a new play must never name someone who was erased.
  */
-object LogPlayDecider : Decider<PlayLogged, LogPlayDecider.State, PlayLogged> {
+/** Log [play]; [minPlayers] is the game's own minimum (from BGG), which the log can't know. */
+data class LogPlay(val play: PlayLogged, val minPlayers: Int = 1)
+
+/** Names one play by what [PlayLogged] holds: it has no id of its own. */
+data class PlayKey(val gameDay: GameDayId, val game: BggId, val loggedBy: PlayerId, val at: Instant)
+
+val PlayLogged.key get() = PlayKey(gameDay, game, loggedBy, at)
+val PlayRemoved.key get() = PlayKey(gameDay, game, loggedBy, loggedAt)
+
+object LogPlayDecider : Decider<LogPlay, LogPlayDecider.State, PlayLogged> {
     data class State(val date: LocalDate? = null, val zone: ZoneId = ZoneId.of("UTC"), val open: Boolean = false, val cancelled: Boolean = false, val joined: Set<PlayerId> = emptySet())
 
     override val initialState = State()
 
-    override fun query(command: PlayLogged) = Query.of(
-        Query.Item(setOf(typeName<GameDayCreated>(), typeName<GameDayDetailsChanged>(), typeName<GameDayCancelled>(), typeName<PlayerJoined>()), setOf(Tags.gameDay(command.gameDay))),
+    override fun query(command: LogPlay) = Query.of(
+        Query.Item(setOf(typeName<GameDayCreated>(), typeName<GameDayDetailsChanged>(), typeName<GameDayCancelled>(), typeName<PlayerJoined>()), setOf(Tags.gameDay(command.play.gameDay))),
         Query.Item(setOf(typeName<PlayerErased>()), emptySet()),
     )
 
@@ -49,15 +60,56 @@ object LogPlayDecider : Decider<PlayLogged, LogPlayDecider.State, PlayLogged> {
         else -> state
     }
 
-    override fun decide(command: PlayLogged, state: State): Decision<PlayLogged> = when {
+    override fun decide(command: LogPlay, state: State): Decision<PlayLogged> = decide(command.play, command.minPlayers, state)
+
+    private fun decide(command: PlayLogged, minPlayers: Int, state: State): Decision<PlayLogged> = when {
         !state.open -> Rejected(Rejection.NoSuchGameDay)
         state.cancelled -> Rejected(Rejection.GameDayCancelled)
         state.date != null && command.at.atZone(state.zone).toLocalDate() < state.date -> Rejected(Rejection.GameDayNotStarted)
         command.loggedBy !in state.joined -> Rejected(Rejection.NotJoined)
         command.players.isEmpty() -> Rejected(Rejection.NobodyPlayed)
         !state.joined.containsAll(command.players) -> Rejected(Rejection.PlayersNotAtGameDay)
+        command.players.distinct().size < minPlayers -> Rejected(Rejection.TooFewPlayers(minPlayers))
         command.minutes !in 5..720 -> Rejected(Rejection.ImplausibleDuration)
         else -> Accepted(command.copy(players = command.players.distinct()))
+    }
+}
+
+/** Take back the play [play], by [by] (U23). */
+data class RemovePlay(val play: PlayKey, val by: PlayerId, val at: Instant)
+
+/**
+ * Only whoever logged a play, or played in it, can take it back, on a game day that isn't cancelled. The boundary is the
+ * game day's lifecycle and its plays of that game; removing a play that's already gone records nothing.
+ */
+object RemovePlayDecider : Decider<RemovePlay, RemovePlayDecider.State, PlayRemoved> {
+    data class State(val open: Boolean = false, val cancelled: Boolean = false, val plays: List<PlayLogged> = emptyList(), val removed: Set<PlayKey> = emptySet())
+
+    override val initialState = State()
+
+    override fun query(command: RemovePlay) = Query.of(
+        Query.Item(setOf(typeName<GameDayCreated>(), typeName<GameDayCancelled>()), setOf(Tags.gameDay(command.play.gameDay))),
+        Query.Item(setOf(typeName<PlayLogged>(), typeName<PlayRemoved>()), setOf(Tags.gameDay(command.play.gameDay), Tags.game(command.play.game))),
+    )
+
+    override fun evolve(state: State, event: Event) = when (event) {
+        is GameDayCreated -> state.copy(open = true)
+        is GameDayCancelled -> state.copy(cancelled = true)
+        is PlayLogged -> state.copy(plays = state.plays + event)
+        is PlayRemoved -> state.copy(removed = state.removed + event.key)
+        else -> state
+    }
+
+    override fun decide(command: RemovePlay, state: State): Decision<PlayRemoved> {
+        val play = state.plays.firstOrNull { it.key == command.play }
+        return when {
+            !state.open -> Rejected(Rejection.NoSuchGameDay)
+            state.cancelled -> Rejected(Rejection.GameDayCancelled)
+            play == null -> Rejected(Rejection.NoSuchPlay)
+            command.by != play.loggedBy && command.by !in play.players -> Rejected(Rejection.NotYourPlay)
+            command.play in state.removed -> Accepted()
+            else -> Accepted(PlayRemoved(play.gameDay, play.game, play.loggedBy, play.at, play.players, command.by, command.at))
+        }
     }
 }
 
@@ -71,6 +123,8 @@ class GameDayPlays private constructor(private val byGameDay: Map<GameDayId, Lis
 
     internal fun logged(play: PlayLogged) = GameDayPlays(byGameDay + (play.gameDay to on(play.gameDay) + play))
 
+    internal fun removed(play: PlayKey) = GameDayPlays(byGameDay + (play.gameDay to on(play.gameDay).filterNot { it.key == play }))
+
     companion object {
         val none = GameDayPlays(emptyMap())
     }
@@ -79,7 +133,11 @@ class GameDayPlays private constructor(private val byGameDay: Map<GameDayId, Lis
 object Plays : Projection<GameDayPlays> {
     override val initialState = GameDayPlays.none
 
-    override fun evolve(state: GameDayPlays, event: Event) = if (event is PlayLogged) state.logged(event) else state
+    override fun evolve(state: GameDayPlays, event: Event) = when (event) {
+        is PlayLogged -> state.logged(event)
+        is PlayRemoved -> state.removed(event.key)
+        else -> state
+    }
 }
 
 /**

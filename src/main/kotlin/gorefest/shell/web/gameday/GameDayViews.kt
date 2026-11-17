@@ -20,6 +20,7 @@ import gorefest.shell.web.zone
 import gorefest.shell.web.bgg.collection
 import gorefest.shell.web.components.ButtonSize
 import gorefest.shell.web.components.actionButton
+import gorefest.shell.web.components.hiddenInput
 import gorefest.shell.web.components.Nav
 import gorefest.shell.web.components.SiteBar
 import gorefest.shell.web.components.art
@@ -282,6 +283,15 @@ fun HTML.gameDayPage(hub: GameDayHub) {
                                 // A play logged after the day says when it was logged, not played: no time then.
                                 val at = log.at.atZone(zone(gameDay))
                                 if (at.toLocalDate() == gameDay.date) span("gf-small gf-muted") { +at.toLocalTime().withSecond(0).withNano(0).toString() }
+                                // Logged by mistake (U23): whoever logged it or played it can take it back, then log it again.
+                                if (!gameDay.cancelled && (me.id == log.loggedBy || me.id in log.players)) {
+                                    form(action = "$base/plays/remove", method = FormMethod.post) {
+                                        hiddenInput("game", log.game.toString())
+                                        hiddenInput("loggedBy", log.loggedBy.toString())
+                                        hiddenInput("at", log.at.toString())
+                                        actionButton("Remove", ButtonStyle.GHOST, ButtonSize.SMALL, submit = true, says = "Remove the play of ${game.name}")
+                                    }
+                                }
                             }
                         }
                     }

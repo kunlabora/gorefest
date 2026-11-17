@@ -21,12 +21,13 @@ import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import kotlin.uuid.Uuid
+import gorefest.shell.web.todayIn
 
 context(login: Login)
 fun Route.suggestionsRoutes(app: App) {
     suspend fun tableView(gameDay: GameDaySummary, params: Parameters, me: CurrentPlayer): TableView {
         val shelf = app.shelves.of(gameDay.id).mapNotNull { entry -> app.catalog[entry.game]?.let { it to entry } }
-        return tableView(app, login, TableEvent.of(gameDay), shelf, params, me)
+        return tableView(app, login, TableEvent.of(gameDay, logOpen = gameDay.date <= app.clock.todayIn(gameDay.timeZone)), shelf, params, me)
     }
 
     get("/gamedays/{id}/table") {

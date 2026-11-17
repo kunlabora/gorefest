@@ -54,6 +54,15 @@ sealed interface Rejection {
     data object OwnerNotAcceptingRequests : Rejection
 
     data object NobodyPlayed : Rejection
+
+    /** The game needs at least [minPlayers] and fewer were ticked. */
+    data class TooFewPlayers(val minPlayers: Int) : Rejection
+
+    /** There is no such play on this game day. */
+    data object NoSuchPlay : Rejection
+
+    /** Only whoever logged a play, or played in it, can take it back. */
+    data object NotYourPlay : Rejection
     data object PlayersNotAtGameDay : Rejection
     data object ImplausibleDuration : Rejection
     data object SameGameTwice : Rejection

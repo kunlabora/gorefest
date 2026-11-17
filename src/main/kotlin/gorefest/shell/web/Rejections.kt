@@ -7,6 +7,7 @@ import gorefest.core.gameday.MAX_BRING_REQUESTS
 import gorefest.core.gameday.MAX_PLACE_LENGTH
 import gorefest.core.gameday.MAX_TITLE_LENGTH
 import gorefest.core.gameday.MAX_WISHES
+import gorefest.shell.web.components.inWords
 
 /** The sentence a person sees for a decider's rejection: one place for all of them. */
 fun Rejection.message(): String = when (this) {
@@ -34,6 +35,9 @@ fun Rejection.message(): String = when (this) {
     Rejection.OwnerAskedEnough -> "They've been asked a lot already: leave it to them"
     Rejection.OwnerNotAcceptingRequests -> "They'd rather not be asked to bring games"
     Rejection.NobodyPlayed -> "Tick who played"
+    is Rejection.TooFewPlayers -> "This game needs at least ${minPlayers.inWords().lowercase()} players. Tick who else played."
+    Rejection.NoSuchPlay -> "That play isn't there any more"
+    Rejection.NotYourPlay -> "Only whoever logged it, or played it, can remove a play"
     Rejection.PlayersNotAtGameDay -> "Only players at this game day can be in a log"
     Rejection.ImplausibleDuration -> "That doesn't look like a real duration"
     Rejection.SameGameTwice -> "Compare two different games"

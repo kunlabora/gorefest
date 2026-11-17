@@ -8,6 +8,8 @@ import gorefest.core.GameBrought
 import gorefest.core.GameDayEnded
 import gorefest.core.GamePlayStatusDeclared
 import gorefest.core.PlayLogged
+import gorefest.core.GameDayCancelled
+import gorefest.shell.web.checkpoint.JUST_YOU
 import gorefest.core.PlayerErased
 import gorefest.core.PlayerId
 import gorefest.core.PlayerJoined
@@ -88,7 +90,7 @@ class CheckpointRoutesTest {
     }
 
     @Test
-    @Obligation("PL-6")
+    @Obligation("PL-19")
     fun `the log form offers the shelf, me at the table and a duration`() = test.webTest(session = kim) { client ->
         val form = client.get(log).page().one("#log-form")
 
@@ -111,14 +113,14 @@ class CheckpointRoutesTest {
         summary.one("button[type=submit]").text() shouldBe "Log it"
         // On a phone the dock holds the button and says what will be logged; the hyperscript keeps both current.
         page.one(".gf-dock.gf-phone-only button").attr("form") shouldBe "log-form"
-        page.one(".gf-dock [data-log=dock]").text() shouldBe "Log Azul · 1 player · 45m"
+        page.one(".gf-dock [data-log=dock]").text() shouldBe "Just you? Log Azul · 1 player · 45m"
         page.one("#log-form").attr("_").contains("on change call update()") shouldBe true
     }
 
     @Test
     @Obligation("PL-12")
     fun `the quick question page keeps the shell and the duel`() = test.webTest(session = kim) { client ->
-        val logged = client.htmxPost(log, parameters { append("game", azul.toString()); append("players", kimId.toString()); append("duration", "45m") })
+        val logged = client.htmxPost(log, parameters { append("game", azul.toString()); append("players", kimId.toString()); append("players", anna.toString()); append("duration", "45m") })
         given(GamePlayStatusDeclared(kimId, cascadia, played = true))
 
         val page = client.get(logged.headers["HX-Redirect"]!!).page()
@@ -140,7 +142,7 @@ class CheckpointRoutesTest {
     }
 
     @Test
-    @Obligation("PL-6")
+    @Obligation("PL-19")
     fun `a game that isn't on the shelf can be found by search and logged`() = test.webTest(session = kim) { client ->
         val form = client.get(log).page().one("#log-form")
         form.one("input[type=search]").attr("hx-get") shouldBe "$log/search"
@@ -158,7 +160,7 @@ class CheckpointRoutesTest {
         client.get("$log/search?q=azul").fragment().select(".gf-search-empty").shouldBeEmpty()
 
         val brass = id("Brass: Birmingham")
-        val logged = client.htmxPost(log, parameters { append("game", brass.toString()); append("players", kimId.toString()); append("duration", "90m") })
+        val logged = client.htmxPost(log, parameters { append("game", brass.toString()); append("players", kimId.toString()); append("players", anna.toString()); append("duration", "90m") })
         logged.headers["HX-Redirect"]!! shouldStartWith "/gamedays/$gorefest7/log/compare?game=$brass"
         app.plays.on(gorefest7).single().game shouldBe brass
     }
@@ -227,15 +229,15 @@ class CheckpointRoutesTest {
     @Test
     @Obligation("PL-13")
     fun `logging a table you weren't at asks you nothing and records nothing`() = test.webTest(session = kim) { client ->
-        given(GamePlayStatusDeclared(kimId, cascadia, played = true))
+        given(GamePlayStatusDeclared(kimId, azul, played = true))
 
-        val compare = client.htmxPost(log, parameters { append("game", azul.toString()); append("players", anna.toString()); append("duration", "45m") })
+        val compare = client.htmxPost(log, parameters { append("game", cascadia.toString()); append("players", anna.toString()); append("duration", "45m") })
             .headers["HX-Redirect"]!!
         client.get(compare).headers["Location"] shouldBe "/gamedays/$gorefest7/table?players=$anna"
 
         // A hand-made answer for a game you didn't play is ignored too.
         client.submitForm("/gamedays/$gorefest7/log/compare", parameters {
-            append("a", azul.toString()); append("b", cascadia.toString()); append("answer", "A")
+            append("a", cascadia.toString()); append("b", azul.toString()); append("answer", "A")
         }).status shouldBe HttpStatusCode.Found
         app.tastes.of(kimId).comparisons shouldHaveSize 0
     }
@@ -243,9 +245,9 @@ class CheckpointRoutesTest {
     @Test
     @Obligation("PL-13")
     fun `with nothing to compare against, it goes straight to suggestions`() = test.webTest(session = kim) { client ->
-        client.htmxPost(log, parameters { append("game", azul.toString()); append("players", kimId.toString()); append("duration", "30m") })
+        client.htmxPost(log, parameters { append("game", cascadia.toString()); append("players", kimId.toString()); append("duration", "30m") })
 
-        client.get("/gamedays/$gorefest7/log/compare?game=$azul&minutes=30&players=$kimId").headers["Location"] shouldBe
+        client.get("/gamedays/$gorefest7/log/compare?game=$cascadia&minutes=30&players=$kimId").headers["Location"] shouldBe
             "/gamedays/$gorefest7/table?players=$kimId"
     }
 
@@ -284,9 +286,9 @@ class CheckpointRoutesTest {
     @Obligation("PL-14")
     fun `the compare link ignores strangers, junk and out-of-range minutes`() = test.webTest(session = kim) { client ->
         val stranger = PlayerId(Uuid.random())
-        client.htmxPost(log, parameters { append("game", azul.toString()); append("players", kimId.toString()); append("duration", "30m") })
+        client.htmxPost(log, parameters { append("game", cascadia.toString()); append("players", kimId.toString()); append("duration", "30m") })
 
-        client.get("/gamedays/$gorefest7/log/compare?game=$azul&minutes=x&players=$kimId&players=$stranger&players=%22%3E%3Cscript%3E").headers["Location"] shouldBe
+        client.get("/gamedays/$gorefest7/log/compare?game=$cascadia&minutes=x&players=$kimId&players=$stranger&players=%22%3E%3Cscript%3E").headers["Location"] shouldBe
             "/gamedays/$gorefest7/table?players=$kimId"
     }
 
@@ -303,7 +305,7 @@ class CheckpointRoutesTest {
     @Obligation("PL-8")
     fun `during the game day a play can be logged, and the hub keeps the log one tap away`() = test.webTest(session = kim) { client ->
         given(*Array(10) { ComparisonRecorded(kimId, azul, cascadia, ComparisonResult.A, Basis.VIBE, test.clock.instant()) })
-        val response = client.htmxPost(log, parameters { append("game", azul.toString()); append("players", kimId.toString()); append("duration", "30m") })
+        val response = client.htmxPost(log, parameters { append("game", cascadia.toString()); append("players", kimId.toString()); append("duration", "30m") })
         response.status shouldBe io.ktor.http.HttpStatusCode.NoContent
         app.plays.on(gorefest7) shouldHaveSize 1
 
@@ -420,5 +422,129 @@ class CheckpointRoutesTest {
         answer(azul.toString(), cascadia.toString())
         app.tastes.of(kimId).comparisons.single().let { (it.a to it.b) shouldBe (azul to cascadia) }
     }
-}
 
+    // A table of one by mistake (U23)
+
+    private val bramId = PlayerId(Uuid.random())
+    private val playedAt = java.time.Instant.parse("2026-09-27T09:00:00Z")
+    private fun play(game: gorefest.core.BggId, players: List<PlayerId>, by: PlayerId = kimId) = PlayLogged(gorefest7, game, players, 45, by, playedAt)
+
+    @Test
+    @Obligation("PL-19")
+    fun `a suggestion links to the log with its game and table, which the form fills in`() = test.webTest(session = kim) { client ->
+        val picks = client.get("/gamedays/$gorefest7/suggestions?players=$kimId&players=$anna").fragment()
+        val link = picks.select("a").first { it.text() == "We played this" }
+        link.attr("href") shouldStartWith "$log?game="
+        link.attr("href") shouldContain "players=$kimId"
+        link.attr("href") shouldContain "players=$anna"
+
+        val stranger = PlayerId(Uuid.random())
+        val form = client.get("$log?game=$cascadia&players=$kimId&players=$anna&players=$stranger&duration=2h").page().one("#log-form")
+        form.one("input[name=game][checked]").`val`() shouldBe cascadia.toString()
+        form.select("input[name=players][checked]").map { it.`val`() }.toSet() shouldBe setOf(kimId.toString(), anna.toString())
+        form.one("input[name=duration][checked]").`val`() shouldBe "2h"
+    }
+
+    @Test
+    @Obligation("PL-19")
+    fun `from the hub the log starts with the table of my last play`() = test.webTest(session = kim) { client ->
+        given(play(azul, listOf(kimId, anna), by = anna))
+
+        client.get(log).page().select("#log-form input[name=players][checked]").map { it.`val`() }.toSet() shouldBe setOf(kimId.toString(), anna.toString())
+    }
+
+    @Test
+    @Obligation("PL-20")
+    fun `a play with fewer players than the game needs is refused, keeping the form`() = test.webTest(session = kim) { client ->
+        val refused = client.htmxPost(log, parameters { append("game", azul.toString()); append("players", kimId.toString()); append("duration", "45m") }).fragment()
+
+        refused.one("[role=alert]").text() shouldBe "This game needs at least two players. Tick who else played."
+        refused.select("input[name=players][checked]").map { it.`val`() } shouldBe listOf(kimId.toString())
+        refused.one("input[name=game][checked]").`val`() shouldBe azul.toString()
+        app.plays.on(gorefest7).shouldBeEmpty()
+    }
+
+    @Test
+    @Obligation("PL-21")
+    fun `just me ticked on a game day with others asks "Just you?" but still logs`() = test.webTest(session = kim) { client ->
+        val page = client.get(log).page()
+        page.one("#log-form [data-log=alone]").text() shouldBe JUST_YOU
+        page.one("#log-form [data-log=alone]").hasAttr("hidden") shouldBe false
+        page.one(".gf-dock [data-log=dock]").text() shouldBe "Just you? Log Azul · 1 player · 45m"
+        page.one("#log-form").attr("_") shouldContain "data-log=alone"
+
+        client.get("$log?players=$kimId&players=$anna").page().one("#log-form [data-log=alone]").hasAttr("hidden") shouldBe true
+
+        // Cascadia plays solo: a table of one logs.
+        val logged = client.htmxPost(log, parameters { append("game", cascadia.toString()); append("players", kimId.toString()); append("duration", "45m") })
+        logged.headers["HX-Redirect"]!! shouldStartWith "$log/compare"
+        app.plays.on(gorefest7).single().players shouldBe listOf(kimId)
+    }
+
+    private suspend fun io.ktor.client.HttpClient.remove(play: PlayLogged) = submitForm("/gamedays/$gorefest7/plays/remove", parameters {
+        append("game", play.game.toString()); append("loggedBy", play.loggedBy.toString()); append("at", play.at.toString())
+    })
+
+    @Test
+    @Obligation("PL-22", "PL-23", "PL-24")
+    fun `whoever logged a play removes it from the hub, then logs it again without the question`() = test.webTest(session = kim) { client ->
+        val solo = play(azul, listOf(kimId))
+        given(solo)
+        app.tastes.of(kimId).played[azul] shouldBe true
+
+        val form = client.get("/gamedays/$gorefest7").page().one("form[action=/gamedays/$gorefest7/plays/remove]")
+        form.one("input[name=game]").`val`() shouldBe azul.toString()
+        form.one("button").text() shouldBe "Remove"
+
+        val removed = client.remove(solo)
+        removed.status shouldBe HttpStatusCode.Found
+        val again = removed.headers["Location"]!!
+        again shouldStartWith "$log?again=true&game=$azul&duration=45m"
+        app.plays.on(gorefest7).shouldBeEmpty()
+        app.tastes.of(kimId).played[azul] shouldBe null
+        client.get("/gamedays/$gorefest7").page().select("form[action=/gamedays/$gorefest7/plays/remove]").shouldBeEmpty()
+
+        val page = client.get(again).page()
+        page.one(".gf-notice").text() shouldContain "Removed Azul from what was played"
+        page.one("#log-form input[name=again]").`val`() shouldBe "true"
+        page.select("#log-form .gf-hint").map { it.text() }.contains("Then one quick question about it.") shouldBe false
+
+        val relogged = client.htmxPost(log, parameters {
+            append("again", "true"); append("game", azul.toString()); append("players", kimId.toString()); append("players", anna.toString()); append("duration", "45m")
+        })
+        relogged.headers["HX-Redirect"]!! shouldStartWith "/gamedays/$gorefest7/table?"
+        app.plays.on(gorefest7).single().players shouldBe listOf(kimId, anna)
+
+        // Twice changes nothing: back to the hub.
+        client.remove(solo).headers["Location"] shouldBe "/gamedays/$gorefest7"
+        app.plays.on(gorefest7) shouldHaveSize 1
+    }
+
+    @Test
+    @Obligation("PL-22")
+    fun `someone who played in it can remove it too, but nobody else, and not on a cancelled game day`() {
+        val annasPlay = play(azul, listOf(anna, kimId), by = anna)
+        val annaAlone = play(cascadia, listOf(anna), by = anna)
+        kotlinx.coroutines.runBlocking {
+            test.loggedIn("Bram", id = bramId)
+            given(PlayerJoined(gorefest7, bramId), annasPlay, annaAlone)
+        }
+        test.webTest(session = kim) { client ->
+            val forms = client.get("/gamedays/$gorefest7").page().select("form[action=/gamedays/$gorefest7/plays/remove]")
+            forms.map { it.one("input[name=game]").`val`() } shouldBe listOf(azul.toString())
+
+            client.remove(annaAlone).status shouldBe HttpStatusCode.Conflict
+            client.remove(annasPlay).status shouldBe HttpStatusCode.Found
+            app.plays.on(gorefest7).map { it.game } shouldBe listOf(cascadia)
+        }
+        val stranger = kotlinx.coroutines.runBlocking { test.loggedIn("Stranger") }
+        test.webTest(session = stranger) { client -> client.remove(annaAlone).status shouldBe HttpStatusCode.NotFound }
+        kotlinx.coroutines.runBlocking { given(GameDayCancelled(gorefest7)) }
+        val annaSession = kotlinx.coroutines.runBlocking { test.loggedIn("Anna", id = anna) }
+        test.webTest(session = annaSession) { client ->
+            client.get("/gamedays/$gorefest7").page().select("form[action=/gamedays/$gorefest7/plays/remove]").shouldBeEmpty()
+            client.remove(annaAlone).status shouldBe HttpStatusCode.NotFound
+        }
+        app.plays.on(gorefest7).map { it.game } shouldBe listOf(cascadia)
+    }
+}

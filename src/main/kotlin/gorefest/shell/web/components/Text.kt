@@ -35,9 +35,9 @@ fun Int.asDuration(): String = when {
     else -> "${this / 60} h ${this % 60} min"
 }
 
-/** "Anna", "Anna and Bram", "Anna, Bram and Cara": the one way the app lists names or games in a sentence. */
 /** Who can explain a game (U22): "Anna can explain it.", "You and Anna can explain it.", "Three people can explain it." */
 fun canExplainText(names: List<String>): String =
     if (names.size <= 2) "${names.joinAnd()} can explain it." else "${names.size.inWords()} people can explain it."
 
+/** "Anna", "Anna and Bram", "Anna, Bram and Cara": the one way the app lists names or games in a sentence. */
 fun List<String>.joinAnd(): String = if (size < 2) joinToString() else dropLast(1).joinToString(", ") + " and " + last()

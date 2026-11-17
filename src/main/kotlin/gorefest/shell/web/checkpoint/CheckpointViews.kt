@@ -14,11 +14,17 @@ val DURATIONS = listOf("15m" to 15, "30m" to 30, "45m" to 45, "1h" to 60, "90m" 
 /** Step 1 of a checkpoint: what, who, how long. */
 data class LogFormView(val gameDay: GameDaySummary, val games: List<Game>, val names: Map<PlayerId, String>)
 
-/** What the summary card and the phone dock say: the chosen game, how many are at the table, and the time. */
-private data class LogSummary(val game: String?, val players: Int, val duration: String) {
+/**
+ * What the summary card and the phone dock say: the chosen game, how many are at the table, and the time. [alone]: just
+ * one ticked on a game day with others, which is more often a slip than a solo game (U23).
+ */
+private data class LogSummary(val game: String?, val players: Int, val duration: String, val alone: Boolean) {
     val about: String get() = "${players.of("player")} · ${durationText(duration)}"
-    val dock: String get() = if (game == null) "Log it" else "Log $game · ${players.of("player")} · $duration"
+    val dock: String get() = if (game == null) "Log it" else (if (alone) "Just you? " else "") + "Log $game · ${players.of("player")} · $duration"
 }
+
+/** Said under the summary when only one player is ticked on a game day with others. */
+const val JUST_YOU = "Just you? Tick who else played."
 
 /** "45m" is "about 45 min", "2h" is "about 2 h", "3h+" is "3 h or more". The form's hyperscript says the same. */
 private fun durationText(label: String): String {
@@ -29,16 +35,21 @@ private fun durationText(label: String): String {
 
 private fun logSummary(view: LogFormView, values: Parameters): LogSummary {
     val chosen = values["game"] ?: view.games.firstOrNull()?.id?.toString()
-    return LogSummary(view.games.firstOrNull { it.id.toString() == chosen }?.name, values.getAll("players")?.size ?: 1, values["duration"] ?: "45m")
+    val players = values.getAll("players")?.size ?: 1
+    return LogSummary(view.games.firstOrNull { it.id.toString() == chosen }?.name, players, values["duration"] ?: "45m", alone = players == 1 && view.gameDay.players.size > 1)
 }
 
-fun HTML.logPage(view: LogFormView, checkpoint: String, me: CurrentPlayer) = page(
+/**
+ * [values] fill the form in: from a suggestion (the game and its table), the last table I played at, or a play I just
+ * removed (`again`, U23), which the page says ([removed]) and which asks no question afterwards.
+ */
+fun HTML.logPage(view: LogFormView, checkpoint: String, me: CurrentPlayer, values: Parameters = Parameters.Empty, removed: String? = null) = page(
     "What did you play?",
     site = SiteBar(me, Nav.GAME_DAYS),
     dock = {
         classes = classes + "gf-phone-only"
         actionButton(
-            logSummary(view, Parameters.Empty).dock, ButtonStyle.PRIMARY, ButtonSize.LARGE, block = true, submit = true, spinner = true,
+            logSummary(view, values).dock, ButtonStyle.PRIMARY, ButtonSize.LARGE, block = true, submit = true, spinner = true,
             labelSpan = { attributes["data-log"] = "dock" },
         ) { attributes["form"] = "log-form" }
     },
@@ -49,12 +60,16 @@ fun HTML.logPage(view: LogFormView, checkpoint: String, me: CurrentPlayer) = pag
             p("gf-kicker") { +checkpoint }
             pageHeading("What did you play?")
         }
-        consumer.logForm(view, me, Parameters.Empty, error = null)
+        if (removed != null) notice("check", NoticeKind.GOOD) {
+            +"Removed "; strong { +removed }; +" from what was played. Log it again with the right people, or "
+            a("/gamedays/${view.gameDay.id}", classes = "gf-link") { +"go back to the game day" }; +"."
+        }
+        consumer.logForm(view, me, values, error = null)
     }
 }
 
 /** Updates the summary card and the dock label as choices change, in the browser: no round trip. */
-private val LOG_SUMMARY_SCRIPT = """def update()
+private const val LOG_SUMMARY_SCRIPT = """def update()
   js(me)
     const g = me.querySelector('input[name=game]:checked');
     const name = g ? g.closest('label').querySelector('.gf-tile__name').textContent : '';
@@ -63,10 +78,12 @@ private val LOG_SUMMARY_SCRIPT = """def update()
     const m = /^(\d+)(m|h)(\+)?$/.exec(d);
     const time = !m ? 'no time chosen' : m[2] === 'h' ? (m[3] ? m[1] + ' h or more' : 'about ' + m[1] + ' h') : 'about ' + m[1] + ' min';
     const who = n + (n === 1 ? ' player' : ' players');
+    const alone = n === 1 && me.querySelectorAll('input[name=players]').length > 1;
     const say = function (key, text) { document.querySelectorAll('[data-log=' + key + ']').forEach(function (el) { el.textContent = text; }); };
     say('game', name || 'Pick a game');
     say('about', who + ' · ' + time);
-    say('dock', name ? 'Log ' + name + ' · ' + who + ' · ' + d : 'Log it');
+    say('dock', name ? (alone ? 'Just you? ' : '') + 'Log ' + name + ' · ' + who + ' · ' + d : 'Log it');
+    document.querySelectorAll('[data-log=alone]').forEach(function (el) { el.hidden = !alone; });
   end
 end
 init call update()
@@ -80,6 +97,7 @@ fun TagConsumer<*>.logForm(view: LogFormView, me: CurrentPlayer, values: Paramet
         hyperscript(LOG_SUMMARY_SCRIPT)
         val summary = logSummary(view, values)
         if (error != null) errorNotice(error)
+        if (values["again"] == "true") hiddenInput("again", "true")
         stepper("gf-stepper--sections") {
             formStep(1, "The game") {
                 if (view.games.isEmpty()) p("gf-muted") { +"Nothing on the shelf yet. Search for the game you played." }
@@ -106,8 +124,9 @@ fun TagConsumer<*>.logForm(view: LogFormView, me: CurrentPlayer, values: Paramet
             p("gf-kicker") { +"You're logging" }
             heading(Level.H2, "gf-log__game") { attributes["data-log"] = "game"; +(summary.game ?: "Pick a game") }
             p("gf-muted gf-log__about") { attributes["data-log"] = "about"; +summary.about }
+            p("gf-hint") { attributes["data-log"] = "alone"; hidden = !summary.alone; +JUST_YOU }
             actionButton("Log it", ButtonStyle.PRIMARY, ButtonSize.LARGE, block = true, submit = true, spinner = true)
-            p("gf-hint") { +"Then one quick question about it." }
+            if (values["again"] != "true") p("gf-hint") { +"Then one quick question about it." }
         }
     }
 

@@ -11,12 +11,22 @@ The play log, the checkpoint question after a play, and telling what you watched
 - **PL-3** Plays can be logged from the game day's date, judged in its own time zone and following the date when it moves; before that a log is refused ("The game day hasn't started yet") and the hub doesn't offer it.
 - **PL-4** After the game day ended, a forgotten play can still be logged; a cancelled game day takes no plays.
 - **PL-5** A play never names someone who was erased, and a player without a name shows as "Someone" in what was played.
-- **PL-6** The log form offers the shelf's games, has me ticked at the table and a duration picked, and a game that isn't on the shelf can be found by search, without repeating the shelf's games.
+- ~~**PL-6** The log form offers the shelf's games, has me ticked at the table and a duration picked, and a game that isn't on the shelf can be found by search, without repeating the shelf's games.~~ Replaced by PL-19 (U23).
 - **PL-7** The log page walks through three steps (the game, who played, how long) with a summary of what will be logged, also in the phone dock.
 - **PL-8** On the day, the hub's checkpoint asks what you played once you have a taste, and otherwise offers the taste round first with the log one tap away; the "Played today" section keeps a link to the log.
 - **PL-9** The game day hub lists what was played, with who played and for how long.
 - **PL-10** A logged play marks the game played for everyone at the table.
 - **PL-11** Logged plays teach how fast the group plays: the median ratio to the box time over plays with mostly the same table, kept within bounds, where games without a playtime don't count.
+
+- **PL-19** The log form offers the shelf's games and a duration picked, and a game that isn't on the shelf can be found by search, without repeating the shelf's games. Each suggestion links to it ("We played this") with that game and that table filled in; from the hub it starts with the table of my last play on this game day, else just me; nobody outside the game day is ever ticked.
+- **PL-20** A play with fewer players than the game needs is refused, naming the minimum ("This game needs at least two players. Tick who else played."), and the form keeps what was filled in.
+- **PL-21** With just me ticked on a game day with others, the summary and the phone dock ask "Just you?"; the play still logs as it is.
+
+## Putting a play right
+
+- **PL-22** Whoever logged a play, or played in it, can remove it from the hub's list, also a play logged before this was possible; nobody else can, removing it twice changes nothing, and a cancelled game day's plays stay.
+- **PL-23** A removed play is gone from the hub, from the group's speed and from played status (a game played only in that play is new to them again, and what they said before counts again); the comparison answered after it stays.
+- **PL-24** Removing a play opens the log form with that play filled in and says what was removed; logging it again from there doesn't ask "which did you enjoy more?" a second time.
 
 ## The question after a play
 
