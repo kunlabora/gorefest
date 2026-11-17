@@ -5,6 +5,24 @@ Shown in the app at /release-notes. Newest first. The shape is strict (ReleaseNo
 "## <version> · <yyyy-mm-dd>", then "### New", "### Changed" or "### Fixed", each with "- " lines in players' words.
 -->
 
+## 2.5.0 · 2026-11-17
+
+### New
+
+- Mark the games you can explain. Suggestions lean towards a game someone at the table can teach, and say who.
+- A play logged by mistake can be removed, and logged again the right way.
+- The version in the footer opens What's new: what's new, changed and fixed in every version.
+
+### Changed
+
+- Linking your BGG account is just typing your username, without a code in your BGG profile. A household can share one account, and each person keeps their own collection.
+- Logging a play starts with your last table, and a suggestion logs the table it was made for.
+- Too few players for a game is a warning, not a refusal, so a play with someone who has no account still logs. A table of one asks "Just you?" first.
+
+### Fixed
+
+- Double-clicking "Create game day" or "Log it" no longer makes two.
+
 ## 2.4.1 · 2026-11-13
 
 ### Fixed
