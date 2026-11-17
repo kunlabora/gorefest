@@ -10,7 +10,6 @@ import gorefest.core.PlayerId
 import gorefest.core.eventsourcing.Decision
 import gorefest.core.game.Game
 import gorefest.core.gameday.GameDaySummary
-import gorefest.core.gameday.LogPlay
 import gorefest.core.gameday.LogPlayDecider
 import gorefest.core.gameday.PlayKey
 import gorefest.core.gameday.RemovePlay
@@ -97,7 +96,7 @@ fun Route.checkpointRoutes(app: App) {
             val view = logFormView(app, gameDay, game)
             if (game == null) return@authenticated respondFragment { logForm(view, me, form, "Pick the game you played") }
             val log = PlayLogged(gameDay.id, game.id, players, minutes, me.id, app.clock.instant())
-            when (val decision = app.commands.handle(LogPlayDecider, LogPlay(log, game.minPlayers))) {
+            when (val decision = app.commands.handle(LogPlayDecider, log)) {
                 // Logging the same game again, by whoever was asked about it the first time, asks nothing more (U23).
                 is Decision.Accepted -> if (form["again"] == game.id.toString()) redirect(tableLink(gameDay, form.playersAt(gameDay)))
                 else redirect("/gamedays/${gameDay.id}/log/compare?game=${game.id}&minutes=$minutes&${players.joinToString("&") { "players=$it" }}")

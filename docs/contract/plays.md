@@ -19,7 +19,7 @@ The play log, the checkpoint question after a play, and telling what you watched
 - **PL-11** Logged plays teach how fast the group plays: the median ratio to the box time over plays with mostly the same table, kept within bounds, where games without a playtime don't count.
 
 - **PL-19** The log form offers the shelf's games and a duration picked, and a game that isn't on the shelf can be found by search, without repeating the shelf's games. Each suggestion links to it ("We played this") with that game and that table filled in; from the hub it starts with the table of my last play on this game day, else just me; nobody outside the game day is ever ticked.
-- **PL-20** A play with fewer players than the game needs is refused, naming the minimum ("This game needs at least two players. Tick who else played."), and the form keeps what was filled in.
+- **PL-20** With fewer players ticked than the chosen game needs, the log form says so, naming the minimum ("Azul needs at least 2 players. Tick who else played, or log it as it is if someone without an account joined in."); the play still logs as it is, because someone without an account can't be ticked.
 - **PL-21** With just me ticked on a game day with others, the summary and the phone dock ask "Just you?"; the play still logs as it is.
 
 ## Putting a play right

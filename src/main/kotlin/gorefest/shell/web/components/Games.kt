@@ -158,7 +158,12 @@ fun FlowContent.gameTiles(question: String, name: String, multiple: Boolean = fa
 /** One game in its [gameTiles] group, ticked when [checked]. */
 context(group: TileGroup)
 fun FlowContent.gameTileChoice(game: Game, checked: Boolean) = label("gf-tile") {
-    input(if (group.multiple) InputType.checkBox else InputType.radio, name = group.name) { value = game.id.toString(); this.checked = checked }
+    input(if (group.multiple) InputType.checkBox else InputType.radio, name = group.name) {
+        value = game.id.toString()
+        this.checked = checked
+        // The log form warns when fewer are ticked than the game needs (U23).
+        attributes["data-min-players"] = game.minPlayers.toString()
+    }
     art(game)
     span("gf-tile__name") { +game.name }
 }

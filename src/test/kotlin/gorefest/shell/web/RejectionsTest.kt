@@ -34,7 +34,6 @@ class RejectionsTest {
             Rejection.OwnerAskedEnough to "They've been asked a lot already: leave it to them",
             Rejection.OwnerNotAcceptingRequests to "They'd rather not be asked to bring games",
             Rejection.NobodyPlayed to "Tick who played",
-            Rejection.TooFewPlayers(2) to "This game needs at least two players. Tick who else played.",
             Rejection.NoSuchPlay to "That play isn't there any more",
             Rejection.NotYourPlay to "Only whoever logged it, or played it, can remove a play",
             Rejection.PlayersNotAtGameDay to "Only players at this game day can be in a log",

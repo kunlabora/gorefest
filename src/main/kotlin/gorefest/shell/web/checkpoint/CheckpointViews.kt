@@ -18,15 +18,24 @@ data class LogFormView(val gameDay: GameDaySummary, val games: List<Game>, val n
 
 /**
  * What the summary card and the phone dock say: the chosen game, how many are at the table, and the time. [alone]: just
- * one ticked on a game day with others, which is more often a slip than a solo game (U23).
+ * one ticked on a game day with others, which is more often a slip than a solo game; [minPlayers]: the chosen game's
+ * minimum. Both only warn: someone without an account can't be ticked (U23).
  */
-private data class LogSummary(val game: String?, val players: Int, val duration: String, val alone: Boolean) {
+private data class LogSummary(val game: String?, val players: Int, val duration: String, val alone: Boolean, val minPlayers: Int = 1) {
     val about: String get() = "${players.of("player")} · ${durationText(duration)}"
     val dock: String get() = if (game == null) "Log it" else (if (alone) "Just you? " else "") + "Log $game · ${players.of("player")} · $duration"
+    val check: String? get() = when {
+        game != null && players < minPlayers -> tooFew(game, minPlayers)
+        alone -> JUST_YOU
+        else -> null
+    }
 }
 
 /** Said under the summary when only one player is ticked on a game day with others. */
 const val JUST_YOU = "Just you? Tick who else played."
+
+/** Said under the summary when fewer are ticked than [game] needs. The form's hyperscript says the same. */
+fun tooFew(game: String, minPlayers: Int) = "$game needs at least $minPlayers players. Tick who else played, or log it as it is if someone without an account joined in."
 
 /** "45m" is "about 45 min", "2h" is "about 2 h", "3h+" is "3 h or more". The form's hyperscript says the same. */
 private fun durationText(label: String): String {
@@ -38,7 +47,8 @@ private fun durationText(label: String): String {
 private fun logSummary(view: LogFormView, values: Parameters): LogSummary {
     val chosen = values["game"] ?: view.games.firstOrNull()?.id?.toString()
     val players = values.getAll("players")?.size ?: 1
-    return LogSummary(view.games.firstOrNull { it.id.toString() == chosen }?.name, players, values["duration"] ?: "45m", alone = players == 1 && view.gameDay.players.size > 1)
+    val game = view.games.firstOrNull { it.id.toString() == chosen }
+    return LogSummary(game?.name, players, values["duration"] ?: "45m", alone = players == 1 && view.gameDay.players.size > 1, minPlayers = game?.minPlayers ?: 1)
 }
 
 /**
@@ -81,11 +91,13 @@ private const val LOG_SUMMARY_SCRIPT = """def update()
     const time = !m ? 'no time chosen' : m[2] === 'h' ? (m[3] ? m[1] + ' h or more' : 'about ' + m[1] + ' h') : 'about ' + m[1] + ' min';
     const who = n + (n === 1 ? ' player' : ' players');
     const alone = n === 1 && me.querySelectorAll('input[name=players]').length > 1;
+    const min = g ? parseInt(g.dataset.minPlayers || '1', 10) : 1;
+    const check = name && n < min ? name + ' needs at least ' + min + ' players. Tick who else played, or log it as it is if someone without an account joined in.' : alone ? '$JUST_YOU' : '';
     const say = function (key, text) { document.querySelectorAll('[data-log=' + key + ']').forEach(function (el) { el.textContent = text; }); };
     say('game', name || 'Pick a game');
     say('about', who + ' · ' + time);
     say('dock', name ? (alone ? 'Just you? ' : '') + 'Log ' + name + ' · ' + who + ' · ' + d : 'Log it');
-    document.querySelectorAll('[data-log=alone]').forEach(function (el) { el.hidden = !alone; });
+    document.querySelectorAll('[data-log=check]').forEach(function (el) { el.textContent = check; el.hidden = !check; });
   end
 end
 init call update()
@@ -126,7 +138,7 @@ fun TagConsumer<*>.logForm(view: LogFormView, me: CurrentPlayer, values: Paramet
             p("gf-kicker") { +"You're logging" }
             heading(Level.H2, "gf-log__game") { attributes["data-log"] = "game"; +(summary.game ?: "Pick a game") }
             p("gf-muted gf-log__about") { attributes["data-log"] = "about"; +summary.about }
-            p("gf-hint") { attributes["data-log"] = "alone"; hidden = !summary.alone; +JUST_YOU }
+            p("gf-hint") { attributes["data-log"] = "check"; hidden = summary.check == null; +summary.check.orEmpty() }
             actionButton("Log it", ButtonStyle.PRIMARY, ButtonSize.LARGE, block = true, submit = true, spinner = true)
             if (values["again"] == null) p("gf-hint") { +"Then one quick question about it." }
         }

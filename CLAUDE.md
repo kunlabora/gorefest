@@ -14,7 +14,7 @@ Helps a group of boardgamers pick the games they'll enjoy most at a game day, us
 - **Suggestions**: top-ranked candidates shown to a table (top 3, each with a one-line reason).
 - **Comparison**: a pairwise answer, with basis `VIBE` (unplayed, "which would you rather try?"), `PLAYED` ("which did you enjoy more?") or `WATCHED` (after watching a table play it, U9; trains the enjoyment model like `PLAYED` but doesn't make the game played).
 - **Checkpoint**: morning / lunch / evening moments when people open the app.
-- **Play log**: what was played, by whom, how long. Open from the game day's date, also after it ended (a forgotten play); not on a cancelled one. A play logged by mistake is removed (`PlayRemoved`, by whoever logged it or played in it) and logged again (U23); a game won't log with fewer players than its minimum.
+- **Play log**: what was played, by whom, how long. Open from the game day's date, also after it ended (a forgotten play); not on a cancelled one. A play logged by mistake is removed (`PlayRemoved`, by whoever logged it or played in it) and logged again (U23) The form warns, but still logs, below the game's minimum (someone without an account can't be ticked) and for a table of one.
 - **Explainer**: a player who said they can explain (teach) a game (U22, `CanExplainChanged`). A lasting fact about the player, not a game day; marking a game also makes it played for them.
 
 ## Stack

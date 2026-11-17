@@ -84,7 +84,7 @@ One line, about 60 characters, naming people where it helps:
 
 - Each suggestion: **We played this** (**I played this** at a table of one) opens the log with that game and table.
 - Log summary and dock, with just you ticked on a day with others: "Just you? Tick who else played." · dock "Just you? Log Azul · 1 player · 45m". It still logs.
-- Too few for the game: "This game needs at least two players. Tick who else played."
+- Too few for the game (a warning; it still logs): "Azul needs at least 2 players. Tick who else played, or log it as it is if someone without an account joined in."
 - On the hub's play list: **Remove**. Then: "Removed **Azul** from what was played. Log it again with the right people, or go back to the game day."
 - Refused: "Only whoever logged it, or played it, can remove a play" · "That play isn't there any more"
 

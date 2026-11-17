@@ -32,22 +32,19 @@ import java.time.ZoneId
  * the night), but not on a cancelled one. Erased players stay on a closed game day's history, so every erasure is in
  * the boundary too: a new play must never name someone who was erased.
  */
-/** Log [play]; [minPlayers] is the game's own minimum (from BGG), which the log can't know. */
-data class LogPlay(val play: PlayLogged, val minPlayers: Int = 1)
-
 /** Names one play by what [PlayLogged] holds: it has no id of its own. */
 data class PlayKey(val gameDay: GameDayId, val game: BggId, val loggedBy: PlayerId, val at: Instant)
 
 val PlayLogged.key get() = PlayKey(gameDay, game, loggedBy, at)
 val PlayRemoved.key get() = PlayKey(gameDay, game, loggedBy, loggedAt)
 
-object LogPlayDecider : Decider<LogPlay, LogPlayDecider.State, PlayLogged> {
+object LogPlayDecider : Decider<PlayLogged, LogPlayDecider.State, PlayLogged> {
     data class State(val date: LocalDate? = null, val zone: ZoneId = ZoneId.of("UTC"), val open: Boolean = false, val cancelled: Boolean = false, val joined: Set<PlayerId> = emptySet())
 
     override val initialState = State()
 
-    override fun query(command: LogPlay) = Query.of(
-        Query.Item(setOf(typeName<GameDayCreated>(), typeName<GameDayDetailsChanged>(), typeName<GameDayCancelled>(), typeName<PlayerJoined>()), setOf(Tags.gameDay(command.play.gameDay))),
+    override fun query(command: PlayLogged) = Query.of(
+        Query.Item(setOf(typeName<GameDayCreated>(), typeName<GameDayDetailsChanged>(), typeName<GameDayCancelled>(), typeName<PlayerJoined>()), setOf(Tags.gameDay(command.gameDay))),
         Query.Item(setOf(typeName<PlayerErased>()), emptySet()),
     )
 
@@ -60,16 +57,13 @@ object LogPlayDecider : Decider<LogPlay, LogPlayDecider.State, PlayLogged> {
         else -> state
     }
 
-    override fun decide(command: LogPlay, state: State): Decision<PlayLogged> = decide(command.play, command.minPlayers, state)
-
-    private fun decide(command: PlayLogged, minPlayers: Int, state: State): Decision<PlayLogged> = when {
+    override fun decide(command: PlayLogged, state: State): Decision<PlayLogged> = when {
         !state.open -> Rejected(Rejection.NoSuchGameDay)
         state.cancelled -> Rejected(Rejection.GameDayCancelled)
         state.date != null && command.at.atZone(state.zone).toLocalDate() < state.date -> Rejected(Rejection.GameDayNotStarted)
         command.loggedBy !in state.joined -> Rejected(Rejection.NotJoined)
         command.players.isEmpty() -> Rejected(Rejection.NobodyPlayed)
         !state.joined.containsAll(command.players) -> Rejected(Rejection.PlayersNotAtGameDay)
-        command.players.distinct().size < minPlayers -> Rejected(Rejection.TooFewPlayers(minPlayers))
         command.minutes !in 5..720 -> Rejected(Rejection.ImplausibleDuration)
         else -> Accepted(command.copy(players = command.players.distinct()))
     }

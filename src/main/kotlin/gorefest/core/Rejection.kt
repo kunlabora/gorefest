@@ -55,9 +55,6 @@ sealed interface Rejection {
 
     data object NobodyPlayed : Rejection
 
-    /** The game needs at least [minPlayers] and fewer were ticked. */
-    data class TooFewPlayers(val minPlayers: Int) : Rejection
-
     /** There is no such play on this game day. */
     data object NoSuchPlay : Rejection
 

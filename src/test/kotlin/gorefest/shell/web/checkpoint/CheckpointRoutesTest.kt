@@ -10,6 +10,7 @@ import gorefest.core.GamePlayStatusDeclared
 import gorefest.core.PlayLogged
 import gorefest.core.GameDayCancelled
 import gorefest.shell.web.checkpoint.JUST_YOU
+import gorefest.shell.web.checkpoint.tooFew
 import gorefest.core.PlayerErased
 import gorefest.core.PlayerId
 import gorefest.core.PlayerJoined
@@ -456,25 +457,30 @@ class CheckpointRoutesTest {
 
     @Test
     @Obligation("PL-20")
-    fun `a play with fewer players than the game needs is refused, keeping the form`() = test.webTest(session = kim) { client ->
-        val refused = client.htmxPost(log, parameters { append("game", azul.toString()); append("players", kimId.toString()); append("duration", "45m") }).fragment()
+    fun `fewer players than the game needs is a warning, not a refusal`() = test.webTest(session = kim) { client ->
+        val check = client.get("$log?game=$azul&players=$kimId").page().one("#log-form [data-log=check]")
+        check.text() shouldBe tooFew("Azul", 2)
+        check.hasAttr("hidden") shouldBe false
+        client.get("$log?game=$azul&players=$kimId&players=$anna").page().one("#log-form [data-log=check]").hasAttr("hidden") shouldBe true
+        client.get(log).page().one("#log-form").attr("_") shouldContain "dataset.minPlayers"
+        client.get(log).page().one("#log-form input[name=game][value=$azul]").attr("data-min-players") shouldBe "2"
 
-        refused.one("[role=alert]").text() shouldBe "This game needs at least two players. Tick who else played."
-        refused.select("input[name=players][checked]").map { it.`val`() } shouldBe listOf(kimId.toString())
-        refused.one("input[name=game][checked]").`val`() shouldBe azul.toString()
-        app.plays.on(gorefest7).shouldBeEmpty()
+        // Someone without an account played too: it logs as it is.
+        val logged = client.htmxPost(log, parameters { append("game", azul.toString()); append("players", kimId.toString()); append("duration", "45m") })
+        logged.headers["HX-Redirect"]!! shouldStartWith "$log/compare"
+        app.plays.on(gorefest7).single().players shouldBe listOf(kimId)
     }
 
     @Test
     @Obligation("PL-21")
     fun `just me ticked on a game day with others asks "Just you?" but still logs`() = test.webTest(session = kim) { client ->
-        val page = client.get(log).page()
-        page.one("#log-form [data-log=alone]").text() shouldBe JUST_YOU
-        page.one("#log-form [data-log=alone]").hasAttr("hidden") shouldBe false
-        page.one(".gf-dock [data-log=dock]").text() shouldBe "Just you? Log Azul · 1 player · 45m"
-        page.one("#log-form").attr("_") shouldContain "data-log=alone"
+        val page = client.get("$log?game=$cascadia").page()
+        page.one("#log-form [data-log=check]").text() shouldBe JUST_YOU
+        page.one("#log-form [data-log=check]").hasAttr("hidden") shouldBe false
+        page.one(".gf-dock [data-log=dock]").text() shouldBe "Just you? Log Cascadia · 1 player · 45m"
+        page.one("#log-form").attr("_") shouldContain "data-log=check"
 
-        client.get("$log?players=$kimId&players=$anna").page().one("#log-form [data-log=alone]").hasAttr("hidden") shouldBe true
+        client.get("$log?game=$cascadia&players=$kimId&players=$anna").page().one("#log-form [data-log=check]").hasAttr("hidden") shouldBe true
 
         // Cascadia plays solo: a table of one logs.
         val logged = client.htmxPost(log, parameters { append("game", cascadia.toString()); append("players", kimId.toString()); append("duration", "45m") })

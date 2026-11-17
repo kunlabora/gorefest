@@ -18,8 +18,10 @@ refused.
    - From the hub, the form ticks the players of your last logged play on this game day, if you were in it; otherwise
      just you, as today.
 2. **Refuse what can't be true, question what's odd.**
-   - Fewer players ticked than the game's minimum (BGG `minPlayers`) is refused, and the form stays as filled in:
-     "Brass: Birmingham needs at least 2 players. Tick who else played."
+   - Fewer players ticked than the game's minimum (BGG `minPlayers`) is a warning, not a refusal (**Decided
+     (2026-11-17)** after review: there are no guests, so someone without an account can't be ticked): "Brass:
+     Birmingham needs at least 2 players. Tick who else played, or log it as it is if someone without an account
+     joined in."
    - Just you ticked, on a game day with others, for a game that plays with one: the summary card and the phone dock say
      "Just you? Tick who else played." The log still goes through as is.
 3. **Put it right afterwards.**
@@ -41,9 +43,7 @@ refused.
 
 **Deciders** (`core/gameday/Plays.kt`):
 
-- `LogPlayDecider` takes a command `LogPlay(play: PlayLogged, minPlayers: Int)` instead of the event itself, so the
-  game's minimum is in the command (the core has no BGG metadata). New rejection `TooFewPlayers(minPlayers)`. Query
-  unchanged.
+- `LogPlayDecider` unchanged: the minimum only warns, in the form (each game tile carries `data-min-players`).
 - `RemovePlayDecider(RemovePlay(...))`. Query: the game day's created/cancelled/details and `PlayLogged`/`PlayRemoved`
   tagged with the game day and game. Rejections: `NoSuchGameDay`, `GameDayCancelled`, new `NoSuchPlay` (also when
   already removed: a double tap is a no-op instead), new `NotYourPlay` (only the logger or a player in it).
@@ -79,8 +79,7 @@ refused.
 
 - [x] PL-19 (replaces ~~PL-6~~'s "has me ticked"): coming from a suggestion, the log form has that game and that table
   filled in; from the hub, the table of your last play on this game day, else just you.
-- [x] PL-20: a play with fewer players than the game's minimum is refused with the minimum named, and the form keeps
-  what was filled in.
+- [x] PL-20: fewer players ticked than the game's minimum is a warning naming the minimum; the play still logs.
 - [x] PL-21: logging just yourself on a game day with others shows "Just you?" in the summary and the dock, and still
   logs.
 - [x] PL-22: the logger or a player in a play can remove it, also a play logged before this story; anyone else can't;
@@ -102,7 +101,7 @@ Built as designed, with these notes:
 - After review: the question is skipped only for whoever was asked it the first time (the one who logged it, if they
   played) and only for the same game (`again=<game>`); logging a different game, or removing a play someone else logged
   for you, asks as usual. A removed play's off-shelf game is left out of the form's search (`also=`), so it shows once.
-- `LogPlayDecider` takes `LogPlay(play, minPlayers)`. `PlayRemoved` carries the removed play's players (for tags and
+- `PlayRemoved` carries the removed play's players (for tags and
   projections) and its `loggedAt`.
 - `PlayerTastes` keeps every word on played status per game (`TasteHistory.words`: said, or a play log), so a removed
   play gives back the last word before it. Old tests that logged a two-player game for one person now log a solo game

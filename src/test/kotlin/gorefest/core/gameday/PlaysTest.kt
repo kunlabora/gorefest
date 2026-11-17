@@ -33,30 +33,30 @@ class PlaysTest {
     @Test
     @Obligation("PL-1")
     fun `a joined player logs a play for joined players`() {
-        LogPlayDecider.given(*joined).whenever(LogPlay(log(45))).thenEmits(log(45))
+        LogPlayDecider.given(*joined).whenever(log(45)).thenEmits(log(45))
     }
 
     @Test
     @Obligation("PL-2", "PL-4")
     fun `logs need joined players, a real duration and a game day that wasn't cancelled`() {
         val stranger = gorefest.core.PlayerId(kotlin.uuid.Uuid.random())
-        LogPlayDecider.given(*joined).whenever(LogPlay(log(45, listOf(anna, stranger)))).thenRejects(Rejection.PlayersNotAtGameDay)
-        LogPlayDecider.given(*joined).whenever(LogPlay(log(45, emptyList()))).thenRejects(Rejection.NobodyPlayed)
-        LogPlayDecider.given(*joined).whenever(LogPlay(log(0))).thenRejects(Rejection.ImplausibleDuration)
-        LogPlayDecider.given(*joined, GameDayCancelled(gorefest7)).whenever(LogPlay(log(45))).thenRejects(Rejection.GameDayCancelled)
-        LogPlayDecider.given(gameDayCreated()).whenever(LogPlay(log(45))).thenRejects(Rejection.NotJoined)
+        LogPlayDecider.given(*joined).whenever(log(45, listOf(anna, stranger))).thenRejects(Rejection.PlayersNotAtGameDay)
+        LogPlayDecider.given(*joined).whenever(log(45, emptyList())).thenRejects(Rejection.NobodyPlayed)
+        LogPlayDecider.given(*joined).whenever(log(0)).thenRejects(Rejection.ImplausibleDuration)
+        LogPlayDecider.given(*joined, GameDayCancelled(gorefest7)).whenever(log(45)).thenRejects(Rejection.GameDayCancelled)
+        LogPlayDecider.given(gameDayCreated()).whenever(log(45)).thenRejects(Rejection.NotJoined)
     }
 
     @Test
     @Obligation("PL-4")
     fun `a play can still be logged after the game day ended`() {
-        LogPlayDecider.given(*joined, GameDayEnded(gorefest7)).whenever(LogPlay(log(45))).thenEmits(log(45))
+        LogPlayDecider.given(*joined, GameDayEnded(gorefest7)).whenever(log(45)).thenEmits(log(45))
     }
 
     @Test
     @Obligation("PL-5", "PR-9")
     fun `a play never names someone who was erased, also on an ended game day that still shows them`() {
-        LogPlayDecider.given(*joined, GameDayEnded(gorefest7), PlayerErased(bram)).whenever(LogPlay(log(45))).thenRejects(Rejection.PlayersNotAtGameDay)
+        LogPlayDecider.given(*joined, GameDayEnded(gorefest7), PlayerErased(bram)).whenever(log(45)).thenRejects(Rejection.PlayersNotAtGameDay)
     }
 
     @Test
@@ -64,16 +64,16 @@ class PlaysTest {
     fun `plays can be logged during the game day, from its date in its own time zone`() {
         fun at(instant: String) = log(45).copy(at = Instant.parse(instant))
         // 27 Sep, Europe/Brussels (UTC+2): the day starts at 26 Sep 22:00 UTC.
-        LogPlayDecider.given(*joined).whenever(LogPlay(at("2026-09-27T09:00:00Z"))).thenEmits(at("2026-09-27T09:00:00Z"))
-        LogPlayDecider.given(*joined).whenever(LogPlay(at("2026-09-26T22:00:00Z"))).thenEmits(at("2026-09-26T22:00:00Z"))
-        LogPlayDecider.given(*joined).whenever(LogPlay(at("2026-09-26T21:59:00Z"))).thenRejects(Rejection.GameDayNotStarted)
+        LogPlayDecider.given(*joined).whenever(at("2026-09-27T09:00:00Z")).thenEmits(at("2026-09-27T09:00:00Z"))
+        LogPlayDecider.given(*joined).whenever(at("2026-09-26T22:00:00Z")).thenEmits(at("2026-09-26T22:00:00Z"))
+        LogPlayDecider.given(*joined).whenever(at("2026-09-26T21:59:00Z")).thenRejects(Rejection.GameDayNotStarted)
     }
 
     @Test
     @Obligation("PL-3")
     fun `moving the game day moves when logging opens`() {
         val moved = GameDayDetailsChanged(gorefest7, "Gorefest #7", today.plusDays(10), "Anna's place")
-        LogPlayDecider.given(*joined, moved).whenever(LogPlay(log(45))).thenRejects(Rejection.GameDayNotStarted)
+        LogPlayDecider.given(*joined, moved).whenever(log(45)).thenRejects(Rejection.GameDayNotStarted)
     }
 
     @Test
@@ -120,16 +120,6 @@ class PlaysTest {
     }
 
     // A table of one by mistake (U23)
-
-    @Test
-    @Obligation("PL-20")
-    fun `a play with fewer players than the game needs is refused, naming the minimum`() {
-        LogPlayDecider.given(*joined).whenever(LogPlay(log(45, listOf(anna)), minPlayers = 2)).thenRejects(Rejection.TooFewPlayers(2))
-        LogPlayDecider.given(*joined).whenever(LogPlay(log(45, listOf(anna, anna)), minPlayers = 2)).thenRejects(Rejection.TooFewPlayers(2))
-        LogPlayDecider.given(*joined).whenever(LogPlay(log(45), minPlayers = 2)).thenEmits(log(45))
-        // A solo game logs with one.
-        LogPlayDecider.given(*joined).whenever(LogPlay(log(45, listOf(anna)), minPlayers = 1)).thenEmits(log(45, listOf(anna)))
-    }
 
     private val later = Instant.parse("2026-09-27T13:00:00Z")
     private fun remove(play: PlayLogged, by: gorefest.core.PlayerId) = RemovePlay(play.key, by, later)

@@ -44,7 +44,7 @@ class CancelGameDayTest {
         BringGameDecider.given(*given).whenever(BringGame(gorefest7, anna, BggId(13), true)).thenRejects(Rejection.GameDayCancelled)
         SetPlayWishDecider.given(*given, GameBrought(gorefest7, anna, BggId(13))).whenever(SetPlayWish(gorefest7, anna, BggId(13), true))
             .thenRejects(Rejection.GameDayCancelled)
-        LogPlayDecider.given(*given).whenever(LogPlay(PlayLogged(gorefest7, BggId(13), listOf(anna), 45, anna, Instant.parse("2026-09-27T12:00:00Z"))))
+        LogPlayDecider.given(*given).whenever(PlayLogged(gorefest7, BggId(13), listOf(anna), 45, anna, Instant.parse("2026-09-27T12:00:00Z")))
             .thenRejects(Rejection.GameDayCancelled)
     }
 
