@@ -18,6 +18,7 @@ What Boardfest promises about BoardGameGeek: linking an account, collections, ga
 - **BGG-33** A player links a BGG account by typing its username: if BGG knows it, it is linked at once, without a code or a change on BGG.
 - **BGG-34** The link page sits under Collection in the nav, can be skipped with "Not now", and asks only for the username.
 - **BGG-35** Several players can link the same BGG account, whatever the case of the username, each with their own copy of its collection.
+- **BGG-36** The link page says that nobody checks the account is theirs, and that a household can share one.
 - **BGG-10** Until a player has linked an account, the home page suggests linking, and the collection and bring pages send them to link one.
 
 ## Collections

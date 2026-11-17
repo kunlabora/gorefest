@@ -5,6 +5,10 @@ import gorefest.core.BggAccountLinked
 import gorefest.core.BggAccountLinkedHashed
 import gorefest.core.PlayerId
 import gorefest.core.gameday.bram
+import gorefest.core.player.LinkBggAccount
+import gorefest.core.player.LinkBggAccountDecider
+import gorefest.shell.bgg.BggPriority
+import gorefest.shell.bgg.SyncStatus
 import gorefest.shell.web.TestApp
 import gorefest.shell.web.fragment
 import gorefest.shell.web.htmxPost
@@ -57,6 +61,13 @@ class BggRoutesTest {
         page.one("#bgg-form").attr("hx-post") shouldBe "/bgg/username"
         page.one("#bgg-form a[href='/']").text() shouldBe "Not now"
         page.select(".gf-copy__value, .gf-stepper, img.gf-howto").shouldBeEmpty()
+    }
+
+    @Test
+    @Obligation("BGG-36")
+    fun `the link page says nobody checks the account is yours`() = test.webTest(session = kim) { client ->
+        client.get("/bgg").page().one("#username-hint").text() shouldBe
+            "We don't check it's yours, so link your own. Sharing a collection at home? You can both link the same account."
     }
 
     @Test
@@ -116,7 +127,9 @@ class BggRoutesTest {
     fun `a second account is refused until you unlink`() = test.webTest(session = kim) { client ->
         client.link("KimPlays")
 
+        client.link("kimplays").headers["HX-Redirect"] shouldBe "/collection?returnTo=%2Fgamedays%2Fnew"
         client.link("OtherPlays").fragment().one(".gf-error").text() shouldBe "You've already linked a BGG account"
+        app.bggAccounts.isLinked(kimId) shouldBe true
     }
 
     @Test
@@ -126,8 +139,28 @@ class BggRoutesTest {
             app.store.append(listOf(BggAccountLinkedHashed(bram, app.bggUsernameKey.of("kimplays")), BggAccountLinked(PlayerId(Uuid.random()), "KimPlays")))
         }
 
-        client.link("kimplays").headers["HX-Redirect"] shouldBe "/collection?returnTo=%2Fgamedays%2Fnew"
+        client.link("KIMPLAYS").headers["HX-Redirect"] shouldBe "/collection?returnTo=%2Fgamedays%2Fnew"
         app.bggAccounts.isLinked(kimId) shouldBe true
+        app.bggAccounts.isLinked(bram) shouldBe true
+    }
+
+    @Test
+    @Obligation("BGG-35", "BGG-7")
+    fun `two players on one account each have their own collection, and one unlinking leaves the other's`() = test.webTest(session = kim) { client ->
+        test.loggedIn("Bram", id = bram)
+        app.commands.handle(LinkBggAccountDecider, LinkBggAccount(bram, "KimPlays", app.bggUsernameKey.of("KimPlays")))
+        app.collectionSync.request(bram, "KimPlays", BggPriority.LINK).join()
+        client.link("kimplays")
+        kotlinx.coroutines.withTimeout(5000) { while (app.collectionSync.status(kimId)?.status != SyncStatus.DONE) kotlinx.coroutines.delay(20) }
+        val games = app.collectionSync.collection(bram)
+        games.isEmpty() shouldBe false
+        app.collectionSync.collection(kimId) shouldBe games
+
+        client.submitForm("/bgg/unlink", Parameters.Empty)
+
+        app.collectionSync.collection(kimId).isEmpty() shouldBe true
+        app.collectionSync.collection(bram) shouldBe games
+        app.collectionSync.status(bram)?.status shouldBe SyncStatus.DONE
         app.bggAccounts.isLinked(bram) shouldBe true
     }
 

@@ -34,7 +34,7 @@ fun TagConsumer<*>.linkForm(returnTo: String, username: String = "", error: Stri
             div(if (error != null) "gf-signin gf-field--invalid" else "gf-signin") {
                 signinField(
                     "username", "BGG username", error = error,
-                    hint = "Sharing a collection at home? You can both link the same account.",
+                    hint = "We don't check it's yours, so link your own. Sharing a collection at home? You can both link the same account.",
                     action = { actionButton("Link", ButtonStyle.PRIMARY, ButtonSize.LARGE, submit = true, spinner = true) },
                 ) {
                     fieldInput("username") {
