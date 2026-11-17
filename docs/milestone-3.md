@@ -26,3 +26,4 @@ Decisions (2026-10-30): split into four stories; a contrast pair that fails is f
 | U21 | [Link BGG without a code](requests/u21-link-bgg-without-a-code.md)       | ✅     |            | 2026-11-17 | 2026-11-17 | 2026-11-17 |
 | U22 | [I can explain this game](requests/u22-i-can-explain-this.md)            | ✅     |            | 2026-11-17 | 2026-11-17 | 2026-11-17 |
 | U23 | [Don't log a play for a table of one by mistake](requests/u23-solo-play-log.md) | ✅     |            | 2026-11-17 | 2026-11-17 | 2026-11-17 |
+| U24 | [Release notes](requests/u24-release-notes.md)                         | 🚧     |            | 2026-11-17 | 2026-11-17 |            |

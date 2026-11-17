@@ -34,3 +34,10 @@ What every page promises, whatever the feature.
 ## Running safely
 
 - **WEB-16** Dev mode, with its in-page mailbox, refuses to start on a public or HTTPS address, bound beyond this machine, or with a real mail provider; production is unaffected.
+
+## Release notes
+
+- **WEB-17** The footer's version, on every page, links to the release notes.
+- **WEB-18** The release notes list every version newest first, each with its date and its new, changed and fixed lines; an empty kind isn't shown.
+- **WEB-19** The version the footer shows has its release notes.
+- **WEB-20** The release notes are readable signed out.
