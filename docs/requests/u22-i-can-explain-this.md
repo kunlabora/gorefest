@@ -104,6 +104,10 @@ All answered 2026-11-17.
 
 ## Criteria
 
+The obligation ids (SH-35–37, SU-24–26, TA-33) are reserved here and go into `docs/contract/` when the build starts,
+so `check` stays green until a test proves them.
+
+
 - [ ] SH-35: A player can mark a game in their collection, or on the shelf of a game day they joined, as one they can explain, and take it back; marking it twice changes nothing (decider given/when/then, web test).
 - [ ] SH-36: On a game day's shelf, a game shows which of the game day's players can explain it; nobody outside the game day sees it.
 - [ ] SU-24: When someone at the table can explain a game and someone at the table hasn't played it, the game is nudged up the suggestions and the pick says who can explain it.
