@@ -88,6 +88,13 @@ One line, about 60 characters, naming people where it helps:
 - On the hub's play list: **Remove**. Then: "Removed **Azul** from what was played. Log it again with the right people, or go back to the game day."
 - Refused: "Only whoever logged it, or played it, can remove a play" · "That play isn't there any more"
 
+## Release notes (U24)
+
+- Footer: **Boardfest v2.4.1** links to the page.
+- Page title and heading: **What's new**. Lede: "What changed in Boardfest, newest first."
+- Per version: "2.4.1" with its date ("Fri 13 Nov 2026"), then **New**, **Changed**, **Fixed**.
+- Lines are what a player notices, in one plain sentence: "A pasted login code keeps all six digits." No story ids, bug numbers or developer work.
+
 ## Game type and time
 
 - Under a game's name: up to two words from BGG, uppercase small: "ABSTRACT · TILE PLACING", "COOPERATIVE", "CARD GAME".

@@ -754,6 +754,14 @@ div.gf-tile { cursor: default; }
 .gf-privacy__section ul { padding-left: 1.2em; }
 .gf-privacy__section li + li { margin-top: 6px; }
 
+/* What's new (U24): the privacy page's readable column, one section per release. */
+.gf-release-notes .gf-wrap { max-width: 68ch; display: flex; flex-direction: column; gap: 16px; padding-block: 24px 40px; }
+.gf-release { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
+.gf-release__date { font: 400 15px/24px var(--font-sans); }
+.gf-release .gf-kicker { margin-top: 8px; }
+.gf-release ul { margin: 0; padding-left: 1.2em; }
+.gf-release li + li { margin-top: 6px; }
+
 /* The avatar in the app bar is a link to the account page. */
 .gf-appbar__account { display: inline-flex; border-radius: 50%; text-decoration: none; }
 .gf-appbar__account:focus-visible { outline: 2px solid var(--focus, currentColor); outline-offset: 2px; }

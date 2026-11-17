@@ -91,14 +91,14 @@ fun HTML.page(
             footer("gf-footer") {
                 bggCredit()
                 p("gf-credit") { a("/privacy") { +"Privacy" } }
-                p("gf-credit gf-credit--version") { +"Boardfest v$APP_VERSION" }
+                p("gf-credit gf-credit--version") { a("/release-notes") { +"Boardfest v$APP_VERSION" } }
             }
         }
     }
 }
 
 /** Read from `version.properties`, which Gradle fills from the project version, so the footer always shows the built jar's version. */
-private val APP_VERSION: String = object {}.javaClass.getResourceAsStream("/version.properties")
+val APP_VERSION: String = object {}.javaClass.getResourceAsStream("/version.properties")
     ?.use { java.util.Properties().apply { load(it) }.getProperty("version") } ?: "dev"
 
 private val PRELOADED_FONTS = listOf("atkinson-hyperlegible-next-latin.woff2", "bricolage-grotesque-latin.woff2")

@@ -4,6 +4,7 @@ import gorefest.shell.App
 import gorefest.shell.auth.DevMailbox
 import gorefest.shell.web.account.accountRoutes
 import gorefest.shell.web.privacy.privacyRoutes
+import gorefest.shell.web.releasenotes.releaseNotesRoutes
 import gorefest.shell.web.auth.authRoutes
 import gorefest.shell.web.bgg.bggRoutes
 import gorefest.shell.web.bgg.collectionRoutes
@@ -146,6 +147,7 @@ fun Application.web(app: App) {
         context(app.login, app.config) { authRoutes() }
         context(app.login, app.config) { newcomerRoutes(app.newcomers) }
         context(app.config) { privacyRoutes() }
+        releaseNotesRoutes()
         context(app.login, app.config) { accountRoutes(app) }
         context(app.ids, app.clock, app.login, app.config) { gameDayRoutes(app) }
         context(app.ids, app.clock, app.login, app.config) { datePollRoutes(app) }
