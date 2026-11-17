@@ -18,3 +18,9 @@ Decisions (2026-10-30): split into four stories; a contrast pair that fails is f
 | A2 | [Names: every button, link, toggle and image says what it is](requests/a2-names.md)        | ✅     |            | 2026-10-30 | 2026-10-30 | 2026-10-30 |
 | A3 | [Structure: one heading, headings in order, announced swaps](requests/a3-structure.md)     | ✅     |            | 2026-10-30 | 2026-10-30 | 2026-10-30 |
 | A4 | [Colour and motion: contrast, focus and target size checked](requests/a4-colour-motion.md) | ✅     |            | 2026-10-30 | 2026-10-30 | 2026-10-30 |
+
+## Feedback, 2026-11-17
+
+| #   | Story                                                                    | Status | Depends on | Arrived    | Started    | Done |
+|-----|--------------------------------------------------------------------------|--------|------------|------------|------------|------|
+| U21 | [Link BGG without a code](requests/u21-link-bgg-without-a-code.md)       | 🚧     |            | 2026-11-17 | 2026-11-17 |      |

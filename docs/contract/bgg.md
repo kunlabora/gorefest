@@ -6,15 +6,18 @@ What Boardfest promises about BoardGameGeek: linking an account, collections, ga
 
 ## Linking an account
 
-- **BGG-1** A player links a BGG account by putting a one-time code (`GORE-` and six characters) in any field of their BGG profile; until BGG shows the code there, the account stays unlinked and the page says so.
-- **BGG-2** An unknown or empty BGG username is explained instead of getting a code.
-- **BGG-3** The link page sits under Collection in the nav, can be skipped with "Not now", and shows the code to copy, three numbered steps, a picture of where the code goes on the profile, and a way back to change the username.
-- **BGG-4** A BGG account belongs to one player at a time, whatever the case of the username; nobody else can link it.
+- ~~**BGG-1**~~ A player links a BGG account by putting a one-time code in their BGG profile, dropped 2026-11-17: too much work, a player gave up halfway (BGG-33).
+- **BGG-2** An unknown or empty BGG username is explained instead of being linked.
+- ~~**BGG-3**~~ The link page shows the code to copy, three numbered steps and a picture of the profile, dropped 2026-11-17: there is no code any more (BGG-34).
+- ~~**BGG-4**~~ A BGG account belongs to one player at a time, dropped 2026-11-17: without proof it would let anyone squat a username (BGG-35).
 - **BGG-5** A player has one linked account: linking the same one again changes nothing, and a different one is refused until they unlink.
 - **BGG-6** The event log holds only a keyed hash of a BGG username, never the name itself.
-- **BGG-7** Unlinking forgets the account and its collection, and frees the username for anyone, the player included.
-- **BGG-8** An erased player's BGG username is free for someone else to link.
+- **BGG-7** Unlinking forgets the account and its collection, and the player can link again.
+- ~~**BGG-8**~~ An erased player's BGG username is free for someone else to link, dropped 2026-11-17: every username is free for anyone now (BGG-35).
 - **BGG-9** After linking, the player lands on their collection, which offers the way back to where they were going.
+- **BGG-33** A player links a BGG account by typing its username: if BGG knows it, it is linked at once, without a code or a change on BGG.
+- **BGG-34** The link page sits under Collection in the nav, can be skipped with "Not now", and asks only for the username.
+- **BGG-35** Several players can link the same BGG account, whatever the case of the username, each with their own copy of its collection.
 - **BGG-10** Until a player has linked an account, the home page suggests linking, and the collection and bring pages send them to link one.
 
 ## Collections
@@ -49,4 +52,4 @@ What Boardfest promises about BoardGameGeek: linking an account, collections, ga
 
 - **BGG-30** Without a BGG token, a fake BGG answers: every collection holds fifteen games plus every game with cover art.
 - **BGG-31** Every dev game has cover art we ship, and every shipped cover belongs to a dev game.
-- **BGG-32** In dev mode, the link page can fill in the fake profile with the code.
+- ~~**BGG-32**~~ In dev mode, the link page can fill in the fake profile with the code, dropped 2026-11-17: there is no code any more.
