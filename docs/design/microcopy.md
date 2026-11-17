@@ -73,6 +73,21 @@ One line, about 60 characters, naming people where it helps:
 - Switch on the collection page: **Let people see my collection to ask for games** · "Only people on a game day you joined see your collection, and only to ask you for a game. You always get to say "Not this time"."
 - Rejections: "You've asked for 3 games already: take one back first" · "They've been asked a lot already: leave it to them" · "They'd rather not be asked to bring games" · "They're already bringing that one"
 
+## Explaining a game (U22)
+
+- Toggle on the collection page and on each shelf game: **I can explain this** (pressed when marked). Saved: "You can explain Azul" · "Azul is no longer marked as one you can explain".
+- Shelf line: "Anna can explain it." · "You and Anna can explain it." · "Three people can explain it."
+- Bring page, under the hearts: "Say which ones you can explain, so a table new to a game knows who can teach it."
+- Under a suggestion's reason, when someone at the table is new to it: "Anna can explain it."
+
+## Putting a play right (U23)
+
+- Each suggestion: **We played this** (**I played this** at a table of one) opens the log with that game and table.
+- Log summary and dock, with just you ticked on a day with others: "Just you? Tick who else played." · dock "Just you? Log Azul · 1 player · 45m". It still logs.
+- Too few for the game: "This game needs at least two players. Tick who else played."
+- On the hub's play list: **Remove**. Then: "Removed **Azul** from what was played. Log it again with the right people, or go back to the game day."
+- Refused: "Only whoever logged it, or played it, can remove a play" · "That play isn't there any more"
+
 ## Game type and time
 
 - Under a game's name: up to two words from BGG, uppercase small: "ABSTRACT · TILE PLACING", "COOPERATIVE", "CARD GAME".
