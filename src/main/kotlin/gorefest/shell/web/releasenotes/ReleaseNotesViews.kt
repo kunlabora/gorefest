@@ -26,7 +26,7 @@ fun HTML.releaseNotesPage(notes: ReleaseNotes, me: CurrentPlayer?) = page(
     appBar = { if (me == null) wordmark() },
     site = me?.let { SiteBar(it, current = null) },
     wide = true,
-    mainClasses = "gf-release-notes",
+    mainClasses = "gf-reading",
 ) {
     wrap {
         crumb("/", "Back")

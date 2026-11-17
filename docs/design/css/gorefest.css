@@ -419,6 +419,11 @@ div.gf-tile { cursor: default; }
   .gf-stepper__item--ill > .gf-ill { grid-row: auto; height: 132px; margin-bottom: 10px; }
 }
 
+/* Reading column: a page of short text sections (the privacy notice, the release notes). */
+.gf-reading .gf-wrap { max-width: 68ch; display: flex; flex-direction: column; gap: 16px; padding-block: 24px 40px; }
+.gf-reading ul { padding-left: 1.2em; }
+.gf-reading li + li { margin-top: 6px; }
+
 /* ---------- Per-screen CSS slots: one block per redesign item, so parallel work doesn't collide. Keep your rules inside your block. ---------- */
 /* ==== R1 home ==== */
 .gf-home .gf-card { background: var(--surface-raised); border: 2px solid var(--line); border-radius: var(--radius-lg); box-shadow: var(--shadow-edge); }
@@ -748,19 +753,14 @@ div.gf-tile { cursor: default; }
 /* ==== end of per-screen blocks ==== */
 
 /* Privacy notice: a readable column of short sections. */
-.gf-privacy .gf-wrap { max-width: 68ch; display: flex; flex-direction: column; gap: 16px; padding-block: 24px 40px; }
 .gf-privacy__section { margin-top: 12px; }
 .gf-privacy__section > div > p, .gf-privacy__section > div > ul { margin: 8px 0 0; }
-.gf-privacy__section ul { padding-left: 1.2em; }
-.gf-privacy__section li + li { margin-top: 6px; }
 
-/* What's new (U24): the privacy page's readable column, one section per release. */
-.gf-release-notes .gf-wrap { max-width: 68ch; display: flex; flex-direction: column; gap: 16px; padding-block: 24px 40px; }
+/* What's new (U24): a reading column, one section per release. */
 .gf-release { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
 .gf-release__date { font: 400 15px/24px var(--font-sans); }
 .gf-release .gf-kicker { margin-top: 8px; }
-.gf-release ul { margin: 0; padding-left: 1.2em; }
-.gf-release li + li { margin-top: 6px; }
+.gf-release ul { margin: 0; }
 
 /* The avatar in the app bar is a link to the account page. */
 .gf-appbar__account { display: inline-flex; border-radius: 50%; text-decoration: none; }

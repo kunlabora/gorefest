@@ -36,7 +36,7 @@ enum class MailProvider(val label: String, val where: String) {
 }
 
 /** A plain-words notice for a private site: public (no login), still `noindex`. */
-fun HTML.privacyPage(view: PrivacyView) = page("Privacy", appBar = { wordmark() }, wide = true, mainClasses = "gf-privacy") {
+fun HTML.privacyPage(view: PrivacyView) = page("Privacy", appBar = { wordmark() }, wide = true, mainClasses = "gf-reading") {
     wrap {
         crumb("/", "Back")
         heading(Level.H1, "gf-h1") { +"What Boardfest keeps about you" }
