@@ -67,7 +67,7 @@ fun HTML.privacyPage(view: PrivacyView) = page("Privacy", appBar = { wordmark() 
         privacySection("keep", "What it keeps") {
             ul {
                 li { +"Your email address and the name you picked. The email is only used to sign you in and to send you the mails you'd expect (login codes, a recap after a game day)." }
-                li { +"The BGG username you link, and your collection, which is read from BoardGameGeek. Nothing about you is sent to BGG except that username in the request." }
+                li { +"The BGG username you link, and your collection, which is read from BoardGameGeek. Nothing about you is sent to BGG except that username in the request. Nobody checks that the account is yours, so link your own; people who share a collection at home can both link the same one." }
                 li { +"Your taste: which game you'd rather play when asked, games you haven't played, and the games you've hearted." }
                 li { +"Which game days you joined, the games you brought or asked someone to bring, what you played and with whom, your answers in date polls (which dates suit you, which games you'd play, which you'd bring), and the game nights a poll turned into." }
                 li { +"The title, date and place of game days, date polls and game nights. The place is shown only to people who have joined, never on the invite page or in its preview." }

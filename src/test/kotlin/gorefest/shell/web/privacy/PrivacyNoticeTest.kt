@@ -60,6 +60,7 @@ class PrivacyNoticeTest {
         val page = client.get("/privacy").page()
         page.one("#ask").text() shouldContain "change your email address yourself"
         page.one("#ask").text() shouldContain "unlink your BGG account"
+        page.one("#keep").text() shouldContain "Nobody checks that the account is yours"
         page.one("#others").text() shouldContain "I get a mail"
         page.one("#long").text() shouldContain "two years"
         page.one("#long").text() shouldContain "leave game days still to come"
