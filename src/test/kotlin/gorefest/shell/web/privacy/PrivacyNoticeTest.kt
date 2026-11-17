@@ -67,6 +67,7 @@ class PrivacyNoticeTest {
         page.one("#long").text() shouldContain "you leave every game night and date poll"
         page.one("#sees").text() shouldContain "only by people on the same game day"
         page.one("#sees").text() shouldContain "never from yours"
+        page.one("#sees").text() shouldContain "which of its games you can explain"
         page.one("#sees").text() shouldNotContain "the host of a date poll you joined"
     }
 

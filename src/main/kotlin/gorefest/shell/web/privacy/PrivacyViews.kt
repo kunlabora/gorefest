@@ -68,14 +68,14 @@ fun HTML.privacyPage(view: PrivacyView) = page("Privacy", appBar = { wordmark() 
             ul {
                 li { +"Your email address and the name you picked. The email is only used to sign you in and to send you the mails you'd expect (login codes, a recap after a game day)." }
                 li { +"The BGG username you link, and your collection, which is read from BoardGameGeek. Nothing about you is sent to BGG except that username in the request. Nobody checks that the account is yours, so link your own; people who share a collection at home can both link the same one." }
-                li { +"Your taste: which game you'd rather play when asked, games you haven't played, and the games you've hearted." }
+                li { +"Your taste: which game you'd rather play when asked, games you haven't played, the games you've hearted, and the games you said you can explain." }
                 li { +"Which game days you joined, the games you brought or asked someone to bring, what you played and with whom, your answers in date polls (which dates suit you, which games you'd play, which you'd bring), and the game nights a poll turned into." }
                 li { +"The title, date and place of game days, date polls and game nights. The place is shown only to people who have joined, never on the invite page or in its preview." }
             }
         }
 
         privacySection("sees", "Who sees what") {
-            p { +"People on the same game day or game night see your name, the games you bring and the games you've hearted. In a date poll, the people in it see which dates suit you, which games you'd play and which you offered to bring; only the host sees the games you said no to." }
+            p { +"People on the same game day or game night see your name, the games you bring, the games you've hearted, and which of its games you can explain. In a date poll, the people in it see which dates suit you, which games you'd play and which you offered to bring; only the host sees the games you said no to." }
             p { +"Your collection is seen only by people on the same game day, on the screen where they ask you to bring a game, unless you switch that off on your collection page. A date poll's host proposes games from their own collection or BGG, never from yours. Nobody outside the group sees anything: you need an invite, I hear about every new account, and I remove the ones I don't know." }
         }
 
@@ -97,7 +97,7 @@ fun HTML.privacyPage(view: PrivacyView) = page("Privacy", appBar = { wordmark() 
 
         privacySection("long", "How long") {
             p { +"For as long as your account exists. If you don't sign in for two years you get a mail, and a month later the account is deleted. Login codes are gone after a day. Server logs keep the time, the page and the result of a request, never a link or an email address, for 14 days. Backups are kept for 30 days, so a deleted account leaves them at the end of that." }
-            p { +"When I delete your account, your email, name, collection and sign-ins are removed. Your games and requests leave game days still to come, and you leave every game night and date poll. What you answered stays in the game history, under a number that no longer points at anyone." }
+            p { +"When I delete your account, your email, name, collection, sign-ins and the games you said you can explain are removed. Your games and requests leave game days still to come, and you leave every game night and date poll. What you answered stays in the game history, under a number that no longer points at anyone." }
         }
     }
 }
