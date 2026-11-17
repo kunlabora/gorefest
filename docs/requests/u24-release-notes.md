@@ -1,6 +1,6 @@
 # U24 Release notes
 
-Source: Tim, 2026-11-17. Status: 🚧 doing
+Source: Tim, 2026-11-17. Status: ✅ built
 
 **Idea:** players see what changed in Boardfest: what's new, what works differently, and what got fixed, per version.
 
@@ -73,15 +73,22 @@ startup into `List<Release(version, date, new, changed, fixed)>`; the parser is 
 
 ## Criteria
 
-- [ ] WEB-17: The footer's version, on every page, links to the release notes.
-- [ ] WEB-18: The release notes list every version newest first, each with its date and its new, changed and fixed
+- [x] WEB-17: The footer's version, on every page, links to the release notes.
+- [x] WEB-18: The release notes list every version newest first, each with its date and its new, changed and fixed
       lines; an empty kind isn't shown.
-- [ ] WEB-19: The version the footer shows has its release notes.
-- [ ] WEB-20: The release notes are readable signed out.
-- [ ] The parser rejects a file that strays from the shape (unknown heading, line outside a kind, bad date), with the
+- [x] WEB-19: The version the footer shows has its release notes.
+- [x] WEB-20: The release notes are readable signed out.
+- [x] The parser rejects a file that strays from the shape (unknown heading, line outside a kind, bad date), with the
       line number.
-- [ ] Backfilled notes for 2.0.0–2.4.1 and 1.0, in players' words.
-- [ ] The `release` skill writes the new version's notes in the version commit.
-- [ ] Design mockup in `docs/design/mockups/screen-release-notes.html` and the screen uses existing components; new
+- [x] Backfilled notes for 2.0.0–2.4.1 and 1.0, in players' words.
+- [x] The `release` skill writes the new version's notes in the version commit.
+- [x] Design mockup in `docs/design/mockups/screen-release-notes.html` and the screen uses existing components; new
       sentences in `docs/design/microcopy.md`.
-- [ ] No events: event evolution and erasure unaffected; `CLAUDE.md` lists `web.releasenotes`.
+- [x] No events: event evolution and erasure unaffected; `CLAUDE.md` lists `web.releasenotes`.
+
+Built as designed, with these notes:
+
+- Signed-in readers get the site bar (no nav item marked), signed-out readers the wordmark bar; the design said so, the first build missed it and review caught it.
+- Dates show as on the rest of the app ("Fri 13 Nov 2026"); the kinds are small uppercase kickers.
+- The parser also refuses a version with no lines and a version listed twice.
+- The page shares the privacy notice's reading column (`.gf-reading` in the shared CSS).
