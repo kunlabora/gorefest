@@ -46,6 +46,12 @@ What people bring to a game day, the games they really want to play, and asking 
 - **SH-32** Players accept requests by default and can opt out on the collection page, which says who can see their collection; once opted out they vanish from the ask screen and can't be asked ("They'd rather not be asked to bring games") until they opt in again.
 - **SH-33** Only members see the ask screen and the requests, or can ask; on an ended game day asking, taking back and declining are refused and requests stay as they were; a cancelled game day's ask screen is gone.
 
+## Explainers
+
+- **SH-35** A player can mark a game in their collection, or on the shelf of a game day they joined, as one they can explain, and take it back; marking it again changes nothing. The mark holds on every game day.
+- **SH-36** On a game day's shelf, a game shows which of the game day's players can explain it; nobody outside the game day sees it.
+
 ## Erasure
 
 - **SH-34** When a player is erased, a game day still to be played loses their games, hearts and bring requests (asked or asked of them), which stop counting against any limit; closed game days keep them as history.
+- **SH-37** When a player is erased, their "I can explain this" marks are gone everywhere.

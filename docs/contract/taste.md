@@ -47,3 +47,4 @@ How Boardfest learns what each player likes from pairwise comparisons, and what 
 - **TA-30** After a round, when shelf games are still uncertain, the game day offers a short top-up ("Sharpen your picks") of 5 pairs, each holding an uncertain game, against an anchor once the shelf pairs run out.
 - **TA-31** A top-up first asks again a pair answered long ago and not asked since, one at a time.
 - **TA-32** When the player knows the whole shelf well, the game day points to their favourites instead of another round.
+- **TA-33** Marking a game as one you can explain marks it played for you (its novelty ends for you); unmarking leaves it played; it adds no comparison.
