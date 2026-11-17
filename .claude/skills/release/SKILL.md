@@ -1,6 +1,6 @@
 ---
 name: release
-description: Cut a Boardfest release - bump the version in build.gradle.kts (patch, minor or major), commit "Version X.Y.Z", add an annotated vX.Y.Z tag with a one-line summary, and push main plus the tag (which deploys). Use when the user asks to release, bump the version, tag, or "version, tag and push".
+description: Cut a Boardfest release - bump the version in build.gradle.kts (patch, minor or major), write its release notes, commit "Version X.Y.Z", add an annotated vX.Y.Z tag with a one-line summary, and push main plus the tag (which deploys). Use when the user asks to release, bump the version, tag, or "version, tag and push".
 ---
 
 # Release
@@ -10,25 +10,37 @@ Pushing `main` deploys (`.github/workflows/ci.yml`: test → build → deploy on
 ## Before
 
 1. `git status`: the tree is clean apart from `.claude/worktrees/`, and you are on `main`. Commit or ask about anything else first; don't fold it into the release commit.
-2. `./gradlew test` passes. If it fails, stop and report.
+2. `./gradlew test` passes. If it fails, stop and report. (It runs again after the bump, below.)
 3. Pick the bump from what the user said. If they didn't say, use **patch** for fixes only, **minor** when a story or feature landed, **major** only when they ask. Tell them which you picked.
 
 ## Steps
 
-1. Read the current `version = "X.Y.Z"` in `build.gradle.kts` (the only place the version lives; the footer shows it as "Boardfest vX.Y.Z") and change it to the new one. Nothing else goes in this commit.
-2. Commit with exactly this message (plus the attribution line the session asks for):
+1. Read the current `version = "X.Y.Z"` in `build.gradle.kts` (the only place the version lives; the footer shows it as "Boardfest vX.Y.Z") and change it to the new one.
+2. Write the new version's release notes at the top of `src/main/resources/release-notes.md` (the footer's version links to them at `/release-notes`, and the build fails without them: WEB-19). Shape:
+   ```markdown
+   ## X.Y.Z · YYYY-MM-DD
+
+   ### New
+
+   - One plain sentence per thing a player notices.
+   ```
+   - Draft from `git log --oneline vPREV..HEAD`. Keep `### New`, `### Changed`, `### Fixed` in that order and leave out an empty one.
+   - Players' words only: no story ids or bug numbers, and no developer work (design docs, privacy checks, "breathe out", the Contract, tooling, the onboarding site).
+   - Show the user the section before committing; they may want to reword it.
+3. Run `./gradlew test` again, so the notes parse and match the new version. If it fails, fix the notes, not the test.
+4. Commit the version bump and the notes together (nothing else) with exactly this message (plus the attribution line the session asks for):
    ```
    Version X.Y.Z
    ```
-3. Write the tag summary from the commits since the previous tag (`git log --oneline vPREV..HEAD`). It's one line, `Boardfest X.Y.Z: <what changed>`, in the brand voice: plain words, comma-separated, user-facing first, bug ids in passing. Earlier tags:
+5. Write the tag summary from the commits since the previous tag (`git log --oneline vPREV..HEAD`). It's one line, `Boardfest X.Y.Z: <what changed>`, in the brand voice: plain words, comma-separated, user-facing first, bug ids in passing. Earlier tags:
    - `Boardfest 2.0.0: the redesign`
    - `Boardfest 2.1.0: GDPR (privacy notice, account page, erasure, export, retention), logs without secrets, QA round 2`
    - `Boardfest 2.1.1: stylesheet reaches browsers after a deploy, account and privacy screen fixes, BUG-018/025/026 (...)`
-4. Make an **annotated** tag on the version commit:
+6. Make an **annotated** tag on the version commit:
    ```bash
    git tag -a vX.Y.Z -m "Boardfest X.Y.Z: ..."
    ```
-5. Push the branch, then the tag:
+7. Push the branch, then the tag:
    ```bash
    git push origin main
    ```

@@ -32,6 +32,9 @@ class ReleaseNotesPageTest {
             listOf("/", "/account").forEach { path ->
                 client.get(path).page().one(".gf-footer .gf-credit--version a").attr("href") shouldBe "/release-notes"
             }
+            val notes = client.get("/release-notes")
+            notes.status shouldBe HttpStatusCode.OK
+            notes.page().select(".gf-nav a").map { it.text() } shouldBe listOf("Game days", "Collection")
         }
     }
 
@@ -40,7 +43,9 @@ class ReleaseNotesPageTest {
     fun `the release notes are readable signed out`() = test.webTest { client ->
         val response = client.get("/release-notes")
         response.status shouldBe HttpStatusCode.OK
-        response.page().one("h1").text() shouldBe "What's new"
+        val page = response.page()
+        page.one("h1").text() shouldBe "What's new"
+        page.select(".gf-nav").size shouldBe 0
     }
 
     @Test
@@ -51,13 +56,12 @@ class ReleaseNotesPageTest {
 
         page.select(".gf-release").map { it.id() } shouldBe releases.map { "v${it.version}" }
 
-        val fixOnly = releases.first { it.new.isEmpty() && it.changed.isEmpty() }
-        val section = page.one("#v${fixOnly.version.replace(".", "\\.")}")
-        section.one("time").attr("datetime") shouldBe fixOnly.date.toString()
-        section.texts("h3") shouldBe listOf("Fixed")
-        section.texts("li") shouldBe fixOnly.fixed
-
-        val all = releases.first { it.new.isNotEmpty() && it.changed.isNotEmpty() && it.fixed.isNotEmpty() }
-        page.one("#v${all.version.replace(".", "\\.")}").texts("h3") shouldBe listOf("New", "Changed", "Fixed")
+        releases.forEach { release ->
+            val section = page.one("#v${release.version.replace(".", "\\.")}")
+            section.one("h2 time").attr("datetime") shouldBe release.date.toString()
+            val kinds = listOf("New" to release.new, "Changed" to release.changed, "Fixed" to release.fixed).filter { it.second.isNotEmpty() }
+            section.texts("h3") shouldBe kinds.map { it.first }
+            section.select("ul").map { ul -> ul.select("li").map { it.text() } } shouldBe kinds.map { it.second }
+        }
     }
 }

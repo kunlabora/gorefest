@@ -147,7 +147,7 @@ fun Application.web(app: App) {
         context(app.login, app.config) { authRoutes() }
         context(app.login, app.config) { newcomerRoutes(app.newcomers) }
         context(app.config) { privacyRoutes() }
-        releaseNotesRoutes()
+        context(app.login) { releaseNotesRoutes() }
         context(app.login, app.config) { accountRoutes(app) }
         context(app.ids, app.clock, app.login, app.config) { gameDayRoutes(app) }
         context(app.ids, app.clock, app.login, app.config) { datePollRoutes(app) }

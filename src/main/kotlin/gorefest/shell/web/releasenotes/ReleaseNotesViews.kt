@@ -1,6 +1,8 @@
 package gorefest.shell.web.releasenotes
 
+import gorefest.shell.web.CurrentPlayer
 import gorefest.shell.web.components.Level
+import gorefest.shell.web.components.SiteBar
 import gorefest.shell.web.components.crumb
 import gorefest.shell.web.components.heading
 import gorefest.shell.web.components.long
@@ -19,7 +21,13 @@ import kotlinx.html.time
 import kotlinx.html.ul
 
 /** What's new: every release, newest first, with its new, changed and fixed lines (U24). */
-fun HTML.releaseNotesPage(notes: ReleaseNotes) = page("What's new", appBar = { wordmark() }, wide = true, mainClasses = "gf-release-notes") {
+fun HTML.releaseNotesPage(notes: ReleaseNotes, me: CurrentPlayer?) = page(
+    "What's new",
+    appBar = { if (me == null) wordmark() },
+    site = me?.let { SiteBar(it, current = null) },
+    wide = true,
+    mainClasses = "gf-release-notes",
+) {
     wrap {
         crumb("/", "Back")
         pageHeading("What's new", classes = "gf-h1")

@@ -34,7 +34,10 @@ class ReleaseNotes(val releases: List<Release>) {
          * Parses the strict shape: `## <version> · <yyyy-mm-dd>`, then `### New`, `### Changed` or `### Fixed`, each
          * followed by `- ` lines. Blank lines, the `# ` title and `<!-- -->` comments are skipped.
          */
-        fun parse(text: String): ReleaseNotes = Parser().apply { text.lines().forEachIndexed { i, line -> read(i + 1, line.trimEnd()) } }.notes()
+        fun parse(text: String): ReleaseNotes {
+            val lines = text.lines()
+            return Parser().apply { lines.forEachIndexed { i, line -> read(i + 1, line.trimEnd()) } }.notes(lines.size)
+        }
 
         private fun fail(line: Int, reason: String): Nothing = throw ReleaseNotesFormatException(line, reason)
 
@@ -44,7 +47,16 @@ class ReleaseNotes(val releases: List<Release>) {
             private var kind: String? = null
             private var inComment = false
 
-            fun notes() = ReleaseNotes(releases.toList())
+            fun notes(lastLine: Int): ReleaseNotes {
+                checkLastHasLines(lastLine)
+                return ReleaseNotes(releases.toList())
+            }
+
+            /** A version with no lines would show a bare heading: refuse it where the next one starts, or at the end. */
+            private fun checkLastHasLines(n: Int) {
+                val last = releases.lastOrNull() ?: return
+                if ((last.new + last.changed + last.fixed).isEmpty()) fail(n, "${last.version} has no lines")
+            }
 
             fun read(n: Int, line: String) {
                 when {
@@ -60,6 +72,7 @@ class ReleaseNotes(val releases: List<Release>) {
 
             private fun version(n: Int, line: String) {
                 val (version, date) = VERSION.matchEntire(line)?.destructured ?: fail(n, "expected \"## <version> · <yyyy-mm-dd>\"")
+                checkLastHasLines(n)
                 if (releases.any { it.version == version }) fail(n, "$version is there twice")
                 releases += Release(version, parseDate(date, n))
                 kind = null

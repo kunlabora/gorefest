@@ -60,7 +60,9 @@ class ReleaseNotesTest {
         failure("## version two · 2026-10-08").line shouldBe 1
         failure("### New\n- too early").line shouldBe 1
         failure("## 2.0.0 · 2026-10-08\nJust some text").line shouldBe 2
-        failure("## 2.0.0 · 2026-10-08\n## 2.0.0 · 2026-10-09").message!! shouldContain "twice"
+        failure("## 2.0.0 · 2026-10-08\n### New\n- One.\n## 2.0.0 · 2026-10-09").message!! shouldContain "twice"
+        failure("## 2.1.0 · 2026-10-12\n### New\n## 2.0.0 · 2026-10-08\n### New\n- One.").let { it.line shouldBe 3; it.message!! shouldContain "2.1.0 has no lines" }
+        failure("## 2.0.0 · 2026-10-08\n").message!! shouldContain "2.0.0 has no lines"
     }
 
     @Test
