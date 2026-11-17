@@ -25,7 +25,8 @@ refused.
 3. **Put it right afterwards.**
    - In "Played today" on the hub, a play you logged or played in has **Remove**. Removing takes the play away
      everywhere: the hub list, played status, novelty, the group speed. The form opens again with that play filled in, so
-     a wrong table is fixed by removing and logging again.
+     a wrong table is fixed by removing and logging again. Logging it again from there doesn't ask "which did you enjoy
+     more?" a second time.
    - Removing is possible whenever logging is (from the game day's date, also after it ended), not on a cancelled game
      day. The "which did you enjoy more?" answer given after the play stays: it is the player's own opinion.
 
@@ -68,8 +69,8 @@ refused.
 
 ## Open questions
 
-1. **Who may remove a play?** Recommendation: whoever logged it and anyone named in it. Not the host for others' plays.
-2. **Edit instead of remove-and-log-again?** Recommendation: remove and log again; one new event, and the form already
+1. **Decided (2026-11-17): the logger and anyone named in it, not the host.** **Who may remove a play?** Recommendation: whoever logged it and anyone named in it. Not the host for others' plays.
+2. **Decided (2026-11-17): remove and log again.** **Edit instead of remove-and-log-again?** Recommendation: remove and log again; one new event, and the form already
    exists.
 3. **Decided (2026-11-17): yes.** **Hub default after the first play**: tick the table of your last play? Recommendation: yes, people tend to stay at
    their table.
@@ -88,6 +89,7 @@ The obligation ids are reserved here and go into `docs/contract/plays.md` when t
   removing twice changes nothing; a cancelled game day can't.
 - [ ] PL-23: a removed play is gone from the hub, the group speed and played status (a game played only in that play is
   unplayed again, its novelty back), and the comparison answered after it stays.
+- [ ] PL-24: logging a removed play again from its "Log it again" link doesn't ask the comparison a second time.
 - [ ] Event evolution: new type only, sample in `EventCompatibilityTest`, `PersonalData.describe`, `CLAUDE.md` events
   list.
 - [ ] Members-only and cancelled-day web tests for the log link and remove.
