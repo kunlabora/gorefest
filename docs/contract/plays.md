@@ -26,7 +26,7 @@ The play log, the checkpoint question after a play, and telling what you watched
 
 - **PL-22** Whoever logged a play, or played in it, can remove it from the hub's list, also a play logged before this was possible; nobody else can, removing it twice changes nothing, and a cancelled game day's plays stay.
 - **PL-23** A removed play is gone from the hub, from the group's speed and from played status (a game played only in that play is new to them again, and what they said before counts again); the comparison answered after it stays.
-- **PL-24** Removing a play opens the log form with that play filled in and says what was removed; logging it again from there doesn't ask "which did you enjoy more?" a second time.
+- **PL-24** Removing a play opens the log form with that play filled in and says what was removed; logging the same game again from there doesn't ask "which did you enjoy more?" a second time of whoever was asked the first time (who logged it, if they played); a different game, or a player who wasn't asked, gets the question as usual. A refused removal goes back to the game day.
 
 ## The question after a play
 

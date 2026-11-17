@@ -35,7 +35,6 @@ import gorefest.shell.web.todayIn
 import gorefest.shell.web.urlEncoded
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.Parameters
-import io.ktor.server.response.respondText
 import io.ktor.server.routing.RoutingContext
 import java.time.Instant
 import kotlin.math.abs
@@ -69,9 +68,10 @@ fun Route.checkpointRoutes(app: App) {
             val shelf = logChoices(app, gameDay)
             val game = call.parameters["game"]?.toIntOrNull()?.let(::BggId)?.let(app.catalog::get)
             // A game from a suggestion is on the shelf; one logged again after removing it may have come from a search.
-            val view = LogFormView(gameDay, if (game == null || shelf.any { it.id == game.id }) shelf else shelf + game, login.names(gameDay.players))
+            val offShelf = listOfNotNull(game?.takeIf { g -> shelf.none { it.id == g.id } })
+            val view = LogFormView(gameDay, shelf + offShelf, login.names(gameDay.players), offShelf.map { it.id })
             val values = logValues(app, gameDay, me, game)
-            val removed = game?.name?.takeIf { values["again"] == "true" }
+            val removed = game?.name?.takeIf { call.parameters["removed"] == "true" }
             call.respondHtml { logPage(view, checkpointLabel(gameDay, app.clock), me, values, removed) }
         }
     }
@@ -83,7 +83,8 @@ fun Route.checkpointRoutes(app: App) {
             val query = call.parameters["q"].orEmpty()
             val result = app.gameSearch.search(query)
             // Shelf games are tiles already: a second radio for the same game would repeat its id.
-            val onShelf = logChoices(app, gameDay).map { it.id }.toSet()
+            // So are games added to the form beside the shelf (a removed play's, found by search before): `also`.
+            val onShelf = logChoices(app, gameDay).map { it.id }.toSet() + call.parameters.getAll("also").orEmpty().mapNotNull { it.toIntOrNull()?.let(::BggId) }
             respondFragment { logSearchResults(result.games.filter { it.id !in onShelf }, result.bggUnavailable, result.nothingFor(query)) }
         }
     }
@@ -98,12 +99,13 @@ fun Route.checkpointRoutes(app: App) {
             val minutes = DURATIONS.firstOrNull { it.first == form["duration"] }?.second ?: 0
             // A game that isn't on the shelf can be logged too (found by search): keep its tile when the form comes back.
             val shelf = logChoices(app, gameDay)
-            val view = LogFormView(gameDay, if (game == null || shelf.any { it.id == game.id }) shelf else shelf + game, login.names(gameDay.players))
+            val offShelf = listOfNotNull(game?.takeIf { g -> shelf.none { it.id == g.id } })
+            val view = LogFormView(gameDay, shelf + offShelf, login.names(gameDay.players), offShelf.map { it.id })
             if (game == null) return@authenticated respondFragment { logForm(view, me, form, "Pick the game you played") }
             val log = PlayLogged(gameDay.id, game.id, players, minutes, me.id, app.clock.instant())
             when (val decision = app.commands.handle(LogPlayDecider, LogPlay(log, game.minPlayers))) {
-                // Logging a removed play again asks nothing: the question was answered the first time (U23).
-                is Decision.Accepted -> if (form["again"] == "true") redirect(tableLink(gameDay, players.filter { it in gameDay.players }.distinct()))
+                // Logging the same game again, by whoever was asked about it the first time, asks nothing more (U23).
+                is Decision.Accepted -> if (form["again"] == game.id.toString()) redirect(tableLink(gameDay, players.filter { it in gameDay.players }.distinct()))
                 else redirect("/gamedays/${gameDay.id}/log/compare?game=${game.id}&minutes=$minutes&${players.joinToString("&") { "players=$it" }}")
                 is Decision.Rejected -> respondFragment { logForm(view, me, form, decision.reason.message()) }
             }
@@ -159,12 +161,18 @@ fun Route.checkpointRoutes(app: App) {
             val key = PlayKey(gameDay.id, game, loggedBy, at)
             val play = app.plays.on(gameDay.id).firstOrNull { it.key == key }
             when (val decision = app.commands.handle(RemovePlayDecider, RemovePlay(key, me.id, app.clock.instant()))) {
-                is Decision.Rejected -> call.respondText(decision.reason.message(), status = HttpStatusCode.Conflict)
+                // Refused (a stale page: someone else's play, or one already gone): back to the hub, which shows how things stand.
+                is Decision.Rejected -> redirect("/gamedays/${gameDay.id}")
                 is Decision.Accepted -> {
                     // Already gone (a double tap): back to the hub, where it no longer shows.
                     if (play == null) return@authenticated redirect("/gamedays/${gameDay.id}")
                     val duration = DURATIONS.minBy { abs(it.second - play.minutes) }.first
-                    redirect("/gamedays/${gameDay.id}/log?again=true&game=${play.game}&duration=${duration.urlEncoded()}&" + play.players.joinToString("&") { "players=$it" })
+                    // The question after a play went to whoever logged it, if they played: only they skip it when logging the same game again.
+                    val asked = me.id == play.loggedBy && me.id in play.players
+                    redirect(
+                        "/gamedays/${gameDay.id}/log?removed=true&game=${play.game}&duration=${duration.urlEncoded()}&" +
+                            (if (asked) "again=${play.game}&" else "") + play.players.joinToString("&") { "players=$it" },
+                    )
                 }
             }
         }
@@ -190,7 +198,7 @@ private fun RoutingContext.logValues(app: App, gameDay: GameDaySummary, me: Curr
         if (game != null) append("game", game.id.toString())
         if (players.isNotEmpty()) appendAll("players", players.map { it.toString() })
         if (duration != null) append("duration", duration)
-        if (call.parameters["again"] == "true" && game != null) append("again", "true")
+        call.parameters["again"]?.takeIf { game != null && it == game.id.toString() }?.let { append("again", it) }
     }
 }
 

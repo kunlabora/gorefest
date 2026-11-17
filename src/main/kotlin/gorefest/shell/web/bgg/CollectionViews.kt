@@ -9,8 +9,8 @@ import gorefest.shell.web.components.*
 import gorefest.shell.web.request.bringRequestsSwitch
 import kotlinx.html.*
 
-/** [explains]: the games I said I can explain (U22). */
-data class CollectionView(val sync: CollectionSyncState?, val games: List<Game>, val explains: Set<BggId> = emptySet())
+/** [explains]: the games I said I can explain (U22); [explainsElsewhere]: those of them not in my collection, so I can take the mark back. */
+data class CollectionView(val sync: CollectionSyncState?, val games: List<Game>, val explains: Set<BggId> = emptySet(), val explainsElsewhere: List<Game> = emptyList())
 
 /** [onward] is where the player was going before linking BGG (bringing games, say): it gets the page's one brand button. */
 fun HTML.collectionPage(view: CollectionView, me: CurrentPlayer, bringRequestsAllowed: Boolean, onward: String? = null) = page("Your collection", site = SiteBar(me, Nav.COLLECTION)) {
@@ -55,6 +55,7 @@ fun TagConsumer<*>.collection(view: CollectionView) = div("gf-stack") {
             p("gf-muted") { +"${view.games.size} games from ${sync.username} on BGG." }
             if (view.games.isEmpty()) emptyState("No games in your BGG collection", "Mark games as owned on BGG, then sync again.")
             else ul("gf-list gf-collection__list") { view.games.forEach { collectionItem(it, canExplain = it.id in view.explains) } }
+            explainsElsewhere(view.explainsElsewhere)
             syncButton("Sync again")
         }
     }
@@ -74,6 +75,14 @@ fun TagConsumer<*>.collectionItem(game: Game, canExplain: Boolean, announcement:
             hx("swap", "outerHTML")
         }
     }
+}
+
+/** Marked games outside the collection (U22): listed so every mark can be taken back. */
+private fun FlowContent.explainsElsewhere(games: List<Game>) {
+    if (games.isEmpty()) return
+    sectionHeading("You can also explain")
+    p("gf-small gf-muted") { +"Games you marked on a shelf, or that left your collection. Untick one to take the mark back." }
+    ul("gf-list gf-collection__list") { games.forEach { consumer.collectionItem(it, canExplain = true) } }
 }
 
 private fun FlowContent.syncButton(label: String) = actionButton(label, ButtonStyle.SECONDARY, block = true, icon = "refresh") {

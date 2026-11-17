@@ -48,7 +48,7 @@ What people bring to a game day, the games they really want to play, and asking 
 
 ## Explainers
 
-- **SH-35** A player can mark a game in their collection, or on the shelf of a game day they joined, as one they can explain, and take it back; marking it again changes nothing. The mark holds on every game day.
+- **SH-35** A player can mark a game in their collection, or on the shelf of a game day they joined, as one they can explain, and take it back; marking it again changes nothing. The mark holds on every game day. The collection page also lists marked games outside the collection, so every mark can be taken back.
 - **SH-36** On a game day's shelf, a game shows which of the game day's players can explain it; nobody outside the game day sees it.
 
 ## Erasure

@@ -1,6 +1,6 @@
 # U22 I can explain this game
 
-Source: product idea, 2026-11-17. Status: 🚧 doing
+Source: product idea, 2026-11-17. Status: ✅ built
 
 **Idea:** a player marks the games in their collection that they can explain. When a table picks a game, a game that
 someone at the table can teach is an easier start than one nobody knows, so the suggestions lean towards it and say who
@@ -65,7 +65,7 @@ the player, not about one game day.
   needs teaching and there's no bonus.
 - `unteachablePenalty` (0.2): subtracted when nobody at the table has played the game and nobody can explain it. With
   the novelty bonus (0.3) such a game still nets +0.1, so a new game nobody knows can still win on taste; it just loses
-  ground to one somebody can teach (+0.5 net). The reason wording is unchanged ("Nobody has played it").
+  ground to one somebody can teach (+0.2: marking a game makes it played, so a game with an explainer is never novel). The reason wording is unchanged ("Nobody has played it").
 - `Suggestion` gains `explainers: List<String>` (names, as `WantedBy` does; default empty), filled whenever someone at
   the table can explain the game and someone at the table hasn't played it. It's a second line, not a new
   `SuggestionReason`, so it doesn't push out the reason that matters more (hearts, safe bet, best at this size).
@@ -104,17 +104,26 @@ All answered 2026-11-17.
 
 ## Criteria
 
-The obligation ids (SH-35–37, SU-24–26, TA-33) are reserved here and go into `docs/contract/` when the build starts,
-so `check` stays green until a test proves them.
+- [x] SH-35: A player can mark a game in their collection, or on the shelf of a game day they joined, as one they can explain, and take it back; marking it twice changes nothing (decider given/when/then, web test).
+- [x] SH-36: On a game day's shelf, a game shows which of the game day's players can explain it; nobody outside the game day sees it.
+- [x] SU-24: When someone at the table can explain a game and someone at the table hasn't played it, the game is nudged up the suggestions and the pick says who can explain it.
+- [x] SU-25: A game everyone at the table has played gets no nudge and no explainer line.
+- [x] SU-26: A game nobody at the table has played and nobody can explain ranks below an otherwise equal game someone can explain.
+- [x] SH-37: When a player is erased, their marks are gone everywhere.
+- [x] TA-33: Marking a game as one you can explain marks it played for you (its novelty ends for you); unmarking leaves it played; it adds no comparison.
+- [x] Event evolution: new type only, sample in `EventCompatibilityTest`, `PersonalData.describe` case, `CLAUDE.md` events list and vocabulary.
+- [x] Ended and cancelled game days: the bring page is read-only, the collection toggle still works (web tests).
+- [x] Design mockup in `docs/design/` and the screens use existing components (`chipToggle`, `rankedGame`).
 
-
-- [ ] SH-35: A player can mark a game in their collection, or on the shelf of a game day they joined, as one they can explain, and take it back; marking it twice changes nothing (decider given/when/then, web test).
-- [ ] SH-36: On a game day's shelf, a game shows which of the game day's players can explain it; nobody outside the game day sees it.
-- [ ] SU-24: When someone at the table can explain a game and someone at the table hasn't played it, the game is nudged up the suggestions and the pick says who can explain it.
-- [ ] SU-25: A game everyone at the table has played gets no nudge and no explainer line.
-- [ ] SU-26: A game nobody at the table has played and nobody can explain ranks below an otherwise equal game someone can explain.
-- [ ] SH-37: When a player is erased, their marks are gone everywhere.
-- [ ] TA-33: Marking a game as one you can explain marks it played for you (its novelty ends for you); unmarking leaves it played; it adds no comparison.
-- [ ] Event evolution: new type only, sample in `EventCompatibilityTest`, `PersonalData.describe` case, `CLAUDE.md` events list and vocabulary.
-- [ ] Ended and cancelled game days: the bring page is read-only, the collection toggle still works (web tests).
-- [ ] Design mockup in `docs/design/` and the screens use existing components (`chipToggle`, `rankedGame`).
+Built as designed, with these notes:
+- The toggle on the bring page sits on the "On the shelf" list (the hearts), which holds every shelf game, mine
+  included; the collection grid on that page has no second toggle. On an ended game day that list isn't shown, and the
+  route answers 404 for a closed game day or a game not on its shelf.
+- Numbers: a game someone at the table can teach a newcomer gets +0.2; a novel game nobody can teach gets +0.3 − 0.2 =
+  +0.1. A game with an explainer is never novel, because the mark makes it played.
+- The explainer line is `Suggestion.explainers` (names), shown by `rankedGame(note = …)` with the users icon; no new
+  `SuggestionReason`.
+- On the shelf, my own mark reads "You": "You and Anna can explain it."
+- After review: the collection page also lists marked games that aren't in the collection ("You can also explain"),
+  so a mark set on someone's shelf, or on a game since sold, can always be taken back. From there a mark can only be
+  taken back, not set.

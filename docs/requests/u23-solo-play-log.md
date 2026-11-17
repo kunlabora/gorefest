@@ -1,6 +1,6 @@
 # U23 Don't log a play for a table of one by mistake
 
-Source: Tim logged a game and then saw he was the only one at the table, 2026-11-17. Status: 📋 todo
+Source: Tim logged a game and then saw he was the only one at the table, 2026-11-17. Status: ✅ built
 
 **Idea:** a play log should name the people who really played, and a wrong one can be put right.
 
@@ -77,19 +77,36 @@ refused.
 
 ## Criteria
 
-The obligation ids are reserved here and go into `docs/contract/plays.md` when the build starts.
-
-- [ ] PL-19 (replaces ~~PL-6~~'s "has me ticked"): coming from a suggestion, the log form has that game and that table
+- [x] PL-19 (replaces ~~PL-6~~'s "has me ticked"): coming from a suggestion, the log form has that game and that table
   filled in; from the hub, the table of your last play on this game day, else just you.
-- [ ] PL-20: a play with fewer players than the game's minimum is refused with the minimum named, and the form keeps
+- [x] PL-20: a play with fewer players than the game's minimum is refused with the minimum named, and the form keeps
   what was filled in.
-- [ ] PL-21: logging just yourself on a game day with others shows "Just you?" in the summary and the dock, and still
+- [x] PL-21: logging just yourself on a game day with others shows "Just you?" in the summary and the dock, and still
   logs.
-- [ ] PL-22: the logger or a player in a play can remove it, also a play logged before this story; anyone else can't;
+- [x] PL-22: the logger or a player in a play can remove it, also a play logged before this story; anyone else can't;
   removing twice changes nothing; a cancelled game day can't.
-- [ ] PL-23: a removed play is gone from the hub, the group speed and played status (a game played only in that play is
+- [x] PL-23: a removed play is gone from the hub, the group speed and played status (a game played only in that play is
   unplayed again, its novelty back), and the comparison answered after it stays.
-- [ ] PL-24: logging a removed play again from its "Log it again" link doesn't ask the comparison a second time.
-- [ ] Event evolution: new type only, sample in `EventCompatibilityTest`, `PersonalData.describe`, `CLAUDE.md` events
+- [x] PL-24: logging a removed play again from its "Log it again" link doesn't ask the comparison a second time.
+- [x] Event evolution: new type only, sample in `EventCompatibilityTest`, `PersonalData.describe`, `CLAUDE.md` events
   list.
-- [ ] Members-only and cancelled-day web tests for the log link and remove.
+- [x] Members-only and cancelled-day web tests for the log link and remove.
+
+Built as designed, with these notes:
+- Remove is a plain form on the hub's play list. It leads straight to the log form, filled in with the play (game,
+  table, nearest length) and a notice saying what was removed, with a link back to the game day. There is no htmx swap
+  of the "Played today" section.
+- Removing a play that's already gone (a double tap), or a refused removal (a stale page), goes back to the hub. A
+  cancelled game day answers 404, because members' game day routes refuse cancelled days; the decider refuses it too
+  (`GameDayCancelled`).
+- After review: the question is skipped only for whoever was asked it the first time (the one who logged it, if they
+  played) and only for the same game (`again=<game>`); logging a different game, or removing a play someone else logged
+  for you, asks as usual. A removed play's off-shelf game is left out of the form's search (`also=`), so it shows once.
+- `LogPlayDecider` takes `LogPlay(play, minPlayers)`. `PlayRemoved` carries the removed play's players (for tags and
+  projections) and its `loggedAt`.
+- `PlayerTastes` keeps every word on played status per game (`TasteHistory.words`: said, or a play log), so a removed
+  play gives back the last word before it. Old tests that logged a two-player game for one person now log a solo game
+  or the whole table.
+- "We played this" (or "I played this" at a table of one) shows once plays can be logged, and passes the game and the
+  table, not the length.
+

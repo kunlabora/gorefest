@@ -19,6 +19,7 @@ import gorefest.shell.web.shouldReplace
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.collections.shouldContain
 import io.ktor.client.request.get
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -183,5 +184,24 @@ class CollectionTest {
 
         client.htmxPost("/collection/$catan/explain", parameters { append("canExplain", "true") }).status shouldBe HttpStatusCode.NotFound
         app.explainers.gamesOf(kimId) shouldBe emptySet()
+    }
+
+    @Test
+    @Obligation("SH-35")
+    fun `a mark on a game outside my collection is listed and can be taken back, not set`() = test.webTest(session = kim) { client ->
+        sync.request(kimId, "KimPlays", BggPriority.LINK).join()
+        // Marked on someone's shelf: the game's details are in the cache from there.
+        app.catalog.put(gorefest.shell.bgg.DevCatalog.games, test.clock.instant())
+        app.db.transaction { app.store.append(listOf(gorefest.core.CanExplainChanged(kimId, catan, true))) }
+        app.catchUp()
+
+        val page = client.get("/collection").page()
+        page.select("h2").map { it.text() } shouldContain "You can also explain"
+        page.one("#collection-$catan-explain").attr("aria-pressed") shouldBe "true"
+
+        client.htmxPost("/collection/$catan/explain", parameters { append("canExplain", "false") }).fragment()
+            .one("#collection-$catan-explain").attr("aria-pressed") shouldBe "false"
+        app.explainers.gamesOf(kimId) shouldBe emptySet()
+        client.htmxPost("/collection/$catan/explain", parameters { append("canExplain", "true") }).status shouldBe HttpStatusCode.NotFound
     }
 }

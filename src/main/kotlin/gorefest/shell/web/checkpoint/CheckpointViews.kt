@@ -1,5 +1,6 @@
 package gorefest.shell.web.checkpoint
 
+import gorefest.core.BggId
 import gorefest.core.PlayerId
 import gorefest.core.game.Game
 import gorefest.core.gameday.GameDaySummary
@@ -12,7 +13,8 @@ import kotlinx.html.*
 val DURATIONS = listOf("15m" to 15, "30m" to 30, "45m" to 45, "1h" to 60, "90m" to 90, "2h" to 120, "3h+" to 180)
 
 /** Step 1 of a checkpoint: what, who, how long. */
-data class LogFormView(val gameDay: GameDaySummary, val games: List<Game>, val names: Map<PlayerId, String>)
+/** [offShelf]: games among [games] that aren't on the shelf (a removed play's), which the search leaves out like the shelf's. */
+data class LogFormView(val gameDay: GameDaySummary, val games: List<Game>, val names: Map<PlayerId, String>, val offShelf: List<BggId> = emptyList())
 
 /**
  * What the summary card and the phone dock say: the chosen game, how many are at the table, and the time. [alone]: just
@@ -41,7 +43,7 @@ private fun logSummary(view: LogFormView, values: Parameters): LogSummary {
 
 /**
  * [values] fill the form in: from a suggestion (the game and its table), the last table I played at, or a play I just
- * removed (`again`, U23), which the page says ([removed]) and which asks no question afterwards.
+ * removed (U23), which the page says ([removed]); `again` (the game) skips the question for whoever answered it already.
  */
 fun HTML.logPage(view: LogFormView, checkpoint: String, me: CurrentPlayer, values: Parameters = Parameters.Empty, removed: String? = null) = page(
     "What did you play?",
@@ -97,7 +99,7 @@ fun TagConsumer<*>.logForm(view: LogFormView, me: CurrentPlayer, values: Paramet
         hyperscript(LOG_SUMMARY_SCRIPT)
         val summary = logSummary(view, values)
         if (error != null) errorNotice(error)
-        if (values["again"] == "true") hiddenInput("again", "true")
+        values["again"]?.let { hiddenInput("again", it) }
         stepper("gf-stepper--sections") {
             formStep(1, "The game") {
                 if (view.games.isEmpty()) p("gf-muted") { +"Nothing on the shelf yet. Search for the game you played." }
@@ -106,7 +108,7 @@ fun TagConsumer<*>.logForm(view: LogFormView, me: CurrentPlayer, values: Paramet
                 div("gf-log__search") {
                     heading(Level.H3, "gf-log__sub") { +"Played something else?" }
                     // Enter would submit the whole log form from here.
-                    searchField("Search BGG", "Search for the game you played", "/gamedays/${view.gameDay.id}/log/search", "#log-search-results") {
+                    searchField("Search BGG", "Search for the game you played", "/gamedays/${view.gameDay.id}/log/search" + view.offShelf.joinToString("&", prefix = if (view.offShelf.isEmpty()) "" else "?") { "also=$it" }, "#log-search-results") {
                         hyperscript("on keydown[key=='Enter'] halt the event")
                     }
                     consumer.logSearchResults(emptyList(), bggUnavailable = false)
@@ -126,7 +128,7 @@ fun TagConsumer<*>.logForm(view: LogFormView, me: CurrentPlayer, values: Paramet
             p("gf-muted gf-log__about") { attributes["data-log"] = "about"; +summary.about }
             p("gf-hint") { attributes["data-log"] = "alone"; hidden = !summary.alone; +JUST_YOU }
             actionButton("Log it", ButtonStyle.PRIMARY, ButtonSize.LARGE, block = true, submit = true, spinner = true)
-            if (values["again"] != "true") p("gf-hint") { +"Then one quick question about it." }
+            if (values["again"] == null) p("gf-hint") { +"Then one quick question about it." }
         }
     }
 

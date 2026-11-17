@@ -57,9 +57,11 @@ fun Route.collectionRoutes(app: App) {
     post("/collection/{game}/explain") {
         authenticated {
             val me = contextOf<CurrentPlayer>()
-            val id = call.parameters["game"]?.toIntOrNull()?.let(::BggId)?.takeIf { it in app.collectionSync.collection(me.id) }
-            val game = id?.let { app.catalog[it] } ?: return@authenticated call.respond(HttpStatusCode.NotFound)
             val canExplain = call.receiveParameters()["canExplain"] == "true"
+            // Marking needs the game in my collection; taking a mark back works for any game I marked (from a shelf, or since sold).
+            val id = call.parameters["game"]?.toIntOrNull()?.let(::BggId)
+                ?.takeIf { it in app.collectionSync.collection(me.id) || (!canExplain && app.explainers.canExplain(me.id, it)) }
+            val game = id?.let { app.catalog[it] } ?: return@authenticated call.respond(HttpStatusCode.NotFound)
             app.commands.handle(SetCanExplainDecider, SetCanExplain(me.id, game.id, canExplain))
             respondFragment { collectionItem(game, app.explainers.canExplain(me.id, game.id), explainAnnouncement(game, canExplain)) }
         }
@@ -79,4 +81,5 @@ private suspend fun collectionView(app: App, me: CurrentPlayer) = CollectionView
     sync = app.collectionSync.status(me.id),
     games = app.collectionSync.collection(me.id).mapNotNull(app.catalog::get).sortedBy { it.name.lowercase() },
     explains = app.explainers.gamesOf(me.id),
+    explainsElsewhere = (app.explainers.gamesOf(me.id) - app.collectionSync.collection(me.id)).mapNotNull(app.catalog::get).sortedBy { it.name.lowercase() },
 )

@@ -32,6 +32,7 @@ import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.string.shouldStartWith
+import io.kotest.matchers.string.shouldNotContain
 import io.ktor.client.request.forms.submitForm
 import io.ktor.client.request.get
 import io.ktor.client.request.header
@@ -499,18 +500,18 @@ class CheckpointRoutesTest {
         val removed = client.remove(solo)
         removed.status shouldBe HttpStatusCode.Found
         val again = removed.headers["Location"]!!
-        again shouldStartWith "$log?again=true&game=$azul&duration=45m"
+        again shouldStartWith "$log?removed=true&game=$azul&duration=45m&again=$azul"
         app.plays.on(gorefest7).shouldBeEmpty()
         app.tastes.of(kimId).played[azul] shouldBe null
         client.get("/gamedays/$gorefest7").page().select("form[action=/gamedays/$gorefest7/plays/remove]").shouldBeEmpty()
 
         val page = client.get(again).page()
         page.one(".gf-notice").text() shouldContain "Removed Azul from what was played"
-        page.one("#log-form input[name=again]").`val`() shouldBe "true"
+        page.one("#log-form input[name=again]").`val`() shouldBe azul.toString()
         page.select("#log-form .gf-hint").map { it.text() }.contains("Then one quick question about it.") shouldBe false
 
         val relogged = client.htmxPost(log, parameters {
-            append("again", "true"); append("game", azul.toString()); append("players", kimId.toString()); append("players", anna.toString()); append("duration", "45m")
+            append("again", azul.toString()); append("game", azul.toString()); append("players", kimId.toString()); append("players", anna.toString()); append("duration", "45m")
         })
         relogged.headers["HX-Redirect"]!! shouldStartWith "/gamedays/$gorefest7/table?"
         app.plays.on(gorefest7).single().players shouldBe listOf(kimId, anna)
@@ -533,8 +534,9 @@ class CheckpointRoutesTest {
             val forms = client.get("/gamedays/$gorefest7").page().select("form[action=/gamedays/$gorefest7/plays/remove]")
             forms.map { it.one("input[name=game]").`val`() } shouldBe listOf(azul.toString())
 
-            client.remove(annaAlone).status shouldBe HttpStatusCode.Conflict
-            client.remove(annasPlay).status shouldBe HttpStatusCode.Found
+            // Refused: back to the hub, nothing changed.
+            client.remove(annaAlone).headers["Location"] shouldBe "/gamedays/$gorefest7"
+            client.remove(annasPlay).headers["Location"]!! shouldStartWith "$log?removed=true"
             app.plays.on(gorefest7).map { it.game } shouldBe listOf(cascadia)
         }
         val stranger = kotlinx.coroutines.runBlocking { test.loggedIn("Stranger") }
@@ -546,5 +548,38 @@ class CheckpointRoutesTest {
             client.remove(annaAlone).status shouldBe HttpStatusCode.NotFound
         }
         app.plays.on(gorefest7).map { it.game } shouldBe listOf(cascadia)
+    }
+
+    @Test
+    @Obligation("PL-24")
+    fun `logging a different game after removing one asks the question as usual, and so does a player who wasn't asked`() {
+        val solo = play(azul, listOf(kimId))
+        val annasLog = play(cascadia, listOf(anna, kimId), by = anna)
+        kotlinx.coroutines.runBlocking { given(solo, annasLog) }
+        test.webTest(session = kim) { client ->
+            client.remove(solo)
+            val other = client.htmxPost(log, parameters {
+                append("again", azul.toString()); append("game", cascadia.toString()); append("players", kimId.toString()); append("duration", "45m")
+            })
+            other.headers["HX-Redirect"]!! shouldStartWith "$log/compare"
+
+            // Anna logged it, so Kim was never asked: removing and logging it again asks Kim now.
+            val again = client.remove(annasLog).headers["Location"]!!
+            again shouldStartWith "$log?removed=true"
+            again shouldNotContain "again="
+            client.get(again).page().select("#log-form input[name=again]").shouldBeEmpty()
+        }
+    }
+
+    @Test
+    @Obligation("PL-19")
+    fun `a removed play's game that isn't on the shelf shows once, and the search doesn't offer it again`() = test.webTest(session = kim) { client ->
+        val brass = id("Brass: Birmingham")
+        val form = client.get("$log?removed=true&game=$brass&players=$kimId&players=$anna").page().one("#log-form")
+        form.select("input[name=game][value=$brass]") shouldHaveSize 1
+        val search = form.one("input[type=search]").attr("hx-get")
+        search shouldBe "$log/search?also=$brass"
+
+        client.get("$search&q=brass").fragment().select("input[name=game][value=$brass]").shouldBeEmpty()
     }
 }
