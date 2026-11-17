@@ -9,6 +9,8 @@ htmx.config.responseHandling = [
 
 // One request at a time per element, and none after one that answered with an HX-Redirect: the browser is
 // already on its way to the next page, so a second tap on "Create game day" must not create a second game day.
+// htmx queues that second tap and fires it once the first answers, so the guard has to outlive the first request.
+// Don't read evt.detail.successful here: htmx 2 follows an HX-Redirect before it sets it, so it is never true then.
 document.addEventListener("htmx:beforeRequest", (evt) => {
   const elt = evt.detail.elt;
   if (elt.dataset.gfBusy) return evt.preventDefault();
@@ -17,7 +19,15 @@ document.addEventListener("htmx:beforeRequest", (evt) => {
 document.addEventListener("htmx:afterRequest", (evt) => {
   const elt = evt.detail.elt;
   const xhr = evt.detail.xhr;
-  if (!(evt.detail.successful && xhr && xhr.getResponseHeader("HX-Redirect"))) delete elt.dataset.gfBusy;
+  const redirecting = xhr && xhr.status >= 200 && xhr.status < 300 && xhr.getResponseHeader("HX-Redirect");
+  if (!redirecting) delete elt.dataset.gfBusy;
+});
+// Back to a page the browser kept in its back/forward cache (Safari does, despite no-store): the form that redirected
+// is still marked busy and spinning, so free it, or every tap on it would be dropped.
+window.addEventListener("pageshow", (evt) => {
+  if (!evt.persisted) return;
+  document.querySelectorAll("[data-gf-busy]").forEach((elt) => delete elt.dataset.gfBusy);
+  document.querySelectorAll(".htmx-request").forEach((elt) => elt.classList.remove("htmx-request"));
 });
 
 // A swapped-in element says what changed in data-announce (the `announce` component); the page's status line reads it

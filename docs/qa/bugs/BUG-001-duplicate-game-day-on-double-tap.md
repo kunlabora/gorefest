@@ -33,3 +33,5 @@ No form uses `hx-disabled-elt` or `hx-sync` (`grep -rn "disabled-elt\|hx-sync" s
 ## Status
 
 Status: fixed. A global htmx hook in `htmx-config.js` drops a second request from an element that is in flight or already got an `HX-Redirect` (a browser-only fix, so no automated test); commit a84b760.
+
+Reopened 2026-11-17: a QA run still made two game days (and two plays from a double-clicked "Log it"). The hook never held: it kept the guard only when `evt.detail.successful` was true, but htmx 2.0.11 follows an `HX-Redirect` before it sets `successful`, so the guard was dropped and htmx's queued second submit went through. Fixed by reading the response's status and `HX-Redirect` header instead. Still browser-only (HtmlUnit can't parse htmx 2), so it is checked by hand and listed under Known gaps in `docs/contract/README.md`.
