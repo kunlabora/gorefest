@@ -1,6 +1,6 @@
 # U21 Link BGG without a code
 
-Source: a new player gave up while linking, 2026-11-17. Status: 🚧 doing
+Source: a new player gave up while linking, 2026-11-17. Status: ✅ built
 
 **Idea:** linking a BGG account is typing your BGG username. No code in the BGG profile, no second step.
 
@@ -51,11 +51,18 @@ None: decided with Tim on 2026-11-17 (no verification, no uniqueness, keep one a
 
 ## Criteria
 
-- [ ] BGG-33: a player links a BGG account by typing its username; if BGG knows it, it's linked at once, without a code or a change on BGG (strikes BGG-1)
-- [ ] BGG-34: the link page sits under Collection in the nav, can be skipped with "Not now", and asks only for the username (strikes BGG-3)
-- [ ] BGG-35: several players can link the same BGG account, whatever the case of the username, each with their own collection (strikes BGG-4 and BGG-8)
-- [ ] BGG-7 loses "frees the username for anyone": unlinking forgets the account and its collection, and the player can link again
-- [ ] The code step, the verify route, the dev "fake profile" button and the profile picture are gone
-- [ ] No event changes; erasure unchanged (`PlayerErased` still ends the link)
-- [ ] Mockup `docs/design/mockups/screen-bgg.html` shows the one-step page; the screen uses existing components
-- [ ] `CLAUDE.md` (BGG integration), `docs/gdpr.md` and the `/privacy` notice match (privacy-check)
+- [x] BGG-33: a player links a BGG account by typing its username; if BGG knows it, it's linked at once, without a code or a change on BGG (strikes BGG-1)
+- [x] BGG-34: the link page sits under Collection in the nav, can be skipped with "Not now", and asks only for the username (strikes BGG-3)
+- [x] BGG-35: several players can link the same BGG account, whatever the case of the username, each with their own collection (strikes BGG-4 and BGG-8)
+- [x] BGG-7 loses "frees the username for anyone": unlinking forgets the account and its collection, and the player can link again
+- [x] The code step, the verify route, the dev "fake profile" button and the profile picture are gone
+- [x] No event changes; erasure unchanged (`PlayerErased` still ends the link)
+- [x] BGG-36: the link page says that nobody checks the account is theirs, and that a household can share one
+- [x] Mockup `docs/design/mockups/screen-bgg.html` shows the one-step page; the screen uses existing components
+- [x] `CLAUDE.md` (BGG integration), `docs/gdpr.md` and the `/privacy` notice match (privacy-check)
+
+Built as designed, with these notes:
+
+- PR-5 ("an erased player's BGG username is free for someone else to link") was struck too; what is left of it is PR-29 (an erased player has no linked account). WEB-11 was struck: its only proof was the dev "put the code in the fake profile" button, and no button sends free text any more.
+- The review added BGG-36 (the page says nobody checks) and a test that two players on one account keep their own collections when one unlinks.
+- Known gaps (`docs/contract/README.md`): with a shared account, one player bringing a game doesn't answer a bring request to the other, and the game can still be asked of the other; after a `SECRET_KEY` rotation, linking the same account again is refused instead of changing nothing.
