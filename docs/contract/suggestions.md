@@ -24,6 +24,9 @@ Which games a table is offered, and why.
 - **SU-13** A game a player watched but never played gets an enjoyment guess from what they saw and still counts as new.
 - **SU-14** Players with fewer than 10 answers count as unknown; when nobody at the table is known, the reasons only talk about fit, never about enjoyment.
 - **SU-15** Every reason and every "nothing fits" case has its own sentence, with the wording pinned.
+- **SU-24** When someone at the table can explain a game and someone at the table hasn't played it, the game is nudged up the suggestions and the pick says who can explain it.
+- **SU-25** A game everyone at the table has played gets no nudge and no explainer line.
+- **SU-26** A game nobody at the table has played and nobody can explain ranks below an otherwise equal game someone at the table can explain.
 
 ## The table page
 

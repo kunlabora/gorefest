@@ -1,5 +1,6 @@
 package gorefest.shell.web.bgg
 
+import gorefest.core.BggId
 import gorefest.core.game.Game
 import gorefest.shell.bgg.CollectionSyncState
 import gorefest.shell.bgg.SyncStatus
@@ -8,7 +9,8 @@ import gorefest.shell.web.components.*
 import gorefest.shell.web.request.bringRequestsSwitch
 import kotlinx.html.*
 
-data class CollectionView(val sync: CollectionSyncState?, val games: List<Game>)
+/** [explains]: the games I said I can explain (U22). */
+data class CollectionView(val sync: CollectionSyncState?, val games: List<Game>, val explains: Set<BggId> = emptySet())
 
 /** [onward] is where the player was going before linking BGG (bringing games, say): it gets the page's one brand button. */
 fun HTML.collectionPage(view: CollectionView, me: CurrentPlayer, bringRequestsAllowed: Boolean, onward: String? = null) = page("Your collection", site = SiteBar(me, Nav.COLLECTION)) {
@@ -52,8 +54,24 @@ fun TagConsumer<*>.collection(view: CollectionView) = div("gf-stack") {
         SyncStatus.DONE -> {
             p("gf-muted") { +"${view.games.size} games from ${sync.username} on BGG." }
             if (view.games.isEmpty()) emptyState("No games in your BGG collection", "Mark games as owned on BGG, then sync again.")
-            else ul("gf-list gf-collection__list") { view.games.forEach { li { gameRow(it, level = Level.H2) } } }
+            else ul("gf-list gf-collection__list") { view.games.forEach { collectionItem(it, canExplain = it.id in view.explains) } }
             syncButton("Sync again")
+        }
+    }
+}
+
+/** One game in my collection, with "I can explain this" (U22). Answers the toggle on its own, so it keeps an id. */
+fun TagConsumer<*>.collectionItem(game: Game, canExplain: Boolean, announcement: String? = null) = li {
+    val rowId = "collection-${game.id}"
+    id = rowId
+    if (announcement != null) announce(announcement)
+    gameRow(game, level = Level.H2) {
+        chipToggle("I can explain this", pressed = canExplain, says = "I can explain ${game.name}") {
+            id = "$rowId-explain"
+            hx("post", "/collection/${game.id}/explain")
+            hx("vals", """{"canExplain": "${!canExplain}"}""")
+            hx("target", "#$rowId")
+            hx("swap", "outerHTML")
         }
     }
 }

@@ -15,7 +15,8 @@ import kotlinx.html.*
 data class BringRow(val game: Game, val bringing: Boolean, val owned: Boolean = true)
 
 /** A game on the shelf as it appears under "Really want to play something?": do I want it, and how many people do. */
-data class WishRow(val game: Game, val wants: Boolean, val wishers: Int)
+/** [canExplain]: I said I can explain it; [explainers]: who on the game day can (me as "You"), U22. */
+data class WishRow(val game: Game, val wants: Boolean, val wishers: Int, val canExplain: Boolean = false, val explainers: List<String> = emptyList())
 
 /** Who brings how many games to the shelf. */
 data class ShelfOwner(val id: PlayerId, val name: String, val count: Int)
@@ -63,7 +64,10 @@ fun HTML.bringPage(
                 consumer.bringSummary(gameDay, summary)
                 if (!gameDay.ended) section("gf-card gf-bring__card gf-bring__wishes") {
                     heading(Level.H2, "gf-label") { +"Really want to play something?" }
-                    p("gf-muted gf-small") { +"Heart up to $MAX_WISHES games on the shelf. Each heart nudges a game up the suggestions." }
+                    p("gf-muted gf-small") {
+                        +"Heart up to $MAX_WISHES games on the shelf. Each heart nudges a game up the suggestions. "
+                        +"Say which ones you can explain, so a table new to a game knows who can teach it."
+                    }
                     consumer.wishList(gameDay, wishes)
                 }
             }
@@ -174,10 +178,11 @@ fun TagConsumer<*>.wishList(gameDay: GameDaySummary, rows: List<WishRow>) = ul("
     rows.forEach { wishItem(gameDay, it) }
 }
 
-fun TagConsumer<*>.wishItem(gameDay: GameDaySummary, row: WishRow, error: String? = null) = li {
+/** [announcement] overrides what the row says changed (the heart, by default). */
+fun TagConsumer<*>.wishItem(gameDay: GameDaySummary, row: WishRow, error: String? = null, announcement: String? = null) = li {
     val rowId = "wish-${row.game.id}"
     id = rowId
-    announce(if (row.wants) "You really want to play ${row.game.name}" else "No heart on ${row.game.name}")
+    announce(announcement ?: if (row.wants) "You really want to play ${row.game.name}" else "No heart on ${row.game.name}")
     gameRow(row.game)
     div("gf-wish") {
         chipToggle(if (row.wants) "I really want to play this" else "I want to play this", pressed = row.wants, icon = "heart", says = "I want to play ${row.game.name}") {
@@ -189,6 +194,16 @@ fun TagConsumer<*>.wishItem(gameDay: GameDaySummary, row: WishRow, error: String
             hx("swap", "outerHTML")
         }
         if (row.wishers > 0) span("gf-small gf-muted") { +"${row.wishers.of("person", "people")} want${if (row.wishers == 1) "s" else ""} this" }
+    }
+    div("gf-wish") {
+        chipToggle("I can explain this", pressed = row.canExplain, says = "I can explain ${row.game.name}") {
+            id = "$rowId-explain"
+            hx("post", "/gamedays/${gameDay.id}/shelf/${row.game.id}/explain")
+            hx("vals", """{"canExplain": "${!row.canExplain}"}""")
+            hx("target", "#$rowId")
+            hx("swap", "outerHTML")
+        }
+        if (row.explainers.isNotEmpty()) span("gf-small gf-muted") { +canExplainText(row.explainers) }
     }
     if (error != null) fieldError(error)
 }

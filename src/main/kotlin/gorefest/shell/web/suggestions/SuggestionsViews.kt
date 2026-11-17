@@ -2,6 +2,7 @@ package gorefest.shell.web.suggestions
 
 import gorefest.core.PlayerId
 import gorefest.core.gameday.GameDaySummary
+import gorefest.core.matching.Suggestion
 import gorefest.core.matching.Suggestions
 import gorefest.shell.web.CurrentPlayer
 import gorefest.shell.web.components.*
@@ -80,11 +81,11 @@ fun TagConsumer<*>.suggestions(view: TableView) = section("gf-picker__answer") {
                 sectionHeading("Play this")
                 if (suggestions.unknown.isNotEmpty()) unknownTaste(suggestions.unknown, view.tableSize, view.event, view.names, view.me.id)
                 suggestions.top.take(1).forEach { s ->
-                    rankedGame(1, s.game, s.reason.text()) { icon("clock"); +"~${s.minutes} min ${if (view.tableSize == 1) "for you" else "for the ${view.tableSize} of you"}" }
+                    rankedGame(1, s.game, s.reason.text(), note = s.explainerNote()) { icon("clock"); +"~${s.minutes} min ${if (view.tableSize == 1) "for you" else "for the ${view.tableSize} of you"}" }
                 }
                 if (suggestions.top.size > 1) div("gf-picker__more") {
                     suggestions.top.drop(1).forEachIndexed { i, s ->
-                        rankedGame(i + 2, s.game, s.reason.text()) { icon("clock"); +"~${s.minutes} min ${if (view.tableSize == 1) "for you" else "for ${view.tableSize}"}" }
+                        rankedGame(i + 2, s.game, s.reason.text(), note = s.explainerNote()) { icon("clock"); +"~${s.minutes} min ${if (view.tableSize == 1) "for you" else "for ${view.tableSize}"}" }
                     }
                 }
             }
@@ -140,3 +141,5 @@ private fun FlowContent.unknownTaste(unknown: List<PlayerId>, tableSize: Int, ev
     if (me in unknown && event.tasteRound != null) linkButton(event.tasteRound, "Take the 2-minute taste round", ButtonStyle.SECONDARY)
 }
 
+/** Who at the table can explain it, when someone there is new to it (U22). */
+private fun Suggestion.explainerNote() = explainers.takeIf { it.isNotEmpty() }?.let(::canExplainText)

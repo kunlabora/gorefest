@@ -57,7 +57,7 @@ suspend fun tableView(app: App, login: Login, event: TableEvent, shelf: List<Pai
     val budget = TIMES.firstOrNull { it.first == params["time"] }?.second
     val names = login.names(event.players)
     val table = chosen.map { id ->
-        TablePlayer(id, names[id] ?: SOMEONE, PlayerGames(app.tastes.of(id), app.collectionSync.collection(id)))
+        TablePlayer(id, names[id] ?: SOMEONE, PlayerGames(app.tastes.of(id), app.collectionSync.collection(id)), app.explainers.gamesOf(id))
     }
     val suggestions = app.matcher.suggest(table, shelf, budget, app.clock.instant(), speed = app.groupSpeed(chosen))
     val ticked = params.getAll("players")?.toSet() ?: emptySet<String>().takeIf { params.contains(TABLE_SET) }

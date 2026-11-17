@@ -8,6 +8,7 @@ import gorefest.core.BringRequestDeclined
 import gorefest.core.BringRequestWithdrawn
 import gorefest.core.BringRequested
 import gorefest.core.BringRequestsAllowedChanged
+import gorefest.core.CanExplainChanged
 import gorefest.core.ComparisonRecorded
 import gorefest.core.DatePollAnswered
 import gorefest.core.DatePollBringAnswered
@@ -93,6 +94,7 @@ object PersonalData {
         is BringRequestsAllowedChanged -> entry(if (event.allowed) "Allowed bring requests" else "Switched bring requests off")
         is ComparisonRecorded -> entry("Compared two games", "a" to l.game(event.a), "b" to l.game(event.b), "answer" to event.result.name, "basis" to event.basis.name, "at" to event.at.toString())
         is GamePlayStatusDeclared -> entry(if (event.played) "Said you've played a game" else "Said you haven't played a game", "game" to l.game(event.game))
+        is CanExplainChanged -> entry(if (event.canExplain) "Said you can explain a game" else "Said you can no longer explain a game", "game" to l.game(event.game))
         is PlayLogged -> entry("Played a game", "game" to l.game(event.game), "gameDay" to l.gameDay(event.gameDay), "minutes" to event.minutes.toString(), "peopleAtTheTable" to event.players.size.toString(), "at" to event.at.toString())
         is DatePollCreated -> entry("Started a date poll", "title" to event.title, "place" to event.place, "dates" to event.dates.joinToString(", "))
         is DatePollJoined -> entry("Joined a date poll", "poll" to l.poll(event.poll))

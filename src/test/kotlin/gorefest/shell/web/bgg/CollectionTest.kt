@@ -1,5 +1,8 @@
 package gorefest.shell.web.bgg
 
+import io.ktor.http.parameters
+import io.ktor.http.HttpStatusCode
+import gorefest.shell.web.htmxPost
 import gorefest.contract.Obligation
 import gorefest.core.BggAccountLinked
 import gorefest.core.BggId
@@ -147,5 +150,38 @@ class CollectionTest {
         test.webTest(session = other) { client ->
             client.get("/collection").headers["Location"] shouldBe "/bgg?returnTo=%2Fcollection"
         }
+    }
+
+    // I can explain this (U22)
+
+    @Test
+    @Obligation("SH-35")
+    fun `each game in the collection can be marked as one I can explain, and unmarked`() = test.webTest(session = kim) { client ->
+        sync.request(kimId, "KimPlays", BggPriority.LINK).join()
+        val explainButton = client.get("/collection").page().one("#collection-$azul-explain")
+        explainButton.attr("aria-pressed") shouldBe "false"
+        explainButton.attr("hx-post") shouldBe "/collection/$azul/explain"
+
+        val on = client.htmxPost("/collection/$azul/explain", parameters { append("canExplain", "true") }).fragment()
+        on shouldReplace "collection-$azul"
+        on.one("#collection-$azul-explain").attr("aria-pressed") shouldBe "true"
+        on.attr("data-announce") shouldBe "You can explain Azul"
+        app.explainers.gamesOf(kimId) shouldBe setOf(azul)
+        client.get("/collection").page().one("#collection-$azul-explain").attr("aria-pressed") shouldBe "true"
+
+        // Twice changes nothing; then back off.
+        client.htmxPost("/collection/$azul/explain", parameters { append("canExplain", "true") }).status shouldBe HttpStatusCode.OK
+        client.htmxPost("/collection/$azul/explain", parameters { append("canExplain", "false") }).fragment()
+            .one("#collection-$azul-explain").attr("aria-pressed") shouldBe "false"
+        app.explainers.gamesOf(kimId) shouldBe emptySet()
+    }
+
+    @Test
+    @Obligation("SH-35")
+    fun `a game outside my collection can't be marked from the collection page`() = test.webTest(session = kim) { client ->
+        sync.request(kimId, "KimPlays", BggPriority.LINK).join()
+
+        client.htmxPost("/collection/$catan/explain", parameters { append("canExplain", "true") }).status shouldBe HttpStatusCode.NotFound
+        app.explainers.gamesOf(kimId) shouldBe emptySet()
     }
 }

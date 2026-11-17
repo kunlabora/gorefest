@@ -1,5 +1,6 @@
 package gorefest.core.matching
 
+import gorefest.core.BggId
 import gorefest.core.PlayerId
 import gorefest.core.game.Game
 import gorefest.core.gameday.ShelfGame
@@ -9,9 +10,11 @@ import java.time.Instant
 import kotlin.math.roundToInt
 import kotlin.math.sqrt
 
-data class TablePlayer(val id: PlayerId, val name: String, val games: PlayerGames)
+/** [canExplain]: the games this player said they can explain (U22). */
+data class TablePlayer(val id: PlayerId, val name: String, val games: PlayerGames, val canExplain: Set<BggId> = emptySet())
 
-data class Suggestion(val game: Game, val minutes: Int, val reason: SuggestionReason, val score: Double)
+/** [explainers]: who at the table can explain it, named only when someone at the table hasn't played it (U22). */
+data class Suggestion(val game: Game, val minutes: Int, val reason: SuggestionReason, val score: Double, val explainers: List<String> = emptyList())
 
 /** Why a game was suggested. The web layer words it. */
 sealed interface SuggestionReason {
@@ -71,12 +74,16 @@ sealed interface Suggestions {
  *   players with few answers weigh less. Bonuses for novelty (nobody played it) and for each player at the table who really wants to play it (up to three).
  * - A game a player declared unplayed (and never compared) counts as neutral for them, not as a guess
  *   from its features; it can only win on novelty, and the reason says it's new to them.
+ * - Teaching (U22): a game someone at the table can explain, with someone at the table new to it, gets a nudge and names
+ *   who can explain it; a game nobody at the table has played and nobody can explain is pushed down.
  */
 class Matcher(
     private val predictor: Predictor = Predictor(),
     private val spreadPenalty: Double = 0.5,
     private val noveltyBonus: Double = 0.3,
     private val wishBonus: Double = 0.3,
+    private val explainerBonus: Double = 0.2,
+    private val unteachablePenalty: Double = 0.2,
 ) {
     fun suggest(
         table: List<TablePlayer>,
@@ -106,10 +113,14 @@ class Matcher(
                 val novel = table.none { it.games.hasPlayed(game.id) }
                 val wishers = table.filter { it.id in entry.eager }
                 val owner = wishers.singleOrNull()?.takeIf { it.id in entry.owners }
-                val score = mean - spreadPenalty * spread + (if (novel) noveltyBonus else 0.0) + wishBonus * wishers.size.coerceAtMost(MAX_WISH_BONUS_PEOPLE)
+                val explainers = table.filter { game.id in it.canExplain }
+                // Teaching only matters when someone is new to it; marking a game also makes it played, so a novel game has no explainer.
+                val teachable = explainers.isNotEmpty() && table.any { !it.games.hasPlayed(game.id) }
+                val score = mean - spreadPenalty * spread + (if (novel) noveltyBonus else 0.0) + wishBonus * wishers.size.coerceAtMost(MAX_WISH_BONUS_PEOPLE) +
+                    (if (teachable) explainerBonus else 0.0) - (if (novel && explainers.isEmpty()) unteachablePenalty else 0.0)
                 val minutes = estimatedMinutes(game, n, speed)
                 val reason = reason(game, table, means, spread, novel, owner?.name, wishers.map { it.name }, minutes, timeBudget, nobodyKnown, strangers.map { it.name })
-                Suggestion(game, minutes, reason, score)
+                Suggestion(game, minutes, reason, score, if (teachable) explainers.map { it.name } else emptyList())
             }.sortedByDescending { it.score }.take(count),
             unknown,
         )

@@ -167,7 +167,8 @@ fun FlowContent.gameTileChoice(game: Game, checked: Boolean) = label("gf-tile") 
  * A numbered pick (payoff podium, suggestions): the first one large with wide art.
  * [meta] fills the facts line, [reason] says why.
  */
-fun FlowContent.rankedGame(rank: Int, game: Game, reason: String, level: Level = Level.H3, meta: P.() -> Unit = { +game.facts }) =
+/** [note]: a second line under the reason, such as who can explain it (U22). */
+fun FlowContent.rankedGame(rank: Int, game: Game, reason: String, level: Level = Level.H3, note: String? = null, meta: P.() -> Unit = { +game.facts }) =
     article(if (rank == 1) "gf-game gf-game--large" else "gf-game") {
         span("gf-game__rank") { +"$rank" }
         art(game, if (rank == 1) "gf-art--wide" else "")
@@ -176,6 +177,7 @@ fun FlowContent.rankedGame(rank: Int, game: Game, reason: String, level: Level =
             if (game.typeText.isNotEmpty()) p("gf-game__type") { +game.typeText }
             p("gf-game__meta") { meta() }
             p("gf-game__reason") { icon("spark"); +reason }
+            if (note != null) p("gf-game__reason") { icon("users"); +note }
         }
     }
 
@@ -229,3 +231,7 @@ private fun FlowContent.answer(value: String, label: String, iconName: String, g
         icon(iconName)
         +label
     }
+
+/** What an "I can explain this" toggle announces once it saved (U22). */
+fun explainAnnouncement(game: Game, canExplain: Boolean) =
+    if (canExplain) "You can explain ${game.name}" else "${game.name} is no longer marked as one you can explain"

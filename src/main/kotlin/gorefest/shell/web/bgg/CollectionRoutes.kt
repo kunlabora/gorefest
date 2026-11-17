@@ -2,6 +2,12 @@ package gorefest.shell.web.bgg
 
 import gorefest.core.gameday.SetBringRequestsAllowed
 import gorefest.core.gameday.SetBringRequestsAllowedDecider
+import gorefest.core.BggId
+import gorefest.core.player.SetCanExplain
+import gorefest.core.player.SetCanExplainDecider
+import gorefest.shell.web.components.explainAnnouncement
+import io.ktor.http.HttpStatusCode
+import io.ktor.server.response.respond
 import gorefest.shell.App
 import gorefest.shell.auth.Login
 import gorefest.shell.bgg.BggPriority
@@ -47,6 +53,18 @@ fun Route.collectionRoutes(app: App) {
         }
     }
 
+    /** "I can explain this" on a game in my collection (U22). */
+    post("/collection/{game}/explain") {
+        authenticated {
+            val me = contextOf<CurrentPlayer>()
+            val id = call.parameters["game"]?.toIntOrNull()?.let(::BggId)?.takeIf { it in app.collectionSync.collection(me.id) }
+            val game = id?.let { app.catalog[it] } ?: return@authenticated call.respond(HttpStatusCode.NotFound)
+            val canExplain = call.receiveParameters()["canExplain"] == "true"
+            app.commands.handle(SetCanExplainDecider, SetCanExplain(me.id, game.id, canExplain))
+            respondFragment { collectionItem(game, app.explainers.canExplain(me.id, game.id), explainAnnouncement(game, canExplain)) }
+        }
+    }
+
     post("/collection/sync") {
         authenticated {
             val me = contextOf<CurrentPlayer>()
@@ -60,4 +78,5 @@ fun Route.collectionRoutes(app: App) {
 private suspend fun collectionView(app: App, me: CurrentPlayer) = CollectionView(
     sync = app.collectionSync.status(me.id),
     games = app.collectionSync.collection(me.id).mapNotNull(app.catalog::get).sortedBy { it.name.lowercase() },
+    explains = app.explainers.gamesOf(me.id),
 )

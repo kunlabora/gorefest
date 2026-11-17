@@ -1,5 +1,6 @@
 package gorefest.shell.web.suggestions
 
+import gorefest.core.CanExplainChanged
 import gorefest.contract.Obligation
 import gorefest.shell.web.components.idSlug
 import gorefest.core.GameBrought
@@ -170,5 +171,21 @@ class SuggestionsRoutesTest {
         ids shouldBe TIMES.map { "time-" + it.first.idSlug() }
         ids.forEach { page.select("#$it") shouldHaveSize 1 }
         "time-3h-plus" shouldBe ids.last()
+    }
+
+    @Test
+    @Obligation("SU-24")
+    fun `a pick says who at the table can explain it to someone new`() = test.webTest(session = kim) { client ->
+        val shelf = listOf("Azul", "Cascadia", "Brass: Birmingham", "Codenames", "Twilight Imperium: Fourth Edition")
+        app.db.transaction { app.store.append(shelf.map { CanExplainChanged(anna, id(it), true) }) }
+        app.catchUp()
+
+        val picks = client.get("/gamedays/$gorefest7/suggestions?players=$kimId&players=$anna").fragment()
+
+        picks.select("article").forEach { it.select(".gf-game__reason").last()!!.text() shouldBe "Anna can explain it." }
+        // At a table of Anna alone nobody is new to them: no line.
+        client.get("/gamedays/$gorefest7/suggestions?players=$anna").fragment().select("article").forEach {
+            it.select(".gf-game__reason") shouldHaveSize 1
+        }
     }
 }

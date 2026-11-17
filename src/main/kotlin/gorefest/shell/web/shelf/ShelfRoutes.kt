@@ -10,6 +10,9 @@ import gorefest.core.gameday.GameDaySummary
 import gorefest.core.gameday.SetPlayWish
 import gorefest.core.gameday.SetPlayWishDecider
 import gorefest.core.gameday.ShelfGame
+import gorefest.shell.web.components.explainAnnouncement
+import gorefest.core.player.SetCanExplain
+import gorefest.core.player.SetCanExplainDecider
 import gorefest.shell.App
 import gorefest.shell.auth.Login
 import gorefest.shell.web.CurrentPlayer
@@ -40,7 +43,8 @@ fun Route.shelfRoutes(app: App) {
             val rows = bringList(app, gameDay, me)
             val summary = summaryFor(app, gameDay, me, login)
             val requests = ownerRequests(app, gameDay, me, login)
-            call.respondHtml { bringPage(me, gameDay, rows, wishList(app, gameDay, me), app.bggAccounts.isLinked(me.id), summary, requests) }
+            val wishes = wishList(app, gameDay, me, login)
+            call.respondHtml { bringPage(me, gameDay, rows, wishes, app.bggAccounts.isLinked(me.id), summary, requests) }
         }
     }
 
@@ -70,7 +74,7 @@ fun Route.shelfRoutes(app: App) {
         authenticated {
             val me = contextOf<CurrentPlayer>()
             val gameDay = memberGameDay(app, me) ?: return@authenticated call.respond(HttpStatusCode.NotFound)
-            val rows = wishList(app, gameDay, me)
+            val rows = wishList(app, gameDay, me, login)
             respondFragment { wishList(gameDay, rows) }
         }
     }
@@ -104,12 +108,25 @@ fun Route.shelfRoutes(app: App) {
             val form = call.receiveParameters()
             val wants = form["wants"] == "true"
             val decision = app.commands.handle(SetPlayWishDecider, SetPlayWish(gameDay.id, me.id, game.id, wants))
-            val row = wishRow(game, app.shelves.of(gameDay.id), me)
+            val row = wishRow(app, gameDay, game, me, login)
             // The wish list is the one that changed, but other rows' counts may be stale: ask for it again.
             call.response.header("HX-Trigger", SHELF_CHANGED)
             respondFragment(if (decision is Decision.Rejected) HttpStatusCode.Conflict else HttpStatusCode.OK) {
                 wishItem(gameDay, row, error = (decision as? Decision.Rejected)?.reason?.message())
             }
+        }
+    }
+
+    /** "I can explain this" on a shelf game (U22): any member, for any game on a shelf still to be played. */
+    post("/gamedays/{id}/shelf/{game}/explain") {
+        authenticated {
+            val me = contextOf<CurrentPlayer>()
+            val (gameDay, game) = shelfTarget(app, me) ?: return@authenticated call.respond(HttpStatusCode.NotFound)
+            if (gameDay.closed || app.shelves.of(gameDay.id).none { it.game == game.id }) return@authenticated call.respond(HttpStatusCode.NotFound)
+            val canExplain = call.receiveParameters()["canExplain"] == "true"
+            app.commands.handle(SetCanExplainDecider, SetCanExplain(me.id, game.id, canExplain))
+            val row = wishRow(app, gameDay, game, me, login)
+            respondFragment { wishItem(gameDay, row, announcement = explainAnnouncement(game, canExplain)) }
         }
     }
 }
@@ -133,14 +150,19 @@ private suspend fun summaryFor(app: App, gameDay: GameDaySummary, me: CurrentPla
 }
 
 /** Everything on the shelf, in the order it was brought, with my hearts. */
-private fun wishList(app: App, gameDay: GameDaySummary, me: CurrentPlayer): List<WishRow> {
+private suspend fun wishList(app: App, gameDay: GameDaySummary, me: CurrentPlayer, login: Login): List<WishRow> {
     val shelf = app.shelves.of(gameDay.id)
-    return shelf.mapNotNull { entry -> app.catalog[entry.game]?.let { wishRow(it, shelf, me) } }
+    return shelf.mapNotNull { entry -> app.catalog[entry.game]?.let { wishRow(app, gameDay, it, me, login) } }
 }
 
-private fun wishRow(game: Game, shelf: List<ShelfGame>, me: CurrentPlayer): WishRow {
-    val eager = shelf.firstOrNull { it.game == game.id }?.eager.orEmpty()
-    return WishRow(game, wants = me.id in eager, wishers = eager.size)
+/** A shelf game with my heart, and who of the game day's players can explain it (me first, as "You"). */
+private suspend fun wishRow(app: App, gameDay: GameDaySummary, game: Game, me: CurrentPlayer, login: Login): WishRow {
+    val eager = app.shelves.of(gameDay.id).firstOrNull { it.game == game.id }?.eager.orEmpty()
+    val explainers = app.explainers.of(game.id, among = gameDay.players)
+    val others = explainers.filter { it != me.id }
+    val names = login.names(others)
+    val said = (if (me.id in explainers) listOf("You") else emptyList()) + others.map { names[it] ?: SOMEONE }
+    return WishRow(game, wants = me.id in eager, wishers = eager.size, canExplain = app.explainers.canExplain(me.id, game.id), explainers = said)
 }
 
 private fun RoutingContext.shelfTarget(app: App, me: CurrentPlayer): Pair<GameDaySummary, Game>? {

@@ -1,5 +1,6 @@
 package gorefest.shell.web.shelf
 
+import gorefest.core.CanExplainChanged
 import gorefest.contract.Obligation
 import gorefest.core.BggAccountLinked
 import gorefest.core.BggId
@@ -139,10 +140,10 @@ class ShelfRoutesTest {
         page.select("h2").map { it.text() } shouldContain "Really want to play something?"
         page.select("#wish-list li .gf-game__name").map { it.text() } shouldContainExactly listOf("Azul", "Brass: Birmingham")
         val azulRow = page.one("#wish-$azul")
-        azulRow.one("button").attr("hx-post") shouldBe "/gamedays/$gorefest7/shelf/$azul/wish"
-        azulRow.one("button").attr("aria-pressed") shouldBe "false"
+        azulRow.one("#wish-$azul-heart").attr("hx-post") shouldBe "/gamedays/$gorefest7/shelf/$azul/wish"
+        azulRow.one("#wish-$azul-heart").attr("aria-pressed") shouldBe "false"
         azulRow.one(".gf-wish .gf-small").text() shouldBe "1 person wants this"
-        page.one("#wish-$brass button").attr("aria-pressed") shouldBe "false"
+        page.one("#wish-$brass-heart").attr("aria-pressed") shouldBe "false"
         page.one("#wish-list").attr("hx-trigger") shouldBe "bring-list-changed from:body, shelf-changed from:body"
     }
 
@@ -156,13 +157,13 @@ class ShelfRoutesTest {
         val on = onResponse.fragment()
 
         on shouldReplace "wish-$azul"
-        on.one("button").attr("aria-pressed") shouldBe "true"
-        on.one("button").attr("hx-vals") shouldContain "\"wants\": \"false\""
+        on.one("#wish-$azul-heart").attr("aria-pressed") shouldBe "true"
+        on.one("#wish-$azul-heart").attr("hx-vals") shouldContain "\"wants\": \"false\""
         on.one(".gf-wish .gf-small").text() shouldBe "1 person wants this"
         app.shelves.of(gorefest7).single().eager shouldBe setOf(kimId)
 
         val off = client.htmxPost("/gamedays/$gorefest7/shelf/$azul/wish", parameters { append("wants", "false") }).fragment()
-        off.one("button").attr("aria-pressed") shouldBe "false"
+        off.one("#wish-$azul-heart").attr("aria-pressed") shouldBe "false"
         app.shelves.of(gorefest7).single().eager shouldBe emptySet()
     }
 
@@ -323,5 +324,61 @@ class ShelfRoutesTest {
             client.get(bringPage).status shouldBe HttpStatusCode.NotFound
             client.htmxPost("/gamedays/$gorefest7/shelf/$brass", parameters { append("bringing", "true") }).status shouldBe HttpStatusCode.NotFound
         }
+    }
+
+    // I can explain this (U22)
+
+    private fun explain(canExplain: Boolean) = parameters { append("canExplain", canExplain.toString()) }
+
+    @Test
+    @Obligation("SH-35", "SH-36")
+    fun `any member can say they can explain a shelf game, and the others see it`() {
+        test.webTest(session = kim) { client ->
+            given(GameBrought(gorefest7, anna, azul))
+
+            val on = client.htmxPost("/gamedays/$gorefest7/shelf/$azul/explain", explain(true)).fragment()
+
+            on shouldReplace "wish-$azul"
+            on.one("#wish-$azul-explain").attr("aria-pressed") shouldBe "true"
+            on.one("#wish-$azul-explain").attr("hx-vals") shouldContain "\"canExplain\": \"false\""
+            on.attr("data-announce") shouldBe "You can explain Azul"
+            on.select(".gf-wish .gf-small").map { it.text() } shouldContain "You can explain it."
+            app.explainers.canExplain(kimId, azul) shouldBe true
+        }
+        val annaSession = kotlinx.coroutines.runBlocking { test.loggedIn("Anna", id = anna) }
+        test.webTest(session = annaSession) { client ->
+            val row = client.get(bringPage).page().one("#wish-$azul")
+            row.one("#wish-$azul-explain").attr("aria-pressed") shouldBe "false"
+            row.select(".gf-wish .gf-small").map { it.text() } shouldContain "Kim can explain it."
+        }
+    }
+
+    @Test
+    @Obligation("SH-35")
+    fun `taking it back on the shelf clears the mark`() = test.webTest(session = kim) { client ->
+        given(GameBrought(gorefest7, anna, azul), CanExplainChanged(kimId, azul, true))
+
+        val off = client.htmxPost("/gamedays/$gorefest7/shelf/$azul/explain", explain(false)).fragment()
+
+        off.one("#wish-$azul-explain").attr("aria-pressed") shouldBe "false"
+        off.attr("data-announce") shouldBe "Azul is no longer marked as one you can explain"
+        app.explainers.canExplain(kimId, azul) shouldBe false
+    }
+
+    @Test
+    @Obligation("SH-36")
+    fun `only members see and set who can explain, only for games on the shelf, and not once the day is over`() {
+        kotlinx.coroutines.runBlocking { given(GameBrought(gorefest7, anna, azul), CanExplainChanged(anna, azul, true)) }
+        val stranger = kotlinx.coroutines.runBlocking { test.loggedIn("Stranger") }
+        test.webTest(session = stranger) { client ->
+            client.get("$bringPage/wishes").status shouldBe HttpStatusCode.NotFound
+            client.htmxPost("/gamedays/$gorefest7/shelf/$azul/explain", explain(true)).status shouldBe HttpStatusCode.NotFound
+        }
+        test.webTest(session = kim) { client ->
+            client.htmxPost("/gamedays/$gorefest7/shelf/$brass/explain", explain(true)).status shouldBe HttpStatusCode.NotFound
+            given(GameDayEnded(gorefest7))
+            client.htmxPost("/gamedays/$gorefest7/shelf/$azul/explain", explain(true)).status shouldBe HttpStatusCode.NotFound
+        }
+        app.explainers.gamesOf(kimId) shouldBe emptySet()
     }
 }

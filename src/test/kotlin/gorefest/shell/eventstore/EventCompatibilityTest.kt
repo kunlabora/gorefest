@@ -32,6 +32,7 @@ import gorefest.core.BringRequestDeclined
 import gorefest.core.BringRequestWithdrawn
 import gorefest.core.BringRequested
 import gorefest.core.BringRequestsAllowedChanged
+import gorefest.core.CanExplainChanged
 import gorefest.core.GamePlayStatusDeclared
 import gorefest.core.GameUnbrought
 import gorefest.core.InviteLinkRotated
@@ -128,6 +129,8 @@ class EventCompatibilityTest {
             ComparisonRecorded(player(p1), BggId(13), BggId(822), ComparisonResult.BOTH_GREAT, Basis.VIBE, Instant.parse("2026-10-03T09:00:00Z")),
         """{"type":"GamePlayStatusDeclared","player":"$p1","game":13,"played":false}""" to
             GamePlayStatusDeclared(player(p1), BggId(13), false),
+        """{"type":"CanExplainChanged","player":"$p1","game":13,"canExplain":true}""" to
+            CanExplainChanged(player(p1), BggId(13), true),
         """{"type":"PlayLogged","gameDay":"$d1","game":13,"players":["$p1","$p2"],"minutes":90,"loggedBy":"$p1","at":"2026-10-03T14:00:00Z"}""" to
             PlayLogged(gameDay, BggId(13), listOf(player(p1), player(p2)), 90, player(p1), Instant.parse("2026-10-03T14:00:00Z")),
         """{"type":"GameDayCancelled","gameDay":"$d1"}""" to

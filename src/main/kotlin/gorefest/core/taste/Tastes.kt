@@ -3,6 +3,7 @@ package gorefest.core.taste
 import gorefest.core.Rejection
 import gorefest.core.Basis
 import gorefest.core.BggId
+import gorefest.core.CanExplainChanged
 import gorefest.core.ComparisonRecorded
 import gorefest.core.Event
 import gorefest.core.GamePlayStatusDeclared
@@ -45,6 +46,8 @@ object Tastes : Projection<PlayerTastes> {
     override fun evolve(state: PlayerTastes, event: Event) = when (event) {
         is ComparisonRecorded -> state.changed(event.player) { it.copy(comparisons = it.comparisons + event) }
         is GamePlayStatusDeclared -> state.changed(event.player) { it.copy(played = it.played + (event.game to event.played)) }
+        // You can't explain a game you never played: the mark makes it played (U22); taking it back doesn't unplay it.
+        is CanExplainChanged -> if (event.canExplain) state.changed(event.player) { it.copy(played = it.played + (event.game to true)) } else state
         is PlayLogged -> event.players.fold(state) { s, p -> s.changed(p) { it.copy(played = it.played + (event.game to true)) } }
         else -> state
     }

@@ -204,6 +204,13 @@ data class GamePlayStatusDeclared(val player: PlayerId, val game: BggId, val pla
     override val tags get() = setOf(Tags.player(player), Tags.game(game))
 }
 
+/** [player] can (or no longer can) explain [game] to a table (U22). A lasting fact about the player, not about one game day. */
+@Serializable
+@SerialName("CanExplainChanged")
+data class CanExplainChanged(val player: PlayerId, val game: BggId, val canExplain: Boolean) : Event {
+    override val tags get() = setOf(Tags.player(player), Tags.game(game))
+}
+
 /** At a checkpoint: this game was played at the game day, by these players, for about this long. */
 @Serializable
 @SerialName("PlayLogged")
