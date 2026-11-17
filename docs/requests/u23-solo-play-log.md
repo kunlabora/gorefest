@@ -71,7 +71,7 @@ refused.
 1. **Who may remove a play?** Recommendation: whoever logged it and anyone named in it. Not the host for others' plays.
 2. **Edit instead of remove-and-log-again?** Recommendation: remove and log again; one new event, and the form already
    exists.
-3. **Hub default after the first play**: tick the table of your last play? Recommendation: yes, people tend to stay at
+3. **Decided (2026-11-17): yes.** **Hub default after the first play**: tick the table of your last play? Recommendation: yes, people tend to stay at
    their table.
 
 ## Criteria
