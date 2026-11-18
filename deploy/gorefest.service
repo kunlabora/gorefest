@@ -8,7 +8,8 @@ Wants=network-online.target
 User=gorefest
 WorkingDirectory=/opt/gorefest
 EnvironmentFile=/etc/gorefest/env
-ExecStart=/usr/bin/java -Xmx512m -XX:+ExitOnOutOfMemoryError -Djava.awt.headless=true --enable-native-access=ALL-UNNAMED --sun-misc-unsafe-memory-access=allow -jar /opt/gorefest/current/gorefest.jar
+ExecStart=/usr/bin/java -XX:-UseBASE64Intrinsics -Xmx512m -XX:+ExitOnOutOfMemoryError -Djava.awt.headless=true --enable-native-access=ALL-UNNAMED --sun-misc-unsafe-memory-access=allow -jar /opt/gorefest/current/gorefest.jar
+# -UseBASE64Intrinsics: Java4Shell (CVE-2026-114938) is in the AVX-512 Base64 intrinsic. Drop it once the JRE is 25.0.5.1 or later.
 # ExitOnOutOfMemoryError makes the JVM exit non-zero on OOM, so Restart=on-failure brings it back.
 Restart=on-failure
 RestartSec=5
