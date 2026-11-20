@@ -50,10 +50,7 @@ allows a service worker from our own origin (`script-src 'self'`, `connect-src '
 **Decisions (2026-11-20):** push next to mail, not a choice between them. The four notifications: game brought,
 player joined, game day cancelled, game requested. The home-screen step on iPhone is acceptable.
 A cancelled game day also sends a mail to everyone who joined; joining and bring requests are push only, for now.
-
-## Open questions
-
-- Can a player turn off one kind (say, "someone joined") and keep the rest, or is it all or nothing per device?
+Push is all or nothing per device: no switch per kind of notification.
 
 ## Privacy
 
