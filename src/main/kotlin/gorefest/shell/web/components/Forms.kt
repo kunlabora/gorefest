@@ -69,7 +69,7 @@ fun FlowContent.codeInput() = input(InputType.text, name = "code", classes = "gf
     placeholder = "······"
     attributes["inputmode"] = "numeric"
     attributes["autocomplete"] = "one-time-code"
-    hyperscript("on input js(me) me.value = me.value.replace(/\\D/g, '').slice(0, 6) end")
+    hyperscript("on input call gorefestDigitsOnly(me, 6)")
 }
 
 /**

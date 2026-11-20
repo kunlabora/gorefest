@@ -71,6 +71,7 @@ fun HTML.page(
         script(src = "/webjars/htmx.org/dist/htmx.min.js") {}
         script(src = "/static/js/htmx-config.js") {}
         script(src = "/webjars/hyperscript.org/dist/_hyperscript.min.js") {}
+        script(src = "/static/js/forms.js") {}
         head()
     }
     body {

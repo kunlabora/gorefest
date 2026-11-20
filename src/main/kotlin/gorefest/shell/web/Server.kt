@@ -63,6 +63,24 @@ private val NoIndex = createApplicationPlugin("NoIndex") {
     onCallRespond { call, _ -> call.response.header("X-Robots-Tag", "noindex, nofollow, noarchive, noimageindex, nosnippet") }
 }
 
+/**
+ * What a page may load and run, in case escaping ever misses something (WEB-21). Scripts come only from our own files:
+ * no inline script, no `on…` attributes and no eval (htmx's `allowEval` is off, and hyperscript calls named functions
+ * in `/static/js` instead of `js` blocks). Inline `style` attributes stay allowed: box art sets its `--art` through one.
+ * Box art comes from BGG's image CDN (and dev's placeholders), so images may come from any https host.
+ */
+const val CONTENT_SECURITY_POLICY =
+    "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; " +
+        "font-src 'self'; connect-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'; object-src 'none'"
+
+private val SecurityHeaders = createApplicationPlugin("SecurityHeaders") {
+    // onCallRespond, like NoIndex, so answers Webjars completes early carry them too.
+    onCallRespond { call, _ ->
+        call.response.header("Content-Security-Policy", CONTENT_SECURITY_POLICY)
+        call.response.header("X-Content-Type-Options", "nosniff")
+    }
+}
+
 /** Pages are personal: `no-store` keeps them out of the history cache, so Back after logout doesn't show the last person's page. Assets set their own caching. */
 private val NoStorePages = createApplicationPlugin("NoStorePages") {
     onCallRespond { call, _ ->
@@ -104,6 +122,7 @@ fun Application.web(app: App) {
     install(Webjars)
     // Private by design: no search engine or archive should list this site, so nobody finds it by accident.
     install(NoIndex)
+    install(SecurityHeaders)
     install(NoStorePages)
     install(AutoHeadResponse)
     install(EtagOnlyAssets)

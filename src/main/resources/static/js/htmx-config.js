@@ -1,3 +1,6 @@
+// The Content-Security-Policy forbids eval: htmx must not try it either (trigger filters, hx-on, js: in hx-vals).
+htmx.config.allowEval = false;
+
 // Loaded right after htmx. Rejections (409 conflict, 403 forbidden) come back as an error fragment
 // for the element that asked: let htmx swap it in, like a 200, instead of dropping it as an error.
 htmx.config.responseHandling = [

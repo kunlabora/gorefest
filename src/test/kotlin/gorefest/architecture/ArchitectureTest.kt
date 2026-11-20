@@ -133,6 +133,44 @@ class ArchitectureTest {
         }.shouldBeEmpty()
     }
 
+    @Test
+    fun `SQL takes its values as parameters, never pasted into its text`() {
+        val calls = shell.flatMap { file -> SQL_CALL.findAll(file.code).map { file to it } }
+        calls.shouldNotBeEmpty()
+        calls.flatMap { (file, call) ->
+            val sql = call.groups["sql"]?.value
+            when {
+                call.value.startsWith("createStatement") -> listOf("${file.name}: createStatement. Use prepareStatement with ? parameters")
+                sql == null -> listOf("${file.name}: ${call.value.trim()}…. Pass the SQL as a literal, with ? for the values")
+                else -> INTERPOLATION.findAll(sql).map { it.value }.filterNot { it in (SQL_FRAGMENTS[file.name] ?: emptySet()) }
+                    .map { "${file.name}: $it in SQL. Bind it with ? instead; only fixed fragments (SQL_FRAGMENTS) may be pasted in" }.toList()
+            }
+        }.shouldBeEmpty()
+    }
+
+    @Test
+    fun `the SQL rule sees pasted values in plain and raw strings, and calls without a literal`() {
+        val code = "c.prepareStatement(\"select 1 where a = \$x\")\nc.prepareStatement(\n  \"\"\"\n  select \${y.z} \"\"\"\n)\nc.prepareStatement(sql)\nc.prepareStatement(\"select ?\")"
+        val calls = SQL_CALL.findAll(code).toList()
+        calls.map { call -> call.groups["sql"]?.value?.let { sql -> INTERPOLATION.findAll(sql).map { it.value }.toList() } } shouldBe
+            listOf(listOf("\$x"), listOf("\${y.z}"), null, emptyList())
+    }
+
+    @Test
+    fun `only components write raw HTML`() {
+        shell.filter { it.pkg != "gorefest.shell.web.components" && it.name !in RAW_HTML_ALLOWED }.flatMap { file ->
+            RAW_HTML.findAll(file.code).map { "${file.name}: ${it.value.trim()}. Build it with kotlinx.html, which escapes, or add a component that writes fixed markup" }
+        }.shouldBeEmpty()
+    }
+
+    @Test
+    @Obligation("WEB-21")
+    fun `hyperscript and htmx run without eval, which the Content-Security-Policy forbids`() {
+        shell.flatMap { file ->
+            EVAL_SCRIPT.findAll(file.code).map { "${file.name}: ${it.value.trim()}. Call a named function from /static/js instead" }
+        }.shouldBeEmpty()
+    }
+
     /** The file's text without comments, so a KDoc that mentions `button(` isn't a call. */
     private val KoFileDeclaration.code get() = withoutComments(text)
 
@@ -171,6 +209,28 @@ class ArchitectureTest {
         val COMMENT_OR_STRING = Regex("(?s)\"\"\".*?\"\"\"|\"(?:\\\\.|[^\"\\\\\n])*\"|/\\*.*?\\*/|//[^\n]*")
 
         fun withoutComments(code: String) = COMMENT_OR_STRING.replace(code) { if (it.value.startsWith("/")) "" else it.value }
+
+        /** A JDBC call that takes SQL text: the first argument when it is a string literal (`sql`), or the start of anything else. */
+        val SQL_CALL = Regex("(?s)(?:prepareStatement|prepareCall)\\(\\s*(?:(?<sql>\"\"\".*?\"\"\"|\"(?:\\\\.|[^\"\\\\\n])*\")|[^\"\\s])|createStatement\\(")
+
+        /** A Kotlin string template: `$name` or `${…}`. */
+        val INTERPOLATION = Regex("""\$(\{[^}]*}|\w+)""")
+
+        /** The only values pasted into SQL text, per file: fixed table names, placeholder shapes and constants, never input. */
+        val SQL_FRAGMENTS = mapOf(
+            "Catalog" to setOf("\$table"), // from a fixed list of the player's tables
+            "EventStore" to setOf("\$where", "\$APPEND_LOCK"), // "(type = any(?) and tags @> ?)" per item, and a constant
+            "Repositories" to setOf("\$where"), // "id = ?" or "token_hash = ?", from the login attempts' own finders
+        )
+
+        /** kotlinx.html's escape hatch: whatever goes in is written as is. */
+        val RAW_HTML = Regex("""\bunsafe\s*\{""")
+
+        /** Re-inserts a fragment that kotlinx.html has already rendered, and so escaped. */
+        val RAW_HTML_ALLOWED = setOf("Responses")
+
+        /** Script the browser can only run through eval: a hyperscript `js` block, htmx's `hx-on`, a `js:` value. */
+        val EVAL_SCRIPT = Regex("""hyperscript\("[^"]*\bjs\b[^"]*"|hx\("on|"hx-on|"js:""")
 
         /** ARIA written by hand: `aria-*` and `role` attributes. */
         val RAW_ARIA = Regex("""attributes\["(aria-[a-z]+|role)"]|\brole\s*=""")

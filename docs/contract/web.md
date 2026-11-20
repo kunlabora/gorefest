@@ -41,3 +41,8 @@ What every page promises, whatever the feature.
 - **WEB-18** The release notes list every version newest first, each with its date and its new, changed and fixed lines; an empty kind isn't shown.
 - **WEB-19** The version the footer shows has its release notes.
 - **WEB-20** The release notes are readable signed out.
+
+## Script safety
+
+- **WEB-21** Every response tells the browser to run only scripts from the site's own files (no inline script, no eval) and not to let other sites frame it, so text that slipped through unescaped still can't run.
+- **WEB-22** Pages hold no inline script: every script element loads a file, and no element carries an `on…` handler.
