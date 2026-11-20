@@ -14,12 +14,21 @@ allows a service worker from our own origin (`script-src 'self'`, `connect-src '
 
 1. On their account page (or after joining a game day), a player can switch on notifications on this device. The
    browser's permission prompt only appears after they tap that switch, never on page load.
-2. The first notifications are the ones U19 mails: someone brings games to a game day you joined. Later candidates are
-   a bring request for you (U20), a game day's date or place changing, and the recap.
-3. Tapping a notification opens the page it's about (the game day's shelf).
+2. Four notifications, all for game days still to be played, never to the one who did it:
+
+   | When                                          | Event              | Who gets it                                   | Opens            |
+   |-----------------------------------------------|--------------------|-----------------------------------------------|------------------|
+   | Someone brings games                          | `GameBrought`      | everyone else who joined (batched as in U19)  | the shelf        |
+   | Someone joins the game day                    | `PlayerJoined`     | everyone already in, host included            | the game day     |
+   | The host cancels the game day                 | `GameDayCancelled` | everyone who joined                           | the game day     |
+   | Someone asks you to bring a game (U20)        | `BringRequested`   | the owner asked                               | the bring page   |
+
+   When games brought answer a bring request, the asker's notification says so ("Tim brings Cascadia, as you asked").
+3. Tapping a notification opens the page it's about (the table above).
 4. Each device is its own subscription. A player can switch a device off, and a subscription the browser reports gone
    (404/410 from the push service) is deleted.
-5. Push comes next to the mail, not instead of it, unless the player chooses push only (open question).
+5. Push comes next to the mail, not instead of it: no choice between the two. A player with push on still gets U19's
+   mail, unless they turned that mail off.
 6. On iPhone, push only works once Boardfest is added to the home screen (iOS 16.4+). The switch says so on iOS instead
    of failing silently.
 
@@ -34,12 +43,18 @@ allows a service worker from our own origin (`script-src 'self'`, `connect-src '
   cascade with the account on erasure.
 - The payload holds as little as possible: a title, a line and a URL, no email or BGG username. It passes through the
   browser maker's push service (Google, Apple, Mozilla), encrypted end to end.
-- Whatever sends U19's mail decides who hears about it, and both mail and push go out from that one place.
+- One notifier in the shell follows the log (after the append, like the recap), decides who hears about what from the
+  read models (`gameDaysById`, `bringRequests`), and sends the mail (U19) and the push from that one place. Display
+  text lives in a pure shell value, like `Recap`.
+
+**Decisions (2026-11-20):** push next to mail, not a choice between them. The four notifications: game brought,
+player joined, game day cancelled, game requested.
 
 ## Open questions
 
-- Push next to mail, or a per-player choice (mail / push / both)? And is one opt-out for "games brought" enough?
-- Which events are worth a push from the start? A push about every shelf change may feel too noisy; batching like U19?
+- Should joining, cancelling and bring requests also get a mail, like games brought in U19, or are they push only?
+  (A cancelled game day is the one people most need to hear about.)
+- Can a player turn off one kind (say, "someone joined") and keep the rest, or is it all or nothing per device?
 - Is the home-screen step on iPhone acceptable for the group, or does it make push Android/desktop only in practice?
 
 ## Privacy
