@@ -106,7 +106,13 @@ The app writes to journald, which `provision.sh` limits to 14 days (`/etc/system
 
 Caddy's access log is on and goes to journald too (14 days), because CrowdSec and GoAccess read it. It holds the IP, but every Caddy log line goes through the `scrubbed` filter in the `Caddyfile`, which strips what `loggable()` strips: the query string and the `/i/` and `/p/` tokens become `redacted`, and Referer, cookies and response headers are dropped. The filter sits on Caddy's default logger as well, because Caddy's error lines (a 502 while the app restarts) print the request too. A new secret in a path needs a case in both `loggable()` and that regexp. To check, request `/i/SECRET?x=SECRET` and run `journalctl -u caddy | grep -c SECRET`: it should print 0.
 
-**Traffic (GoAccess).** `sudo gorefest-traffic` opens GoAccess's terminal dashboard over the last 7 days (`gorefest-traffic 1d` for a day). `sudo gorefest-traffic 14d /tmp/report.html` writes an HTML report to `scp` home. Don't serve it from the site.
+**Traffic (GoAccess).** `sudo gorefest-traffic` opens GoAccess's terminal dashboard over the last 7 days (`gorefest-traffic 1d` for a day; `q` quits). For the HTML dashboard, write a report (one self-contained file) and open it at home:
+```bash
+ssh boardfest sudo gorefest-traffic 14d /tmp/traffic.html                       # 14 days is all journald keeps
+scp boardfest:/tmp/traffic.html ~/Downloads/ && open ~/Downloads/traffic.html
+ssh boardfest rm /tmp/traffic.html && rm ~/Downloads/traffic.html                # it lists visitors' IPs: don't keep it
+```
+The report holds IP addresses, which the privacy notes promise stay with the admin for 14 days at most, so delete it on both sides when you're done. Never serve it from the site. GoAccess can also run a live HTML dashboard over its own WebSocket server; that is left out on purpose (one more long-running process, and served from the site it would put visitor IPs behind a public URL). If it's ever wanted, reach it through an SSH tunnel only.
 
 **Bans (CrowdSec).** CrowdSec reads sshd's log and Caddy's access log (`/etc/crowdsec/acquis.d/caddy.yaml`), and the nftables bouncer drops what it bans, next to ufw. Its local API is on `127.0.0.1:8090` (`/etc/crowdsec/config.yaml.local`, and the bouncer's `.yaml.local`), because its default, 8080, is the app's port. It shares the IPs that trip a scenario with CrowdSec and gets their community blocklist back. Because the query string is scrubbed before CrowdSec sees it, the scenarios that look inside query strings (SQL injection, XSS probes) don't fire; path probing, brute force and scanners do. Useful commands:
 ```bash
