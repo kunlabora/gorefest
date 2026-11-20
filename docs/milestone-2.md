@@ -8,7 +8,7 @@ Status, the definition of done and the flow-metric columns (Arrived, Started, Do
 ## User testing feedback, 2026-10-06
 
 One request file per item in [`docs/requests/`](requests/); each has its own criteria. Decisions: U16 cancels silently;
-U9 and U11 (option C) are done (2026-10-14); U17 and U19 won't be done (2026-10-14).
+U9 and U11 (option C) are done (2026-10-14); U17 and U19 won't be done (2026-10-14), but U19 will after all (2026-11-20).
 
 | #   | Story                                                                                                                | Status | Depends on | Arrived    | Started    | Done       |
 |-----|----------------------------------------------------------------------------------------------------------------------|--------|------------|------------|------------|------------|
@@ -30,7 +30,7 @@ U9 and U11 (option C) are done (2026-10-14); U17 and U19 won't be done (2026-10-
 | U16 | [Cancel a game day](requests/u16-cancel-game-day.md)                                                                 | ✅     |            | 2026-10-06 | 2026-10-06 | 2026-10-06 |
 | U17 | [Link BGG by a message from a Boardfest bot account](requests/u17-bgg-link-via-bot-message.md)                       | 🚫     |            | 2026-10-06 |            | 2026-10-14 |
 | U18 | ["Your likely favourites today": pills overlap the bottom after scrolling](requests/u18-favourites-pills-overlap.md) | ✅     |            | 2026-10-06 | 2026-10-06 | 2026-10-06 |
-| U19 | [Update emails when people add games (and push as an alternative)](requests/u19-update-emails-and-push.md)           | 🚫     |            | 2026-10-06 |            | 2026-10-14 |
+| U19 | [Update emails when people add games (and push as an alternative)](requests/u19-update-emails-and-push.md)           | 📋     |            | 2026-10-06 |            |            |
 | U20 | [Ask someone to bring a game from their collection](requests/u20-ask-someone-to-bring-a-game.md)                     | ✅     |            | 2026-10-08 | 2026-10-08 | 2026-10-08 |
 
 ## GDPR, 2026-10-09

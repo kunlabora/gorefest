@@ -41,7 +41,7 @@ Greetings, sign-offs and links differ from mail to mail, and some text sits on o
 - Templates in `shell` (built with kotlinx.html, which escapes everything, like the views), one function per mail
   returning both parts, so the senders stop building text inline. Display text stays out of the IO, like `Recap`.
 - Tests pin each mail's subject and wording, and parse the HTML with Jsoup like the web tests.
-- Could be split: (a) the shared layout plus the login mail, (b) the rest. Story U25's mail would use the layout.
+- Could be split: (a) the shared layout plus the login mail, (b) the rest. U19's mail would use the layout.
 
 ## Open questions
 
