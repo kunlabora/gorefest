@@ -34,3 +34,9 @@ Decisions (2026-10-30): split into four stories; a contrast pair that fails is f
 |-----|-------------------------------------------------------------------------------|--------|------------|------------|---------|------|
 | U25 | [Mail the others when someone brings games](requests/u25-mail-when-games-are-brought.md) | 📋     |            | 2026-11-20 |         |      |
 | U26 | [Mails that look like Boardfest](requests/u26-mail-templates.md)              | 📋     |            | 2026-11-20 |         |      |
+
+## Technical, 2026-11-20
+
+| #  | Story                                                                    | Status | Depends on | Arrived    | Started | Done |
+|----|--------------------------------------------------------------------------|--------|------------|------------|---------|------|
+| T1 | [Locks the compiler makes you take](requests/t1-locks-as-context-parameters.md) | 📋     |            | 2026-11-20 |         |      |
