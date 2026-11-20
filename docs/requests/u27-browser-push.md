@@ -48,14 +48,13 @@ allows a service worker from our own origin (`script-src 'self'`, `connect-src '
   text lives in a pure shell value, like `Recap`.
 
 **Decisions (2026-11-20):** push next to mail, not a choice between them. The four notifications: game brought,
-player joined, game day cancelled, game requested.
+player joined, game day cancelled, game requested. The home-screen step on iPhone is acceptable.
 
 ## Open questions
 
 - Should joining, cancelling and bring requests also get a mail, like games brought in U19, or are they push only?
   (A cancelled game day is the one people most need to hear about.)
 - Can a player turn off one kind (say, "someone joined") and keep the rest, or is it all or nothing per device?
-- Is the home-screen step on iPhone acceptable for the group, or does it make push Android/desktop only in practice?
 
 ## Privacy
 
