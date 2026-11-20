@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# One-time setup of a fresh Ubuntu 26.04 (or 24.04) server for gorefest (Java 25, PostgreSQL 18 and Caddy from their own repositories). Run as root from a copy of deploy/:
+# One-time setup of a fresh Ubuntu 26.04 (or 24.04) server for gorefest (Java 25, PostgreSQL 18, Caddy and CrowdSec from their own repositories). Run as root from a copy of deploy/:
 #   bash provision.sh <domain> "<public key GitHub Actions deploys with>"
 # Safe to run again: it keeps existing secrets, the database password and /etc/gorefest/env.
 set -euo pipefail
@@ -11,7 +11,7 @@ export DEBIAN_FRONTEND=noninteractive
 
 echo "== Packages"
 apt-get update -q
-apt-get install -yq curl gnupg ufw postgresql-common rclone fontconfig fonts-dejavu-core unattended-upgrades debian-keyring debian-archive-keyring apt-transport-https
+apt-get install -yq curl gnupg ufw goaccess postgresql-common rclone fontconfig fonts-dejavu-core unattended-upgrades debian-keyring debian-archive-keyring apt-transport-https
 
 # PostgreSQL 18 from the PostgreSQL project's own repository (what dev and the tests run): the same version on every Ubuntu release (24.04 ships 16).
 if ! command -v psql >/dev/null || ! pg_lsclusters 2>/dev/null | grep -q '^18 '; then
@@ -98,6 +98,20 @@ systemctl enable gorefest gorefest-backup.timer
 systemctl start gorefest-backup.timer
 sed "s|{\$GOREFEST_DOMAIN}|$domain|" "$here/Caddyfile" > /etc/caddy/Caddyfile
 systemctl reload caddy || systemctl restart caddy
+
+echo "== CrowdSec"
+# Reads sshd's log and Caddy's access log (crowdsec-caddy.yaml), and the nftables bouncer drops banned IPs, next to ufw.
+# From CrowdSec's own repository (their install script only adds it); the bouncer registers itself with the local agent.
+if ! command -v cscli >/dev/null; then
+  curl -fsSL https://install.crowdsec.net | sh
+  apt-get install -yq crowdsec
+fi
+dpkg -s crowdsec-firewall-bouncer-nftables >/dev/null 2>&1 || apt-get install -yq crowdsec-firewall-bouncer-nftables
+cscli collections install crowdsecurity/linux crowdsecurity/caddy
+install -d /etc/crowdsec/acquis.d
+install -m 644 "$here/crowdsec-caddy.yaml" /etc/crowdsec/acquis.d/caddy.yaml
+systemctl restart crowdsec
+install -m 755 -o root -g root "$here/traffic.sh" /usr/local/bin/gorefest-traffic
 
 echo "== Firewall and updates"
 ufw allow OpenSSH >/dev/null && ufw allow 80/tcp >/dev/null && ufw allow 443/tcp >/dev/null

@@ -1,5 +1,32 @@
 # /etc/caddy/Caddyfile. Caddy gets and renews the TLS certificate by itself.
+
+# Every request Caddy logs is scrubbed like the app's own request log (loggable()): no query string, no invite
+# or poll token, no Referer (it would carry them too), no cookies and no response headers (redirects hold return
+# paths). Both loggers use it: the access log, and the default one, where Caddy's errors (a 502 while the app
+# restarts) also print the request.
+(scrubbed) {
+	format filter {
+		wrap json
+		request>uri regexp "^(/[ip]/)[^/?#]+|([?#]).*$" "${1}${2}redacted"
+		request>headers>Referer delete
+		request>headers>Cookie delete
+		request>headers>Authorization delete
+		resp_headers delete
+	}
+}
+
+{
+	log default {
+		import scrubbed
+	}
+}
+
 {$GOREFEST_DOMAIN} {
 	encode zstd gzip
 	reverse_proxy 127.0.0.1:8080
+
+	# The access log feeds CrowdSec (bans) and GoAccess (traffic). It goes to journald (Caddy's stderr), which keeps 14 days.
+	log {
+		import scrubbed
+	}
 }

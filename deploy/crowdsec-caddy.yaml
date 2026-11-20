@@ -1,0 +1,6 @@
+# /etc/crowdsec/acquis.d/caddy.yaml: CrowdSec reads Caddy's access log from journald (the Caddyfile's log block).
+source: journalctl
+journalctl_filter:
+  - "_SYSTEMD_UNIT=caddy.service"
+labels:
+  type: caddy

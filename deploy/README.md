@@ -1,6 +1,6 @@
 # Deploying
 
-One cheap VPS: the fat jar under systemd, Postgres, Caddy in front for TLS, and a nightly `pg_dump` to object storage. GitHub Actions builds, tests and deploys every push to `main`.
+One cheap VPS: the fat jar under systemd, Postgres, Caddy in front for TLS, CrowdSec banning attackers, GoAccess for traffic, and a nightly `pg_dump` to object storage. GitHub Actions builds, tests and deploys every push to `main`.
 
 **On Scaleway: follow [scaleway.md](scaleway.md).** `provision.sh` does the one-time setup below in one go on Ubuntu 26.04 (24.04 also works); the manual steps are here for other hosts.
 
@@ -28,6 +28,7 @@ If the data matters, install `postgresql-18` from the PostgreSQL repository next
    Postgres 18 is what dev (`compose.yaml`) and the tests run; Ubuntu 24.04's own `postgresql` package is 16, so don't install that one there. A server that already has an older cluster needs `pg_upgradecluster` before this.
    Java 25 and Caddy also come from their own apt repositories, because Ubuntu 24.04 ships neither `openjdk-25` nor a current Caddy (26.04 has both, but the repositories keep every release alike): Temurin 25 from Adoptium (`temurin-25-jre`) and Caddy from Cloudsmith. `provision.sh` shows the exact repository and key setup.
    `fontconfig` and a font are needed for the invite preview image (Java2D).
+   Also `goaccess` (Ubuntu's own package), and CrowdSec from its own repository: `curl -fsSL https://install.crowdsec.net | sudo sh`, then `sudo apt install crowdsec crowdsec-firewall-bouncer-nftables` and `sudo cscli collections install crowdsecurity/linux crowdsecurity/caddy`. Copy `deploy/crowdsec-caddy.yaml` to `/etc/crowdsec/acquis.d/caddy.yaml`, restart `crowdsec`, and install `deploy/traffic.sh` as `/usr/local/bin/gorefest-traffic`.
 2. **Users and folders**: the service user `gorefest` only reads releases; a `deploy` user (member of group `gorefest`) writes them.
    ```bash
    sudo useradd --system --home /opt/gorefest --shell /usr/sbin/nologin gorefest
@@ -101,7 +102,21 @@ Ids that no longer exist are skipped, and leaving the line set does no harm, onl
 
 ## Logs
 
-The app writes to journald, which `provision.sh` limits to 14 days (`/etc/systemd/journald.conf.d/retention.conf`, `MaxRetentionSec=14d`). Request lines hold the method, status and a scrubbed path only: no query string, and invite and poll links show as `/i/{token}` and `/p/{token}` (`loggable()`). No code logs an email address or an IP, apart from the dev mailbox, which only runs in dev. Caddy's access log stays off (`Caddyfile`): keep it that way, since it would record the links. On a server provisioned before this, run `provision.sh` again or create the drop-in by hand and restart `systemd-journald`.
+The app writes to journald, which `provision.sh` limits to 14 days (`/etc/systemd/journald.conf.d/retention.conf`, `MaxRetentionSec=14d`). Request lines hold the method, status and a scrubbed path only: no query string, and invite and poll links show as `/i/{token}` and `/p/{token}` (`loggable()`). No app code logs an email address or an IP, apart from the dev mailbox, which only runs in dev. On a server provisioned before this, run `provision.sh` again or create the drop-in by hand and restart `systemd-journald`.
+
+Caddy's access log is on and goes to journald too (14 days), because CrowdSec and GoAccess read it. It holds the IP, but every Caddy log line goes through the `scrubbed` filter in the `Caddyfile`, which strips what `loggable()` strips: the query string and the `/i/` and `/p/` tokens become `redacted`, and Referer, cookies and response headers are dropped. The filter sits on Caddy's default logger as well, because Caddy's error lines (a 502 while the app restarts) print the request too. A new secret in a path needs a case in both `loggable()` and that regexp. To check, request `/i/SECRET?x=SECRET` and run `journalctl -u caddy | grep -c SECRET`: it should print 0.
+
+**Traffic (GoAccess).** `sudo gorefest-traffic` opens GoAccess's terminal dashboard over the last 7 days (`gorefest-traffic 1d` for a day). `sudo gorefest-traffic 14d /tmp/report.html` writes an HTML report to `scp` home. Don't serve it from the site.
+
+**Bans (CrowdSec).** CrowdSec reads sshd's log and Caddy's access log (`/etc/crowdsec/acquis.d/caddy.yaml`), and the nftables bouncer drops what it bans, next to ufw. It shares the IPs that trip a scenario with CrowdSec and gets their community blocklist back. Because the query string is scrubbed before CrowdSec sees it, the scenarios that look inside query strings (SQL injection, XSS probes) don't fire; path probing, brute force and scanners do. Useful commands:
+```bash
+sudo cscli metrics                       # is it reading caddy and ssh lines?
+sudo cscli alerts list                   # what it noticed
+sudo cscli decisions list                # who is banned now
+sudo cscli decisions delete --ip 1.2.3.4 # unban (a friend behind a shared IP, say)
+sudo cscli hub update && sudo cscli hub upgrade   # newer scenarios
+```
+If you lock yourself out of SSH, use the Scaleway console to unban.
 
 ## After a deploy
 

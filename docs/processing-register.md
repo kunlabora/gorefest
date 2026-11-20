@@ -16,4 +16,6 @@ An internal list of where personal data lives, kept short because the household 
 | The data file (`/admin/requests/{id}/export`) | Everything about one person, in words; no other person's name or id | Answering a request for one's data | Admin, at download (`no-store`); then whoever the admin sends it to (the person) | Not stored by the app; made on demand |
 | Backups | Nightly `pg_dump` of everything above, Scaleway Object Storage fr-par | Restore | Admin | 30 days |
 | Server logs (journald) | Time, method, status, scrubbed path; errors name a player by id; no tokens, codes, emails, IPs or BGG usernames | Operations | Admin | 14 days (`provision.sh`) |
+| Caddy access log (journald) | Time, IP, method, scrubbed path (no query, no token), status, user agent; no Referer, cookies or response headers (`deploy/Caddyfile`) | Blocking attacks (CrowdSec), seeing traffic (GoAccess, by hand over SSH) | Admin | 14 days |
+| CrowdSec | IPs that trip an attack scenario (on SSH or the site), with the scenario; bans | Blocking attacks | Admin; the IPs and scenario also go to CrowdSec (France), which shares a community blocklist back | Bans expire after hours; CrowdSec's own retention for what it receives |
 | Cookies | `gf_session` (sign-in), `gf_theme` (light/dark, set in the browser) | Working at all | — | Session, one year |
