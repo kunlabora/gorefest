@@ -17,7 +17,8 @@ Source: user testing, 2026-10-06. Status: 📋 todo
 **Decision (2026-10-14):** won't do.
 
 **Decision (2026-11-20):** will do after all, as a mail to the others when someone decides to bring a game or games.
-The estimate above still holds. Push stays out.
+Mail only: no web push, Discord or other notifications.
+The estimate above still holds.
 
 **Today:** bringing a game appends `GameBrought` (and `GameUnbrought` when taken back); a bring request is answered by
 the owner's `GameBrought` (U20). Nobody hears about it until they open the game day. The only mails to players are the
