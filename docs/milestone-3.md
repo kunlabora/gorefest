@@ -28,12 +28,13 @@ Decisions (2026-10-30): split into four stories; a contrast pair that fails is f
 | U23 | [Don't log a play for a table of one by mistake](requests/u23-solo-play-log.md) | ✅     |            | 2026-11-17 | 2026-11-17 | 2026-11-17 |
 | U24 | [Release notes](requests/u24-release-notes.md)                         | ✅     |            | 2026-11-17 | 2026-11-17 | 2026-11-17 |
 
-## Mail, 2026-11-20
+## Mail and notifications, 2026-11-20
 
 | #   | Story                                                                         | Status | Depends on | Arrived    | Started | Done |
 |-----|-------------------------------------------------------------------------------|--------|------------|------------|---------|------|
 | ~~U25~~ | Mail the others when someone brings games: merged into [U19](requests/u19-update-emails-and-push.md) | 🚫 | | 2026-11-20 | | 2026-11-20 |
 | U26 | [Mails that look like Boardfest](requests/u26-mail-templates.md)              | 📋     |            | 2026-11-20 |         |      |
+| U27 | [Browser push notifications](requests/u27-browser-push.md)              | 📋     | U19        | 2026-11-20 |         |      |
 
 ## Technical, 2026-11-20
 

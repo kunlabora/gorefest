@@ -17,7 +17,8 @@ Source: user testing, 2026-10-06. Status: 📋 todo
 **Decision (2026-10-14):** won't do.
 
 **Decision (2026-11-20):** will do after all, as a mail to the others when someone decides to bring a game or games.
-Mail only: no web push, Discord or other notifications.
+Mail only: no web push, Discord or other notifications. Browser push is its own story,
+[U27](u27-browser-push.md).
 The estimate above still holds.
 
 **Today:** bringing a game appends `GameBrought` (and `GameUnbrought` when taken back); a bring request is answered by
