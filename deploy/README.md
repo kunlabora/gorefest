@@ -28,7 +28,7 @@ If the data matters, install `postgresql-18` from the PostgreSQL repository next
    Postgres 18 is what dev (`compose.yaml`) and the tests run; Ubuntu 24.04's own `postgresql` package is 16, so don't install that one there. A server that already has an older cluster needs `pg_upgradecluster` before this.
    Java 25 and Caddy also come from their own apt repositories, because Ubuntu 24.04 ships neither `openjdk-25` nor a current Caddy (26.04 has both, but the repositories keep every release alike): Temurin 25 from Adoptium (`temurin-25-jre`) and Caddy from Cloudsmith. `provision.sh` shows the exact repository and key setup.
    `fontconfig` and a font are needed for the invite preview image (Java2D).
-   Also `goaccess` (Ubuntu's own package), and CrowdSec from its own repository: `curl -fsSL https://install.crowdsec.net | sudo sh`, then `sudo apt install crowdsec crowdsec-firewall-bouncer-nftables` and `sudo cscli collections install crowdsecurity/linux crowdsecurity/caddy`. Copy `deploy/crowdsec-caddy.yaml` to `/etc/crowdsec/acquis.d/caddy.yaml`, restart `crowdsec`, and install `deploy/traffic.sh` as `/usr/local/bin/gorefest-traffic`.
+   Also `goaccess` (Ubuntu's own package), and CrowdSec from its own repository: `curl -fsSL https://install.crowdsec.net | sudo sh`, then `sudo apt install crowdsec crowdsec-firewall-bouncer-nftables` and `sudo cscli collections install crowdsecurity/linux crowdsecurity/caddy`. Before installing, move its local API off the app's port 8080 the way `provision.sh` does (the `.local` files). Copy `deploy/crowdsec-caddy.yaml` to `/etc/crowdsec/acquis.d/caddy.yaml`, restart `crowdsec`, and install `deploy/traffic.sh` as `/usr/local/bin/gorefest-traffic`.
 2. **Users and folders**: the service user `gorefest` only reads releases; a `deploy` user (member of group `gorefest`) writes them.
    ```bash
    sudo useradd --system --home /opt/gorefest --shell /usr/sbin/nologin gorefest
@@ -108,7 +108,7 @@ Caddy's access log is on and goes to journald too (14 days), because CrowdSec an
 
 **Traffic (GoAccess).** `sudo gorefest-traffic` opens GoAccess's terminal dashboard over the last 7 days (`gorefest-traffic 1d` for a day). `sudo gorefest-traffic 14d /tmp/report.html` writes an HTML report to `scp` home. Don't serve it from the site.
 
-**Bans (CrowdSec).** CrowdSec reads sshd's log and Caddy's access log (`/etc/crowdsec/acquis.d/caddy.yaml`), and the nftables bouncer drops what it bans, next to ufw. It shares the IPs that trip a scenario with CrowdSec and gets their community blocklist back. Because the query string is scrubbed before CrowdSec sees it, the scenarios that look inside query strings (SQL injection, XSS probes) don't fire; path probing, brute force and scanners do. Useful commands:
+**Bans (CrowdSec).** CrowdSec reads sshd's log and Caddy's access log (`/etc/crowdsec/acquis.d/caddy.yaml`), and the nftables bouncer drops what it bans, next to ufw. Its local API is on `127.0.0.1:8090` (`/etc/crowdsec/config.yaml.local`, and the bouncer's `.yaml.local`), because its default, 8080, is the app's port. It shares the IPs that trip a scenario with CrowdSec and gets their community blocklist back. Because the query string is scrubbed before CrowdSec sees it, the scenarios that look inside query strings (SQL injection, XSS probes) don't fire; path probing, brute force and scanners do. Useful commands:
 ```bash
 sudo cscli metrics                       # is it reading caddy and ssh lines?
 sudo cscli alerts list                   # what it noticed

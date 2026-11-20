@@ -102,15 +102,25 @@ systemctl reload caddy || systemctl restart caddy
 echo "== CrowdSec"
 # Reads sshd's log and Caddy's access log (crowdsec-caddy.yaml), and the nftables bouncer drops banned IPs, next to ufw.
 # From CrowdSec's own repository (their install script only adds it); the bouncer registers itself with the local agent.
+# CrowdSec's local API listens on 127.0.0.1:8080 by default: the app's port. Whoever starts first gets it, so after a
+# reboot CrowdSec could take the site down. Its overrides (*.local, merged over the packaged files) move it to 8090,
+# and they are written before the packages first start anything.
+crowdsec_api=127.0.0.1:8090
+install -d /etc/crowdsec/bouncers
+printf 'api:\n  server:\n    listen_uri: %s\n' "$crowdsec_api" > /etc/crowdsec/config.yaml.local
+printf 'api_url: http://%s/\n' "$crowdsec_api" > /etc/crowdsec/bouncers/crowdsec-firewall-bouncer.yaml.local
 if ! command -v cscli >/dev/null; then
   curl -fsSL https://install.crowdsec.net | sh
   apt-get install -yq crowdsec
 fi
-dpkg -s crowdsec-firewall-bouncer-nftables >/dev/null 2>&1 || apt-get install -yq crowdsec-firewall-bouncer-nftables
+# cscli reaches the agent through the address in its credentials, written when the package was installed.
+sed -i "s|^url:.*|url: http://$crowdsec_api/|" /etc/crowdsec/local_api_credentials.yaml
 cscli collections install crowdsecurity/linux crowdsecurity/caddy
 install -d /etc/crowdsec/acquis.d
 install -m 644 "$here/crowdsec-caddy.yaml" /etc/crowdsec/acquis.d/caddy.yaml
 systemctl restart crowdsec
+dpkg -s crowdsec-firewall-bouncer-nftables >/dev/null 2>&1 || apt-get install -yq crowdsec-firewall-bouncer-nftables
+systemctl restart crowdsec-firewall-bouncer
 install -m 755 -o root -g root "$here/traffic.sh" /usr/local/bin/gorefest-traffic
 
 echo "== Firewall and updates"
