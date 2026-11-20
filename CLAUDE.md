@@ -23,7 +23,7 @@ Helps a group of boardgamers pick the games they'll enjoy most at a game day, us
 - Postgres, plain JDBC + HikariCP, Flyway migrations, kotlinx.serialization for event JSON.
 - Tests: JUnit 6 (suspend test functions work), Kotest assertions, Testcontainers for Postgres.
 - No SSE / WebSockets in the MVP (usage is checkpoint-based; refresh is enough).
-- Deploy: fat jar + systemd on a single cheap VPS, Caddy in front for TLS, nightly `pg_dump` to object storage. CrowdSec (with the nftables bouncer) bans attackers from sshd's and Caddy's logs; GoAccess shows traffic from Caddy's access log, on demand over SSH (`gorefest-traffic`). Caddy's logs go through a scrubbing filter (`deploy/Caddyfile`), like `loggable()`. GitHub Action: build → scp → restart. Hosted on Scaleway (`deploy/scaleway.md`, `deploy/provision.sh`); general setup, deploy and restore steps in `deploy/README.md`.
+- Deploy: fat jar + systemd on a single cheap VPS, Caddy in front for TLS, nightly `pg_dump` to object storage. CrowdSec (with the nftables bouncer) bans attackers from sshd's and Caddy's logs; GoAccess shows traffic from Caddy's access log, on demand over SSH (`gorefest-traffic`, or `deploy/traffic-report.sh` from your machine), plus a nightly history with masked IPs kept about a year (`gorefest-traffic-history.timer`). Caddy's logs go through a scrubbing filter (`deploy/Caddyfile`), like `loggable()`. GitHub Action: build → scp → restart. Hosted on Scaleway (`deploy/scaleway.md`, `deploy/provision.sh`); general setup, deploy and restore steps in `deploy/README.md`.
 - Offline support: out of scope for now.
 
 ## Architecture

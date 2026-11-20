@@ -122,6 +122,11 @@ systemctl restart crowdsec
 dpkg -s crowdsec-firewall-bouncer-nftables >/dev/null 2>&1 || apt-get install -yq crowdsec-firewall-bouncer-nftables
 systemctl restart crowdsec-firewall-bouncer
 install -m 755 -o root -g root "$here/traffic.sh" /usr/local/bin/gorefest-traffic
+# Nightly: the long-term traffic history, IPs masked, about a year (traffic-history.sh).
+install -m 755 -o root -g root "$here/traffic-history.sh" /usr/local/bin/gorefest-traffic-history
+install -m 644 "$here/gorefest-traffic-history.service" "$here/gorefest-traffic-history.timer" /etc/systemd/system/
+systemctl daemon-reload
+systemctl enable --now gorefest-traffic-history.timer
 
 echo "== Firewall and updates"
 ufw allow OpenSSH >/dev/null && ufw allow 80/tcp >/dev/null && ufw allow 443/tcp >/dev/null

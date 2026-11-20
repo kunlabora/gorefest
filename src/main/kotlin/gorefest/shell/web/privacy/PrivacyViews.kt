@@ -97,7 +97,7 @@ fun HTML.privacyPage(view: PrivacyView) = page("Privacy", appBar = { wordmark() 
         }
 
         privacySection("long", "How long") {
-            p { +"For as long as your account exists. If you don't sign in for two years you get a mail, and a month later the account is deleted. Login codes are gone after a day. Server logs keep the time, your IP address, the page and the result of a request, never a link or an email address, for 14 days, to see traffic and block attacks. Backups are kept for 30 days, so a deleted account leaves them at the end of that." }
+            p { +"For as long as your account exists. If you don't sign in for two years you get a mail, and a month later the account is deleted. Login codes are gone after a day. Server logs keep the time, your IP address, the page and the result of a request, never a link or an email address, for 14 days, to see traffic and block attacks. After that, only traffic counts stay, for about a year, with the last part of the IP address removed. Backups are kept for 30 days, so a deleted account leaves them at the end of that." }
             p { +"When I delete your account, your email, name, collection, sign-ins and the games you said you can explain are removed. Your games and requests leave game days still to come, and you leave every game night and date poll. What you answered stays in the game history, under a number that no longer points at anyone." }
         }
     }

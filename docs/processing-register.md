@@ -17,5 +17,6 @@ An internal list of where personal data lives, kept short because the household 
 | Backups | Nightly `pg_dump` of everything above, Scaleway Object Storage fr-par | Restore | Admin | 30 days |
 | Server logs (journald) | Time, method, status, scrubbed path; errors name a player by id; no tokens, codes, emails, IPs or BGG usernames | Operations | Admin | 14 days (`provision.sh`) |
 | Caddy access log (journald) | Time, IP, method, scrubbed path (no query, no token), status, user agent; no Referer, cookies or response headers (`deploy/Caddyfile`) | Blocking attacks (CrowdSec), seeing traffic (GoAccess, by hand over SSH) | Admin | 14 days |
+| Traffic history (`/var/lib/gorefest-traffic`) | Per day: IP masked to /24 (IPv6 /64), browser and OS, pages, status, counts; no full IP | Seeing how the site is used over the seasons | Admin, as an HTML report fetched over SSH and deleted after | About a year (`--keep-last=365`, days with traffic) |
 | CrowdSec | IPs that trip an attack scenario (on SSH or the site), with the scenario; bans | Blocking attacks | Admin; the IPs and scenario also go to CrowdSec (France), which shares a community blocklist back | Bans expire after hours; CrowdSec's own retention for what it receives |
 | Cookies | `gf_session` (sign-in), `gf_theme` (light/dark, set in the browser) | Working at all | — | Session, one year |

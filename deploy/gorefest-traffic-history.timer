@@ -1,0 +1,11 @@
+# /etc/systemd/system/gorefest-traffic-history.timer
+[Unit]
+Description=Nightly traffic history (GoAccess, masked IPs)
+
+[Timer]
+OnCalendar=*-*-* 04:15:00
+Persistent=true
+RandomizedDelaySec=15m
+
+[Install]
+WantedBy=timers.target
